@@ -1,0 +1,37 @@
+#
+# This file MUST be edited with the 'visudo' command as root.
+#
+# Please consider adding local content in /etc/sudoers.d/ instead of
+# directly modifying this file.
+#
+# See the man page for details on how to write a sudoers file.
+#
+Defaults	env_reset
+Defaults	mail_badpass
+Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Host alias specification
+
+# User alias specification
+User_Alias ADMINS = %admin
+User_Alias ROCKETLOGGER_WEB = www-data, %www-data
+
+# Cmnd alias specification
+Cmnd_Alias ROCKETLOGGER_CMDS = /bin/rocketlogger
+
+# User privilege specification
+root	ALL=(ALL:ALL) ALL
+
+# Allow members of group sudo to execute any command
+%sudo	ALL=(ALL:ALL) ALL
+
+# Allow admins to execute commands with root privileges without password
+ADMINS ALL=(ALL) NOPASSWD: ALL
+
+# Allow rocketlogger web interface to execute rocketlogger binary as root
+ROCKETLOGGER_WEB ALL=NOPASSWD: ROCKETLOGGER_CMDS
+
+# See sudoers(5) for more information on "#include" directives:
+
+#includedir /etc/sudoers.d
+
