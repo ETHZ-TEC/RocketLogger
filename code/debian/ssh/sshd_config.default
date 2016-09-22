@@ -2,7 +2,7 @@
 # See the sshd_config(5) manpage for details
 
 # What ports, IPs and protocols we listen for
-Port 2322
+Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
 #ListenAddress ::
 #ListenAddress 0.0.0.0
@@ -25,12 +25,12 @@ LogLevel INFO
 
 # Authentication:
 LoginGraceTime 120
-PermitRootLogin no
+PermitRootLogin yes
 StrictModes yes
 
 RSAAuthentication yes
 PubkeyAuthentication yes
-AuthorizedKeysFile	%h/.ssh/authorized_keys
+#AuthorizedKeysFile	%h/.ssh/authorized_keys
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
 IgnoreRhosts yes
@@ -42,14 +42,14 @@ HostbasedAuthentication no
 #IgnoreUserKnownHosts yes
 
 # To enable empty passwords, change to yes (NOT RECOMMENDED)
-PermitEmptyPasswords no
+PermitEmptyPasswords yes
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
-ChallengeResponseAuthentication yes
+ChallengeResponseAuthentication no
 
 # Change to no to disable tunnelled clear text passwords
-PasswordAuthentication no
+#PasswordAuthentication yes
 
 # Kerberos options
 #KerberosAuthentication no

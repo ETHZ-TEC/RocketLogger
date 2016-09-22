@@ -10,7 +10,7 @@ allow-hotplug eth0
 auto eth0
 iface eth0 inet dhcp
 # Example to keep MAC address between reboots
-#hwaddress ether 88:c2:55:8e:8c:9a
+#hwaddress ether DE:AD:BE:EF:CA:FE
 
 # The secondary network interface
 #auto eth1
@@ -51,3 +51,4 @@ iface usb0 inet static
     netmask 255.255.255.252
     network 192.168.7.0
     gateway 192.168.7.1
+
