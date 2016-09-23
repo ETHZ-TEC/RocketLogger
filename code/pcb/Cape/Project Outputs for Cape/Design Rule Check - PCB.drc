@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc
 Date     : 23.09.2016
-Time     : 09:32:39
+Time     : 09:47:31
 
 Processing Rule : Room ADC 1 (Bounding Region = (97.1mm, 103.5mm, 118.4mm, 124.6mm) (InComponentClass('ADC 1'))
 Rule Violations :0
@@ -30,6 +30,12 @@ Processing Rule : Board Clearance Constraint (Gap=0mm) (All)
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "SW200" (82.959mm,131.025mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "LED202" (92.659mm,130.861mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "46" (153.8mm,129.6mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V4" (161.767mm,78.1mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V3" (161.767mm,79.9mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V1" (162.1mm,128.1mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V2" (161.767mm,126.4mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_I2" (161.933mm,91.1mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_I1" (162.267mm,114.7mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "RocketLogger" (79.1mm,105.3mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "ETH Zurich" (92.8mm,109mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "TIK" (90.9mm,104.2mm) on Top Overlay And Board Edge 
@@ -40,33 +46,22 @@ Lukas Sigrist
 Andres Gomez
 Roman Lim" (81.3mm,100.6mm) on Top Overlay And Board Edge 
    Violation between Board Outline Clearance(Outline Edge): (0.3mm < 0.3mm) Between Polygon Region (104 hole(s)) V+ And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.3mm < 0.3mm) Between Polygon Region (788 hole(s)) GND And Board Edge 
-Rule Violations :15
+   Violation between Board Outline Clearance(Outline Edge): (0.3mm < 0.3mm) Between Polygon Region (737 hole(s)) GND And Board Edge 
+Rule Violations :21
 
 Processing Rule : Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))
 Rule Violations :0
 
 Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
-   Violation between Modified Polygon: Polygon Not Repour After Edit  (-2.5V_L05_P015) on V- 
-   Violation between Modified Polygon: Polygon Not Repour After Edit  (3.3V_L05_P011) on V- 
-   Violation between Modified Polygon: Polygon Not Repour After Edit  (GND_L05_P031) on V- 
-Rule Violations :3
+Rule Violations :0
 
 Processing Rule : Net Antennae (Tolerance=0mm) (All)
-   Violation between Net Antennae: Track (159mm,116.2mm)(159.4mm,116.2mm) on Component Side 
    Violation between Net Antennae: Track (149.3mm,110.25mm)(149.3mm,111.237mm) on Component Side 
    Violation between Net Antennae: Track (147.188mm,110.212mm)(147.6mm,110.212mm) on Component Side 
-   Violation between Net Antennae: Track (146.15mm,120.8mm)(146.15mm,120.8mm) on Component Side 
-   Violation between Net Antennae: Track (145.25mm,118.95mm)(145.25mm,119.9mm) on Component Side 
-   Violation between Net Antennae: Track (145.15mm,116.45mm)(145.15mm,117.25mm) on Component Side 
-   Violation between Net Antennae: Track (145.15mm,115.55mm)(146.05mm,116.45mm) on Component Side 
-   Violation between Net Antennae: Track (133.614mm,111.275mm)(134.275mm,111.275mm) on Component Side 
    Violation between Net Antennae: Track (155.225mm,89.25mm)(155.707mm,88.768mm) on Component Side 
    Violation between Net Antennae: Track (155.488mm,86.338mm)(155.488mm,87.909mm) on Component Side 
    Violation between Net Antennae: Track (153.35mm,89.502mm)(153.35mm,89.834mm) on Component Side 
    Violation between Net Antennae: Track (153.388mm,88.518mm)(153.56mm,88.691mm) on Component Side 
-   Violation between Net Antennae: Track (118.415mm,118.425mm)(119.515mm,118.425mm) on Component Side 
-   Violation between Net Antennae: Track (118.35mm,117.9mm)(119.45mm,117.9mm) on Component Side 
    Violation between Net Antennae: Track (142.8mm,92.3mm)(142.913mm,92.413mm) on Component Side 
    Violation between Net Antennae: Track (164.525mm,120.5mm)(166.3mm,120.5mm) on Component Side 
    Violation between Net Antennae: Track (164.6mm,134.5mm)(166.4mm,134.5mm) on Component Side 
@@ -78,10 +73,9 @@ Processing Rule : Net Antennae (Tolerance=0mm) (All)
    Violation between Net Antennae: Track (164.4mm,72.525mm)(166.375mm,72.525mm) on Component Side 
    Violation between Net Antennae: Track (139.337mm,115.837mm)(139.5mm,116mm) on Component Side 
    Violation between Net Antennae: Track (140.213mm,116.2mm)(140.225mm,116.187mm) on Component Side 
-   Violation between Net Antennae: Track (109.5mm,89.1mm)(110.158mm,89.1mm) on Inner Layer 1 
    Violation between Net Antennae: Track (153.7mm,89.7mm)(155.1mm,89.7mm) on GND 
    Violation between Net Antennae: Track (153.4mm,118.4mm)(155.4mm,118.4mm) on GND 
-Rule Violations :28
+Rule Violations :19
 
 Processing Rule : Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U303_1-6(143.325mm,106.375mm) on Component Side And Pad U303_1-5(143.325mm,105.725mm) on Component Side [Top Solder] Mask Sliver [0.05mm]
@@ -233,5 +227,5 @@ Processing Rule : Room Voltage Channels 3 & 4 (Bounding Region = (144.596mm, 69.
 Rule Violations :0
 
 
-Violations Detected : 138
-Time Elapsed        : 00:00:20
+Violations Detected : 132
+Time Elapsed        : 00:00:18
