@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc
 Date     : 23.09.2016
-Time     : 17:00:19
+Time     : 17:19:00
 
 Processing Rule : Room ADC 1 (Bounding Region = (97.1mm, 103.5mm, 118.4mm, 124.6mm) (InComponentClass('ADC 1'))
 Rule Violations :0
@@ -22,22 +22,7 @@ Processing Rule : Room Current Channel 2 (Bounding Region = (121.1mm, 82.7mm, 17
 Rule Violations :0
 
 Processing Rule : Board Clearance Constraint (Gap=0mm) (All)
-   Violation between Board Outline Clearance(Outline Edge): (0.129mm < 0.3mm) Between Track (96.73mm,97.065mm)(99.27mm,97.065mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.11mm < 0.3mm) Between Track (96.73mm,97.065mm)(96.73mm,115.095mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.164mm < 0.3mm) Between Track (96.73mm,115.095mm)(99.27mm,115.095mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.255mm < 0.3mm) Between Text "R401" (82.3mm,124.5mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.255mm < 0.3mm) Between Text "SW201" (82.3mm,125.8mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.14mm < 0.3mm) Between Text "C402" (77.1mm,80.8mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V4" (161.767mm,78.1mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V3" (161.767mm,79.9mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V1" (162.1mm,127.9mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_V2" (161.767mm,126.2mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_I2" (161.933mm,91.1mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.168mm < 0.3mm) Between Text "CH_I1" (162.267mm,114.7mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (Collision < 0.3mm) Between Text "2" (96mm,130.3mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.3mm < 0.3mm) Between Polygon Region (105 hole(s)) V+ And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.3mm < 0.3mm) Between Polygon Region (739 hole(s)) GND And Board Edge 
-Rule Violations :15
+Rule Violations :0
 
 Processing Rule : Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))
 Rule Violations :0
@@ -217,5 +202,5 @@ Processing Rule : Room Voltage Channels 3 & 4 (Bounding Region = (144.596mm, 69.
 Rule Violations :0
 
 
-Violations Detected : 126
-Time Elapsed        : 00:00:19
+Violations Detected : 111
+Time Elapsed        : 00:00:18
