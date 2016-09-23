@@ -209,23 +209,6 @@ GenerateClassCluster=0
 DocumentUniqueId=SFPYFWOM
 
 [Document11]
-DocumentPath=Cape.Annotation
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=
-
-[Document12]
 DocumentPath=range_valid_stretching.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=700
@@ -242,7 +225,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MIHTSUIA
 
-[Document13]
+[Document12]
 DocumentPath=..\Libraries\CD4043B.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -259,7 +242,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=TBHKTVSK
 
-[Document14]
+[Document13]
 DocumentPath=..\Libraries\TI_package_PW.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -276,7 +259,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=
 
-[Document15]
+[Document14]
 DocumentPath=..\Libraries\AP2204.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -293,7 +276,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=ACXOFMIY
 
-[Document16]
+[Document15]
 DocumentPath=..\Libraries\ETH_Logo.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
