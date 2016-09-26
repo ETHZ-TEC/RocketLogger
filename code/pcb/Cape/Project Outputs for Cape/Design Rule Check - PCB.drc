@@ -1,7 +1,10 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc
-Date     : 23.09.2016
-Time     : 17:19:00
+Date     : 26.09.2016
+Time     : 13:32:46
+
+Processing Rule : Room RangeValidStretching (Bounding Region = (102.6mm, 113.4mm, 117.5mm, 125.1mm) (InComponentClass('RangeValidStretching'))
+Rule Violations :0
 
 Processing Rule : Room ADC 1 (Bounding Region = (97.1mm, 103.5mm, 118.4mm, 124.6mm) (InComponentClass('ADC 1'))
 Rule Violations :0
@@ -12,9 +15,6 @@ Rule Violations :0
 Processing Rule : Room Digital Channels 1 & 2 (Bounding Region = (100.4mm, 107.1mm, 106.8mm, 113.4mm) (Disabled)(InComponentClass('Digital Channels 1 & 2'))
 Rule Violations :0
 
-Processing Rule : Room RangeValidStrechting (Bounding Region = (104.55mm, 115mm, 113.8mm, 125.4mm) (Disabled)(InComponentClass('RangeValidStrechting'))
-Rule Violations :0
-
 Processing Rule : Room Digital Channels 5 & 6 (Bounding Region = (99.9mm, 92.85mm, 106.3mm, 99.15mm) (Disabled)(InComponentClass('Digital Channels 5 & 6'))
 Rule Violations :0
 
@@ -22,7 +22,9 @@ Processing Rule : Room Current Channel 2 (Bounding Region = (121.1mm, 82.7mm, 17
 Rule Violations :0
 
 Processing Rule : Board Clearance Constraint (Gap=0mm) (All)
-Rule Violations :0
+   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "E" (93.7mm,129.875mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "S" (92.3mm,129.875mm) on Top Overlay And Board Edge 
+Rule Violations :2
 
 Processing Rule : Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))
 Rule Violations :0
@@ -101,32 +103,34 @@ Processing Rule : Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U303_1-3(139.275mm,106.375mm) on Component Side And Pad U303_1-4(139.275mm,105.725mm) on Component Side [Top Solder] Mask Sliver [0.05mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U303_1-2(139.275mm,107.025mm) on Component Side And Pad U303_1-3(139.275mm,106.375mm) on Component Side [Top Solder] Mask Sliver [0.05mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U303_1-1(139.275mm,107.675mm) on Component Side And Pad U303_1-2(139.275mm,107.025mm) on Component Side [Top Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad R603_3-2(104.8mm,95.2mm) on Bottom Side And Pad R601_3-2(104.8mm,95.9mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad R602_3-2(105.629mm,95.2mm) on Bottom Side And Pad R600_3-2(105.629mm,95.9mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-2(103.029mm,93.95mm) on Bottom Side And Pad U600_3-1(103.679mm,93.95mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-3(102.379mm,93.95mm) on Bottom Side And Pad U600_3-2(103.029mm,93.95mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-4(101.729mm,93.95mm) on Bottom Side And Pad U600_3-3(102.379mm,93.95mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-7(103.029mm,98.05mm) on Bottom Side And Pad U600_3-8(103.679mm,98.05mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-6(102.379mm,98.05mm) on Bottom Side And Pad U600_3-7(103.029mm,98.05mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-5(101.729mm,98.05mm) on Bottom Side And Pad U600_3-6(102.379mm,98.05mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-2(102.229mm,101.5mm) on Bottom Side And Pad U600_2-1(102.879mm,101.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-3(101.579mm,101.5mm) on Bottom Side And Pad U600_2-2(102.229mm,101.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-4(100.929mm,101.5mm) on Bottom Side And Pad U600_2-3(101.579mm,101.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-7(102.229mm,105.6mm) on Bottom Side And Pad U600_2-8(102.879mm,105.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-6(101.579mm,105.6mm) on Bottom Side And Pad U600_2-7(102.229mm,105.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-5(100.929mm,105.6mm) on Bottom Side And Pad U600_2-6(101.579mm,105.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-2(103.129mm,108.5mm) on Bottom Side And Pad U600_1-1(103.779mm,108.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-3(102.479mm,108.5mm) on Bottom Side And Pad U600_1-2(103.129mm,108.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-4(101.829mm,108.5mm) on Bottom Side And Pad U600_1-3(102.479mm,108.5mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-7(103.129mm,112.6mm) on Bottom Side And Pad U600_1-8(103.779mm,112.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-6(102.479mm,112.6mm) on Bottom Side And Pad U600_1-7(103.129mm,112.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-5(101.829mm,112.6mm) on Bottom Side And Pad U600_1-6(102.479mm,112.6mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-11(123.55mm,121.325mm) on Bottom Side And Pad U201-10(123.55mm,120.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-13(123.55mm,122.625mm) on Bottom Side And Pad U201-12(123.55mm,121.975mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-15(123.55mm,123.925mm) on Bottom Side And Pad U201-14(123.55mm,123.275mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-6(129.25mm,121.325mm) on Bottom Side And Pad U201-7(129.25mm,120.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-4(129.25mm,122.625mm) on Bottom Side And Pad U201-5(129.25mm,121.975mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U201-2(129.25mm,123.925mm) on Bottom Side And Pad U201-3(129.25mm,123.275mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-2(103.029mm,93.875mm) on Bottom Side And Pad U600_3-1(103.679mm,93.875mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-3(102.379mm,93.875mm) on Bottom Side And Pad U600_3-2(103.029mm,93.875mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-4(101.729mm,93.875mm) on Bottom Side And Pad U600_3-3(102.379mm,93.875mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-7(103.029mm,98.125mm) on Bottom Side And Pad U600_3-8(103.679mm,98.125mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-6(102.379mm,98.125mm) on Bottom Side And Pad U600_3-7(103.029mm,98.125mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_3-5(101.729mm,98.125mm) on Bottom Side And Pad U600_3-6(102.379mm,98.125mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-2(102.229mm,101.425mm) on Bottom Side And Pad U600_2-1(102.879mm,101.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-3(101.579mm,101.425mm) on Bottom Side And Pad U600_2-2(102.229mm,101.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-4(100.929mm,101.425mm) on Bottom Side And Pad U600_2-3(101.579mm,101.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-7(102.229mm,105.675mm) on Bottom Side And Pad U600_2-8(102.879mm,105.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-6(101.579mm,105.675mm) on Bottom Side And Pad U600_2-7(102.229mm,105.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_2-5(100.929mm,105.675mm) on Bottom Side And Pad U600_2-6(101.579mm,105.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-2(103.129mm,108.425mm) on Bottom Side And Pad U600_1-1(103.779mm,108.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-3(102.479mm,108.425mm) on Bottom Side And Pad U600_1-2(103.129mm,108.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-4(101.829mm,108.425mm) on Bottom Side And Pad U600_1-3(102.479mm,108.425mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-7(103.129mm,112.675mm) on Bottom Side And Pad U600_1-8(103.779mm,112.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-6(102.479mm,112.675mm) on Bottom Side And Pad U600_1-7(103.129mm,112.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U600_1-5(101.829mm,112.675mm) on Bottom Side And Pad U600_1-6(102.479mm,112.675mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U307_2-3(131.475mm,90.35mm) on Bottom Side And Pad U307_2-2(131.475mm,89.7mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U307_1-3(131.575mm,117.65mm) on Bottom Side And Pad U307_1-2(131.575mm,117mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad R603_3-2(104.8mm,95.2mm) on Bottom Side And Pad R601_3-2(104.8mm,95.9mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
+   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad R602_3-2(105.629mm,95.2mm) on Bottom Side And Pad R600_3-2(105.629mm,95.9mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U305_1-6(127.875mm,110.875mm) on Bottom Side And Pad U305_1-5(127.875mm,110.225mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U305_1-7(127.875mm,111.525mm) on Bottom Side And Pad U305_1-6(127.875mm,110.875mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.05mm < 0.1mm) Between Pad U305_1-8(127.875mm,112.175mm) on Bottom Side And Pad U305_1-7(127.875mm,111.525mm) on Bottom Side [Bottom Solder] Mask Sliver [0.05mm]
@@ -143,15 +147,14 @@ Processing Rule : Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U306_1-2(135.675mm,118.5mm) on Bottom Side And Pad U306_1-3(135.675mm,119.15mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U306_2-4(135.475mm,87.65mm) on Bottom Side And Pad U306_2-5(135.475mm,88.3mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
    Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U306_2-2(137.525mm,88.3mm) on Bottom Side And Pad U306_2-3(137.525mm,87.65mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U307_1-2(131.575mm,117mm) on Bottom Side And Pad U307_1-3(131.575mm,117.65mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
-   Violation between Minimum Solder Mask Sliver Constraint: (0.1mm < 0.1mm) Between Pad U307_2-2(131.475mm,89.7mm) on Bottom Side And Pad U307_2-3(131.475mm,90.35mm) on Bottom Side [Bottom Solder] Mask Sliver [0.1mm]
 Rule Violations :92
 
 Processing Rule : Hole To Hole Clearance (Gap=0.254mm) (All),(All)
 Rule Violations :0
 
 Processing Rule : Height Constraint (Min=0mm) (Max=25.4mm) (Prefered=12.7mm) (All)
-Rule Violations :0
+   Violation between Height Constraint: LCC Component S1-BMI-S-208-F (138.6mm,103.5mm) on Component Side Actual Height = 27.013mm
+Rule Violations :1
 
 Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)
 Rule Violations :0
@@ -178,7 +181,15 @@ Processing Rule : Width Constraint (Min=0.125mm) (Max=10mm) (Preferred=0.2mm) (A
 Rule Violations :0
 
 Processing Rule : Clearance Constraint (Gap=0.125mm) (All),(All)
-Rule Violations :0
+   Violation between Clearance Constraint: (0.063mm < 0.125mm) Between Track (124.126mm,120.25mm)(124.375mm,120.499mm) on Bottom Side And Pad U201-10(123.55mm,120.675mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.063mm < 0.125mm) Between Track (124.126mm,121.55mm)(125.85mm,123.274mm) on Bottom Side And Pad U201-12(123.55mm,121.975mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.063mm < 0.125mm) Between Track (129.601mm,120.675mm)(130.075mm,121.149mm) on Bottom Side And Pad U201-6(129.25mm,121.325mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.088mm < 0.125mm) Between Track (103.029mm,98.511mm)(103.517mm,99mm) on Bottom Side And Pad U600_3-8(103.679mm,98.125mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.088mm < 0.125mm) Between Track (100.516mm,100.854mm)(100.77mm,100.6mm) on Bottom Side And Pad U600_2-4(100.929mm,101.425mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.088mm < 0.125mm) Between Track (101.099mm,100.612mm)(101.579mm,101.092mm) on Bottom Side And Pad U600_2-4(100.929mm,101.425mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.088mm < 0.125mm) Between Track (102.229mm,106.061mm)(102.692mm,106.525mm) on Bottom Side And Pad U600_2-8(102.879mm,105.675mm) on Bottom Side 
+   Violation between Clearance Constraint: (0.088mm < 0.125mm) Between Track (103.304mm,113.236mm)(103.592mm,113.525mm) on Bottom Side And Pad U600_1-8(103.779mm,112.675mm) on Bottom Side 
+Rule Violations :8
 
 Processing Rule : Room ADC 2 (Bounding Region = (97.1mm, 81.9mm, 118.4mm, 103mm) (InComponentClass('ADC 2'))
 Rule Violations :0
@@ -202,5 +213,5 @@ Processing Rule : Room Voltage Channels 3 & 4 (Bounding Region = (144.596mm, 69.
 Rule Violations :0
 
 
-Violations Detected : 111
-Time Elapsed        : 00:00:18
+Violations Detected : 122
+Time Elapsed        : 00:00:19
