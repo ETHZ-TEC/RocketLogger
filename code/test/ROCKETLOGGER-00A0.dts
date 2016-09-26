@@ -107,11 +107,24 @@
 		};  
 	};  
 	
-	/* Apply pins to EHRPWM-Modules */
+	// force_high_range_pins
 	fragment@7 {
+        target = <&am33xx_pinmux>;
+        __overlay__ {
+            fhr_pins: pinmux_fhr_pins {
+                pinctrl-single,pins = <
+					0x070 0x07
+					0x078 0x07
+				>;
+            };
+        };
+    };
+	
+	/* Apply pins to EHRPWM-Modules */
+	fragment@8 {
 		target = <&ocp>;
 		__overlay__ {
-			pwm_test_P9_22 {
+			adc_clock {
 				compatible	= "pwm_test";
 				pwms 		= <&ehrpwm0 0 500000 1>;
 				pwm-names 	= "RL_PWM_0";
@@ -124,10 +137,10 @@
 		};
 	};
 
-	fragment@8 {
+	fragment@9 {
 		target = <&ocp>;
 		__overlay__ {
-			pwm_test_P9_14 {
+			range_switch_clock {
 				compatible	= "pwm_test";
 				pwms 		= <&ehrpwm1 0 500000 1>;
 				pwm-names 	= "RL_PWM_1";
@@ -140,12 +153,24 @@
 		};
 	};
 	
-	fragment@9 {  
-    target = <&pruss>;  
-    __overlay__ {  
-      status = "okay";  
-      pinctrl-names = "default";  
-      pinctrl-0 = <&pru_pins>;  
-    };  
-   }; 
+	fragment@10 {  
+		target = <&pruss>;  
+		__overlay__ {  
+			status = "okay";  
+			pinctrl-names = "default";  
+			pinctrl-0 = <&pru_pins>;  
+		};  
+	}; 
+   
+	fragment@11 {
+		target = <&ocp>;
+		__overlay__ {
+			fhr {
+				compatible = "bone-pinmux-helper";
+				pinctrl-names = "default";
+				pinctrl-0 = <&fhr_pins>;
+				status = "okay";
+            };
+        };
+    };
 };
