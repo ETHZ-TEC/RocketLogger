@@ -86,7 +86,7 @@
 
 // memory map
 #define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
-#define PWM_FILE 			"/sys/devices/ocp.3/pwm_test_P9_22.12/"
+#define PWM_FILE 			"/sys/devices/ocp.3/adc_clock.12/"
 #define GPIO_FILE 			"/sys/class/gpio/"
 #define FHR1_FILE 			"/sys/class/gpio/gpio30/"
 #define FHR2_FILE 			"/sys/class/gpio/gpio60/"
