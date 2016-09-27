@@ -1,0 +1,440 @@
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+        h1, h2, h3, h4, h5, h6 {
+			font-family : segoe ui;
+			color : black;
+			background-color : #EDE7D9;
+            padding: 0.3em;
+        }
+
+		h1 {
+			font-size: 1.2em;
+		}		
+
+		h2 {
+			font-size: 1.2em;
+		}
+
+        body {
+			font-family : segoe ui;
+        }
+
+        td, th {
+            padding: 0.5em;
+			text-align : left;
+			width: 10em;
+        }
+        th {
+			background-color : #EEEEEE;
+
+        }
+        th.column1, td.column1 {
+            text-align: left;
+            width : auto;
+        }
+        table {
+            width : 100%;
+			font-size: 0.9em;
+        }
+        
+        .DRC_summary_header {                           
+            padding-bottom : 0.1em;
+            border : 0px solid black;                           
+            width: 100%;
+			align: left;
+        }
+
+        .DRC_summary_header_col1, 
+        .DRC_summary_header_col2, 
+        .DRC_summary_header_col3  {
+            color : black;
+            font-size:100%;
+                        padding : 0em;
+            padding-top : 0.2em;
+            padding-bottom 0.2em;
+            border : 0px solid black;
+            vertical-align: top;
+			text-align: left;
+        }
+        
+        .DRC_summary_header_col1 {                              
+			font-weight: bold;
+			width: 8em;
+        }
+
+        .DRC_summary_header_col2 {       
+			width: 0.1em;
+		
+        }
+
+        .DRC_summary_header_col3 {       
+			width : auto;
+        }
+
+        .header_holder  {
+        Width = 100%;
+        border = 0px solid green;
+        padding = 0;
+        }
+        
+        
+        .front_matter, .front_matter_column1, .front_matter_column2, .front_matter_column3
+                {
+            left:0;
+            top:0;
+			padding: 0em;
+            padding-top : 0.1em;            
+            border : 0px solid black;
+            width : 100%;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        .front_matter_column1 {
+            width : 8em;   
+			font-weight: bold;
+        }
+        
+        .front_matter_column2 {
+            width: 0.1em;
+        }
+
+        .front_matter_column3 {
+            width         : auto;  
+        }
+        
+        .total_column1, .total_column {
+            font-weight : bold;
+        }
+        .total_column1 {
+			text-align : left;
+        }
+        .warning, .error {
+            color : red;
+            font-weight : bold;
+        }
+        tr.onmouseout_odd {
+			background-color : #white;
+        }
+        tr.onmouseout_even { 
+			background-color : #FAFAFA;
+        }
+        tr.onmouseover_odd, tr.onmouseover_even { 
+			background-color : #EEEEEE;
+        } 
+        a:link, a:visited, .q a:link,.q a:active,.q {
+            color: #21489e; 
+        }
+        a:link.callback, a:visited.callback { 
+            color: #21489e; 
+        }
+        p.contents_level1 {
+            font-weight : bold;
+            font-size : 110%;
+            margin : 0.5em;
+        }
+        p.contents_level2 {
+            position : relative;
+            left : 20px;
+            margin : 0.5em;
+        }
+    </style><script type="text/javascript">
+        function coordToMils(coord) {
+            var number = coord / 10000;
+            
+            if (number != number.toFixed(3))
+                number = number.toFixed(3);
+
+            return number + 'mil'
+        }
+
+        function coordToMM(coord) {
+            var number = 0.0254 * coord / 10000;
+            
+            if (number != number.toFixed(4))
+                number = number.toFixed(4);
+            
+            return number + 'mm'
+        }
+    
+        function convertCoord(coordNode, units) {
+            for (var i = 0; i < coordNode.childNodes.length; i++) {
+                coordNode.removeChild(coordNode.childNodes[i]);
+            }
+
+            var coord = coordNode.getAttribute('value');
+            if (coord != null) {
+                if (units == 'mm') {
+                    textNode = document.createTextNode(coordToMM(coord));
+                    coordNode.appendChild(textNode);
+                } else if (units == 'mil') {
+                    textNode = document.createTextNode(coordToMils(coord));     
+                    coordNode.appendChild(textNode);    
+                }
+            }
+        }
+    
+        function convertUnits(unitNode, units) {
+            for (var i = 0; i < unitNode.childNodes.length; i++) {
+                unitNode.removeChild(unitNode.childNodes[i]);       
+            }
+        
+            textNode = document.createTextNode(units); 
+            unitNode.appendChild(textNode);
+        }
+    
+        function changeUnits(radio_input, units) {
+            if (radio_input.checked) {
+            
+                var elements = document.getElementsByName('coordinate');
+                if (elements) {
+                    for (var i = 0; i < elements.length; i++) {
+                        convertCoord(elements[i], units);
+                    }
+                }
+    
+                var elements = document.getElementsByName('units');
+                if (elements) {
+                    for (var i = 0; i < elements.length; i++) {
+                        convertUnits(elements[i], units);
+                    }
+                }
+            }
+        }
+    </script></head>
+<body onload=""><img ALT="Altium" src="
+			file://C:\Users\Public\Documents\Altium\AD16\Templates\AD_logo.png
+        "><h1>Design Rule Verification Report</h1>
+<table class="header_holder">
+<td class="column1">
+<table class="front_matter">
+<tr class="front_matter">
+<td class="front_matter_column1">Date:</td>
+<td class="front_matter_column2"></td>
+<td class="front_matter_column3">26.09.2016</td>
+</tr>
+<tr class="front_matter">
+<td class="front_matter_column1">Time:</td>
+<td class="front_matter_column2"></td>
+<td class="front_matter_column3">16:27:19</td>
+</tr>
+<tr class="front_matter">
+<td class="front_matter_column1">Elapsed Time:</td>
+<td class="front_matter_column2"></td>
+<td class="front_matter_column3">00:00:39</td>
+</tr>
+<tr class="front_matter">
+<td class="front_matter_column1">Filename:</td>
+<td class="front_matter_column2"></td>
+<td class="front_matter_column3"><a href="file:///C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc" class="file"><acronym title="C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc">C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc</acronym></a></td>
+</tr>
+</table>
+</td>
+<td class="column2">
+<table class="DRC_summary_header">
+<tr>
+<td class="DRC_summary_header_col1">Warnings:</td>
+<td class="DRC_summary_header_col2"></td>
+<td class="DRC_summary_header_col3">0</td></tr>
+<tr>
+<td class="DRC_summary_header_col1">Rule Violations:</td>
+<td class="DRC_summary_header_col2"></td>
+<td class="DRC_summary_header_col3" style="color : red">14</td></tr>
+</table>
+</td>
+</table><a name="IDQ1XGJPCPOLEOOMAO3N2SXBSTQDIKXUHIGHH1XDKWM133SMEZ0QOO"><h2>Summary</h2></a><table>
+<tr>
+<th class="column1">Warnings</th>
+<th class="column2">Count</th>
+</tr>
+<tr>
+<td style="font-weight : bold; text-align : right" class="column1">Total</td>
+<td style="font-weight : bold" class="column2">0</td>
+</tr>
+</table><br><table>
+<tr>
+<th class="column1">Rule Violations</th>
+<th class="column2">Count</th>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDS04MZIKCMEDXFFC424F0H2U5AKMFINZ1ZAXCFQPPGECAEXYDUS2C">Power Plane Connect Rule(Direct Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (IsVia)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDMB3JJAPGSMWOB31FLZWB1VTIWMF3AQYFT5PU4JC353S5JSTA4ONG">Room Voltage Channels 3 &amp; 4 (Bounding Region = (144.596mm, 69.264mm, 176.629mm, 92.804mm) (InComponentClass('Voltage Channels 3 &amp; 4'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDFIUVIELDSJUDPKHZJH4IKFJX0LDGJV5YVSGTEQFNO1FGE53LKJ2E">Room Voltage Channels 1 &amp; 2 (Bounding Region = (145.846mm, 113.946mm, 176.629mm, 137.743mm) (InComponentClass('Voltage Channels 1 &amp; 2'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDNDBYVVIQ5EC2DOCWOCBRNKYPZX15Z5K2WONI2MFGWYFOP0E30N">Room Current Channel 1 (Bounding Region = (121mm, 102.9mm, 177.5mm, 122.6mm) (InComponentClass('Current Channel 1'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDJOBNQX42NN0TFMTT2E3BQNRLYPDYXIA3Q2ODBGCLBDKJO4V33I4J">Width Constraint (Min=0.125mm) (Max=2mm) (Preferred=0.35mm) (InNetClass('Power'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#ID2UYQZDME23VHLNMWXJR12CEKLHCXN0J11V3225LFBXVOTFK2Z5XF">Room PSU (Bounding Region = (76.3mm, 76.2mm, 95.8mm, 97.4mm) (Disabled)(InComponentClass('PSU'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDUDBXSYBWKGMFVZFMOEXBEN3YPO0DIGMWTY1CDFOT1EFMDN0VJUI">Room Cape (Bounding Region = (81.9mm, 114.4mm, 96.6mm, 130.9mm) (Disabled)(InComponentClass('Cape'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#ID455SLODEQQOQMLKLKC1ZHU2YDMLJLOL4PN41TLJ0PXVBR50GK0TJ">Room ADC 2 (Bounding Region = (97.1mm, 81.9mm, 118.4mm, 103mm) (InComponentClass('ADC 2'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID21SPZFGQB03PF3F4YY2AEZKISK3YAY533UKB4DJ2EYB4CWB5LVVF">Clearance Constraint (Gap=0.125mm) (All),(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#ID4XCSNSVRDLSNHF4ZGBEAASC43ETF2OGYLXGUQ2FCNHU5H2D55PUJ">Width Constraint (Min=0.125mm) (Max=10mm) (Preferred=0.2mm) (All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID0031CBJE4DXHE34YLGKRLNOTPL5GLHONRL0ORLGUFYYMLKVMDGDK">Power Plane Connect Rule(Relief Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (InPadClass('All Pads'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDY34OQD0JFCC2PPH4OCBW3IMGIMS4YSZ3V5KULGIJDF4OYLJYFN4B">Short-Circuit Constraint (Allowed=No) (All),(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDWJJ32Z3JIU1WMZNELT2JAPBAFTNNJATMIXZZCYQWIB3TC3N2PE">Un-Routed Net Constraint ( (All) )</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDWQMVSDMEZFFEKC23QZ0WWYXPOHAYR3KDL5KAUBE5WD2OFK4WLXTK">Component Clearance Constraint ( Horizontal Gap = 0.1mm, Vertical Gap = 0.254mm ) (Not InComponent('S1')),(Not InComponent('S1')) </a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDG0PFKT40MYLQH3EMI0F2CK0EWH0PBE2RO00FLTIDXD1CE0H5V4W">Hole Size Constraint (Min=0.2mm) (Max=6mm) (All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDNXW1OH432X2KMKMGQFVMSSBQEPOPB2QDIBDXDVMZAP4GXJUU1UHN">Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID1GOYQRZCI4YREYC1NIF4I0NW5KVEJDMDTDZV1JY2NZELX43XLQI">Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDFQ03ZOYR44DGOR34APEVLDKZNJYQYYIWYK4GBHBYNEFK0DFXXHRF">Height Constraint (Min=0mm) (Max=25.4mm) (Prefered=12.7mm) (All)</a></td>
+<td class="column2">1</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDFPSACNHSKSOSGMXHTC0SNC2RX32TWYVUCGIKLOEUKTSRDM0UKAH">Hole To Hole Clearance (Gap=0.254mm) (All),(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDDC34ZEJMJBDXI20QPT15ITC5BEEVC4AIQH0AG1JAFOSN2KMCXU0H">Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID1OZAQNQRCRXVF4DHR41WA1ZKCJFC1DLQSMGKJYMFQJU5AUNRWJ2M">Net Antennae (Tolerance=0mm) (All)</a></td>
+<td class="column2">10</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDTWGEHDFE1IPBB4HJDGSZQVD432ECLUDWP2M04JYROYRNCZ5VLSI">Modified Polygon (Allow modified: No), (Allow shelved: No)</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID15IAH0C04JIMC3NRM3GYJQZXUBZ0ES4V0UWE2WOIJ542BZU3QN2N">Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDBU1LQQMWBU5UPDMLJOZNVFWFGHFFWNGHKPTESBNPI3BIFHYHPS3D">Board Clearance Constraint (Gap=0mm) (All)</a></td>
+<td class="column2">3</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDLGITCTQ5YCSTL3JRDZQZY5WYKMS1SXND4P4J5TDFV1K32KGKRP1P">Room Current Channel 2 (Bounding Region = (121.1mm, 82.7mm, 176.7mm, 103.9mm) (InComponentClass('Current Channel 2'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDM1B405UGEZ3RIGOU5UGPANPMGMWLJUJFF504SZNPPY0BH2TT52NF">Room Digital Channels 5 &amp; 6 (Bounding Region = (99.9mm, 92.85mm, 106.3mm, 99.15mm) (Disabled)(InComponentClass('Digital Channels 5 &amp; 6'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#IDSXFIKPH2FYMCHBWB55H10YFS0GNN5ADJXWS4TCITKZVKAEGCIKYI">Room Digital Channels 1 &amp; 2 (Bounding Region = (100.4mm, 107.1mm, 106.8mm, 113.4mm) (Disabled)(InComponentClass('Digital Channels 1 &amp; 2'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#ID5CRBFN14OSNUQCU04ZBLLUW4GVWAENHXTS0C4P4RY4MBYMDABPN">Room Digital Channels 3 &amp; 4 (Bounding Region = (99.1mm, 100.7mm, 105.5mm, 107mm) (Disabled)(InComponentClass('Digital Channels 3 &amp; 4'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="#ID1YCX1XUJPLKWBWSGU0F1TYAIMKD14ULZRTRCQNCVZDPY2OSALZDK">Room ADC 1 (Bounding Region = (97.1mm, 103.5mm, 118.4mm, 124.6mm) (InComponentClass('ADC 1'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="#IDJ1GV32AWCI0TODVZFIYTI1W4FNEQLGIZ1XEEWYJTWPQO2CZAGREB">Room RangeValidStretching (Bounding Region = (102.6mm, 113.4mm, 117.5mm, 125.1mm) (InComponentClass('RangeValidStretching'))</a></td>
+<td class="column2">0</td>
+</tr>
+<tr>
+<td style="font-weight : bold; text-align : right" class="column1">Total</td>
+<td style="font-weight : bold" class="column2">14</td>
+</tr>
+</table><br><a name="IDFQ03ZOYR44DGOR34APEVLDKZNJYQYYIWYK4GBHBYNEFK0DFXXHRF"><table>
+<tr>
+<th style="text-align : left" colspan="1" class="rule">Height Constraint (Min=0mm) (Max=25.4mm) (Prefered=12.7mm) (All)</th>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5455.693mil|Location2.X=5457.693mil|Location1.Y=4073.803mil|Location2.Y=4075.803mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5455.693mil|Location2.X=5457.693mil|Location1.Y=4073.803mil|Location2.Y=4075.803mil|Absolute=True">Height Constraint: LCC Component S1-BMI-S-208-F (138.6mm,103.5mm) on Component Side Actual Height = 27.013mm</acronym></a><br></td>
+</tr>
+</table></a><hr color="#EEEEEE"><a href="#top" style="font-size: 0.9em">Back to top</a><br><br><a name="ID1OZAQNQRCRXVF4DHR41WA1ZKCJFC1DLQSMGKJYMFQJU5AUNRWJ2M"><table>
+<tr>
+<th style="text-align : left" colspan="1" class="rule">Net Antennae (Tolerance=0mm) (All)</th>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6145.614mil|Location2.X=6163.675mil|Location1.Y=4648.567mil|Location2.Y=4673.65mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6145.614mil|Location2.X=6163.675mil|Location1.Y=4648.567mil|Location2.Y=4673.65mil|Absolute=True">Net Antennae: Track (156.25mm,118.225mm)(156.725mm,118.225mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6115.604mil|Location2.X=6133.665mil|Location1.Y=3455.028mil|Location2.Y=3480.11mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6115.604mil|Location2.X=6133.665mil|Location1.Y=3455.028mil|Location2.Y=3480.11mil|Absolute=True">Net Antennae: Track (155.488mm,86.338mm)(155.488mm,87.909mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6104.276mil|Location2.X=6122.336mil|Location1.Y=3509.787mil|Location2.Y=3534.87mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6104.276mil|Location2.X=6122.336mil|Location1.Y=3509.787mil|Location2.Y=3534.87mil|Absolute=True">Net Antennae: Track (155.2mm,89.3mm)(155.769mm,88.731mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5514.217mil|Location2.X=5532.277mil|Location1.Y=4568.842mil|Location2.Y=4593.925mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5514.217mil|Location2.X=5532.277mil|Location1.Y=4568.842mil|Location2.Y=4593.925mil|Absolute=True">Net Antennae: Track (140.213mm,116.2mm)(140.225mm,116.187mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5616.087mil|Location2.X=5634.147mil|Location1.Y=3627.898mil|Location2.Y=3652.98mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=5616.087mil|Location2.X=5634.147mil|Location1.Y=3627.898mil|Location2.Y=3652.98mil|Absolute=True">Net Antennae: Track (142.8mm,92.3mm)(142.913mm,92.413mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6039.718mil|Location2.X=6057.779mil|Location1.Y=3485.8mil|Location2.Y=3510.883mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6039.718mil|Location2.X=6057.779mil|Location1.Y=3485.8mil|Location2.Y=3510.883mil|Absolute=True">Net Antennae: Track (153.388mm,88.518mm)(153.56mm,88.691mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6029.974mil|Location2.X=6051.249mil|Location1.Y=3516.279mil|Location2.Y=3546.662mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6029.974mil|Location2.X=6051.249mil|Location1.Y=3516.279mil|Location2.Y=3546.662mil|Absolute=True">Net Antennae: Track (153.35mm,89.502mm)(153.35mm,89.834mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6051.618mil|Location2.X=6072.893mil|Location1.Y=4667.76mil|Location2.Y=4698.143mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6051.618mil|Location2.X=6072.893mil|Location1.Y=4667.76mil|Location2.Y=4698.143mil|Absolute=True">Net Antennae: Track (153.65mm,118.75mm)(153.9mm,118.75mm) on Component Side </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6027.996mil|Location2.X=6083.553mil|Location1.Y=3508.311mil|Location2.Y=3596.016mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6027.996mil|Location2.X=6083.553mil|Location1.Y=3508.311mil|Location2.Y=3596.016mil|Absolute=True">Net Antennae: Track (153.7mm,89.7mm)(155.1mm,89.7mm) on GND </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6094.925mil|Location2.X=6150.482mil|Location1.Y=4638.232mil|Location2.Y=4725.938mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6094.925mil|Location2.X=6150.482mil|Location1.Y=4638.232mil|Location2.Y=4725.938mil|Absolute=True">Net Antennae: Track (153.4mm,118.4mm)(155.4mm,118.4mm) on GND </acronym></a><br></td>
+</tr>
+</table></a><hr color="#EEEEEE"><a href="#top" style="font-size: 0.9em">Back to top</a><br><br><a name="IDBU1LQQMWBU5UPDMLJOZNVFWFGHFFWNGHKPTESBNPI3BIFHYHPS3D"><table>
+<tr>
+<th style="text-align : left" colspan="1" class="rule">Board Clearance Constraint (Gap=0mm) (All)</th>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6026.839mil|Location2.X=6044.226mil|Location1.Y=5140.812mil|Location2.Y=5153.873mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=6026.839mil|Location2.X=6044.226mil|Location1.Y=5140.812mil|Location2.Y=5153.873mil|Absolute=True">Board Outline Clearance(Outline Edge): (0.23mm &lt; 0.3mm) Between Text "46" (153.4mm,129.9mm) on Top Overlay And Board Edge </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_even" onmouseover="className = 'onmouseover_even'" onmouseout="className = 'onmouseout_even'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=3589.543mil|Location2.X=3602.604mil|Location1.Y=5138.512mil|Location2.Y=5151.573mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=3589.543mil|Location2.X=3602.604mil|Location1.Y=5138.512mil|Location2.Y=5151.573mil|Absolute=True">Board Outline Clearance(Outline Edge): (0.232mm &lt; 0.3mm) Between Text "S" (92.3mm,129.875mm) on Top Overlay And Board Edge </acronym></a><br></td>
+</tr>
+<tr class="onmouseout_odd" onmouseover="className = 'onmouseover_odd'" onmouseout="className = 'onmouseout_odd'">
+<td class="column1"><a href="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=3644.661mil|Location2.X=3657.722mil|Location1.Y=5138.512mil|Location2.Y=5151.573mil|Absolute=True" class="callback"><acronym title="dxpprocess://PCB:Zoom?document=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc;viewname=PCBEditor;Action=AREA_DYNAMICZOOM|Location1.X=3644.661mil|Location2.X=3657.722mil|Location1.Y=5138.512mil|Location2.Y=5151.573mil|Absolute=True">Board Outline Clearance(Outline Edge): (0.232mm &lt; 0.3mm) Between Text "E" (93.7mm,129.875mm) on Top Overlay And Board Edge </acronym></a><br></td>
+</tr>
+</table></a><hr color="#EEEEEE"><a href="#top" style="font-size: 0.9em">Back to top</a><br><br></body>
+</html>

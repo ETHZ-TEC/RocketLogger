@@ -1,0 +1,15 @@
+Output: Design Rules Check
+Type  : DRC
+From  : PCB Document [PCB.PcbDoc]
+   Printed Document[top.SchDoc]
+   Printed Document[cape.SchDoc]
+   Printed Document[psu.SchDoc]
+   Printed Document[adc.SchDoc]
+   Printed Document[current_channel.SchDoc]
+   Printed Document[voltage_channel.SchDoc]
+   Printed Document[digital_voltage_channel.SchDoc]
+   Printed Document[range_valid_stretching.SchDoc]
+   Printed Document[PCB.PcbDoc]
+   Printed Document[PCB.PcbDoc]
+   Printed Document[PCB.PcbDoc]
+   Printed Document[PCB.PcbDoc]
