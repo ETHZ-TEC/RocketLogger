@@ -30,7 +30,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=Project Outputs for Cape
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 
@@ -276,23 +276,6 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=ACXOFMIY
 
-[Document15]
-DocumentPath=..\Libraries\ETH_Logo.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=CVYNPATT
-
 [GeneratedDocument1]
 DocumentPath=Project Outputs for Cape\BOM\Bill of Materials-Cape.xls
 DItemRevisionGUID=
@@ -306,7 +289,19 @@ DocumentPath=Project Outputs for Cape\Design Rule Check - PCB.html
 DItemRevisionGUID=
 
 [GeneratedDocument4]
+DocumentPath=Project Outputs for Cape\Gerber\PCB.EXTREP
+DItemRevisionGUID=
+
+[GeneratedDocument5]
 DocumentPath=Project Outputs for Cape\DRC\PCB.html
+DItemRevisionGUID=
+
+[GeneratedDocument6]
+DocumentPath=Project Outputs for Cape\Gerber\PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument7]
+DocumentPath=Project Outputs for Cape\Gerber\PCB.RUL
 DItemRevisionGUID=
 
 [SearchPath1]
@@ -327,7 +322,7 @@ Variant=[No Variations]
 OutputJobsCount=0
 
 [Generic_EDE]
-OutputDir=Project Outputs for Cape
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs

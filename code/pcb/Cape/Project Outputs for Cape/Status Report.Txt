@@ -1,10 +1,12 @@
-Output: Design Rules Check
-Type  : DRC
-From  : PCB Document [PCB.PcbDoc]
-   Generated File[PCB.html]
+Output: Gerber Files
+Type  : Gerber
+From  : Variant [[No Variations]] of PCB Document [PCB.PcbDoc]
+   Generated File[PCB.RUL]
+   Generated File[PCB.EXTREP]
+   Generated File[PCB.REP]
 
 
-Files Generated   : 1
+Files Generated   : 3
 Documents Printed : 0
 
-Finished Output Generation At 19:04:41 On 26.09.2016
+Finished Output Generation At 08:43:42 On 27.09.2016
