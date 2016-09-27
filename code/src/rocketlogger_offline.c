@@ -1,17 +1,10 @@
-#include <poll.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/inotify.h>
-
-char pathname[100] = "/sys/class/gpio/gpio26/value";
+#include "gpio.h"
 
 int gpio_setup() {
 	
-	// TODO
+	gpio_export(26);
+	gpio_dir(26, IN);
+	gpio_interrupt(26, RISING);
 	
 	return 1;
 }
@@ -28,57 +21,24 @@ int interrupt_handler(int value) {
 		} else {
 			system("rocketlogger sample 10");
 		}
+	} else {
+		printf("Value %d received!\n",value);
 	}
 	
-	return 1;
-	
-}
-
-int interrupt_listener() {
-	
-	// open gpio value file
-	int fd = open(pathname, O_RDONLY);
-	if (fd < 0) {
-		printf("Error: could not open GPIO value file!\n");
-		return -1;
-	}
-	
-	// set up polling struct
-	struct pollfd fds;
-	fds.fd = fd;
-	fds.events = POLLPRI;
-	int timeout = -1; // infinite timeout
-	int nfds = 1;
-	int ret;
-	
-	// dummy read (enables blocking polling)
-	char buf[2] = "";
-	read(fds.fd, &buf, 1);
-	
-	while(1) {
-		
-		// wait on gpio change
-		ret = poll(&fds, nfds, timeout);
-		if (ret < 0) {
-		  printf("Error: poll failed!\n");
-		  return -1;
-		}
-		
-		// read value
-		lseek(fds.fd, 0, SEEK_SET);
-		read(fds.fd, &buf, 1);
-		interrupt_handler(atoi(buf));
-	
-	}
-	
-	close(fd);
 	return 1;
 	
 }
 
 
 int main(int argc, char **argv) {
+	
 	gpio_setup();
-	return interrupt_listener();
+	
+	while(1) {
+		int val = gpio_wait_interrupt(26);
+		interrupt_handler(val);
+	}
+	
+	return 1;
 }
 
