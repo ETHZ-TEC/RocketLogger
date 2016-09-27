@@ -8,9 +8,9 @@
 #include <stdint.h>
 
 // base addresses
-#define PWMSS2_BASE 0x48304000
-#define PWMSS1_BASE 0x48302000
 #define PWMSS0_BASE 0x48300000
+#define PWMSS1_BASE 0x48302000
+#define PWMSS2_BASE 0x48304000
 #define EPWM_OFFSET 0x0200
 
 // pwm size
@@ -24,7 +24,7 @@
 #define AQCTLA 0x16	// action qualifier
 #define AQCTLB 0x18	
 
-// register values
+// register values (see AM335x_TR)
 #define TBCTL_DEFAULT	0xC000
 #define UP_DOWN_COUNT	0x0002
 #define PRESCALE2		0x0400
@@ -36,7 +36,7 @@
 // pulse configuration
 #define PULSE_WIDTH 0.1 // 10% of sampling period
 #define MARGIN 0.1
-#define PERIOD_SCALE 50000 * (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in 5ns, /2 prescaling)
+#define PERIOD_SCALE 50000 * (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in 5ns, (/2 clock prescaling))
 
 
 int mem_fd;
