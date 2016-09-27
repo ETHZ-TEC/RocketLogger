@@ -1,9 +1,19 @@
 #include "pwm.h"
 
+// TODO: include other PWM functions
+
 int mem_fd;
 
 volatile uint16_t *pwm_regs;
 
+// map pwm registers into user space
+int pwm_setup() {
+	
+	// TODO
+	
+}
+
+// setup range clock pwm module
 int range_clock_setup(int sample_rate) {
 	
 	int period = PERIOD_SCALE / sample_rate;
