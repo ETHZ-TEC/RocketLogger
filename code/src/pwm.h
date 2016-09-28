@@ -29,9 +29,10 @@
 #define UP_DOWN_COUNT	0x0002
 #define PRESCALE2		0x0400
 
-#define AQ_A 0x0060
-#define AQ_B 0x0900
 
+// range switch clock configuration (action qualifier)
+#define RWC_AQ_A 0x0060 // set when incrementing, clear when decrementing
+#define RWC_AQ_B 0x0900 // set when decrementing, clear when incrementing
 
 // pulse configuration
 #define PULSE_WIDTH 0.1 // 10% of sampling period
@@ -39,4 +40,12 @@
 #define PERIOD_SCALE 50000 * (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in 5ns, (/2 clock prescaling))
 
 
+// ADC clock settings
+#define ADC_CLOCK_PERIOD	48		// in 10ns
+#define ADC_AQ				0x0025	// clear on zero and period, set at 50%
+
+int pwm_setup();
+int pwm_close();
+
 int range_clock_setup(int sample_rate); // sampling rate [kHz]
+int adc_clock_setup();
