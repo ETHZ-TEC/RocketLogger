@@ -148,7 +148,7 @@ int gpio_get_value(int num) {
 }
 
 // wait on gpio change (returns new value)
-int gpio_wait_interrupt(int num) {
+int gpio_wait_interrupt(int num, int timeout) {
 	
 	// open gpio value file
 	char pathname[100];
@@ -163,7 +163,6 @@ int gpio_wait_interrupt(int num) {
 	struct pollfd fds;
 	fds.fd = fd;
 	fds.events = POLLPRI;
-	int timeout = -1; // infinite timeout
 	int nfds = 1;
 	int ret;
 	

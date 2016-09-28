@@ -26,4 +26,4 @@ int gpio_set_value(int num, int val);
 
 int gpio_get_value(int num);
 
-int gpio_wait_interrupt(int num);
+int gpio_wait_interrupt(int num, int timeout); // timout<0 -> infinite
