@@ -30,7 +30,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for Cape
 LogFolderPath=
 ManagedProjectGUID=
 
@@ -293,15 +293,79 @@ DocumentPath=Project Outputs for Cape\Gerber\PCB.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument5]
-DocumentPath=Project Outputs for Cape\DRC\PCB.html
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument6]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.REP
+DocumentPath=Project Outputs for Cape\DRC\PCB.html
 DItemRevisionGUID=
 
 [GeneratedDocument7]
+DocumentPath=Project Outputs for Cape\Gerber\PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument8]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument9]
 DocumentPath=Project Outputs for Cape\Gerber\PCB.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument10]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument11]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_1.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_2.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument13]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_3.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument14]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_4.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument15]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Bot.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument16]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Top.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument17]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Bot.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument18]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Top.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument19]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Bot.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument20]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Top.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument21]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Profile.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument22]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Bot.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument23]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Top.gbr
 DItemRevisionGUID=
 
 [SearchPath1]
@@ -322,7 +386,7 @@ Variant=[No Variations]
 OutputJobsCount=0
 
 [Generic_EDE]
-OutputDir=
+OutputDir=Project Outputs for Cape
 
 [OutputGroup1]
 Name=Netlist Outputs

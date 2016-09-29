@@ -1,111 +1,109 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\user\Documents\RocketLogger\code\pcb\Cape\PCB.PcbDoc
-Date     : 26.09.2016
-Time     : 18:22:07
+Date     : 29.09.2016
+Time     : 10:54:55
 
-Processing Rule : Power Plane Connect Rule(Direct Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (IsVia)
-Rule Violations :0
-
-Processing Rule : Room Voltage Channels 3 & 4 (Bounding Region = (144.596mm, 69.264mm, 176.629mm, 92.804mm) (InComponentClass('Voltage Channels 3 & 4'))
-Rule Violations :0
-
-Processing Rule : Room Voltage Channels 1 & 2 (Bounding Region = (145.846mm, 113.946mm, 176.629mm, 137.743mm) (InComponentClass('Voltage Channels 1 & 2'))
-Rule Violations :0
-
-Processing Rule : Room Current Channel 1 (Bounding Region = (121mm, 102.9mm, 177.5mm, 122.6mm) (InComponentClass('Current Channel 1'))
-Rule Violations :0
-
-Processing Rule : Width Constraint (Min=0.125mm) (Max=2mm) (Preferred=0.35mm) (InNetClass('Power'))
-Rule Violations :0
-
-Processing Rule : Room PSU (Bounding Region = (76.3mm, 76.2mm, 95.8mm, 97.4mm) (Disabled)(InComponentClass('PSU'))
-Rule Violations :0
-
-Processing Rule : Room Cape (Bounding Region = (81.9mm, 114.4mm, 96.6mm, 130.9mm) (Disabled)(InComponentClass('Cape'))
-Rule Violations :0
-
-Processing Rule : Room ADC 2 (Bounding Region = (97.1mm, 81.9mm, 118.4mm, 103mm) (InComponentClass('ADC 2'))
-Rule Violations :0
-
-Processing Rule : Clearance Constraint (Gap=0.125mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Width Constraint (Min=0.125mm) (Max=10mm) (Preferred=0.2mm) (All)
-Rule Violations :0
-
-Processing Rule : Power Plane Connect Rule(Relief Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (InPadClass('All Pads'))
-Rule Violations :0
-
-Processing Rule : Short-Circuit Constraint (Allowed=No) (All),(All)
-Rule Violations :0
-
-Processing Rule : Un-Routed Net Constraint ( (All) )
-Rule Violations :0
-
-Processing Rule : Component Clearance Constraint ( Horizontal Gap = 0.1mm, Vertical Gap = 0.254mm ) (Not InComponent('S1')),(Not InComponent('S1')) 
-Rule Violations :0
-
-Processing Rule : Hole Size Constraint (Min=0.2mm) (Max=6mm) (All)
-Rule Violations :0
-
-Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)
-Rule Violations :0
-
-Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)
-Rule Violations :0
-
-Processing Rule : Height Constraint (Min=0mm) (Max=30mm) (Prefered=12.7mm) (All)
-Rule Violations :0
-
-Processing Rule : Hole To Hole Clearance (Gap=0.254mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Net Antennae (Tolerance=0mm) (All)
-   Violation between Net Antennae: Track (156.25mm,118.225mm)(156.725mm,118.225mm) on Component Side 
-   Violation between Net Antennae: Track (155.488mm,86.338mm)(155.488mm,87.909mm) on Component Side 
-   Violation between Net Antennae: Track (155.2mm,89.3mm)(155.769mm,88.731mm) on Component Side 
-   Violation between Net Antennae: Track (140.213mm,116.2mm)(140.225mm,116.187mm) on Component Side 
-   Violation between Net Antennae: Track (142.8mm,92.3mm)(142.913mm,92.413mm) on Component Side 
-   Violation between Net Antennae: Track (153.388mm,88.518mm)(153.56mm,88.691mm) on Component Side 
-   Violation between Net Antennae: Track (153.35mm,89.502mm)(153.35mm,89.834mm) on Component Side 
-   Violation between Net Antennae: Track (153.65mm,118.75mm)(153.9mm,118.75mm) on Component Side 
-   Violation between Net Antennae: Track (153.7mm,89.7mm)(155.1mm,89.7mm) on GND 
-   Violation between Net Antennae: Track (153.4mm,118.4mm)(155.4mm,118.4mm) on GND 
-Rule Violations :10
-
-Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
-Rule Violations :0
-
-Processing Rule : Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))
-Rule Violations :0
-
-Processing Rule : Board Clearance Constraint (Gap=0mm) (All)
-   Violation between Board Outline Clearance(Outline Edge): (0.23mm < 0.3mm) Between Text "46" (153.4mm,129.9mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "S" (92.3mm,129.875mm) on Top Overlay And Board Edge 
-   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "E" (93.7mm,129.875mm) on Top Overlay And Board Edge 
-Rule Violations :3
-
-Processing Rule : Room Current Channel 2 (Bounding Region = (121.1mm, 82.7mm, 176.7mm, 103.9mm) (InComponentClass('Current Channel 2'))
-Rule Violations :0
-
-Processing Rule : Room Digital Channels 5 & 6 (Bounding Region = (99.9mm, 92.85mm, 106.3mm, 99.15mm) (Disabled)(InComponentClass('Digital Channels 5 & 6'))
-Rule Violations :0
-
-Processing Rule : Room Digital Channels 1 & 2 (Bounding Region = (100.4mm, 107.1mm, 106.8mm, 113.4mm) (Disabled)(InComponentClass('Digital Channels 1 & 2'))
-Rule Violations :0
-
-Processing Rule : Room Digital Channels 3 & 4 (Bounding Region = (99.1mm, 100.7mm, 105.5mm, 107mm) (Disabled)(InComponentClass('Digital Channels 3 & 4'))
+Processing Rule : Room RangeValidStretching (Bounding Region = (102.6mm, 113.4mm, 117.5mm, 125.1mm) (InComponentClass('RangeValidStretching'))
 Rule Violations :0
 
 Processing Rule : Room ADC 1 (Bounding Region = (97.1mm, 103.5mm, 118.4mm, 124.6mm) (InComponentClass('ADC 1'))
 Rule Violations :0
 
-Processing Rule : Room RangeValidStretching (Bounding Region = (102.6mm, 113.4mm, 117.5mm, 125.1mm) (InComponentClass('RangeValidStretching'))
+Processing Rule : Room Digital Channels 3 & 4 (Bounding Region = (99.1mm, 100.7mm, 105.5mm, 107mm) (Disabled)(InComponentClass('Digital Channels 3 & 4'))
+Rule Violations :0
+
+Processing Rule : Room Digital Channels 1 & 2 (Bounding Region = (100.4mm, 107.1mm, 106.8mm, 113.4mm) (Disabled)(InComponentClass('Digital Channels 1 & 2'))
+Rule Violations :0
+
+Processing Rule : Room Digital Channels 5 & 6 (Bounding Region = (99.9mm, 92.85mm, 106.3mm, 99.15mm) (Disabled)(InComponentClass('Digital Channels 5 & 6'))
+Rule Violations :0
+
+Processing Rule : Room Current Channel 2 (Bounding Region = (121.1mm, 82.7mm, 176.7mm, 103.9mm) (InComponentClass('Current Channel 2'))
+Rule Violations :0
+
+Processing Rule : Board Clearance Constraint (Gap=0mm) (All)
+   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "E" (93.7mm,129.875mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.232mm < 0.3mm) Between Text "S" (92.3mm,129.875mm) on Top Overlay And Board Edge 
+   Violation between Board Outline Clearance(Outline Edge): (0.23mm < 0.3mm) Between Text "46" (153.4mm,129.9mm) on Top Overlay And Board Edge 
+Rule Violations :3
+
+Processing Rule : Room top (Bounding Region = (129.1mm, 125.1mm, 131mm, 127.6mm) (Disabled)(InComponentClass('top'))
+Rule Violations :0
+
+Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
+Rule Violations :0
+
+Processing Rule : Net Antennae (Tolerance=0mm) (All)
+   Violation between Net Antennae: Track (153.65mm,118.75mm)(153.9mm,118.75mm) on Component Side 
+   Violation between Net Antennae: Track (153.35mm,89.502mm)(153.35mm,89.834mm) on Component Side 
+   Violation between Net Antennae: Track (153.388mm,88.518mm)(153.56mm,88.691mm) on Component Side 
+   Violation between Net Antennae: Track (155.2mm,89.3mm)(155.769mm,88.731mm) on Component Side 
+   Violation between Net Antennae: Track (155.488mm,86.338mm)(155.488mm,87.909mm) on Component Side 
+   Violation between Net Antennae: Track (156.25mm,118.225mm)(156.725mm,118.225mm) on Component Side 
+   Violation between Net Antennae: Track (153.4mm,118.4mm)(155.4mm,118.4mm) on GND 
+   Violation between Net Antennae: Track (153.7mm,89.7mm)(155.1mm,89.7mm) on GND 
+Rule Violations :8
+
+Processing Rule : Minimum Solder Mask Sliver (Gap=0.1mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Hole To Hole Clearance (Gap=0.254mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Height Constraint (Min=0mm) (Max=30mm) (Prefered=12.7mm) (All)
+Rule Violations :0
+
+Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)
+Rule Violations :0
+
+Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (Disabled)(All)
+Rule Violations :0
+
+Processing Rule : Hole Size Constraint (Min=0.2mm) (Max=6mm) (All)
+Rule Violations :0
+
+Processing Rule : Component Clearance Constraint ( Horizontal Gap = 0.1mm, Vertical Gap = 0.254mm ) (Not InComponent('S1')),(Not InComponent('S1')) 
+Rule Violations :0
+
+Processing Rule : Un-Routed Net Constraint ( (All) )
+Rule Violations :0
+
+Processing Rule : Short-Circuit Constraint (Allowed=No) (All),(All)
+Rule Violations :0
+
+Processing Rule : Power Plane Connect Rule(Relief Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (InPadClass('All Pads'))
+Rule Violations :0
+
+Processing Rule : Width Constraint (Min=0.125mm) (Max=10mm) (Preferred=0.2mm) (All)
+Rule Violations :0
+
+Processing Rule : Clearance Constraint (Gap=0.125mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Room ADC 2 (Bounding Region = (97.1mm, 81.9mm, 118.4mm, 103mm) (InComponentClass('ADC 2'))
+Rule Violations :0
+
+Processing Rule : Room Cape (Bounding Region = (81.9mm, 114.4mm, 96.6mm, 130.9mm) (Disabled)(InComponentClass('Cape'))
+Rule Violations :0
+
+Processing Rule : Room PSU (Bounding Region = (76.3mm, 76.2mm, 95.8mm, 97.4mm) (Disabled)(InComponentClass('PSU'))
+Rule Violations :0
+
+Processing Rule : Width Constraint (Min=0.125mm) (Max=2mm) (Preferred=0.35mm) (InNetClass('Power'))
+Rule Violations :0
+
+Processing Rule : Room Current Channel 1 (Bounding Region = (121mm, 102.9mm, 177.5mm, 122.6mm) (InComponentClass('Current Channel 1'))
+Rule Violations :0
+
+Processing Rule : Room Voltage Channels 1 & 2 (Bounding Region = (145.846mm, 113.946mm, 176.629mm, 137.743mm) (InComponentClass('Voltage Channels 1 & 2'))
+Rule Violations :0
+
+Processing Rule : Room Voltage Channels 3 & 4 (Bounding Region = (144.596mm, 69.264mm, 176.629mm, 92.804mm) (InComponentClass('Voltage Channels 3 & 4'))
+Rule Violations :0
+
+Processing Rule : Power Plane Connect Rule(Direct Connect )(Expansion=0.4mm) (Conductor Width=0.15mm) (Air Gap=0.15mm) (Entries=4) (IsVia)
 Rule Violations :0
 
 
-Violations Detected : 13
+Violations Detected : 11
 Time Elapsed        : 00:00:17
