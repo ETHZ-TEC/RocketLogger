@@ -1,29 +1,10 @@
-Project Outputs Generation Report
----------------------------------
-Start Output Generation At 10:58:52 On 29.09.2016
-
-Output: Gerber X2 Files
-Type  : GerberX2
+Output: Design Rules Check
+Type  : DRC
 From  : PCB Document [PCB.PcbDoc]
-   Generated File[PCB_Copper_Signal_Top.gbr]
-   Generated File[PCB_Copper_Signal_1.gbr]
-   Generated File[PCB_Copper_Signal_2.gbr]
-   Generated File[PCB_Copper_Signal_3.gbr]
-   Generated File[PCB_Copper_Signal_4.gbr]
-   Generated File[PCB_Copper_Signal_Bot.gbr]
-   Generated File[PCB_Soldermask_Bot.gbr]
-   Generated File[PCB_Legend_Top.gbr]
-   Generated File[PCB_Soldermask_Top.gbr]
-   Generated File[PCB_Paste_Bot.gbr]
-   Generated File[PCB_Legend_Bot.gbr]
-   Generated File[PCB_Paste_Top.gbr]
-   Generated File[PCB_Profile.gbr]
-   Generated File[PCB.RUL]
-   Generated File[PCB.EXTREP]
-   Generated File[PCB.REP]
+   Generated File[PCB.html]
 
 
-Files Generated   : 16
+Files Generated   : 1
 Documents Printed : 0
 
-Finished Output Generation At 10:58:56 On 29.09.2016
+Finished Output Generation At 13:58:08 On 29.09.2016
