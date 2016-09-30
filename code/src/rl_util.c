@@ -8,7 +8,7 @@ int is_running() {
 	return 0;
 }
 
-void print_usage(struct rl_conf_new* conf) {
+void print_usage(struct rl_conf* conf) {
 	printf("Usage:\n");
 	printf("  rocketlogger [mode] -[option] [value]\n\n");
 	printf("  Modes:\n");
@@ -44,20 +44,20 @@ void print_usage(struct rl_conf_new* conf) {
 	
 }
 
-void print_config(struct rl_conf_new* conf) {
+void print_config(struct rl_conf* conf) {
 	printf("\nRocketLogger Configuration:\n");
 	rl_print_config(conf, 0);
 	
 }
 
 
-void reset_config(struct rl_conf_new* conf) {
-	conf->mode = NEW_CONTINUOUS;
+void reset_config(struct rl_conf* conf) {
+	conf->mode = CONTINUOUS;
 	conf->sample_rate = 1;
 	conf->update_rate = 1;
 	conf->number_samples = 0;
 	conf->enable_web_server = 1;
-	conf->file_format = BIN; // TODO: change to BIN
+	conf->file_format = BIN;
 	
 	strcpy(conf->file_name, "/var/www/data/data.dat");
 	
@@ -67,42 +67,41 @@ void reset_config(struct rl_conf_new* conf) {
 	return;
 }
 
-int read_default_config(struct rl_conf_new* conf, char file_name[MAX_PATH_LENGTH]) { // TODO: move to upper layer
+int read_default_config(struct rl_conf* conf) {
 	
 	// check if config file existing
-	if(open(file_name, O_RDWR) <= 0) {
-		//printf("Warning: no default configuration file found.\n");
+	if(open(DEFAULT_CONFIG, O_RDWR) <= 0) {
 		reset_config(conf);
 		return 0;
 	}
 	
 	// open config file
-	FILE* file = fopen(file_name, "r");
+	FILE* file = fopen(DEFAULT_CONFIG, "r");
 	if(file == NULL) {
 		printf("Error opening configuration file.\n");
 		return -1;
 	}
 	// read values
-	fread(conf, sizeof(struct rl_conf_new), 1, file);
+	fread(conf, sizeof(struct rl_conf), 1, file);
 	
 	// reset mode
-	conf->mode = NEW_CONTINUOUS;
+	conf->mode = CONTINUOUS;
 	
 	//close file
 	fclose(file);
 	return 1;
 }
 
-int write_default_config(struct rl_conf_new* conf, char file_name[MAX_PATH_LENGTH]) {
+int write_default_config(struct rl_conf* conf) {
 	
 	// open config file
-	FILE* file = fopen(file_name, "w");
+	FILE* file = fopen(DEFAULT_CONFIG, "w");
 	if(file == NULL) {
 		printf("Error creating configuration file.\n");
 		return -1;
 	}
 	// write values
-	fwrite(conf, sizeof(struct rl_conf_new), 1, file);
+	fwrite(conf, sizeof(struct rl_conf), 1, file);
 	
 	//close file
 	fclose(file);

@@ -13,10 +13,10 @@
 #define NUM_V_CHANNELS 4
 
 enum rl_state {NEW_OFF, NEW_RUNNING, ERROR};
-enum rl_mode {IDLE, LIMIT, NEW_CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT}; // TODO: change NEW_CONTINUOUS, ERROR?
+enum rl_mode {IDLE, LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT}; // TODO: ERROR
 enum rl_file_format {NO_FILE, CSV, BIN};
 
-struct rl_conf_new {
+struct rl_conf {
 	enum rl_mode mode;
 	int sample_rate;
 	int update_rate;

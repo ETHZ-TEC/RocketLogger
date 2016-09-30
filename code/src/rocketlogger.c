@@ -4,7 +4,7 @@
 #include "rl_lib.h"
 #include "rl_util.h"
 
-struct rl_conf_new conf;
+struct rl_conf conf;
 int set_as_default;
 
 int parse_args(int argc, char* argv[]) { //TODO: outsource
@@ -14,7 +14,6 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 		return -1;
 	}
 	
-	//int file = 0;
 	set_as_default = 0;
 	int i = 1;
 	// modes
@@ -30,6 +29,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 							
 							conf.mode = LIMIT;
 							conf.number_samples = atoi(argv[i+1]);
+							conf.enable_web_server = 0; // webserver not as default
 							i++;
 							break;
 						} else {
@@ -39,6 +39,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 					
 					case 'a': // status
 						conf.mode = STATUS;
+						conf.enable_web_server = 0; // webserver not as default
 						break;
 					
 					case 'o': // stop
@@ -52,7 +53,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 			break;
 		case 'c':
 			if (argv[i][1] == 'o') { // continuous mode
-				conf.mode = NEW_CONTINUOUS;
+				conf.mode = CONTINUOUS;
 				break;
 			
 			} else {
@@ -131,15 +132,13 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 					}
 				}
 			
-			case 'r': // acquisition rate
+			case 'r': // sampling rate
 				if (argc > i+1 && isdigit(argv[i+1][0])) {
-					int rate = atoi(argv[i+1]);
-					if (rate == 1 || rate == 2 || rate == 4 || rate == 8 || rate == 16 || rate == 32 || rate == 64) { //TODO: in rl_lib as well
-						conf.sample_rate = rate;
-					} else {
-						printf("Wrong sample rate.\n");
+					conf.sample_rate = atoi(argv[i+1]);
+					if(check_sample_rate(conf.sample_rate) < 0) { // check if rate allowed
+						printf("Error: wrong sample rate.\n");
 						return -1;
-					}			
+					}
 					i++;
 					break;
 				} else {
@@ -148,11 +147,9 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 			
 			case 'u': // update rate
 				if (argc > i+1 && isdigit(argv[i+1][0])) {
-					int update_rate = atoi(argv[i+1]);
-					if (update_rate == 1 || update_rate == 2 || update_rate == 5 || update_rate == 10) { //TODO: in rl_lib as well
-						conf.update_rate = update_rate;
-					} else {
-						printf("Wrong update rate.\n");
+					conf.update_rate = atoi(argv[i+1]);
+					if(check_update_rate(conf.update_rate) < 0) { // check if rate allowed
+						printf("Error: wrong update rate.\n");
 						return -1;
 					}
 					i++;
@@ -194,7 +191,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// get default config
-	read_default_config(&conf, DEFAULT_CONFIG);
+	read_default_config(&conf);
 	
 	// parse arguments
 	if (parse_args(argc, argv) < 0) {
@@ -205,7 +202,7 @@ int main(int argc, char* argv[]) {
 	
 	// store config as default
 	if(set_as_default == 1) {
-		write_default_config(&conf, DEFAULT_CONFIG);
+		write_default_config(&conf);
 	}
 	
 	switch (conf.mode) {
@@ -219,7 +216,7 @@ int main(int argc, char* argv[]) {
 			rl_sample(&conf);
 			break;
 			
-		case NEW_CONTINUOUS:
+		case CONTINUOUS:
 			if(is_running()) {
 				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
 				return -1;
@@ -250,6 +247,7 @@ int main(int argc, char* argv[]) {
 				printf("Error: RocketLogger not running\n");
 				return -1;
 			}
+			printf("Stopping RocketLogger ...\n");
 			rl_stop();
 			break;
 		
@@ -269,7 +267,7 @@ int main(int argc, char* argv[]) {
 			break;
 		
 		case SET_DEFAULT:
-			write_default_config(&conf, DEFAULT_CONFIG);
+			write_default_config(&conf);
 			print_config(&conf);
 			break;
 		

@@ -2,30 +2,12 @@
 
 // ---------------------------------------------- CONSTANTS----------------------------------------------------------//
 
-unsigned int samplerates[7] = {64000,32000,16000,8000,4000,2000,1000}; // samplerates in sps
-
-#define PRECISION_HIGH 24
-#define PRECISION_LOW 16
-
-#define SIZE_HIGH 4
-#define SIZE_LOW 2
-
-unsigned int precisions[7] = {16, 16, 24, 24, 24, 24, 24}; // ADC precisions in bit
-
-unsigned int sizes[7] = {2, 2, 4, 4, 4, 4, 4}; // value sizes in bytes
 
 char channel_names[10][15] = {"I1H [nA]","I1M [nA]","I1L [10pA]","V1 [uV]","V2 [uV]","I2H [nA]","I2M [nA]","I2L [10pA]","V3 [uV]","V4 [uV]"};
 
 struct header file_header;
 
-// ---------------------------------------------- PRU DATA ---------------------------------------------------------//
-
 struct pru_data_struct pru;
-
-#define PRUDATALENGTH 17
-unsigned int pru_data[PRUDATALENGTH];
-
-//unsigned int state;
 
 int test_mode = 1;
 
@@ -102,7 +84,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int
 	int line_int[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 	int value_int = 0;
 	
-	// csv data
+	// csv data TODO: defines
 	char line_char[200] = "";
 	char value_char[20];
 	
@@ -540,7 +522,7 @@ int pru_init() {
 }
 
 // main sample function
-int pru_sample(FILE* data, struct rl_conf_new* conf) {
+int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// TODO temporary solution !!!!!!!!

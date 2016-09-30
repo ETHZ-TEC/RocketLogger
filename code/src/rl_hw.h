@@ -8,7 +8,7 @@
 #define LED_STATUS_GPIO 45
 #define LED_ERROR_GPIO 44
 
-void hw_init(struct rl_conf_new* conf);
+void hw_init(struct rl_conf* conf);
 void hw_close();
 
-int hw_sample(struct rl_conf_new* conf);
+int hw_sample(struct rl_conf* conf);

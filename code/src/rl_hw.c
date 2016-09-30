@@ -1,7 +1,7 @@
 #include "rl_hw.h"
 
 // init all hardware modules
-void hw_init(struct rl_conf_new* conf) {
+void hw_init(struct rl_conf* conf) {
 	
 	// PWM
 	pwm_setup();
@@ -42,7 +42,7 @@ void hw_close() {
 	// PRU TODO
 }
 
-int hw_sample(struct rl_conf_new* conf) {
+int hw_sample(struct rl_conf* conf) {
 	
 	// set update rate (remove?!)
 	if ((conf->update_rate != 1) && (conf->update_rate != 2) && (conf->update_rate != 5) && (conf->update_rate != 10)) {

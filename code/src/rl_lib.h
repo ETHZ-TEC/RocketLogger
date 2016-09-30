@@ -5,34 +5,20 @@
 #include "types.h"
 #include "rl_hw.h"
 
-// ---------------------------------------------- UPDATE RATES ------------------------------------------------------// 
-
-/*#define HZ1 1
-#define HZ2 2
-#define HZ5 5
-#define HZ10 10*/
-
-
-
-// ---------------------------------------------- Functions ---------------------------------------------------------// 
-
 // TODO: update
 
 
-void rl_print_config(struct rl_conf_new* conf, int web);
+void rl_print_config(struct rl_conf* conf, int web);
 
 void rl_reset_calibration();
 
 int rl_get_data();
 
-//void print_json(float data[], int length);
-
 int rl_get_status(int print, int web);
-int rl_get_status_web();
 
-int rl_sample(struct rl_conf_new* conf);
-int rl_continuous(struct rl_conf_new* conf);
-int rl_meter(struct rl_conf_new* conf);
+int rl_sample(struct rl_conf* conf);
+int rl_continuous(struct rl_conf* conf);
+int rl_meter(struct rl_conf* conf);
 
 int rl_stop();
 

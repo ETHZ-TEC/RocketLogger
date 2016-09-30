@@ -106,19 +106,18 @@
 
 // ---------------------------------------------- PRU/PWM DEFINES ---------------------------------------------------//
 
+#define PRECISION_HIGH 24
+#define PRECISION_LOW 16
+
+#define SIZE_HIGH 4
+#define SIZE_LOW 2
+
 #define TIMEOUT 3 // 3s PRU timeout
 
 #define STATUSSIZE 2 //status size in bytes
 #define BUFFERSTATUSSIZE 4 //buffer status size in bytes
 #define WEB_BUFFER_SIZE 100
 #define NUMBER_WEB_CHANNELS 6
-
-// PRU states
-enum pru_states {
-	PRU_OFF = 0,
-	PRU_LIMIT = 1,
-	PRU_CONTINUOUS = 3
-};
 
 // PWM states
 #define ENABLE 1
@@ -166,6 +165,13 @@ struct header {
 	int precision;
 };
 
+// PRU states
+enum pru_states {
+	PRU_OFF = 0,
+	PRU_LIMIT = 1,
+	PRU_CONTINUOUS = 3
+};
+
 #define NUMBER_PRU_COMMANDS 10
 struct pru_data_struct {
 	enum pru_states state;
@@ -197,7 +203,7 @@ int pru_set_state(enum pru_states state);
 int pru_init();
 int pru_stop(); // stop pru when in continuous mode (has to be done before close)
 int pru_close();
-int pru_sample(FILE* data, struct rl_conf_new* conf);
+int pru_sample(FILE* data, struct rl_conf* conf);
 
 
 #endif
