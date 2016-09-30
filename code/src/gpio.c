@@ -44,9 +44,9 @@ int gpio_export(int num) {
 int gpio_dir(int num, enum direction dir) {
 	
 	// open gpio direction file
-	char pathname[100];
-	sprintf(pathname, GPIO_PATH "gpio%d/direction",num);
-	int fd = open(pathname, O_WRONLY);
+	char file_name[MAX_PATH_LENGTH];
+	sprintf(file_name, GPIO_PATH "gpio%d/direction",num);
+	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO direction file!\n");
 		return -1;
@@ -69,9 +69,9 @@ int gpio_dir(int num, enum direction dir) {
 int gpio_interrupt(int num, enum edge e) {
 	
 	// open gpio edge file
-	char pathname[100];
-	sprintf(pathname, GPIO_PATH "gpio%d/edge",num);
-	int fd = open(pathname, O_WRONLY);
+	char file_name[MAX_PATH_LENGTH];
+	sprintf(file_name, GPIO_PATH "gpio%d/edge",num);
+	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO edge file!\n");
 		return -1;
@@ -104,9 +104,9 @@ int gpio_interrupt(int num, enum edge e) {
 int gpio_set_value(int num, int val) {
 	
 	// open gpio value file
-	char pathname[100];
-	sprintf(pathname, GPIO_PATH "gpio%d/value",num);
-	int fd = open(pathname, O_WRONLY);
+	char file_name[MAX_PATH_LENGTH];
+	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
+	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
 		return -1;
@@ -129,9 +129,9 @@ int gpio_set_value(int num, int val) {
 int gpio_get_value(int num) {
 	
 	// open gpio value file
-	char pathname[100];
-	sprintf(pathname, GPIO_PATH "gpio%d/value",num);
-	int fd = open(pathname, O_RDONLY);
+	char file_name[MAX_PATH_LENGTH];
+	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
+	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
 		return -1;
@@ -151,9 +151,9 @@ int gpio_get_value(int num) {
 int gpio_wait_interrupt(int num, int timeout) {
 	
 	// open gpio value file
-	char pathname[100];
-	sprintf(pathname, GPIO_PATH "gpio%d/value",num);
-	int fd = open(pathname, O_RDONLY);
+	char file_name[MAX_PATH_LENGTH];
+	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
+	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
 		return -1;

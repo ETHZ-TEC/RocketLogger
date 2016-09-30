@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <poll.h>
 
+#include "types.h"
+
 #define GPIO_PATH "/sys/class/gpio/"
 
 enum direction {IN, OUT};
@@ -19,11 +21,11 @@ int gpio_export(int num);
 // set direction
 int gpio_dir(int num, enum direction dir);
 
-// set interrupt
-int gpio_interrupt(int num, enum edge e);
-
+// gpio value
 int gpio_set_value(int num, int val);
-
 int gpio_get_value(int num);
 
+// interrupt
+int gpio_interrupt(int num, enum edge e);
 int gpio_wait_interrupt(int num, int timeout); // timout<0 -> infinite
+
