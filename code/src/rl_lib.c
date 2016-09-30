@@ -10,6 +10,22 @@ void rl_reset_calibration() {
 	
 }
 
+// TODO: move to lib_util
+// print data in json format for easy reading in javascript
+void print_json(float data[], int length) {
+	char str[150]; // TODO: adjustable length
+	char val[20];
+	int i;
+	sprintf(str, "[\"%f\"", data[0]);
+	for (i=1; i < length; i++) {
+		sprintf(val, ",\"%f\"", data[i]);
+		strcat(str, val);
+	}
+	strcat(str, "]\n");
+	printf(str);
+}
+
+
 // get current data (used for webserver)
 int rl_get_data() {
 	
@@ -35,19 +51,6 @@ int rl_get_data() {
 	return 1;
 }
 
-// print data in json format for easy reading in javascript
-void print_json(float data[], int length) {
-	char str[150]; // TODO: adjustable length
-	char val[20];
-	int i;
-	sprintf(str, "[\"%f\"", data[0]);
-	for (i=1; i < length; i++) {
-		sprintf(val, ",\"%f\"", data[i]);
-		strcat(str, val);
-	}
-	strcat(str, "]\n");
-	printf(str);
-}
 
 // print active channels in json format (for webserver)
 void print_channels(int channels) {
@@ -148,20 +151,20 @@ void print_status(struct rl_conf_new* conf, int web) {
 		if (web == 1) {
 			printf("OFF\n");
 		} else {
-			printf("RocketLogger IDLE\n");
+			printf("\nRocketLogger IDLE\n\n");
 		}
 	} else {
 		if (web == 1) {
 			printf("RUNNING\n");
 			
 		} else {
-			printf("RocketLogger Status: RUNNING\n");
+			printf("\nRocketLogger Status: RUNNING\n");
 		}
-		print_config(conf, web);
+		rl_print_config(conf, web);
 	}
 }
 
-void print_config(struct rl_conf_new* conf, int web) {
+void rl_print_config(struct rl_conf_new* conf, int web) {
 	
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
 	
@@ -201,6 +204,7 @@ void print_config(struct rl_conf_new* conf, int web) {
 			}
 			printf("\n");
 		}
+		printf("\n");
 	}
 }
 
@@ -221,68 +225,7 @@ int rl_get_status(int print, int web) {
 	}
 	
 	return status;
-	
-	/*
-	struct rl_conf conf;
-	
-	// read conf from shared memory
-	key_t key = ftok(DEVICE_FILE "conf", 's');								// create shared memory key  
-    int conf_id = shmget(key, sizeof(struct rl_conf), 0666);
-	struct rl_conf* conf_ptr = (struct rl_conf*) shmat(conf_id, NULL, 0);	// get pointer to shared memory
-	
-	if (conf_ptr == (void *) -1) {	// check if shared memory set (shared memory is detached during stop)
-		conf.state = OFF;
-	} else {
-		conf = *conf_ptr;			// read shared memory
-	}
-	if (print == 1) {				// print status, if requested
-									printf("RocketLogger Status:\n");
-		if (conf.state == OFF) {	printf("  State:        OFF\n");
-		} else {					printf("  State:        RUNNING\n");
-									printf("  Webserver:    %d\n",conf.enable_web_server);
-									printf("  Rate:         %ukSps\n",conf.rate);
-									printf("  Update rate:  %uHz\n",conf.update_rate);
-									printf("  Sample limit: %u\n",conf.number_samples);
-									printf("  Channels:     %u\n",conf.channels);
-									printf("  File:         %s\n",conf.file);
-									printf("  Binary file:  %d\n", conf.binary_file);
-		}
-	
-	}
-	
-	shmdt(conf_ptr); // detach shared memory
-	return (conf.state != OFF);*/
 }
-
-// get status of RL (for web usage)
-/*int rl_get_status_web() {
-	
-	struct rl_conf conf;
-	
-	// read conf from shared memory
-	key_t key = ftok(DEVICE_FILE "conf", 's');								// create shared memory key  
-    int conf_id = shmget(key, sizeof(struct rl_conf), 0666);
-	struct rl_conf* conf_ptr = (struct rl_conf*) shmat(conf_id, NULL, 0);	// get pointer to shared memory
-	
-	if (conf_ptr == (void *) -1) {	// check if shared memory set (shared memory is detached during stop)
-		conf.state = OFF;
-	} else {
-		conf = *conf_ptr;			// read shared memory
-	}
-	if (conf.state == OFF) {	printf("OFF\n");
-	} else {					printf("RUNNING\n");
-								printf("%d\n",conf.enable_web_server);
-								printf("%u\n",conf.rate);
-								printf("%u\n",conf.update_rate);
-								printf("%u\n",conf.number_samples);
-								print_channels(conf.channels);
-								printf("%s\n",conf.file);
-								printf("%d\n", conf.binary_file);
-	}
-	
-	shmdt(conf_ptr); // detach shared memory
-	return 1;
-}*/
 
 
 // main sample function
@@ -303,14 +246,7 @@ int rl_sample(struct rl_conf_new* confn) {
 		}
 	}
 	
-	/*// store PID to shared memory (needed by stop process)
-	key_t MyKey = ftok(DEVICE_FILE, 's'); // create shared memory key  
-    int pid_id = shmget(MyKey, sizeof(pid_t), IPC_CREAT | 0666);
-	
-    pid_t* pid_ptr = (pid_t *) shmat(pid_id, NULL, 0);
-    *pid_ptr = getpid();*/
-	
-	// store PID to file TODO: do in function
+	// store PID to file TODO: do in function (lib_util)
 	pid_t pid = getpid();
 	FILE* file = fopen(PID_FILE, "w");
 	if(file == NULL) {
@@ -333,13 +269,6 @@ int rl_sample(struct rl_conf_new* confn) {
 		printf("Can't register signal handler.\n");
 		return -1;
 	}
-	
-	
-	/*// write conf to shared memory
-	key_t key = ftok(DEVICE_FILE "conf", 's'); // create shared memory key  
-    int conf_id = shmget(key, sizeof(struct rl_conf), IPC_CREAT | 0666);
-	struct rl_conf* conf_ptr = (struct rl_conf*) shmat(conf_id, NULL, 0);
-	*conf_ptr = *conf;*/
 
 	//write conf to file
 	write_config(confn, CONFIG_FILE);
@@ -359,15 +288,8 @@ int rl_sample(struct rl_conf_new* confn) {
 	if(confn->mode != LIMIT) {
 		pru_stop();
 	}
-	/*if (conf->number_samples == 0) { // when in continuous mode, pru needs to be stopped
-		pru_stop();
-	}*/
 	pru_close();
 	hw_close();
-	
-	
-	// set RL state to zero
-	//conf_ptr->state = OFF; // write to shared memory
 	
 	confn->mode = IDLE;
 	write_config(confn, CONFIG_FILE);
@@ -375,13 +297,6 @@ int rl_sample(struct rl_conf_new* confn) {
 	// remove fifos
 	remove(FIFO_FILE);
 	remove(CONTROL_FIFO);
-	
-	/*// detach shared memory
-	shmdt(pid_ptr);
-    shmctl(pid_id, IPC_RMID, NULL);
-	shmdt(conf_ptr);
-    shmctl(conf_id, IPC_RMID, NULL);*/
-	
 	 
 	return 1;
 	
@@ -399,8 +314,7 @@ int rl_continuous(struct rl_conf_new* confn) {
 	}
 	
 	// continuous sampling
-	//conf->number_samples = 0;
-	confn->number_samples = 0;
+	confn->number_samples = 0; // useless?
 	
 	rl_sample(confn);
 	
@@ -432,35 +346,10 @@ int rl_stop() {
 	kill(pid, SIGQUIT); // send stop signal
 	
 	return 1;
-	
-	/*// get pid of running RL
-	key_t MyKey = ftok(DEVICE_FILE, 's'); // create shared memory key 
-	int shm_id = shmget(MyKey, sizeof(pid_t), 0666);
-    pid_t *pid_ptr = (pid_t *) shmat(shm_id, NULL, 0);
-	
-	// check if shared memory set
-	if (pid_ptr == (void *) -1) {
-		printf("RocketLogger not running!\n");
-		shmdt(pid_ptr); // detach shared memory
-		return 1;
-	}
-	
-	printf("Stopping RocketLogger.\n");
-    pid_t pid = *pid_ptr;	// get PID of background process
-	*pid_ptr = -1;			// reset pid to make sure, rl is not running
-	shmdt(pid_ptr);			// detach shared memory
-	kill(pid, SIGQUIT);		// send stop signal
-	
-	return 1;*/
 }
 
 // meter function
 int rl_meter(struct rl_conf_new* confn) {
-	
-	/*conf->update_rate = HZ10;
-	conf->number_samples = 0;
-	conf->enable_web_server = 0;
-	conf->store = 0;*/
 	
 	confn->update_rate = 10;
 	confn->number_samples = 0;

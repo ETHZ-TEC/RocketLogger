@@ -44,74 +44,23 @@ void hw_close() {
 
 int hw_sample(struct rl_conf_new* confn) {
 	
-	/*int meter = 0;
-	if (conf->state == RL_METER) { // remove??
-		meter = 1;
-	}*/
-	
-	/*int rate;
-	// set rate
-	switch (conf->rate) {
-		case 1:
-			rate = K1;
-			break;
-		case 2:
-			rate = K2;
-			break;
-		case 4:
-			rate = K4;
-			break;
-		case 8:
-			rate = K8;
-			break;
-		case 16:
-			rate = K16;
-			break;
-		case 32:
-			rate = K32;
-			break;
-		case 64:
-			rate = K64;
-			break;
-		default:
-			printf("Wrong sample rate.\n");
-			return -1;
-	}*/
-	
 	// set update rate (remove?!)
-	if ((confn->update_rate != 1) && (confn->update_rate != 2) && (confn->update_rate != 5) && (confn->update_rate != 10)) { // TODO: replace with confn
+	if ((confn->update_rate != 1) && (confn->update_rate != 2) && (confn->update_rate != 5) && (confn->update_rate != 10)) {
 		printf("Wrong update rate.\n");
 			return -1;
 	}
-	/*switch (update_rate) {
-		case 1:
-			update_rate = HZ1;
-			break;
-		case 2:
-			update_rate = HZ2;
-			break;
-		case 5:
-			update_rate = HZ5;
-			break;
-		case 10:
-			update_rate = HZ10;
-			break;
-		default:
-			printf("Wrong update rate.\n");
-			return -1;
-	}*/
 	
 	// open data file
 	FILE* data = (FILE*) -1;
 	if (confn->file_format != NO_FILE) { // open file only if storing requested
-		data = fopen(confn->file_name, "w+"); // TODO: replace with confn
+		data = fopen(confn->file_name, "w+");
 		if(data == NULL) {
 			printf("Error: Error opening data-file");
 			return -1;
 		}
 		// change access rights to data file
 		char cmd[50];
-		sprintf(cmd, "chmod 777 %s", confn->file_name); // TODO: replace with confn
+		sprintf(cmd, "chmod 777 %s", confn->file_name);
 		system(cmd);
 	}
 	
@@ -142,13 +91,12 @@ int hw_sample(struct rl_conf_new* confn) {
 	} else {
 		store = 1;
 	}
-	//printf("Old: %d, new: %d\n",conf->binary_file,binary);
 	
 	// SAMPLE
 	pru_sample(data, channels, store, binary, confn);
 	
 	// close data file
-	if (confn->file_format != NO_FILE) {// TODO: replace with confn
+	if (confn->file_format != NO_FILE) {
 		fclose(data);
 	}
 	

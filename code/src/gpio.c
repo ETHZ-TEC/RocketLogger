@@ -185,27 +185,3 @@ int gpio_wait_interrupt(int num, int timeout) {
 	
 	return atoi(buf);
 }
-
-/*int main(int argc, char **argv) {
-	gpio_export(26);
-	gpio_dir(26, IN);
-	gpio_interrupt(26, RISING);
-	int val = gpio_wait_interrupt(26);
-	printf("Interrupt! Value = %d\n",val);
-	gpio_unexport(26);
-	
-	gpio_export(44);
-	gpio_dir(44,OUT);
-	gpio_set_value(44,0);
-	
-	gpio_export(45);
-	gpio_dir(45,OUT);
-	gpio_set_value(45,1);
-	
-	gpio_export(26);
-	gpio_dir(26, IN);
-	int val = gpio_get_value(26);
-	printf("GPIO26 = %d",val);
-	
-	return 1;
-}*/

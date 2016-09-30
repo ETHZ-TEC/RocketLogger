@@ -82,14 +82,3 @@ int adc_clock_setup() {
 	
 	return 1;
 }
-
-/*int main(int argc, char **argv) {
-	int sample_rate = 2;
-	
-	pwm_setup();
-    range_clock_setup(sample_rate);
-	adc_clock_setup();
-	pwm_close();
-	
-    return 0;
-}*/

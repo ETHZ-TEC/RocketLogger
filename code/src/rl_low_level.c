@@ -471,11 +471,10 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 // ------------------------------  PRU FUNCTIONS ------------------------------ //
 
 // set state to PRU
-int pru_set_state(int state){
+int pru_set_state(int state){ // TODO void functions
+	
 	pru.state = (unsigned int) state;
-	//pru_data[0] = (unsigned int) state;
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(int));
-	//prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, pru_data, 4);
 	
 	return 1;
 }
@@ -492,17 +491,11 @@ int pru_init() {
 	}
 	prussdrv_pruintc_init(&pruss_intc_initdata);
 	
-	/*// reset pru_data
-	int i;
-	for (i=0;i<PRUDATALENGTH;i++) {
-		pru_data[i] = 0;
-	}*/
 	return 1;
 }
 
 // main sample function
 int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_new* conf) {
-//int pru_sample(FILE* data, int rate, int update_rate, int number_samples, int channels, int webserver, int store, int meter, int binary, struct rl_conf_new* conf) {
 	
 	unsigned int pru_sample_rate;
 	unsigned int buffer_size_bytes;
@@ -537,9 +530,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 	prussdrv_pruintc_init(&pruss_intc_initdata);
 	
 	// set configuration
-	
-	
-	// NEW
 	if(conf->mode == LIMIT) {
 		pru.state = PRU_LIMIT;
 	} else {
@@ -608,74 +598,17 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 	pru.commands[7] = WREG|CH5SET|GAIN1;
 	pru.commands[8] = RDATAC;											// continuous reading
 	
-	
-	/*// TEST
-	pru_data[0] = pru.state;
-	pru_data[0] = pru.precision
-	pru_data[0] = pru.sample_size
-	pru_data[0] = prunumber_samples
-	pru_data[0] = pru.
-	pru_data[0] = pru.
-	pru_data[0] = pru.
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	pru_data[0] = 
-	
-	unsigned int state;
-	unsigned int precision;
-	unsigned int sample_size;
-	unsigned int number_samples;
-	unsigned int buffer_size;
-	unsigned int buffer0_location;
-	unsigned int buffer1_location;	
-	unsigned int number_commands;*/
-	
-	// OLD
-	/*if(number_samples == 0) {
-		state = PRU_CONTINUOUS;
-	} else {
-		state = PRU_LIMIT;
-	}
-	unsigned int precision = precisions[rate/256];							// precision in bit
-	unsigned int size = sizes[rate/256];									// sample size in byte
-	unsigned int buffer_size = samplerates[rate/256] / update_rate;			// buffer size in samples
-	buffer_size_bytes = buffer_size * (size * NUM_CHANNELS + STATUSSIZE) + BUFFERSTATUSSIZE; // buffer size in bytes
-	unsigned int buffer0_location = read_file_value(MMAP_FILE "addr");		// two buffer for switched-buffer reading
-	unsigned int buffer1_location = buffer0_location + buffer_size_bytes;
-	number_buffers = ceil_div(number_samples, buffer_size);	// number of buffers needed
-	*/
-	
-	
-	
 	// save file header
 	if (binary == 1) {
 		file_header.header_length = HEADERLENGTH;
 	} else {
 		file_header.header_length = HEADERLENGTH + 1;
 	}
-	file_header.number_samples = 0;//number_samples; // number of samples taken
+	file_header.number_samples = 0; // number of samples taken
 	file_header.buffer_size = pru.buffer_size;
 	file_header.rate = pru_sample_rate;
 	file_header.channels = channels;
 	file_header.precision = pru.precision;
-	/*if (binary == 1) {
-		file_header.header_length = HEADERLENGTH;
-	} else {
-		file_header.header_length = HEADERLENGTH + 1;
-	}
-	file_header.number_samples = 0;//number_samples; // number of samples taken
-	file_header.buffer_size = buffer_size;
-	file_header.rate = rate;
-	file_header.channels = channels;
-	file_header.precision = precision;*/
-	
-	
 	
 	
 	// check memory size
@@ -685,43 +618,14 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 		pru.state = PRU_OFF; // TODO: remove?
 		status.state = NEW_OFF;
 	}
-	/*unsigned int max_size = read_file_value(MMAP_FILE "size");
-	if(2*buffer_size_bytes > max_size) {
-		printf("Not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x\n", 2*buffer_size_bytes);
-		state = PRU_OFF;
-	}*/
 	
 	// map PRU memory into userspace
 	void* map_base = memory_map(pru.buffer0_location, MAP_SIZE); // map base placed on start of block
 	void* buffer0 = map_base + ( (off_t) pru.buffer0_location & MAP_MASK);
 	void* buffer1 = buffer0 + buffer_size_bytes; 
-	/*void* map_base = memory_map(buffer0_location, MAP_SIZE); // map base placed on start of block
-	void* buffer0 = map_base + ( (off_t) buffer0_location & MAP_MASK);
-	void* buffer1 = buffer0 + buffer_size_bytes;*/ 
-	
-	/*// configure PRU0
-	pru_data[0] = state;
-	pru_data[1] = precision;
-	pru_data[2] = size;
-	pru_data[3] = buffer0_location;							// memory addresses
-	pru_data[4] = buffer1_location;
-	pru_data[5] = buffer_size;
-	pru_data[6] = number_samples;
-	pru_data[7] = 9;										// number of commands
-	pru_data[8] = SDATAC;
-	pru_data[9] = WREG|CONFIG3|CONFIG3DEFAULT;				// write configuration
-	pru_data[10] = WREG|CONFIG1|CONFIG1DEFAULT|rate;
-	pru_data[11] = WREG|CH1SET|GAIN2;						// set channel gains
-	pru_data[12] = WREG|CH2SET|GAIN1;
-	pru_data[13] = WREG|CH3SET|GAIN1;
-	pru_data[14] = WREG|CH4SET|GAIN1;
-	pru_data[15] = WREG|CH5SET|GAIN1;
-	pru_data[16] = RDATAC;									//automatic reading*/
 	
 	// write configuration to PRU memory
-	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));
-	//prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, pru_data, 4*PRUDATALENGTH);
-	
+	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));	
 
 	// run SPI on PRU0
 	prussdrv_exec_program (0, PRU_CODE);
@@ -732,7 +636,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 	
 	// continuous sampling loop
 	for(i=0; status.state == NEW_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
-	//for(i=0;((i<number_buffers && state == PRU_LIMIT) || state == PRU_CONTINUOUS) && status.state == NEW_RUNNING; i++) {
 		
 		// select current buffer
 		if(i%2 == 0) {
@@ -746,11 +649,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 		} else {
 			samples_buffer = pru.number_samples % pru.buffer_size;
 		}
-		/*if(i < number_buffers-1 || number_samples % buffer_size == 0) {
-			samples_buffer = buffer_size; // full buffer size
-		} else {
-			samples_buffer = number_samples % buffer_size;
-		}*/
 		
 		// Wait for event completion from PRU
 		if (test_mode == 0) {
@@ -763,7 +661,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 		struct timeval current_time;
 		gettimeofday(&current_time,NULL);
 		current_time.tv_sec -= 1 / conf->update_rate; // adjust with buffer latency
-		//current_time.tv_sec -= 1 / update_rate; // adjust with buffer latency
 		
 		// clear event
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
@@ -780,7 +677,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, addr+4, i, samples_buffer, pru.sample_size, channels, &current_time, store, binary, conf->enable_web_server);
-		//store_buffer(data, fifo_fd, control_fifo, addr+4, i, samples_buffer, size, channels, &current_time, store, binary, webserver);
 		
 		// update state
 		status.samples_taken += samples_buffer;
@@ -790,10 +686,6 @@ int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_n
 		if(conf->mode == METER) {
 			print_meter(addr + 4, samples_buffer, pru.sample_size, channels);
 		}
-		/*if (meter == 1) {
-			print_meter(addr + 4, samples_buffer, size, channels);
-			
-		}*/
 	}
 	
 	if (store == 1) {
