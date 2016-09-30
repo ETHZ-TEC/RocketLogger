@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <termios.h>
@@ -26,6 +25,10 @@
 #include <sys/shm.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
+
+#include "util.h"
+#include "types.h"
+#include "calibration.h"
 
 
 // ---------------------------------------------- ADC DEFINES -------------------------------------------------------//
@@ -94,8 +97,7 @@
 #define LOG_FILE			"/var/www/log/log.txt"
 #define FIFO_FILE			"/etc/rocketlogger/fifo"
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
-#define CALIBRATION_FILE	"/etc/rocketlogger/calibration.dat"
-#define TEMP_CALIBRATION	"/etc/rocketlogger/temp_calib.dat"
+//#define TEMP_CALIBRATION	"/etc/rocketlogger/temp_calib.dat"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/SPI.bin"
 
@@ -109,13 +111,16 @@
 #define WEB_BUFFER_SIZE 100
 #define NUMBER_WEB_CHANNELS 6
 
-#define MAP_SIZE 0x0FFFFFFF
-#define MAP_MASK (MAP_SIZE - 1)
-
 // PRU states
-#define OFF 0
-#define SAMPLES 1
-#define CONTINUOUS 3
+/*enum pru_states { // TODO: test
+	PRU_OFF = 0,
+	PRU_LIMIT = 1,
+	PRU_CONTINUOUS = 3
+};*/
+//#define OFF 0
+#define PRU_OFF 0
+#define PRU_LIMIT 1
+#define PRU_CONTINUOUS 3
 //#define OFF 4
 
 // PWM states
@@ -128,7 +133,7 @@
 
 // ---------------------------------------------- CHANNEL DEFINES ----------------------------------------------------// 
 
-#define NUMBERCHANNELS 10
+//#define NUMBERCHANNELS 10
 
 #define ALL 0x3FF
 
@@ -164,42 +169,21 @@ struct header {
 	int precision;
 };
 
-// ---------------------------------------------- Calibration Values -------------------------------------------------//
-
-int offsets16[10];
-int offsets24[10];
-
-double scales24[10];
-double scales16[10];
+#define NUMBER_PRU_COMMANDS 9
+struct pru_data_struct {
+	unsigned int state;
+	unsigned int precision;
+	unsigned int sample_size;
+	unsigned int buffer0_location;
+	unsigned int buffer1_location;
+	unsigned int buffer_size;
+	unsigned int number_samples;
+	unsigned int number_commands;
+	unsigned int commands[NUMBER_PRU_COMMANDS];
+};
 
 // ---------------------------------------------- PROTOCOL FUNCTIONS ------------------------------------------------//
 
-// signal functions
-void sig_handler(int signo);
-
-// log functions
-int rl_log_init();
-int rl_log(char line[]);
-
-// calibration functions
-int set_default_offsets();
-int set_default_scales();
-int reset_offsets();
-int reset_scales();
-int read_calibration();
-int write_calibration();
-
-// standard functions
-int ceil_div(int n, int d);
-int count_bits(int x);
-int input_available();
-int read_file_value(char filename[]);
-int write_sys_value(char filename[], int value);
-int write_sys_string(char filename[], char value[]);
-
-// memory map
-void* memory_map(unsigned int addr, size_t size);
-int memory_unmap(void* ptr, size_t size);
 
 // store functions
 int store_header_bin(FILE* data, struct header* h);
@@ -216,16 +200,7 @@ int pru_set_state(int state);
 int pru_init();
 int pru_stop(); // stop pru when in continuous mode (has to be done before close)
 int pru_close();
-int pru_sample(FILE* data, int rate, int update_rate, int number_samples, int channels, int webserver, int store, int meter, int binary);
-
-// PWM functions
-int pwm_init();
-int pwm_close();
-
-// GPIO function
-int gpio_init();
-int force_high_range(int channels);
-int gpio_close();
+int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_new* conf);
 
 
 #endif

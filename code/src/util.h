@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -15,6 +16,8 @@
 int ceil_div(int n, int d);
 int count_bits(int x);
 int input_available();
+
+void sig_handler(int signo);
 
 void* memory_map(unsigned int addr, size_t size);
 int memory_unmap(void* ptr, size_t size);
