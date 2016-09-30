@@ -156,7 +156,6 @@ int parse_args(int argc, char* argv[]) {
 						conf.rate = rate;
 					} else {
 						printf("Wrong sample rate.\n");
-						rl_log("Error: wrong sample rate chosen.\n");
 						return -1;
 					}			
 					i++;
@@ -172,7 +171,6 @@ int parse_args(int argc, char* argv[]) {
 						conf.update_rate = update_rate;
 					} else {
 						printf("Wrong update rate.\n");
-						rl_log("Error: wrong update rate chosen.\n");
 						return -1;
 					}
 					i++;
@@ -220,7 +218,6 @@ int running() {
 	// check if RL already running
 	if(rl_get_status(0) == 1) {
 		printf("Error: RocketLogger already running!\n Run:  rocketlogger stop\n\n");
-		rl_log("Error: RocketLogger already running.\n");
 		return 1;
 	}
 	return 0;
@@ -228,14 +225,9 @@ int running() {
 
 int main(int argc, char* argv[]) {
 	
-	// init log file
-	rl_log_init();
-	rl_log("--- Rocketlogger Log File ---\n");
-	
 	// check if root
 	if(getuid()!=0){
 		printf("You must run this program as root. Exiting.\n");
-		rl_log("Error: program not running as root.\n");
 		return -1;
 	}
 	
@@ -243,7 +235,6 @@ int main(int argc, char* argv[]) {
 	if (parse_args(argc, argv) < 0) {
 		return -1;
 	}
-	rl_log("Info: argument parsed correctly.\n");
 	
 	// start rocketlogger
 	switch (conf.state) {
