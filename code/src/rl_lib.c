@@ -115,6 +115,29 @@ int rl_get_status(int print, int web) {
 // main sample function
 int rl_sample(struct rl_conf* conf) {
 	
+	// check mode
+	switch (conf->mode) {
+		case LIMIT:
+			break;
+		case CONTINUOUS:
+			// create deamon to run in background
+			if (daemon(1, 1) < 0) {
+				printf("Error: Deamon");
+				return 1;
+			}
+			break;
+		case METER:
+			// set meter config
+			conf->update_rate = 10;
+			conf->number_samples = 0;
+			conf->enable_web_server = 0;
+			conf->file_format = NO_FILE;
+			break;
+		default:
+			printf("Error: wrong mode\n");
+			return -1;
+	}
+	
 	// check input
 	if(check_sample_rate(conf->sample_rate) < 0) {
 		printf("Error: wrong sampling rate\n");
@@ -125,7 +148,7 @@ int rl_sample(struct rl_conf* conf) {
 		return -1;
 	}
 	
-	// create FIFOs if not existing (TODO: in HW??)
+	// create FIFOs if not existing
 	if(open(FIFO_FILE, O_RDWR) <= 0) {
 		if(mkfifo(FIFO_FILE,O_NONBLOCK) < 0) {
 			printf("Error: could not create FIFO.\n");
@@ -152,24 +175,16 @@ int rl_sample(struct rl_conf* conf) {
 	//write conf to file
 	write_config(conf);
 	
-	
 	// INITIATION
-	// init all modules
-	pru_init();
 	hw_init(conf);
-	
 	
 	// SAMPLING
 	hw_sample(conf);
 	
 	// FINISH
-	// close all modules
-	if(conf->mode != LIMIT) {
-		pru_stop();
-	}
-	pru_close(); // TODO: in HW
-	hw_close();
+	hw_close(conf);
 	
+	// write conf to file
 	conf->mode = IDLE;
 	write_config(conf);
 	
@@ -181,20 +196,6 @@ int rl_sample(struct rl_conf* conf) {
 	
 }
 
-// continuous sample function
-int rl_continuous(struct rl_conf* conf) {
-	
-	// create deamon to run in background
-	if (daemon(1, 1) < 0) {
-		printf("Error: Deamon");
-		return 1;
-	}
-	
-	rl_sample(conf);
-	
-	return 1;
-	
-}
 
 // stop function (to stop continuous mode)
 int rl_stop() {
@@ -210,20 +211,6 @@ int rl_stop() {
 	
 	// send stop signal
 	kill(pid, SIGQUIT);
-	
-	return 1;
-}
-
-// meter function
-int rl_meter(struct rl_conf* conf) {
-	
-	// set meter config
-	conf->update_rate = 10;
-	conf->number_samples = 0;
-	conf->enable_web_server = 0;
-	conf->file_format = NO_FILE;
-	
-	rl_sample(conf);
 	
 	return 1;
 }

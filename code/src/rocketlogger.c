@@ -213,7 +213,6 @@ int main(int argc, char* argv[]) {
 			}
 			print_config(&conf);
 			printf("\nStart sampling ...\n");
-			rl_sample(&conf);
 			break;
 			
 		case CONTINUOUS:
@@ -223,7 +222,6 @@ int main(int argc, char* argv[]) {
 			}
 			print_config(&conf);
 			printf("\nData acquisition running in background ...\n  Stop with:   rocketlogger stop\n\n");
-			rl_continuous(&conf);
 			break;
 		
 		case METER:
@@ -231,16 +229,11 @@ int main(int argc, char* argv[]) {
 				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
 				return -1;
 			}
-			rl_meter(&conf);
 			break;
 		
 		case STATUS:
-			if(conf.enable_web_server == 1) {
-				rl_get_status(1,1);
-			} else {
-				rl_get_status(1,0);
-			}
-			break;
+			rl_get_status(1,conf.enable_web_server);
+			return 1;
 		
 		case STOPPED:
 			if(!is_running()) {
@@ -249,7 +242,7 @@ int main(int argc, char* argv[]) {
 			}
 			printf("Stopping RocketLogger ...\n");
 			rl_stop();
-			break;
+			return 1;
 		
 		case DATA:
 			if(!is_running()) {
@@ -257,28 +250,31 @@ int main(int argc, char* argv[]) {
 				return -1;
 			}
 			rl_get_data();
-			break;
+			return 1;
 		
 		case CALIBRATE:
 			if(is_running()) {
 				printf("Warning: reset will not affect current measurement\n");
 			}
 			rl_reset_calibration();
-			break;
+			return 1;
 		
 		case SET_DEFAULT:
 			write_default_config(&conf);
 			print_config(&conf);
-			break;
+			return 1;
 		
 		case PRINT_DEFAULT:
 			print_config(&conf);
-			break;
+			return 1;
 		
 		default:
 			print_usage(&conf);
 			return -1;
 	}
+	
+	// start the sampling
+	rl_sample(&conf);
 	
 	return 1;
 	
