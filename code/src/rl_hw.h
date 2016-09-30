@@ -1,7 +1,7 @@
 #include "types.h"
 #include "gpio.h"
 #include "pwm.h"
-#include "rl_low_level.h"
+#include "pru.h"
 
 #define FHR1_GPIO 30
 #define FHR2_GPIO 60
