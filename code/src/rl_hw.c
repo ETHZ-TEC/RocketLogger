@@ -70,7 +70,10 @@ int hw_sample(struct rl_conf_new* conf) {
 	}
 	
 	// SAMPLE
-	pru_sample(data, conf);
+	if(pru_sample(data, conf) < 0) {
+		// error ocurred
+		gpio_set_value(LED_ERROR_GPIO, 1);
+	}
 	
 	// close data file
 	if (conf->file_format != NO_FILE) {
