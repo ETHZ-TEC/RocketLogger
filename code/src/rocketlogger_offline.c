@@ -1,6 +1,7 @@
-#include "gpio.h"
+#include "rl_lib.h"
 
 #define GPIO_BUTTON 26
+#define MIN_INTERVAl 1 // minimal interval between 2 interrupts (in s)
 
 int gpio_setup() {
 	
@@ -11,33 +12,34 @@ int gpio_setup() {
 	return 1;
 }
 
-int interrupt_handler(int value) {
+void interrupt_handler(int value) {
 	
-	if (value == 1) {
-		printf("Interrupt! Value = %d\n",value); // TODO: remove
+	if (value == 1) { // only react if button pressed enough long
 		
-		int rl_status = 1; // TODO: replace with function
+		// get RL status (without print)
+		int status = rl_get_status(0,0);
 		
-		if (rl_status == 1) {
-			system("rocketlogger stop");
+		if (status == 1) {
+			system("sudo rocketlogger stop > /dev/null");
 		} else {
-			system("rocketlogger sample 10");
+			system("sudo rocketlogger continuous > /dev/null");
 		}
-	} else {
-		printf("Value %d received!\n",value);
+		
+		// debouncing
+		sleep(MIN_INTERVAl);
+		
 	}
-	
-	return 1;
 	
 }
 
 
 int main(int argc, char **argv) {
 	
+	int timeout = -1; //infinite timeout
 	gpio_setup();
 	
 	while(1) {
-		int val = gpio_wait_interrupt(GPIO_BUTTON);
+		int val = gpio_wait_interrupt(GPIO_BUTTON, timeout);
 		interrupt_handler(val);
 	}
 	
