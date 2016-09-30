@@ -207,7 +207,7 @@ CONFIGURE:
 	send_command r2
 	ADD r11, r11, 4 // increase command position
 	
-	wait 10 // enough time for cs toggle and command to settle
+	wait 1000 //wait 10 // enough time for cs toggle and command to settle
 	
 	LSR r10, r10, 1
 	

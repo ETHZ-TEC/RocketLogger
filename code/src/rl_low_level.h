@@ -16,6 +16,7 @@
 #include <termios.h>
 #include <math.h>
 #include <time.h> 
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -105,6 +106,8 @@
 
 // ---------------------------------------------- PRU/PWM DEFINES ---------------------------------------------------//
 
+#define TIMEOUT 3 // 3s PRU timeout
+
 #define STATUSSIZE 2 //status size in bytes
 #define BUFFERSTATUSSIZE 4 //buffer status size in bytes
 #define WEB_BUFFER_SIZE 100
@@ -163,7 +166,7 @@ struct header {
 	int precision;
 };
 
-#define NUMBER_PRU_COMMANDS 9
+#define NUMBER_PRU_COMMANDS 10
 struct pru_data_struct {
 	enum pru_states state;
 	unsigned int precision;

@@ -27,7 +27,7 @@ unsigned int pru_data[PRUDATALENGTH];
 
 //unsigned int state;
 
-int test_mode = 1;
+int test_mode = 0;
 
 
 // ---------------------------------------------- FUNCTIONS --------------------------------------------------------//
@@ -464,11 +464,55 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		MASK = MASK << 1;
 	}
 	printf("\n\n\n\n\n\n\n\n\n\n");
-	//printf("\n\n\nPress Enter to quit!\n\n\n\n\n\n\n");
 }
 
 
 // ------------------------------  PRU FUNCTIONS ------------------------------ //
+
+pthread_mutex_t calculating = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t done = PTHREAD_COND_INITIALIZER;
+
+void *pru_wait_event(void* voidEvent) {
+
+	unsigned int event = *((unsigned int *) voidEvent);
+
+	// allow the thread to be killed at any time
+	int oldtype;
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	// wait for pru event
+	prussdrv_pru_wait_event(event);
+	
+	// notify main program
+	pthread_cond_signal(&done);
+	
+	return NULL;
+}
+
+int pru_wait_event_timeout(unsigned int event, unsigned int timeout) { //TODO: use everywhere
+	
+	struct timespec abs_time;
+	pthread_t tid;
+	int err;
+
+	pthread_mutex_lock(&calculating);
+
+	// pthread cond_timedwait expects an absolute time to wait until
+	clock_gettime(CLOCK_REALTIME, &abs_time);
+	abs_time.tv_sec += timeout;
+
+	pthread_create(&tid, NULL, pru_wait_event, (void *) &event);
+
+	// TODO: pthread_cond_timedwait can return spuriously: this should be in a loop for production code
+	err = pthread_cond_timedwait(&done, &calculating, &abs_time);
+
+	if (!err) {
+		pthread_mutex_unlock(&calculating);
+	}
+
+	return err;
+}
+
 
 // set state to PRU
 int pru_set_state(enum pru_states state){ // TODO void functions
@@ -612,15 +656,17 @@ int pru_sample(FILE* data, struct rl_conf_new* conf) {
 	
 	pru.number_commands = NUMBER_PRU_COMMANDS;
 	
-	pru.commands[0] = SDATAC;
-	pru.commands[1] = WREG|CONFIG3|CONFIG3DEFAULT;						// write configuration
-	pru.commands[2] = WREG|CONFIG1|CONFIG1DEFAULT | pru_sample_rate;
-	pru.commands[3] = WREG|CH1SET|GAIN2;								// set channel gains
-	pru.commands[4] = WREG|CH2SET|GAIN1;
-	pru.commands[5] = WREG|CH3SET|GAIN1;
-	pru.commands[6] = WREG|CH4SET|GAIN1;
-	pru.commands[7] = WREG|CH5SET|GAIN1;
-	pru.commands[8] = RDATAC;											// continuous reading
+	pru.commands[0] = RESET;
+	pru.commands[1] = SDATAC;
+	pru.commands[2] = WREG|CONFIG3|CONFIG3DEFAULT;						// write configuration
+	pru.commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | pru_sample_rate;
+	pru.commands[4] = WREG|CH1SET|GAIN2;								// set channel gains
+	pru.commands[5] = WREG|CH2SET|GAIN1;
+	pru.commands[6] = WREG|CH3SET|GAIN1;
+	pru.commands[7] = WREG|CH4SET|GAIN1;
+	pru.commands[8] = WREG|CH5SET|GAIN1;
+	pru.commands[9] = RDATAC;											// continuous reading
+	
 	
 	// save file header
 	if (binary == 1) {
@@ -674,9 +720,23 @@ int pru_sample(FILE* data, struct rl_conf_new* conf) {
 			samples_buffer = pru.number_samples % pru.buffer_size;
 		}
 		
+		
+		
+		
 		// Wait for event completion from PRU
+		//if (test_mode == 0) {
+		//	prussdrv_pru_wait_event (PRU_EVTOUT_0); // returns event number
+		//} else {
+		//	sleep(1);
+		//}
+
 		if (test_mode == 0) {
-			prussdrv_pru_wait_event (PRU_EVTOUT_0); // returns event number
+			if(pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT) == ETIMEDOUT) {
+				// timeout occured
+				printf("Error: ADC timout. Stopping ...\n");
+				status.state = ERROR;
+				break;
+			}
 		} else {
 			sleep(1);
 		}
@@ -712,7 +772,8 @@ int pru_sample(FILE* data, struct rl_conf_new* conf) {
 		}
 	}
 	
-	if (store == 1) {
+	// flush data if no error occured
+	if (store == 1 && status.state != ERROR) {
 		printf("Stored %d samples to file.\n", status.samples_taken);
 		fflush(data);
 	}
@@ -726,6 +787,10 @@ int pru_sample(FILE* data, struct rl_conf_new* conf) {
 		close(control_fifo);
 	}
 	
+	/*if(status.state == ERROR) {
+		return -1;
+	}*/
+	
 	return 1;
 	
 }
@@ -735,10 +800,12 @@ int pru_stop() {
 	// write OFF to PRU state (so PRU can clean up)
 	pru_set_state(PRU_OFF);
 	
-	// wait for interrupt
-	prussdrv_pru_wait_event (PRU_EVTOUT_0); // returns event number
-	prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
-
+	// wait for interrupt (if no ERROR occured) -> TODO: use wait&timeout function
+	if(status.state != ERROR) {
+		pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT);
+		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
+	}
+	
 	return 1;
 }
 
@@ -747,6 +814,6 @@ int pru_close() {
 	
 	// Disable PRU and close memory mappings 
 	prussdrv_pru_disable(0);
-	prussdrv_exit ();
+	prussdrv_exit();
 	return 1;
 }
