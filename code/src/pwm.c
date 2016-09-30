@@ -83,8 +83,7 @@ int adc_clock_setup() {
 	return 1;
 }
 
-int main(int argc, char **argv)
-{
+/*int main(int argc, char **argv) {
 	int sample_rate = 2;
 	
 	pwm_setup();
@@ -93,4 +92,4 @@ int main(int argc, char **argv)
 	pwm_close();
 	
     return 0;
-}
+}*/
