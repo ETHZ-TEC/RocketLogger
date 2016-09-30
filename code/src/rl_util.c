@@ -56,10 +56,10 @@ void reset_config(struct rl_conf_new* conf) {
 	conf->sample_rate = 1;
 	conf->update_rate = 1;
 	conf->number_samples = 0;
-	conf->enable_web_server = 0;
-	conf->file_format = CSV; // TODO: change to BIN
+	conf->enable_web_server = 1;
+	conf->file_format = BIN; // TODO: change to BIN
 	
-	strcpy(conf->file_name, "/var/www/data/data.csv");
+	strcpy(conf->file_name, "/var/www/data/data.dat");
 	
 	memset(conf->channels, 1, sizeof(conf->channels));
 	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
