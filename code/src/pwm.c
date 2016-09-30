@@ -1,7 +1,5 @@
 #include "pwm.h"
 
-// TODO: include other PWM functions
-
 int mem_fd;
 
 volatile uint16_t *pwmss0_regs;

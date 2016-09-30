@@ -11,4 +11,4 @@
 void hw_init(struct rl_conf_new* conf);
 void hw_close();
 
-int hw_sample(struct rl_conf_new* confn);
+int hw_sample(struct rl_conf_new* conf);

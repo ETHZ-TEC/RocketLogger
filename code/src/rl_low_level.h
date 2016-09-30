@@ -97,7 +97,6 @@
 #define LOG_FILE			"/var/www/log/log.txt"
 #define FIFO_FILE			"/etc/rocketlogger/fifo"
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
-//#define TEMP_CALIBRATION	"/etc/rocketlogger/temp_calib.dat"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/SPI.bin"
 
@@ -112,16 +111,11 @@
 #define NUMBER_WEB_CHANNELS 6
 
 // PRU states
-/*enum pru_states { // TODO: test
+enum pru_states {
 	PRU_OFF = 0,
 	PRU_LIMIT = 1,
 	PRU_CONTINUOUS = 3
-};*/
-//#define OFF 0
-#define PRU_OFF 0
-#define PRU_LIMIT 1
-#define PRU_CONTINUOUS 3
-//#define OFF 4
+};
 
 // PWM states
 #define ENABLE 1
@@ -171,7 +165,7 @@ struct header {
 
 #define NUMBER_PRU_COMMANDS 9
 struct pru_data_struct {
-	unsigned int state;
+	enum pru_states state;
 	unsigned int precision;
 	unsigned int sample_size;
 	unsigned int buffer0_location;
@@ -196,11 +190,11 @@ void collapse_data(float* data_out, int* data_in, int channels);
 int store_web_data(int fifo_fd, int control_fifo, float* buffer);
 
 // PRU functions
-int pru_set_state(int state);
+int pru_set_state(enum pru_states state);
 int pru_init();
 int pru_stop(); // stop pru when in continuous mode (has to be done before close)
 int pru_close();
-int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_new* conf);
+int pru_sample(FILE* data, struct rl_conf_new* conf);
 
 
 #endif

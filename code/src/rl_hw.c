@@ -42,25 +42,25 @@ void hw_close() {
 	// PRU TODO
 }
 
-int hw_sample(struct rl_conf_new* confn) {
+int hw_sample(struct rl_conf_new* conf) {
 	
 	// set update rate (remove?!)
-	if ((confn->update_rate != 1) && (confn->update_rate != 2) && (confn->update_rate != 5) && (confn->update_rate != 10)) {
+	if ((conf->update_rate != 1) && (conf->update_rate != 2) && (conf->update_rate != 5) && (conf->update_rate != 10)) {
 		printf("Wrong update rate.\n");
 			return -1;
 	}
 	
 	// open data file
 	FILE* data = (FILE*) -1;
-	if (confn->file_format != NO_FILE) { // open file only if storing requested
-		data = fopen(confn->file_name, "w+");
+	if (conf->file_format != NO_FILE) { // open file only if storing requested
+		data = fopen(conf->file_name, "w+");
 		if(data == NULL) {
 			printf("Error: Error opening data-file");
 			return -1;
 		}
 		// change access rights to data file
 		char cmd[50];
-		sprintf(cmd, "chmod 777 %s", confn->file_name);
+		sprintf(cmd, "chmod 777 %s", conf->file_name);
 		system(cmd);
 	}
 	
@@ -69,34 +69,11 @@ int hw_sample(struct rl_conf_new* confn) {
 		// TODO
 	}
 	
-	// TODO temporary solution
-	int i;
-	int MASK = 1;
-	int channels = 0;
-	int binary;
-	int store;
-	for(i=0; i<NUM_CHANNELS; i++) {
-		if(confn->channels[i] > 0) {
-			channels = channels | MASK;
-		}
-		MASK = MASK << 1;
-	}
-	if(confn->file_format == BIN) {
-		binary = 1;
-	} else {
-		binary = 0;
-	}
-	if(confn->file_format == NO_FILE || confn->mode == METER) {
-		store = 0;
-	} else {
-		store = 1;
-	}
-	
 	// SAMPLE
-	pru_sample(data, channels, store, binary, confn);
+	pru_sample(data, conf);
 	
 	// close data file
-	if (confn->file_format != NO_FILE) {
+	if (conf->file_format != NO_FILE) {
 		fclose(data);
 	}
 	

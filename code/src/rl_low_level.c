@@ -471,9 +471,9 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 // ------------------------------  PRU FUNCTIONS ------------------------------ //
 
 // set state to PRU
-int pru_set_state(int state){ // TODO void functions
+int pru_set_state(enum pru_states state){ // TODO void functions
 	
-	pru.state = (unsigned int) state;
+	pru.state = state;
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(int));
 	
 	return 1;
@@ -495,7 +495,31 @@ int pru_init() {
 }
 
 // main sample function
-int pru_sample(FILE* data, int channels, int store, int binary, struct rl_conf_new* conf) {
+int pru_sample(FILE* data, struct rl_conf_new* conf) {
+	
+	
+	// TODO temporary solution
+	int j;
+	int MASK = 1;
+	int channels = 0;
+	int binary;
+	int store;
+	for(j=0; j<NUM_CHANNELS; j++) {
+		if(conf->channels[j] > 0) {
+			channels = channels | MASK;
+		}
+		MASK = MASK << 1;
+	}
+	if(conf->file_format == BIN) {
+		binary = 1;
+	} else {
+		binary = 0;
+	}
+	if(conf->file_format == NO_FILE || conf->mode == METER) {
+		store = 0;
+	} else {
+		store = 1;
+	}
 	
 	unsigned int pru_sample_rate;
 	unsigned int buffer_size_bytes;

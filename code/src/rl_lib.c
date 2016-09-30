@@ -210,14 +210,16 @@ void rl_print_config(struct rl_conf_new* conf, int web) {
 
 // get status of RL (returns 1 when running)
 int rl_get_status(int print, int web) {
+	int status;
 	
 	// read config
 	struct rl_conf_new conf;
-	if(read_config(&conf, CONFIG_FILE) == 0) {
-		// no config file found -> assume no running
-		return 0;
+	if(read_config(&conf) == 0) { // no config file found -> not running
+		status = 0;
+		conf.mode = IDLE;
+	} else {
+		status = !(conf.mode == IDLE);
 	}
-	int status = !(conf.mode == IDLE);
 	
 	// print config if requested
 	if(print == 1) {
@@ -229,7 +231,7 @@ int rl_get_status(int print, int web) {
 
 
 // main sample function
-int rl_sample(struct rl_conf_new* confn) {
+int rl_sample(struct rl_conf_new* conf) {
 	
 	
 	// create FIFOs if not existing (TODO: in HW??)
@@ -248,15 +250,7 @@ int rl_sample(struct rl_conf_new* confn) {
 	
 	// store PID to file TODO: do in function (lib_util)
 	pid_t pid = getpid();
-	FILE* file = fopen(PID_FILE, "w");
-	if(file == NULL) {
-		printf("Error creating pid file.\n");
-		return -1;
-	}
-	fwrite(&pid, sizeof(pid_t), 1, file);
-	//close file
-	fclose(file);
-	
+	set_pid(pid);
 	
 	// register signal handler (for stopping)
 	if (signal(SIGQUIT, sig_handler) == SIG_ERR) {
@@ -271,28 +265,28 @@ int rl_sample(struct rl_conf_new* confn) {
 	}
 
 	//write conf to file
-	write_config(confn, CONFIG_FILE);
+	write_config(conf);
 	
 	
 	// INITIATION
 	// init all modules
 	pru_init();
-	hw_init(confn);
+	hw_init(conf);
 	
 	
 	// SAMPLING
-	hw_sample(confn);
+	hw_sample(conf);
 	
 	// FINISH
 	// close all modules
-	if(confn->mode != LIMIT) {
+	if(conf->mode != LIMIT) {
 		pru_stop();
 	}
 	pru_close();
 	hw_close();
 	
-	confn->mode = IDLE;
-	write_config(confn, CONFIG_FILE);
+	conf->mode = IDLE;
+	write_config(conf);
 	
 	// remove fifos
 	remove(FIFO_FILE);
@@ -303,9 +297,7 @@ int rl_sample(struct rl_conf_new* confn) {
 }
 
 // continuous sample function
-int rl_continuous(struct rl_conf_new* confn) {
-	
-	printf("Data acquisition running in background ...\n  Stop with:   rocketlogger stop\n\n");
+int rl_continuous(struct rl_conf_new* conf) {
 	
 	// create deamon to run in background
 	if (daemon(1, 1) < 0) {
@@ -314,9 +306,9 @@ int rl_continuous(struct rl_conf_new* confn) {
 	}
 	
 	// continuous sampling
-	confn->number_samples = 0; // useless?
+	//conf->number_samples = 0; // useless?
 	
-	rl_sample(confn);
+	rl_sample(conf);
 	
 	return 1;
 	
@@ -327,21 +319,12 @@ int rl_stop() {
 	
 	// read config
 	struct rl_conf_new conf;
-	if( (read_config(&conf, CONFIG_FILE) == 0) || conf.mode == IDLE) {
+	if( (read_config(&conf) == 0) || conf.mode == IDLE) {
 		printf("RocketLogger not running!\n");
 		return 1;
 	}
 	
-	// get PID from file TODO: do in function
-	pid_t pid;
-	FILE* file = fopen(PID_FILE, "r");
-	if(file == NULL) {
-		printf("Error opening pid file.\n");
-		return -1;
-	}
-	fread(&pid, sizeof(pid_t), 1, file); // get PID of background process
-	//close file
-	fclose(file);
+	pid_t pid = get_pid();
 	
 	kill(pid, SIGQUIT); // send stop signal
 	
@@ -349,14 +332,15 @@ int rl_stop() {
 }
 
 // meter function
-int rl_meter(struct rl_conf_new* confn) {
+int rl_meter(struct rl_conf_new* conf) {
 	
-	confn->update_rate = 10;
-	confn->number_samples = 0;
-	confn->enable_web_server = 0;
-	confn->file_format = NO_FILE;
+	// set meter config
+	conf->update_rate = 10;
+	conf->number_samples = 0;
+	conf->enable_web_server = 0;
+	conf->file_format = NO_FILE;
 	
-	rl_sample(confn);
+	rl_sample(conf);
 	
 	return 1;
 }

@@ -128,6 +128,7 @@ void rl_error(char message[]) {
 	printf("Error: %s\n", message);
 	
 	// TODO: cleanup
+	//hw_close(); // TODO: check for infinit loops!
 	
 	exit(EXIT_FAILURE);
 }

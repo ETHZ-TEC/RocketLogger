@@ -8,14 +8,16 @@
 #include "types.h"
 
 
-#define CONFIG_FILE "/etc/rocketlogger/rl.conf"
-#define PID_FILE "/etc/rocketlogger/rl.pid"
+#define CONFIG_FILE "/var/run/rocketlogger.conf"
+#define PID_FILE "/var/run/rocketlogger.pid"
 
 
 // TODO: remove file parameter
-int read_config(struct rl_conf_new* conf, char file_name[MAX_PATH_LENGTH]);
+int read_config(struct rl_conf_new* conf);
 
-int write_config(struct rl_conf_new* conf, char file_name[MAX_PATH_LENGTH]);
+int write_config(struct rl_conf_new* conf);
 
+pid_t get_pid();
+void set_pid(pid_t pid);
 
 #endif

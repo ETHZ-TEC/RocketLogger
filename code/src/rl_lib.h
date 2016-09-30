@@ -30,9 +30,9 @@ int rl_get_data();
 int rl_get_status(int print, int web);
 int rl_get_status_web();
 
-int rl_sample(struct rl_conf_new* confn);
-int rl_continuous(struct rl_conf_new* confn);
-int rl_meter(struct rl_conf_new* confn);
+int rl_sample(struct rl_conf_new* conf);
+int rl_continuous(struct rl_conf_new* conf);
+int rl_meter(struct rl_conf_new* conf);
 
 int rl_stop();
 
