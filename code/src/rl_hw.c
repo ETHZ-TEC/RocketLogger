@@ -24,10 +24,11 @@ void hw_init(struct rl_conf* conf) {
 	gpio_set_value(LED_STATUS_GPIO, 1);
 	gpio_set_value(LED_ERROR_GPIO, 0);
 	
-	// PRU TODO
+	// PRU
+	pru_init();
 }
 
-void hw_close() {
+void hw_close(struct rl_conf* conf) {
 	
 	// PWM
 	pwm_close();
@@ -39,7 +40,11 @@ void hw_close() {
 	// leds (not unexport!)
 	gpio_set_value(LED_STATUS_GPIO, 0);
 	
-	// PRU TODO
+	// PRU
+	if(conf->mode != LIMIT) {
+		pru_stop();
+	}
+	pru_close();
 }
 
 int hw_sample(struct rl_conf* conf) {
