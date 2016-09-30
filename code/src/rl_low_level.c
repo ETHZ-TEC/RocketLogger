@@ -27,7 +27,7 @@ unsigned int pru_data[PRUDATALENGTH];
 
 //unsigned int state;
 
-int test_mode = 0;
+int test_mode = 1;
 
 
 // ---------------------------------------------- FUNCTIONS --------------------------------------------------------//
@@ -107,8 +107,9 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int
 	char value_char[20];
 	
 	// webserver data
-	int avg_buffer_size = samples_buffer / WEB_BUFFER_SIZE; // size of buffer to average
+	int avg_buffer_size = ceil_div(samples_buffer, WEB_BUFFER_SIZE); // size of buffer to average
 	float web_data[WEB_BUFFER_SIZE][NUMBER_WEB_CHANNELS];
+	memset(web_data, 0, WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS * sizeof(float)); // reset data (needed due to  unfull buffer sizes)
 	
 	// store header
 	if(buffer_number == 0 && store == 1) {
@@ -542,7 +543,7 @@ int pru_init() {
 int pru_sample(FILE* data, struct rl_conf_new* conf) {
 	
 	
-	// TODO temporary solution
+	// TODO temporary solution !!!!!!!!
 	int j;
 	int MASK = 1;
 	int channels = 0;
@@ -787,9 +788,9 @@ int pru_sample(FILE* data, struct rl_conf_new* conf) {
 		close(control_fifo);
 	}
 	
-	/*if(status.state == ERROR) {
+	if(status.state == ERROR) {
 		return -1;
-	}*/
+	}
 	
 	return 1;
 	
