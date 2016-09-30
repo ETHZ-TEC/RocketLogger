@@ -177,6 +177,9 @@ int gpio_wait_interrupt(int num, int timeout) {
 	  return -1;
 	}
 	
+	// wait for signal to settle
+	usleep(MIN_BUTTON_TIME);
+	
 	// read value
 	lseek(fds.fd, 0, SEEK_SET);
 	read(fds.fd, &buf, 1);

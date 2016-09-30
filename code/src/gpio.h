@@ -8,6 +8,7 @@
 #include "types.h"
 
 #define GPIO_PATH "/sys/class/gpio/"
+#define MIN_BUTTON_TIME 100000 // minimal time a button needs to be pressed (in us)
 
 enum direction {IN, OUT};
 enum edge {NONE, RISING, FALLING, BOTH};
