@@ -3,6 +3,10 @@
 #
 all: rocketlogger rl_deamon
 
+install: rocketlogger rl_deamon
+		cp rocketlogger /bin/rocketlogger
+		cp rl_deamon /bin/rl_deamon
+
 rocketlogger : util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o
 		gcc -Wall -O3 util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o rocketlogger.c -o rocketlogger -pthread -lprussdrv -lrt
 
