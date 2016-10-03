@@ -90,19 +90,20 @@
 
 // memory map
 #define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
-#define PWM_FILE 			"/sys/devices/ocp.3/adc_clock.12/"
-#define GPIO_FILE 			"/sys/class/gpio/"
-#define FHR1_FILE 			"/sys/class/gpio/gpio30/"
-#define FHR2_FILE 			"/sys/class/gpio/gpio60/"
-#define DEVICE_FILE			"/etc/rocketlogger/"
-#define LOG_FILE			"/var/www/log/log.txt"
+//#define PWM_FILE 			"/sys/devices/ocp.3/adc_clock.12/"
+//#define GPIO_FILE 			"/sys/class/gpio/"
+//#define FHR1_FILE 			"/sys/class/gpio/gpio30/"
+//#define FHR2_FILE 			"/sys/class/gpio/gpio60/"
+#define DEVICE_FILE			"/etc/rocketlogger/" // TODO: ???
+//#define LOG_FILE			"/var/www/log/log.txt"
 #define FIFO_FILE			"/etc/rocketlogger/fifo"
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/SPI.bin"
 
-#define CALIBRATION_POINTS 2
-#define CALIBRATION_VALUES 1000
+// TODO: remove
+//#define CALIBRATION_POINTS 2
+//#define CALIBRATION_VALUES 1000
 
 // ---------------------------------------------- PRU/PWM DEFINES ---------------------------------------------------//
 
@@ -119,13 +120,13 @@
 #define WEB_BUFFER_SIZE 100
 #define NUMBER_WEB_CHANNELS 6
 
-// PWM states
-#define ENABLE 1
-#define DISABLE 0
+// PWM states TODO: remove
+//#define ENABLE 1
+//#define DISABLE 0
 
-// data precision (in bit)
-#define LOW 16
-#define HIGH 24
+// data precision (in bit) TODO remove:
+//#define LOW 16
+//#define HIGH 24
 
 // ---------------------------------------------- CHANNEL DEFINES ----------------------------------------------------// 
 

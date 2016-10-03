@@ -1,4 +1,4 @@
-#include "rl_low_level.h"
+#include "pru.h"
 
 // ---------------------------------------------- CONSTANTS----------------------------------------------------------//
 
@@ -703,16 +703,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			samples_buffer = pru.number_samples % pru.buffer_size;
 		}
 		
-		
-		
-		
 		// Wait for event completion from PRU
-		//if (test_mode == 0) {
-		//	prussdrv_pru_wait_event (PRU_EVTOUT_0); // returns event number
-		//} else {
-		//	sleep(1);
-		//}
-
 		if (test_mode == 0) {
 			if(pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT) == ETIMEDOUT) {
 				// timeout occured
@@ -745,9 +736,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, addr+4, i, samples_buffer, pru.sample_size, channels, &current_time, store, binary, conf->enable_web_server);
 		
-		// update state
+		// update and write state
 		status.samples_taken += samples_buffer;
 		status.buffer_number = i;
+		write_status(&status);
 		
 		// print meter output
 		if(conf->mode == METER) {
