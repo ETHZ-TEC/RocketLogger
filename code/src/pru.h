@@ -181,7 +181,7 @@ struct pru_data_struct {
 	unsigned int buffer0_location;
 	unsigned int buffer1_location;
 	unsigned int buffer_size;
-	unsigned int number_samples;
+	unsigned int sample_limit;
 	unsigned int number_commands;
 	unsigned int commands[NUMBER_PRU_COMMANDS];
 };

@@ -28,7 +28,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 						if (argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) > 0) { 
 							
 							conf.mode = LIMIT;
-							conf.number_samples = atoi(argv[i+1]);
+							conf.sample_limit = atoi(argv[i+1]);
 							conf.enable_web_server = 0; // webserver not as default
 							i++;
 							break;

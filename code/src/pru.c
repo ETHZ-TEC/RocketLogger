@@ -553,7 +553,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int number_buffers;
 	
 	// running state
-	status.state = NEW_RUNNING;
+	status.state = RUNNING;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	
@@ -628,10 +628,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			printf("Wrong sample rate.\n");
 			return -1;
 	}
-	pru.number_samples = conf->number_samples;
+	pru.sample_limit = conf->sample_limit;
 	pru.buffer_size = (conf->sample_rate * 1000) / conf->update_rate;
 	
-	number_buffers = ceil_div(conf->number_samples, pru.buffer_size);
+	number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
 	buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUSSIZE) + BUFFERSTATUSSIZE;
 	
 	pru.buffer0_location = read_file_value(MMAP_FILE "addr");
@@ -669,7 +669,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(2*buffer_size_bytes > max_size) {
 		printf("Not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x\n", 2*buffer_size_bytes);
 		pru.state = PRU_OFF; // TODO: remove?
-		status.state = NEW_OFF;
+		status.state = OFF;
 	}
 	
 	// map PRU memory into userspace
@@ -688,7 +688,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int samples_buffer; // number of samples per buffer
 	
 	// continuous sampling loop
-	for(i=0; status.state == NEW_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
+	for(i=0; status.state == RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
 		
 		// select current buffer
 		if(i%2 == 0) {
@@ -697,10 +697,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			addr = buffer1;
 		}
 		// select buffer size
-		if(i < number_buffers-1 || pru.number_samples % pru.buffer_size == 0) {
+		if(i < number_buffers-1 || pru.sample_limit % pru.buffer_size == 0) {
 			samples_buffer = pru.buffer_size; // full buffer size
 		} else {
-			samples_buffer = pru.number_samples % pru.buffer_size;
+			samples_buffer = pru.sample_limit % pru.buffer_size;
 		}
 		
 		// Wait for event completion from PRU

@@ -55,7 +55,7 @@ void reset_config(struct rl_conf* conf) {
 	conf->mode = CONTINUOUS;
 	conf->sample_rate = 1;
 	conf->update_rate = 1;
-	conf->number_samples = 0;
+	conf->sample_limit = 0;
 	conf->enable_web_server = 1;
 	conf->file_format = BIN;
 	

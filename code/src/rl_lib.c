@@ -44,7 +44,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 		printf("%d\n", conf->enable_web_server);
 		printf("%d\n", conf->sample_rate);
 		printf("%d\n", conf->update_rate);
-		printf("%d\n", conf->number_samples);
+		printf("%d\n", conf->sample_limit);
 		print_channels_new(conf->channels);
 		printf("%s\n", conf->file_name);
 		printf("%d\n",conf->file_format == BIN); // TODO: add no-file field
@@ -75,14 +75,14 @@ void rl_print_config(struct rl_conf* conf, int web) {
 			}
 			printf("\n");
 		}
-		if (conf->number_samples == 0) {	printf("  Sample limit:    no limit\n");
-		} else {							printf("  Sample limit:    %d\n", conf->number_samples);}
+		if (conf->sample_limit == 0) {	printf("  Sample limit:    no limit\n");
+		} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
 	}
 }
 
 void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
 	
-	if(status->state == NEW_OFF) {
+	if(status->state == OFF) {
 		if (web == 1) {
 			printf("OFF\n");
 		} else {
@@ -112,7 +112,7 @@ int rl_get_status(int print, int web) {
 	if(pid < 0 || kill(pid, 0) < 0) {
 		// process not running
 		// TODO: handle ERROR
-		status.state = NEW_OFF;
+		status.state = OFF;
 	} else {
 		// read status
 		read_status(&status);
@@ -126,7 +126,7 @@ int rl_get_status(int print, int web) {
 		rl_print_status(&conf, &status, web);
 	}
 	
-	return (status.state == NEW_RUNNING);
+	return (status.state == RUNNING);
 }
 
 
@@ -147,7 +147,7 @@ int rl_sample(struct rl_conf* conf) {
 		case METER:
 			// set meter config
 			conf->update_rate = 10;
-			conf->number_samples = 0;
+			conf->sample_limit = 0;
 			conf->enable_web_server = 0;
 			conf->file_format = NO_FILE;
 			break;

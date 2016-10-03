@@ -18,7 +18,7 @@
 #define NUM_TOT_I_CHANNELS 6
 #define NUM_V_CHANNELS 4
 
-enum rl_state {NEW_OFF, NEW_RUNNING, ERROR};
+enum rl_state {OFF, RUNNING, ERROR};
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT};
 enum rl_file_format {NO_FILE, CSV, BIN};
 
@@ -26,7 +26,7 @@ struct rl_conf {
 	enum rl_mode mode;
 	int sample_rate;
 	int update_rate;
-	int number_samples;
+	int sample_limit;
 	int channels[NUM_CHANNELS];
 	int force_high_channels[NUM_I_CHANNELS];
 	int enable_web_server;
