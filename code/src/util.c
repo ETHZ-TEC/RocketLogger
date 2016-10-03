@@ -1,5 +1,45 @@
 #include "util.h"
 
+int read_status(struct rl_status* status) {
+	
+	// check if status file existing
+	if(open(STATUS_FILE, O_RDWR) <= 0) {
+		status->state = NEW_OFF;
+		return 0;
+	}
+	
+	// open status file
+	FILE* file = fopen(STATUS_FILE, "r");
+	if(file == NULL) {
+		printf("Error opening status file.\n");
+		return -1;
+	}
+	// read values
+	fread(status, sizeof(struct rl_status), 1, file);
+	
+	//close file
+	fclose(file);
+	return 1;
+}
+
+int write_status(struct rl_status* status) {
+	
+	// open status file
+	FILE* file = fopen(STATUS_FILE, "w");
+	if(file == NULL) {
+		printf("Error creating status file.\n");
+		return -1;
+	}
+	
+	// write values
+	fwrite(status, sizeof(struct rl_status), 1, file);
+	
+	//close file
+	fclose(file);
+	return 1;
+}
+
+
 /**
  * Count the number of bits set in an integer.
  * @param x
@@ -68,7 +108,7 @@ void sig_handler(int signo) { // TODO: combine?
 }
 // TODO: allow forced Ctrl+C
 
-// ------------------------------ MEMORY MAP/UNMAP ------------------------------ //
+// ------------------------------ MEMORY MAP/UNMAP ------------------------------ // TODO: move to pru
 
 // map physical memory into virtual adress space
 void* memory_map(unsigned int addr, size_t size) {

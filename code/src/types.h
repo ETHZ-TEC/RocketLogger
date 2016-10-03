@@ -1,6 +1,12 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+
+// files
+#define CONFIG_FILE "/var/run/rocketlogger.conf"
+#define PID_FILE "/var/run/rocketlogger.pid"
+#define STATUS_FILE "/var/run/rocketlogger.stat"
+
 // TODO: try to remove
 #define MAP_SIZE 0x0FFFFFFF
 #define MAP_MASK (MAP_SIZE - 1)
@@ -13,7 +19,7 @@
 #define NUM_V_CHANNELS 4
 
 enum rl_state {NEW_OFF, NEW_RUNNING, ERROR};
-enum rl_mode {IDLE, LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT}; // TODO: ERROR
+enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT};
 enum rl_file_format {NO_FILE, CSV, BIN};
 
 struct rl_conf {
