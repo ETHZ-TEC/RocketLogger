@@ -5,21 +5,21 @@ int read_status(struct rl_status* status) {
 	// check if status file existing
 	if(open(STATUS_FILE, O_RDWR) <= 0) {
 		status->state = OFF;
-		return 0;
+		return UNDEFINED;
 	}
 	
 	// open status file
 	FILE* file = fopen(STATUS_FILE, "r");
 	if(file == NULL) {
 		printf("Error opening status file.\n");
-		return -1;
+		return FAILURE;
 	}
 	// read values
 	fread(status, sizeof(struct rl_status), 1, file);
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 int write_status(struct rl_status* status) {
@@ -28,7 +28,7 @@ int write_status(struct rl_status* status) {
 	FILE* file = fopen(STATUS_FILE, "w");
 	if(file == NULL) {
 		printf("Error creating status file.\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// write values
@@ -36,7 +36,7 @@ int write_status(struct rl_status* status) {
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 
@@ -136,10 +136,10 @@ void* memory_map(unsigned int addr, size_t size) {
 int memory_unmap(void* ptr, size_t size) {
 	if(munmap(ptr, size) == -1) {
 		printf("Error: Failed to unmap memory");
-		return -1;
+		return FAILURE;
     }
     
-	return 1;
+	return SUCCESS;
 }
 
 // ------------------------------ FILE READING/WRITING  ------------------------------ //
@@ -151,11 +151,11 @@ int read_file_value(char filename[]) {
 	fp = fopen(filename, "rt");
 	if (fp < 0) {
 		printf("Error: Cannot open file");
-		return -1;
+		return FAILURE;
 	}
 	if(fscanf(fp, "%x", &value) < 0) {
 		printf("Error: Cannot read from file");
-		return -1;
+		return FAILURE;
 	}
 	fclose(fp);
 	return value;

@@ -17,6 +17,6 @@ void print_json(float data[], int length);
 void print_channels_new(int channels[NUM_CHANNELS]);
 
 pid_t get_pid();
-void set_pid(pid_t pid);
+int set_pid(pid_t pid);
 
 #endif

@@ -14,7 +14,7 @@ void rl_print_config(struct rl_conf* conf, int web);
 
 void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web);
 
-int rl_get_status(int print, int web);
+enum rl_state rl_get_status(int print, int web);
 
 int rl_sample(struct rl_conf* conf);
 

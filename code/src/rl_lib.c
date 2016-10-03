@@ -32,7 +32,7 @@ int rl_get_data() {
 		print_json(data[i], NUMBER_WEB_CHANNELS);
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 void rl_print_config(struct rl_conf* conf, int web) {
@@ -101,7 +101,7 @@ void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
 }
 
 // get status of RL (returns 1 when running)
-int rl_get_status(int print, int web) {
+enum rl_state rl_get_status(int print, int web) {
 	
 	//int temp_status;
 	struct rl_conf conf;
@@ -109,7 +109,7 @@ int rl_get_status(int print, int web) {
 	
 	// get pid
 	pid_t pid = get_pid();
-	if(pid < 0 || kill(pid, 0) < 0) {
+	if(pid == FAILURE || kill(pid, 0) < 0) {
 		// process not running
 		// TODO: handle ERROR
 		status.state = OFF;
@@ -126,7 +126,7 @@ int rl_get_status(int print, int web) {
 		rl_print_status(&conf, &status, web);
 	}
 	
-	return (status.state == RUNNING);
+	return status.state;
 }
 
 
@@ -140,8 +140,8 @@ int rl_sample(struct rl_conf* conf) {
 		case CONTINUOUS:
 			// create deamon to run in background
 			if (daemon(1, 1) < 0) {
-				printf("Error: Deamon");
-				return 1;
+				printf("Error: failed to create background process");
+				return SUCCESS;
 			}
 			break;
 		case METER:
@@ -153,30 +153,30 @@ int rl_sample(struct rl_conf* conf) {
 			break;
 		default:
 			printf("Error: wrong mode\n");
-			return -1;
+			return FAILURE;
 	}
 	
 	// check input
-	if(check_sample_rate(conf->sample_rate) < 0) {
+	if(check_sample_rate(conf->sample_rate) == FAILURE) {
 		printf("Error: wrong sampling rate\n");
-		return -1;
+		return FAILURE;
 	}
-	if(check_update_rate(conf->update_rate) < 0) {
+	if(check_update_rate(conf->update_rate) == FAILURE) {
 		printf("Error: wrong update rate\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// create FIFOs if not existing
 	if(open(FIFO_FILE, O_RDWR) <= 0) {
 		if(mkfifo(FIFO_FILE,O_NONBLOCK) < 0) {
 			printf("Error: could not create FIFO.\n");
-			return -1;
+			return FAILURE;
 		}
 	}
 	if(open(CONTROL_FIFO, O_RDWR) <= 0) {
 		if(mkfifo(CONTROL_FIFO,O_NONBLOCK) < 0) {
 			printf("Error: could not create control FIFO.\n");
-			return -1;
+			return FAILURE;
 		}
 	}
 	
@@ -187,7 +187,7 @@ int rl_sample(struct rl_conf* conf) {
 	// register signal handler (for stopping)
 	if (signal(SIGQUIT, sig_handler) == SIG_ERR || signal(SIGINT, sig_handler) == SIG_ERR) {
         printf("Error: can't register signal handler.\n");
-		return -1;
+		return FAILURE;
 	}
 
 	//write conf to file
@@ -210,7 +210,7 @@ int rl_sample(struct rl_conf* conf) {
 	remove(FIFO_FILE);
 	remove(CONTROL_FIFO);
 	 
-	return 1;
+	return SUCCESS;
 	
 }
 
@@ -219,9 +219,9 @@ int rl_sample(struct rl_conf* conf) {
 int rl_stop() {
 	
 	// check if running
-	if(rl_get_status(0,0) == 0) {
+	if(rl_get_status(0,0) != RUNNING) {
 		printf("RocketLogger not running!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// ged pid
@@ -230,5 +230,5 @@ int rl_stop() {
 	// send stop signal
 	kill(pid, SIGQUIT);
 	
-	return 1;
+	return SUCCESS;
 }

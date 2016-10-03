@@ -11,7 +11,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 	
 	// need at least 2 arguments
 	if (argc < 2) {
-		return -1;
+		return FAILURE;
 	}
 	
 	set_as_default = 0;
@@ -33,7 +33,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 							i++;
 							break;
 						} else {
-							return -1;
+							return FAILURE;
 						}
 						break;
 					
@@ -44,10 +44,10 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 					
 					case 'o': // stop
 						conf.mode = STOPPED;
-						return 1;
+						return SUCCESS;
 					
 					default: 
-						return -1;
+						return FAILURE;
 				}
 			}
 			break;
@@ -67,14 +67,14 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 		
 		case 'd': // data
 			conf.mode = DATA;
-			return 1;
+			return SUCCESS;
 		
 		case 'p': // print default
 			conf.mode = PRINT_DEFAULT;
-			return 1;
+			return SUCCESS;
 		
 		default:
-			return -1;
+			return FAILURE;
 		
 	}
 	i++;
@@ -95,7 +95,7 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 					i++;
 					break;
 				} else {
-					return -1;
+					return FAILURE;
 				}
 			
 			case 'f':
@@ -110,13 +110,13 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 							if (atoi(&argv[i+1][2]) < 3 && atoi(&argv[i+1][2]) > 0) {
 								conf.force_high_channels[atoi(&argv[i+1][2]) - 1] = 1;
 							} else {
-								return -1;
+								return FAILURE;
 							}
 						}
 						i++;
 						break;
 					} else {
-						return -1;
+						return FAILURE;
 					}
 				} else { // output file
 					if (argc > i+1) {
@@ -128,34 +128,34 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 						i++;
 						break;
 					} else {
-						return -1;
+						return FAILURE;
 					}
 				}
 			
 			case 'r': // sampling rate
 				if (argc > i+1 && isdigit(argv[i+1][0])) {
 					conf.sample_rate = atoi(argv[i+1]);
-					if(check_sample_rate(conf.sample_rate) < 0) { // check if rate allowed
+					if(check_sample_rate(conf.sample_rate) == FAILURE) { // check if rate allowed
 						printf("Error: wrong sample rate.\n");
-						return -1;
+						return FAILURE;
 					}
 					i++;
 					break;
 				} else {
-					return -1;
+					return FAILURE;
 				}
 			
 			case 'u': // update rate
 				if (argc > i+1 && isdigit(argv[i+1][0])) {
 					conf.update_rate = atoi(argv[i+1]);
-					if(check_update_rate(conf.update_rate) < 0) { // check if rate allowed
+					if(check_update_rate(conf.update_rate) == FAILURE) { // check if rate allowed
 						printf("Error: wrong update rate.\n");
-						return -1;
+						return FAILURE;
 					}
 					i++;
 					break;
 				} else {
-					return -1;
+					return FAILURE;
 				}
 			
 			case 'w': // webserver
@@ -171,32 +171,32 @@ int parse_args(int argc, char* argv[]) { //TODO: outsource
 				break;
 			
 			case 'h': // help
-				return -1;
+				return FAILURE;
 			
 			default:
-				return -1;
+				return FAILURE;
 		}
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 
 int main(int argc, char* argv[]) {
 	
 	// check if root
-	if(getuid()!=0){
-		printf("You must run this program as root. Exiting.\n");
-		return -1;
+	if(getuid() != 0){
+		printf("Error: you must run this program as root\n");
+		return FAILURE;
 	}
 	
 	// get default config
 	read_default_config(&conf);
 	
 	// parse arguments
-	if (parse_args(argc, argv) < 0) {
+	if (parse_args(argc, argv) == FAILURE) {
 		print_usage(&conf);
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 	
 	
@@ -207,75 +207,75 @@ int main(int argc, char* argv[]) {
 	
 	switch (conf.mode) {
 		case LIMIT:
-			if(is_running()) {
+			if(rl_get_status(0,0) == RUNNING) {
 				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
-				return -1;
+				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
 			printf("\nStart sampling ...\n");
 			break;
 			
 		case CONTINUOUS:
-			if(is_running()) {
+			if(rl_get_status(0,0) == RUNNING) {
 				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
-				return -1;
+				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
 			printf("\nData acquisition running in background ...\n  Stop with:   rocketlogger stop\n\n");
 			break;
 		
 		case METER:
-			if(is_running()) {
+			if(rl_get_status(0,0) == RUNNING) {
 				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
-				return -1;
+				exit(EXIT_FAILURE);
 			}
 			break;
 		
 		case STATUS:
 			rl_get_status(1,conf.enable_web_server);
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		case STOPPED:
-			if(!is_running()) {
+			if(rl_get_status(0,0) != RUNNING) {
 				printf("Error: RocketLogger not running\n");
-				return -1;
+				exit(EXIT_FAILURE);
 			}
 			printf("Stopping RocketLogger ...\n");
 			rl_stop();
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		case DATA:
-			if(!is_running()) {
+			if(rl_get_status(0,0) != RUNNING) {
 				printf("Error: RocketLogger not running\n");
-				return -1;
+				exit(EXIT_FAILURE);
 			}
 			rl_get_data();
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		case CALIBRATE:
-			if(is_running()) {
+			if(rl_get_status(0,0) == RUNNING) {
 				printf("Warning: reset will not affect current measurement\n");
 			}
 			rl_reset_calibration();
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		case SET_DEFAULT:
 			write_default_config(&conf);
 			print_config(&conf);
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		case PRINT_DEFAULT:
 			print_config(&conf);
-			return 1;
+			exit(EXIT_SUCCESS);
 		
 		default:
 			print_usage(&conf);
-			return -1;
+			exit(EXIT_FAILURE);
 	}
 	
 	// start the sampling
 	rl_sample(&conf);
 	
-	return 1;
+	exit(EXIT_SUCCESS);
 	
 }

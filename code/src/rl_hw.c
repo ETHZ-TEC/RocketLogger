@@ -49,11 +49,11 @@ void hw_close(struct rl_conf* conf) {
 
 int hw_sample(struct rl_conf* conf) {
 	
-	// set update rate (remove?!)
-	if ((conf->update_rate != 1) && (conf->update_rate != 2) && (conf->update_rate != 5) && (conf->update_rate != 10)) {
+	// set update rate (TODO: remove?!)
+	/*if ((conf->update_rate != 1) && (conf->update_rate != 2) && (conf->update_rate != 5) && (conf->update_rate != 10)) {
 		printf("Wrong update rate.\n");
-			return -1;
-	}
+			return FAILURE;
+	}*/
 	
 	// open data file
 	FILE* data = (FILE*) -1;
@@ -61,7 +61,7 @@ int hw_sample(struct rl_conf* conf) {
 		data = fopen(conf->file_name, "w+");
 		if(data == NULL) {
 			printf("Error: Error opening data-file");
-			return -1;
+			return FAILURE;
 		}
 		// change access rights to data file
 		char cmd[50];
@@ -70,12 +70,12 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	if(read_calibration() > 0) {
+	if(read_calibration() == SUCCESS) {
 		// TODO
 	}
 	
 	// SAMPLE
-	if(pru_sample(data, conf) < 0) {
+	if(pru_sample(data, conf) == FAILURE) {
 		// error ocurred
 		gpio_set_value(LED_ERROR_GPIO, 1);
 	}
@@ -85,6 +85,6 @@ int hw_sample(struct rl_conf* conf) {
 		fclose(data);
 	}
 	
-	return 1;
+	return SUCCESS;
 	
 }

@@ -6,7 +6,7 @@ int gpio_unexport(int num) {
 	int fd = open(GPIO_PATH "unexport", O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO unexport file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// export gpio
@@ -17,7 +17,7 @@ int gpio_unexport(int num) {
 	// close file
 	close(fd);
 	
-	return 1;
+	return SUCCESS;
 }
 
 // gpio export
@@ -26,7 +26,7 @@ int gpio_export(int num) {
 	int fd = open(GPIO_PATH "export", O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO export file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// export gpio
@@ -37,7 +37,7 @@ int gpio_export(int num) {
 	// close file
 	close(fd);
 	
-	return 1;
+	return SUCCESS;
 }
 
 // set direction
@@ -49,7 +49,7 @@ int gpio_dir(int num, enum direction dir) {
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO direction file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// set direction
@@ -61,7 +61,7 @@ int gpio_dir(int num, enum direction dir) {
 	// close file
 	close(fd);
 	
-	return 1;
+	return SUCCESS;
 }
 
 
@@ -74,7 +74,7 @@ int gpio_interrupt(int num, enum edge e) {
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO edge file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// set edge
@@ -97,7 +97,7 @@ int gpio_interrupt(int num, enum edge e) {
 	// close file
 	close(fd);
 	
-	return 1;
+	return SUCCESS;
 }
 
 // set gpio value
@@ -109,7 +109,7 @@ int gpio_set_value(int num, int val) {
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// set value
@@ -122,7 +122,7 @@ int gpio_set_value(int num, int val) {
 	// close file
 	close(fd);
 	
-	return 1;
+	return SUCCESS;
 }
 
 // get gpio value
@@ -134,7 +134,7 @@ int gpio_get_value(int num) {
 	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// read value
@@ -156,7 +156,7 @@ int gpio_wait_interrupt(int num, int timeout) {
 	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
 		printf("Error: could not open GPIO value file!\n");
-		return -1;
+		return FAILURE;
 	}
 	
 	// set up polling struct
@@ -174,7 +174,7 @@ int gpio_wait_interrupt(int num, int timeout) {
 	ret = poll(&fds, nfds, timeout);
 	if (ret < 0) {
 	  printf("Error: poll failed!\n");
-	  return -1;
+	  return FAILURE;
 	}
 	
 	// wait for signal to settle

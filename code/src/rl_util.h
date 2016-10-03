@@ -10,8 +10,6 @@
 
 #define DEFAULT_CONFIG "/etc/rocketlogger/default.conf"
 
-int is_running();
-
 void print_usage(struct rl_conf* conf);
 void print_config(struct rl_conf* conf);
 

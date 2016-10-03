@@ -1,13 +1,5 @@
 #include "rl_util.h"
 
-int is_running() {
-	// check if RL already running
-	if(rl_get_status(0,0) == 1) {
-		return 1;
-	}
-	return 0;
-}
-
 void print_usage(struct rl_conf* conf) {
 	printf("Usage:\n");
 	printf("  rocketlogger [mode] -[option] [value]\n\n");
@@ -64,7 +56,6 @@ void reset_config(struct rl_conf* conf) {
 	memset(conf->channels, 1, sizeof(conf->channels));
 	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
 	
-	return;
 }
 
 int read_default_config(struct rl_conf* conf) {
@@ -72,14 +63,14 @@ int read_default_config(struct rl_conf* conf) {
 	// check if config file existing
 	if(open(DEFAULT_CONFIG, O_RDWR) <= 0) {
 		reset_config(conf);
-		return 0;
+		return UNDEFINED;
 	}
 	
 	// open config file
 	FILE* file = fopen(DEFAULT_CONFIG, "r");
 	if(file == NULL) {
 		printf("Error opening configuration file.\n");
-		return -1;
+		return FAILURE;
 	}
 	// read values
 	fread(conf, sizeof(struct rl_conf), 1, file);
@@ -89,7 +80,7 @@ int read_default_config(struct rl_conf* conf) {
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 int write_default_config(struct rl_conf* conf) {
@@ -98,12 +89,12 @@ int write_default_config(struct rl_conf* conf) {
 	FILE* file = fopen(DEFAULT_CONFIG, "w");
 	if(file == NULL) {
 		printf("Error creating configuration file.\n");
-		return -1;
+		return FAILURE;
 	}
 	// write values
 	fwrite(conf, sizeof(struct rl_conf), 1, file);
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }

@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <stdint.h>
 
+#include "types.h"
+
 // base addresses
 #define PWMSS0_BASE 0x48300000
 #define PWMSS1_BASE 0x48302000

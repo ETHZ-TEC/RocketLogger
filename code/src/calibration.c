@@ -11,7 +11,7 @@ int reset_offsets() {
 		offsets24[i] = 0;
 		offsets16[i] = 0;
 	}
-	return 1;
+	return SUCCESS;
 }
 
 /**
@@ -24,7 +24,7 @@ int reset_scales() {
 		scales24[i] = 1;
 		scales16[i] = 1;
 	}
-	return 1;
+	return SUCCESS;
 }
 
 /**
@@ -37,13 +37,13 @@ int read_calibration() {
 		printf("Warning: no calibration file, returning uncalibrated values.\n");
 		reset_offsets();
 		reset_scales();
-		return 1;
+		return SUCCESS;
 	}
 	// open calibration file
 	FILE* file = fopen(CALIBRATION_FILE, "r");
 	if(file == NULL) {
 		printf("Error: Error opening calibration file");
-		return -1;
+		return FAILURE;
 	}
 	// read values
 	fread(offsets24, sizeof(int), NUM_CALIBRATION_VALUES, file);
@@ -58,7 +58,7 @@ int read_calibration() {
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 /**
@@ -70,7 +70,7 @@ int write_calibration() {
 	FILE* file = fopen(CALIBRATION_FILE, "w+");
 	if(file == NULL) {
 		printf("Error: Error opening calibration file");
-		return -1;
+		return FAILURE;
 	}
 	// write values
 	fwrite(offsets24, sizeof(int), NUM_CALIBRATION_VALUES, file);
@@ -78,5 +78,5 @@ int write_calibration() {
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }

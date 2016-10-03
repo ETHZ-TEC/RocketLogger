@@ -11,7 +11,7 @@ int pwm_setup() {
 	// open /dev/mem for memory mapping
     if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
 		printf("can't open /dev/mem \n");
-		return -1;
+		return FAILURE;
     }
 	
 	// map pwm0 registers into virtual memory
@@ -19,7 +19,7 @@ int pwm_setup() {
 	if (pwmss1_regs == (volatile uint16_t *)MAP_FAILED) {
 		perror ("mmap failed");
 		close (mem_fd);
-		return -1;
+		return FAILURE;
 	}
 	
 	// map pwm1 registers into virtual memory
@@ -27,10 +27,10 @@ int pwm_setup() {
 	if (pwmss1_regs == (volatile uint16_t *)MAP_FAILED) {
 		perror ("mmap failed");
 		close (mem_fd);
-		return -1;
+		return FAILURE;
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 // unmap pwm registers
@@ -43,7 +43,7 @@ int pwm_close() {
 	// close /dev/mem
 	close (mem_fd);
 	
-	return 1;
+	return SUCCESS;
 	
 }
 
@@ -64,7 +64,7 @@ int range_clock_setup(int sample_rate) {
 	pwmss1_regs[AQCTLA] = RWC_AQ_A; // set actions
 	pwmss1_regs[AQCTLB] = RWC_AQ_B;
 	
-	return 1;
+	return SUCCESS;
 	
 }
 
@@ -78,5 +78,5 @@ int adc_clock_setup() {
 	pwmss0_regs[AQCTLA] = ADC_AQ;
 
 	
-	return 1;
+	return SUCCESS;
 }

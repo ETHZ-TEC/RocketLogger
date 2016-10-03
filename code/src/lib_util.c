@@ -10,20 +10,20 @@ int check_sample_rate(int sample_rate) {
 	int i;
 	for(i=0; i<NUMBER_SAMPLE_RATES; i++) {
 		if(possible_sample_rates[i] == sample_rate){
-			return 1;
+			return SUCCESS;
 		}
 	}
-	return -1;
+	return FAILURE;
 }
 
 int check_update_rate(int update_rate) {
 	int i;
 	for(i=0; i<NUMBER_UPDATE_RATES; i++) {
 		if(possible_update_rates[i] == update_rate){
-			return 1;
+			return SUCCESS;
 		}
 	}
-	return -1;
+	return FAILURE;
 }
 
 int read_config(struct rl_conf* conf) {
@@ -31,21 +31,21 @@ int read_config(struct rl_conf* conf) {
 	// check if config file existing
 	if(open(CONFIG_FILE, O_RDWR) <= 0) {
 		//conf->mode = IDLE;
-		return 0;
+		return UNDEFINED;
 	}
 	
 	// open config file
 	FILE* file = fopen(CONFIG_FILE, "r");
 	if(file == NULL) {
 		printf("Error opening configuration file.\n");
-		return -1;
+		return FAILURE;
 	}
 	// read values
 	fread(conf, sizeof(struct rl_conf), 1, file);
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 int write_config(struct rl_conf* conf) {
@@ -54,14 +54,14 @@ int write_config(struct rl_conf* conf) {
 	FILE* file = fopen(CONFIG_FILE, "w");
 	if(file == NULL) {
 		printf("Error creating configuration file.\n");
-		return -1;
+		return FAILURE;
 	}
 	// write values
 	fwrite(conf, sizeof(struct rl_conf), 1, file);
 	
 	//close file
 	fclose(file);
-	return 1;
+	return SUCCESS;
 }
 
 // print data in json format for easy reading in javascript
@@ -130,7 +130,7 @@ pid_t get_pid() {
 	pid_t pid;
 	FILE* file = fopen(PID_FILE, "r");
 	if(file == NULL) { // no pid found -> no process running
-		return -1;
+		return FAILURE;
 	}
 	
 	// read pid
@@ -142,13 +142,13 @@ pid_t get_pid() {
 	return pid;
 }
 
-void set_pid(pid_t pid) {
+int set_pid(pid_t pid) {
 	
 	// open file
 	FILE* file = fopen(PID_FILE, "w");
 	if(file == NULL) {
 		printf("Error creating pid file.\n");
-		return;
+		return FAILURE;
 	}
 	
 	// write pid
@@ -156,4 +156,6 @@ void set_pid(pid_t pid) {
 	
 	//close file
 	fclose(file);
+	
+	return SUCCESS;
 }

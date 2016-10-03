@@ -48,7 +48,7 @@ int store_header(FILE* data, struct header* h, int binary) {
 		fprintf(data,"\n");
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 int update_sample_number(FILE* data, struct header* h, int binary) {
@@ -68,7 +68,7 @@ int update_sample_number(FILE* data, struct header* h, int binary) {
 	fseek(data, pos, SEEK_SET);
 	
 	
-	return 1;
+	return SUCCESS;
 }
 
 // buffer
@@ -179,7 +179,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int
 		
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 // store webserver data to fifo
@@ -211,7 +211,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS);
 	}*/
 	
-	return 1;
+	return SUCCESS;
 }
 
 // collapse current channels for webserver plotting (always take highest selected I-channel)
@@ -503,7 +503,7 @@ int pru_set_state(enum pru_states state){ // TODO void functions
 	pru.state = state;
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(int));
 	
-	return 1;
+	return SUCCESS;
 }
 
 // PRU initiation
@@ -514,11 +514,11 @@ int pru_init() {
 	prussdrv_init ();
 	if (prussdrv_open(PRU_EVTOUT_0) == -1) {  
 		printf("Error: Failed to open PRU");  
-		return -1;  
+		return FAILURE;  
 	}
 	prussdrv_pruintc_init(&pruss_intc_initdata);
 	
-	return 1;
+	return SUCCESS;
 }
 
 // main sample function
@@ -626,7 +626,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			break;
 		default:
 			printf("Wrong sample rate.\n");
-			return -1;
+			return FAILURE;
 	}
 	pru.sample_limit = conf->sample_limit;
 	pru.buffer_size = (conf->sample_rate * 1000) / conf->update_rate;
@@ -763,10 +763,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	}
 	
 	if(status.state == ERROR) {
-		return -1;
+		return FAILURE;
 	}
 	
-	return 1;
+	return SUCCESS;
 	
 }
 
@@ -781,7 +781,7 @@ int pru_stop() {
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
 	}
 	
-	return 1;
+	return SUCCESS;
 }
 
 // cleanup PRU
@@ -790,5 +790,5 @@ int pru_close() {
 	// Disable PRU and close memory mappings 
 	prussdrv_pru_disable(0);
 	prussdrv_exit();
-	return 1;
+	return SUCCESS;
 }

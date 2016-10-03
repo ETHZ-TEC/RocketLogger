@@ -9,7 +9,7 @@ int gpio_setup() {
 	gpio_dir(GPIO_BUTTON, IN);
 	gpio_interrupt(GPIO_BUTTON, RISING);
 	
-	return 1;
+	return SUCCESS; // TODO: add possibility to fail
 }
 
 void interrupt_handler(int value) {
@@ -19,7 +19,7 @@ void interrupt_handler(int value) {
 		// get RL status (without print)
 		int status = rl_get_status(0,0);
 		
-		if (status == 1) {
+		if (status == RUNNING) {
 			system("sudo rocketlogger stop > /dev/null");
 		} else {
 			system("sudo rocketlogger continuous > /dev/null");
@@ -43,6 +43,6 @@ int main(int argc, char **argv) {
 		interrupt_handler(val);
 	}
 	
-	return 1;
+	exit(EXIT_SUCCESS);
 }
 
