@@ -5,11 +5,14 @@
 #include "types.h"
 #include "rl_hw.h"
 
-void rl_print_config(struct rl_conf* conf, int web);
 
 void rl_reset_calibration();
 
 int rl_get_data();
+
+void rl_print_config(struct rl_conf* conf, int web);
+
+void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web);
 
 int rl_get_status(int print, int web);
 

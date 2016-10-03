@@ -49,13 +49,12 @@ void rl_print_config(struct rl_conf* conf, int web) {
 		printf("%s\n", conf->file_name);
 		printf("%d\n",conf->file_format == BIN); // TODO: add no-file field
 		// TODO: add fhr
+		// TODO: add #samples
 		
 	} else {
 
 											printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
 											printf("  Update rate:     %dHz\n", conf->update_rate);
-		if (conf->number_samples == 0) {	printf("  Sample limit:    no limit\n");
-		} else {							printf("  Sample limit:    %d\n", conf->number_samples);}
 		if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
 											printf("  File format:     %s\n", file_format_names[conf->file_format]);
 		if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
@@ -76,39 +75,58 @@ void rl_print_config(struct rl_conf* conf, int web) {
 			}
 			printf("\n");
 		}
-		printf("\n");
+		if (conf->number_samples == 0) {	printf("  Sample limit:    no limit\n");
+		} else {							printf("  Sample limit:    %d\n", conf->number_samples);}
+	}
+}
+
+void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
+	
+	if(status->state == NEW_OFF) {
+		if (web == 1) {
+			printf("OFF\n");
+		} else {
+			printf("\nRocketLogger IDLE\n\n");
+		}
+	} else {
+		if (web == 1) {
+			printf("RUNNING\n");
+			
+		} else {
+			printf("\nRocketLogger Status: RUNNING\n");
+		}
+		rl_print_config(conf, web);
+		printf("  Samples taken:   %d\n\n", status->samples_taken);
 	}
 }
 
 // get status of RL (returns 1 when running)
 int rl_get_status(int print, int web) {
 	
-	int status;
+	//int temp_status;
 	struct rl_conf conf;
+	struct rl_status status;
 	
 	// get pid
 	pid_t pid = get_pid();
 	if(pid < 0 || kill(pid, 0) < 0) {
 		// process not running
-		status = 0;
-		conf.mode = IDLE;
+		// TODO: handle ERROR
+		status.state = NEW_OFF;
 	} else {
+		// read status
+		read_status(&status);
+		
 		// read config
-		if(read_config(&conf) == 0) { // no config file found -> not running
-			status = 0;
-			conf.mode = IDLE;
-		} else {
-			// TODO: handle ERROR
-			status = !(conf.mode == IDLE);
-		}
+		read_config(&conf);
 	}
 	
 	// print config if requested
 	if(print == 1) {
-		print_status(&conf, web);
+		rl_print_status(&conf, &status, web);
 	}
 	
-	return status;
+	return (status.state == NEW_RUNNING);
 }
 
 
@@ -185,8 +203,8 @@ int rl_sample(struct rl_conf* conf) {
 	hw_close(conf);
 	
 	// write conf to file
-	conf->mode = IDLE;
-	write_config(conf);
+	/*conf->mode = IDLE;
+	write_config(conf);*/
 	
 	// remove fifos
 	remove(FIFO_FILE);
