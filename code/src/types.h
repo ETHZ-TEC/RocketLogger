@@ -30,7 +30,7 @@ enum rl_state {
 	RUNNING = 1,
 	ERROR = -1
 };
-enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT};
+enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
 enum rl_file_format {NO_FILE, CSV, BIN};
 
 // configuration struct

@@ -75,7 +75,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 			}
 			printf("\n");
 		}
-		if (conf->sample_limit == 0) {	printf("  Sample limit:    no limit\n");
+		if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
 		} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
 	}
 }

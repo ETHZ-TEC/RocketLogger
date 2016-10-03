@@ -7,174 +7,243 @@
 struct rl_conf conf;
 int set_as_default;
 
-int parse_args(int argc, char* argv[]) { //TODO: outsource
+enum rl_mode get_mode(char* mode) { // TODO: move to util
+	
+	// MODES
+	if (strcmp(mode, "sample") == 0) {
+		return LIMIT;
+	} else if(strcmp(mode, "cont") == 0) {
+		return CONTINUOUS;
+	} else if(strcmp(mode, "meter") == 0) {
+		return METER;
+	} else if(strcmp(mode, "status") == 0) {
+		return STATUS;
+	} else if(strcmp(mode, "calibrate") == 0) {
+		return CALIBRATE;
+	} else if(strcmp(mode, "data") == 0) {
+		return DATA;
+	} else if(strcmp(mode, "stop") == 0) {
+		return STOPPED;
+	} else if(strcmp(mode, "set") == 0) {
+		return SET_DEFAULT;
+	} else if(strcmp(mode, "print") == 0) {
+		return PRINT_DEFAULT;
+	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0) {
+		return HELP;
+	}
+	
+	return NO_MODE;
+}
+
+enum rl_option get_option(char* option) { // TODO: move to util
+	if (strcmp(option, "f") == 0) {
+		return FILE_NAME;
+	} else if(strcmp(option, "r") == 0) {
+		return SAMPLE_RATE;
+	} else if(strcmp(option, "u") == 0) {
+		return UPDATE_RATE;
+	} else if(strcmp(option, "ch") == 0) {
+		return CHANNEL;
+	} else if(strcmp(option, "fhr") == 0) {
+		return FHR;
+	} else if(strcmp(option, "w") == 0) {
+		return WEB;
+	} else if(strcmp(option, "b") == 0) {
+		return BINARY_FILE;
+	} else if(strcmp(option, "s") == 0) {
+		return DEF_CONF;
+	}
+	
+	
+	
+	return NO_OPTION;
+}
+
+int parse_args(int argc, char* argv[]) { //, struct rl_conf* conf) { // TODO: move to util
+
+	int i; // argument count variable
+	set_as_default = 0;
 	
 	// need at least 2 arguments
 	if (argc < 2) {
+		printf("Error: no mode\n");
 		return FAILURE;
 	}
 	
-	set_as_default = 0;
-	int i = 1;
-	// modes
-	switch (argv[i][0]) {
-		case 's':
-			if(argv[i][1] == 'e') { //set default configuration
-				conf.mode = SET_DEFAULT;
-				break;
-			} else {
-				switch (argv[i][2]) {
-					case 'm': // sampling mode
-						if (argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) > 0) { 
-							
-							conf.mode = LIMIT;
-							conf.sample_limit = atoi(argv[i+1]);
-							conf.enable_web_server = 0; // webserver not as default
-							i++;
-							break;
+	// MODE
+	conf.mode = get_mode(argv[1]);
+	if(conf.mode == NO_MODE) {
+		printf("Error: wrong mode\n");
+		return FAILURE;
+	}
+	
+	if(conf.mode == LIMIT) {
+		// parse sample limit
+		if (argc > 2 && isdigit(argv[2][0]) && atoi(argv[2]) > 0) { 
+			conf.sample_limit = atoi(argv[2]);
+			i = 3;
+		} else {
+			printf("Error: no possible sample limit\n");
+			return FAILURE;
+		}
+	} else {
+		i = 2;
+	}
+	
+	// disable webserver as default for non-continuous mode
+	if(conf.mode == STATUS || conf.mode == LIMIT) {
+		conf.enable_web_server = 0; 
+	}
+	
+	// stop parsing for some modes
+	if (conf.mode == STOPPED || conf.mode == DATA || conf.mode == PRINT_DEFAULT || conf.mode == HELP) {
+		return SUCCESS;
+	}
+	
+	// reset default configuration
+	if (conf.mode == SET_DEFAULT && isdigit(argv[i][0]) && atoi(argv[i]) == 0) {
+		reset_config(&conf);
+		conf.mode = SET_DEFAULT;
+		return SUCCESS;
+	}
+
+	
+	// OPTIONS
+	for (; i<argc; i++) {
+		if (argv[i][0] == '-') {
+			switch(get_option(&argv[i][1])) {
+				
+				case FILE_NAME:
+					if (argc > ++i) {
+						if (isdigit(argv[i][0]) && atoi(argv[i]) == 0) { // no file write
+							conf.file_format = NO_FILE;
 						} else {
+							strcpy(conf.file_name, argv[i]);
+						}
+						break;
+					} else {
+						printf("Error: no file name\n");
+						return FAILURE;
+					}
+					break;
+				
+				case SAMPLE_RATE:
+					if (argc > ++i && isdigit(argv[i][0])) {
+						conf.sample_rate = atoi(argv[i]);
+						if(check_sample_rate(conf.sample_rate) == FAILURE) { // check if rate allowed
+							printf("Error: wrong sampling rate\n");
 							return FAILURE;
 						}
 						break;
-					
-					case 'a': // status
-						conf.mode = STATUS;
-						conf.enable_web_server = 0; // webserver not as default
-						break;
-					
-					case 'o': // stop
-						conf.mode = STOPPED;
-						return SUCCESS;
-					
-					default: 
+					} else {
+						printf("Error: no sampling rate\n");
 						return FAILURE;
-				}
-			}
-			break;
-		case 'c':
-			if (argv[i][1] == 'o') { // continuous mode
-				conf.mode = CONTINUOUS;
-				break;
-			
-			} else {
-				conf.mode = CALIBRATE;
-				break;
-			}
-			
-		case 'm': // meter mode
-			conf.mode = METER;
-			break;
-		
-		case 'd': // data
-			conf.mode = DATA;
-			return SUCCESS;
-		
-		case 'p': // print default
-			conf.mode = PRINT_DEFAULT;
-			return SUCCESS;
-		
-		default:
-			return FAILURE;
-		
-	}
-	i++;
-	// options
-	for (; i<argc && argv[i][0] == '-'; i++) {
-		switch (argv[i][1]) {
-			case 'c': // channel selection
-				if (argc > i+1 && isdigit(argv[i+1][0])) {
-					
-					// reset default channel selection
-					memset(conf.channels, 0, sizeof(conf.channels));
-					
-					conf.channels[atoi(&argv[i+1][0])] = 1; // TODO: optimize?
-					int j;
-					for (j=1; j<18 && argv[i+1][j] == ','; j=j+2){
-						conf.channels[atoi(&argv[i+1][j+1])] = 1;
-					}													
-					i++;
-					break;
-				} else {
-					return FAILURE;
-				}
-			
-			case 'f':
-				if (argv[i][2] == 'h') { // force high range
-					if (argc > i+1 && isdigit(argv[i+1][0]) && atoi(&argv[i+1][0]) < 3 && atoi(&argv[i+1][0]) > 0) {
+					}
+				
+				case UPDATE_RATE:
+					if (argc > ++i && isdigit(argv[i][0])) {
+						conf.update_rate = atoi(argv[i]);
+						if(check_update_rate(conf.update_rate) == FAILURE) { // check if rate allowed
+							printf("Error: wrong update rate\n");
+							return FAILURE;
+						}
+						break;
+					} else {
+						printf("Error: no update rate\n");
+						return FAILURE;
+					}
+				
+				case CHANNEL:
+					if (argc > ++i) {
 						
-						// reset default forced channel selection
-						memset(conf.force_high_channels, 0, sizeof(conf.force_high_channels));
+						// check first channel number
+						char* c = argv[i];
+						if(isdigit(c[0]) && atoi(c) >= 0 && atoi(c) <= 9) {
+							
+							// reset default channel selection
+							memset(conf.channels, 0, sizeof(conf.channels));
+							conf.channels[atoi(c)] = 1;
+							
+						} else {
+							printf("Error: wrong channel number\n");
+							return FAILURE;
+						}
 						
-						conf.force_high_channels[atoi(&argv[i+1][0]) - 1] = 1; // TODO: optimize?
-						if (argv[i+1][1] == ',') {
-							if (atoi(&argv[i+1][2]) < 3 && atoi(&argv[i+1][2]) > 0) {
-								conf.force_high_channels[atoi(&argv[i+1][2]) - 1] = 1;
+						// loop
+						int j;
+						for (j=1; j < 2*(NUM_CHANNELS-1) && argv[i][j] == ','; j=j+2){
+							
+							//check channel number
+							char* c = &argv[i][j+1];
+							if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) { // TODO: use defines
+								conf.channels[atoi(c)] = 1;
 							} else {
+								printf("Error: wrong channel number\n");
+								return FAILURE;
+							}
+						}													
+						break;
+					} else {
+						printf("Error: no channel number\n");
+						return FAILURE;
+					}
+				
+				case FHR:
+					if (argc > ++i) {
+						
+						// check first number
+						char* c = argv[i];
+						if(isdigit(c[0]) && atoi(c) < 3 && atoi(c) >= 0) {
+							
+							// reset default forced channel selection
+							memset(conf.force_high_channels, 0, sizeof(conf.force_high_channels));
+							if(atoi(c) > 0) {
+								conf.force_high_channels[atoi(c) - 1] = 1;
+							}
+						} else {
+							printf("Error: wrong force-channel number\n");
+							return FAILURE;
+						}
+						// check second number
+						if (argv[i][1] == ',') {
+							
+							char* c = &argv[i][2];
+							if (atoi(c) < 3 && atoi(c) > 0) {
+								conf.force_high_channels[atoi(c) - 1] = 1;
+							} else {
+								printf("Error: wrong force-channel number\n");
 								return FAILURE;
 							}
 						}
-						i++;
 						break;
 					} else {
+						printf("Error: no force channel number\n");
 						return FAILURE;
 					}
-				} else { // output file
-					if (argc > i+1) {
-						if (isdigit(argv[i+1][0]) && atoi(&argv[i+1][0]) == 0) { // no file write
-							conf.file_format = NO_FILE;
-						} else {
-							strcpy(conf.file_name, argv[i+1]);
-						}
-						i++;
-						break;
-					} else {
-						return FAILURE;
-					}
-				}
-			
-			case 'r': // sampling rate
-				if (argc > i+1 && isdigit(argv[i+1][0])) {
-					conf.sample_rate = atoi(argv[i+1]);
-					if(check_sample_rate(conf.sample_rate) == FAILURE) { // check if rate allowed
-						printf("Error: wrong sample rate.\n");
-						return FAILURE;
-					}
-					i++;
+				
+				case WEB:
+					conf.enable_web_server = 1;
 					break;
-				} else {
-					return FAILURE;
-				}
-			
-			case 'u': // update rate
-				if (argc > i+1 && isdigit(argv[i+1][0])) {
-					conf.update_rate = atoi(argv[i+1]);
-					if(check_update_rate(conf.update_rate) == FAILURE) { // check if rate allowed
-						printf("Error: wrong update rate.\n");
-						return FAILURE;
-					}
-					i++;
+				
+				case BINARY_FILE:
+					conf.file_format = BIN;	
 					break;
-				} else {
+				
+				case DEF_CONF:
+					set_as_default = 1;
+					break;
+				
+				case NO_OPTION:
+					printf("Error: wrong option\n");
 					return FAILURE;
-				}
-			
-			case 'w': // webserver
-				conf.enable_web_server = 1;
-				break;
-			
-			case 'b': // binary output file
-				conf.file_format = BIN;				
-				break;
-			
-			case 's': // store conf to default
-				set_as_default = 1;				
-				break;
-			
-			case 'h': // help
-				return FAILURE;
-			
-			default:
-				return FAILURE;
+				
+				default:
+					printf("Error: wrong option\n");
+					return FAILURE;
+			}
+		} else {
+			printf("Error: use -[option] [value]\n");
+			return FAILURE;
 		}
 	}
 	
@@ -212,7 +281,7 @@ int main(int argc, char* argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
-			printf("\nStart sampling ...\n");
+			printf("Start sampling ...\n");
 			break;
 			
 		case CONTINUOUS:
@@ -221,7 +290,7 @@ int main(int argc, char* argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
-			printf("\nData acquisition running in background ...\n  Stop with:   rocketlogger stop\n\n");
+			printf("Data acquisition running in background ...\n  Stop with:   rocketlogger stop\n\n");
 			break;
 		
 		case METER:
@@ -266,6 +335,10 @@ int main(int argc, char* argv[]) {
 		
 		case PRINT_DEFAULT:
 			print_config(&conf);
+			exit(EXIT_SUCCESS);
+		
+		case HELP:
+			print_usage(&conf);
 			exit(EXIT_SUCCESS);
 		
 		default:
