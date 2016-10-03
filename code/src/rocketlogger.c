@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
 		
 		case SET_DEFAULT:
 			write_default_config(&conf);
+			printf("\nWarning: change will not affect current measurement\n");
 			print_config(&conf);
 			exit(EXIT_SUCCESS);
 		

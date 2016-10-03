@@ -167,7 +167,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							
 							//check channel number
 							char* c = &argv[i][j+1];
-							if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) { // TODO: use defines
+							if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) {
 								conf->channels[atoi(c)] = 1;
 							} else {
 								printf("Error: wrong channel number\n");
@@ -214,7 +214,11 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 					break;
 				
 				case WEB:
-					conf->enable_web_server = 1;
+					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
+						conf->enable_web_server = 0;
+					} else {
+						conf->enable_web_server = 1;
+						}
 					break;
 				
 				case BINARY_FILE:
@@ -273,7 +277,7 @@ void print_usage(struct rl_conf* conf) {
 	printf("    data               Get current data.\n");
 	printf("    stop               Stops RocketLogger.\n");
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
-	printf("                       Use set 0 to reset the default configuration.\n");
+	printf("                         Use set 0 to reset the default configuration.\n");
 	printf("    print              Print default configuration of RocketLogger.\n");
 	
 	printf("\n  Options:\n");
@@ -294,7 +298,8 @@ void print_usage(struct rl_conf* conf) {
 	printf("                         -f 0 will disable file storing.\n");
 	printf("    -b                 Set output file to binary.\n"); // TODO: adapt webserver and remove
 	printf("    -format [format]   Select file format: csv, bin.\n");
-	printf("    -w                 Enable webserver plotting.\n"); // TODO: allow disable
+	printf("    -w                 Enable webserver plotting.\n");
+	printf("                         Use -w 0 to disable webserver plotting.\n");
 	printf("    -s                 Set configuration as default.\n");
 	
 	printf("\n");
