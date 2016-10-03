@@ -22,7 +22,7 @@ void interrupt_handler(int value) {
 		if (status == RUNNING) {
 			system("sudo rocketlogger stop > /dev/null");
 		} else {
-			system("sudo rocketlogger continuous > /dev/null");
+			system("sudo rocketlogger cont > /dev/null");
 		}
 		
 		// debouncing
