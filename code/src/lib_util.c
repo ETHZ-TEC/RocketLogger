@@ -30,6 +30,7 @@ int read_config(struct rl_conf* conf) {
 	
 	// check if config file existing
 	if(open(CONFIG_FILE, O_RDWR) <= 0) {
+		//conf->mode = IDLE;
 		return 0;
 	}
 	
@@ -121,25 +122,6 @@ void print_channels_new(int channels[NUM_CHANNELS]) {
 	print_json(vChannels, 4);
 	print_json(iChannels, 6);
 	
-}
-
-void print_status(struct rl_conf* conf, int web) {
-	
-	if(conf->mode == IDLE) {
-		if (web == 1) {
-			printf("OFF\n");
-		} else {
-			printf("\nRocketLogger IDLE\n\n");
-		}
-	} else {
-		if (web == 1) {
-			printf("RUNNING\n");
-			
-		} else {
-			printf("\nRocketLogger Status: RUNNING\n");
-		}
-		rl_print_config(conf, web);
-	}
 }
 
 pid_t get_pid() {
