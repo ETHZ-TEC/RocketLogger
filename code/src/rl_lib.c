@@ -140,7 +140,7 @@ int rl_sample(struct rl_conf* conf) {
 		case CONTINUOUS:
 			// create deamon to run in background
 			if (daemon(1, 1) < 0) {
-				printf("Error: failed to create background process");
+				rl_log(ERROR, "failed to create background process");
 				return SUCCESS;
 			}
 			break;
@@ -152,30 +152,30 @@ int rl_sample(struct rl_conf* conf) {
 			conf->file_format = NO_FILE;
 			break;
 		default:
-			printf("Error: wrong mode\n");
+			rl_log(ERROR, "wrong mode");
 			return FAILURE;
 	}
 	
 	// check input
 	if(check_sample_rate(conf->sample_rate) == FAILURE) {
-		printf("Error: wrong sampling rate\n");
+		rl_log(ERROR, "wrong sampling rate");
 		return FAILURE;
 	}
 	if(check_update_rate(conf->update_rate) == FAILURE) {
-		printf("Error: wrong update rate\n");
+		rl_log(ERROR, "wrong update rate");
 		return FAILURE;
 	}
 	
 	// create FIFOs if not existing
 	if(open(FIFO_FILE, O_RDWR) <= 0) {
 		if(mkfifo(FIFO_FILE,O_NONBLOCK) < 0) {
-			printf("Error: could not create FIFO.\n");
+			rl_log(ERROR, "could not create FIFO");
 			return FAILURE;
 		}
 	}
 	if(open(CONTROL_FIFO, O_RDWR) <= 0) {
 		if(mkfifo(CONTROL_FIFO,O_NONBLOCK) < 0) {
-			printf("Error: could not create control FIFO.\n");
+			rl_log(ERROR, "could not create control FIFO");
 			return FAILURE;
 		}
 	}
@@ -186,7 +186,7 @@ int rl_sample(struct rl_conf* conf) {
 	
 	// register signal handler (for stopping)
 	if (signal(SIGQUIT, sig_handler) == SIG_ERR || signal(SIGINT, sig_handler) == SIG_ERR) {
-        printf("Error: can't register signal handler.\n");
+        rl_log(ERROR, "can't register signal handler");
 		return FAILURE;
 	}
 
@@ -196,15 +196,15 @@ int rl_sample(struct rl_conf* conf) {
 	// INITIATION
 	hw_init(conf);
 	
+	rl_log(INFO, "sampling started");
+	
 	// SAMPLING
 	hw_sample(conf);
 	
+	rl_log(INFO, "sampling finished");
+	
 	// FINISH
 	hw_close(conf);
-	
-	// write conf to file
-	/*conf->mode = IDLE;
-	write_config(conf);*/
 	
 	// remove fifos
 	remove(FIFO_FILE);
@@ -220,7 +220,7 @@ int rl_stop() {
 	
 	// check if running
 	if(rl_get_status(0,0) != RL_RUNNING) {
-		printf("RocketLogger not running!\n");
+		rl_log(ERROR, "RocketLogger not running");
 		return FAILURE;
 	}
 	

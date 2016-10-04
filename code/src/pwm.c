@@ -10,14 +10,14 @@ int pwm_setup() {
 	
 	// open /dev/mem for memory mapping
     if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
-		printf("can't open /dev/mem \n");
+		rl_log(ERROR, "can't open /dev/mem");
 		return FAILURE;
     }
 	
 	// map pwm0 registers into virtual memory
 	pwmss0_regs = (volatile uint16_t *)mmap (NULL, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWMSS0_BASE);
 	if (pwmss1_regs == (volatile uint16_t *)MAP_FAILED) {
-		perror ("mmap failed");
+		rl_log(ERROR, "mmap failed");
 		close (mem_fd);
 		return FAILURE;
 	}
@@ -25,7 +25,7 @@ int pwm_setup() {
 	// map pwm1 registers into virtual memory
 	pwmss1_regs = (volatile uint16_t *)mmap (NULL, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWMSS1_BASE);
 	if (pwmss1_regs == (volatile uint16_t *)MAP_FAILED) {
-		perror ("mmap failed");
+		rl_log(ERROR, "mmap failed");
 		close (mem_fd);
 		return FAILURE;
 	}

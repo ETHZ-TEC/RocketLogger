@@ -513,7 +513,7 @@ int pru_init() {
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
 	prussdrv_init ();
 	if (prussdrv_open(PRU_EVTOUT_0) == -1) {  
-		printf("Error: Failed to open PRU");  
+		rl_log(ERROR, "failed to open PRU");  
 		return FAILURE;  
 	}
 	prussdrv_pruintc_init(&pruss_intc_initdata);
@@ -566,13 +566,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// data fifo
 		fifo_fd = open(FIFO_FILE, O_NONBLOCK | O_RDWR);
 		if (fifo_fd < 0) {
-			printf("Error: could not open FIFO.\n");
+			rl_log(ERROR, "could not open FIFO");
 		}
 		
 		// control fifo
 		control_fifo = open(CONTROL_FIFO, O_NONBLOCK | O_RDWR);
 		if (control_fifo < 0) {
-			printf("Error: could not open control FIFO.\n");
+			rl_log(ERROR, "could not open control FIFO");
 		}
 	}
 	
@@ -625,7 +625,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			pru.sample_size = SIZE_LOW;
 			break;
 		default:
-			printf("Wrong sample rate.\n");
+			rl_log(ERROR, "wrong sample rate");
 			return FAILURE;
 	}
 	pru.sample_limit = conf->sample_limit;
@@ -667,7 +667,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");
 	if(2*buffer_size_bytes > max_size) {
-		printf("Not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x\n", 2*buffer_size_bytes);
+		char message[100];
+		sprintf(message, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x", 2*buffer_size_bytes);
+		rl_log(ERROR, message);
 		pru.state = PRU_OFF; // TODO: remove?
 		status.state = RL_OFF;
 	}
@@ -707,7 +709,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (test_mode == 0) {
 			if(pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT) == ETIMEDOUT) {
 				// timeout occured
-				printf("Error: ADC timout. Stopping ...\n");
+				rl_log(ERROR, "ADC timout. Stopping ...");
 				status.state = RL_ERROR;
 				break;
 			}
@@ -728,7 +730,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (test_mode == 0) {
 			int buffer = *((uint32_t*) addr);
 			if (buffer != i) {
-				printf("Overrun! %d samples (%d buffer) lost.\n", (buffer - i) * pru.buffer_size, buffer - i);
+				char message[100];
+				sprintf(message, "overrun: %d samples (%d buffer) lost", (buffer - i) * pru.buffer_size, buffer - i);
+				rl_log(WARNING, message);
 				i = buffer;
 			}
 		}
@@ -749,7 +753,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// flush data if no error occured
 	if (store == 1 && status.state != RL_ERROR) {
+		// print info
+		char message[100];
+		sprintf(message, "stored %d samples to file", status.samples_taken);
+		rl_log(INFO, message);
+		
 		printf("Stored %d samples to file.\n", status.samples_taken);
+		
 		fflush(data);
 	}
 	

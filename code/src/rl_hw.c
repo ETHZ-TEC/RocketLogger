@@ -49,18 +49,12 @@ void hw_close(struct rl_conf* conf) {
 
 int hw_sample(struct rl_conf* conf) {
 	
-	// set update rate (TODO: remove?!)
-	/*if ((conf->update_rate != 1) && (conf->update_rate != 2) && (conf->update_rate != 5) && (conf->update_rate != 10)) {
-		printf("Wrong update rate.\n");
-			return FAILURE;
-	}*/
-	
 	// open data file
 	FILE* data = (FILE*) -1;
 	if (conf->file_format != NO_FILE) { // open file only if storing requested
 		data = fopen(conf->file_name, "w+");
 		if(data == NULL) {
-			printf("Error: Error opening data-file");
+			rl_log(ERROR, "failed to open data-file");
 			return FAILURE;
 		}
 		// change access rights to data file

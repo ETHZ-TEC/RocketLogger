@@ -37,7 +37,7 @@ int read_config(struct rl_conf* conf) {
 	// open config file
 	FILE* file = fopen(CONFIG_FILE, "r");
 	if(file == NULL) {
-		printf("Error opening configuration file.\n");
+		rl_log(ERROR, "failed to open configuration file");
 		return FAILURE;
 	}
 	// read values
@@ -53,7 +53,7 @@ int write_config(struct rl_conf* conf) {
 	// open config file
 	FILE* file = fopen(CONFIG_FILE, "w");
 	if(file == NULL) {
-		printf("Error creating configuration file.\n");
+		rl_log(ERROR, "failed to create configuration file");
 		return FAILURE;
 	}
 	// write values
@@ -147,7 +147,7 @@ int set_pid(pid_t pid) {
 	// open file
 	FILE* file = fopen(PID_FILE, "w");
 	if(file == NULL) {
-		printf("Error creating pid file.\n");
+		rl_log(ERROR, "failed to create pid file");
 		return FAILURE;
 	}
 	

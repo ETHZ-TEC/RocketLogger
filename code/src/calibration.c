@@ -34,7 +34,7 @@ int reset_scales() {
 int read_calibration() {
 	// check if calibration file existing
 	if(open(CALIBRATION_FILE, O_RDWR) <= 0) {
-		printf("Warning: no calibration file, returning uncalibrated values.\n");
+		rl_log(WARNING, "no calibration file, returning uncalibrated values");
 		reset_offsets();
 		reset_scales();
 		return SUCCESS;
@@ -42,7 +42,7 @@ int read_calibration() {
 	// open calibration file
 	FILE* file = fopen(CALIBRATION_FILE, "r");
 	if(file == NULL) {
-		printf("Error: Error opening calibration file");
+		rl_log(ERROR, "failed to open calibration file");
 		return FAILURE;
 	}
 	// read values
@@ -69,7 +69,7 @@ int write_calibration() {
 	// open calibration file
 	FILE* file = fopen(CALIBRATION_FILE, "w+");
 	if(file == NULL) {
-		printf("Error: Error opening calibration file");
+		rl_log(ERROR, "failed to open calibration file");
 		return FAILURE;
 	}
 	// write values

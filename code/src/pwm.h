@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "types.h"
+#include "util.h"
 
 // base addresses
 #define PWMSS0_BASE 0x48300000

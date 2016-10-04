@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 	
 	// check if root
 	if(getuid() != 0){
-		printf("Error: you must run this program as root\n");
+		rl_log(ERROR, "you must run this program as root");
 		return FAILURE;
 	}
 	
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 	switch (conf.mode) {
 		case LIMIT:
 			if(rl_get_status(0,0) == RL_RUNNING) {
-				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
+				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 			
 		case CONTINUOUS:
 			if(rl_get_status(0,0) == RL_RUNNING) {
-				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
+				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
 			print_config(&conf);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 		
 		case METER:
 			if(rl_get_status(0,0) == RL_RUNNING) {
-				printf("Error: RocketLogger already running\n Run:  rocketlogger stop\n\n");
+				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
 			break;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 		
 		case STOPPED:
 			if(rl_get_status(0,0) != RL_RUNNING) {
-				printf("Error: RocketLogger not running\n");
+				rl_log(ERROR, "RocketLogger not running");
 				exit(EXIT_FAILURE);
 			}
 			printf("Stopping RocketLogger ...\n");
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 		
 		case DATA:
 			if(rl_get_status(0,0) != RL_RUNNING) {
-				printf("Error: RocketLogger not running\n");
+				rl_log(ERROR, "RocketLogger not running");
 				exit(EXIT_FAILURE);
 			}
 			rl_get_data();
@@ -80,7 +80,8 @@ int main(int argc, char* argv[]) {
 		
 		case CALIBRATE:
 			if(rl_get_status(0,0) == RL_RUNNING) {
-				printf("Warning: reset will not affect current measurement\n");
+				printf("\n");
+				rl_log(WARNING, "reset will not affect current measurement");
 			}
 			rl_reset_calibration();
 			exit(EXIT_SUCCESS);
@@ -88,7 +89,8 @@ int main(int argc, char* argv[]) {
 		case SET_DEFAULT:
 			write_default_config(&conf);
 			if(rl_get_status(0,0) == RL_RUNNING) {
-				printf("\nWarning: change will not affect current measurement\n");
+				printf("\n");
+				rl_log(WARNING, "change will not affect current measurement");
 			}
 			print_config(&conf);
 			exit(EXIT_SUCCESS);
@@ -108,7 +110,7 @@ int main(int argc, char* argv[]) {
 	
 	// start the sampling
 	rl_sample(&conf);
-	
+		
 	exit(EXIT_SUCCESS);
 	
 }

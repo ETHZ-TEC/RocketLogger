@@ -34,7 +34,7 @@ enum rl_state {
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
 enum rl_file_format {NO_FILE, CSV, BIN};
 
-typedef enum error_type {ERROR, WARNING} rl_error_type;
+typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
 // configuration struct
 struct rl_conf {

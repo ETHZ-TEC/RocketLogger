@@ -5,7 +5,7 @@ int gpio_unexport(int num) {
 	// open gpio value file
 	int fd = open(GPIO_PATH "unexport", O_WRONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO unexport file!\n");
+		rl_log(ERROR, "could not open GPIO unexport file");
 		return FAILURE;
 	}
 	
@@ -25,7 +25,7 @@ int gpio_export(int num) {
 	// open gpio value file
 	int fd = open(GPIO_PATH "export", O_WRONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO export file!\n");
+		rl_log(ERROR, "could not open GPIO export file");
 		return FAILURE;
 	}
 	
@@ -48,7 +48,7 @@ int gpio_dir(int num, enum direction dir) {
 	sprintf(file_name, GPIO_PATH "gpio%d/direction",num);
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO direction file!\n");
+		rl_log(ERROR, "could not open GPIO direction file");
 		return FAILURE;
 	}
 	
@@ -73,7 +73,7 @@ int gpio_interrupt(int num, enum edge e) {
 	sprintf(file_name, GPIO_PATH "gpio%d/edge",num);
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO edge file!\n");
+		rl_log(ERROR, "could not open GPIO edge file");
 		return FAILURE;
 	}
 	
@@ -108,7 +108,7 @@ int gpio_set_value(int num, int val) {
 	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
 	int fd = open(file_name, O_WRONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO value file!\n");
+		rl_log(ERROR, "could not open GPIO value file");
 		return FAILURE;
 	}
 	
@@ -133,7 +133,7 @@ int gpio_get_value(int num) {
 	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
 	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO value file!\n");
+		rl_log(ERROR, "could not open GPIO value file");
 		return FAILURE;
 	}
 	
@@ -155,7 +155,7 @@ int gpio_wait_interrupt(int num, int timeout) {
 	sprintf(file_name, GPIO_PATH "gpio%d/value",num);
 	int fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
-		printf("Error: could not open GPIO value file!\n");
+		rl_log(ERROR, "could not open GPIO value file");
 		return FAILURE;
 	}
 	
@@ -173,7 +173,7 @@ int gpio_wait_interrupt(int num, int timeout) {
 	// wait on gpio change
 	ret = poll(&fds, nfds, timeout);
 	if (ret < 0) {
-	  printf("Error: poll failed!\n");
+	  rl_log(ERROR, "GPIO poll failed");
 	  return FAILURE;
 	}
 	

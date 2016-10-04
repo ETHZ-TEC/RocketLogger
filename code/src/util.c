@@ -11,7 +11,7 @@ int read_status(struct rl_status* status) {
 	// open status file
 	FILE* file = fopen(STATUS_FILE, "r");
 	if(file == NULL) {
-		printf("Error opening status file.\n");
+		rl_log(ERROR, "failed to open status file");
 		return FAILURE;
 	}
 	// read values
@@ -27,7 +27,7 @@ int write_status(struct rl_status* status) {
 	// open status file
 	FILE* file = fopen(STATUS_FILE, "w");
 	if(file == NULL) {
-		printf("Error creating status file.\n");
+		rl_log(ERROR, "failed to create status file.\n");
 		return FAILURE;
 	}
 	
@@ -115,7 +115,7 @@ void* memory_map(unsigned int addr, size_t size) {
 	// memory file
 	int fd;
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1){
-		printf("Error: Failed to open memory");
+		rl_log(ERROR, "failed to open /dev/mem");
 		return NULL;
     }
 	
@@ -123,7 +123,7 @@ void* memory_map(unsigned int addr, size_t size) {
 	off_t target = addr;
 	void* map_base = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
     if(map_base == (void *) -1) {
-		printf("Error: Failed to map base address");
+		rl_log(ERROR, "failed to map base address");
 		return NULL;
     }
 		
@@ -135,7 +135,7 @@ void* memory_map(unsigned int addr, size_t size) {
 // unmap the mapped memory
 int memory_unmap(void* ptr, size_t size) {
 	if(munmap(ptr, size) == -1) {
-		printf("Error: Failed to unmap memory");
+		rl_log(ERROR, "failed to unmap memory");
 		return FAILURE;
     }
     
@@ -150,11 +150,11 @@ int read_file_value(char filename[]) {
 	unsigned int value = 0;
 	fp = fopen(filename, "rt");
 	if (fp < 0) {
-		printf("Error: Cannot open file");
+		rl_log(ERROR, "failed to open file");
 		return FAILURE;
 	}
 	if(fscanf(fp, "%x", &value) < 0) {
-		printf("Error: Cannot read from file");
+		rl_log(ERROR, "failed to read from file");
 		return FAILURE;
 	}
 	fclose(fp);
@@ -162,36 +162,46 @@ int read_file_value(char filename[]) {
 }
 
 
-// ------------------------------ ERROR HANDLING ------------------------------ //
+// ------------------------------ LOG HANDLING ------------------------------ //
 
-void rl_error(rl_error_type type, char message[]) {
+int log_created = 0;
+
+// TODO: add info
+// TODO: change to : const char format ...
+
+void rl_log(rl_log_type type, char message[]) {
 	
-	// open log file
-	FILE* fp = fopen(LOG_FILE, "w");
-	if (fp < 0) {
-		printf("Error: Cannot open log-file");
-		return;
+	// open file
+	FILE* log_fp;
+	if(log_created == 0) {
+		log_created = 1;
+		log_fp = fopen(LOG_FILE, "w");
+		fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
+	} else {
+		log_fp = fopen(LOG_FILE, "a");
 	}
 	
-	fprintf(fp, "--- RocketLogger Log File ---\n\n");
-	
-	// get time
+	// print date/time
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
 	time_t nowtime = current_time.tv_sec;
-	fprintf(fp, "  %s", ctime(&nowtime));
+	fprintf(log_fp, "  %s", ctime(&nowtime));
 	
 	// print error message
 	if(type == ERROR) {
-		fprintf(fp, "     Error: %s\n", message);
-		printf("Error: %s\n", message);
+		fprintf(log_fp, "     Error: %s\n", message);
+		printf("Error: %s\n\n", message);
 	} else if(type == WARNING) {
-		fprintf(fp, "     Warning: %s\n", message);
-		printf("Warning: %s\n", message);
+		fprintf(log_fp, "     Warning: %s\n", message);
+		printf("Warning: %s\n\n", message);
+	} else if(type == INFO) {
+		fprintf(log_fp, "     Info: %s\n", message);
 	} else {
 		// for debugging purposes
 		printf("Error: wrong error-code\n");
 	}
 	
-	
+	// close file
+	fflush(log_fp);
+	fclose(log_fp);
 }

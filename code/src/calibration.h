@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 
 #include "types.h"
+#include "util.h"
 
 #define CALIBRATION_FILE	"/etc/rocketlogger/calibration.dat"
 #define NUM_CALIBRATION_VALUES 10

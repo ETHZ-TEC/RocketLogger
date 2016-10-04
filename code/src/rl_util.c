@@ -60,14 +60,14 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 	
 	// need at least 2 arguments
 	if (argc < 2) {
-		printf("Error: no mode\n");
+		rl_log(ERROR, "no mode");
 		return FAILURE;
 	}
 	
 	// MODE
 	conf->mode = get_mode(argv[1]);
 	if(conf->mode == NO_MODE) {
-		printf("Error: wrong mode\n");
+		rl_log(ERROR, "wrong mode");
 		return FAILURE;
 	}
 	
@@ -77,7 +77,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 			conf->sample_limit = atoi(argv[2]);
 			i = 3;
 		} else {
-			printf("Error: no possible sample limit\n");
+			rl_log(ERROR, "no possible sample limit");
 			return FAILURE;
 		}
 	} else {
@@ -116,7 +116,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							strcpy(conf->file_name, argv[i]);
 						}
 					} else {
-						printf("Error: no file name\n");
+						rl_log(ERROR, "no file nam");
 						return FAILURE;
 					}
 					break;
@@ -125,11 +125,11 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 					if (argc > ++i && isdigit(argv[i][0])) {
 						conf->sample_rate = atoi(argv[i]);
 						if(check_sample_rate(conf->sample_rate) == FAILURE) { // check if rate allowed
-							printf("Error: wrong sampling rate\n");
+							rl_log(ERROR, "wrong sampling rate");
 							return FAILURE;
 						}
 					} else {
-						printf("Error: no sampling rate\n");
+						rl_log(ERROR, "no sampling rate");
 						return FAILURE;
 					}
 					break;
@@ -138,11 +138,11 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 					if (argc > ++i && isdigit(argv[i][0])) {
 						conf->update_rate = atoi(argv[i]);
 						if(check_update_rate(conf->update_rate) == FAILURE) { // check if rate allowed
-							printf("Error: wrong update rate\n");
+							rl_log(ERROR, "wrong update rate");
 							return FAILURE;
 						}
 					} else {
-						printf("Error: no update rate\n");
+						rl_log(ERROR, "no update rate");
 						return FAILURE;
 					}
 					break;
@@ -159,7 +159,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							conf->channels[atoi(c)] = 1;
 							
 						} else {
-							printf("Error: wrong channel number\n");
+							rl_log(ERROR, "wrong channel number");
 							return FAILURE;
 						}
 						
@@ -172,12 +172,12 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) {
 								conf->channels[atoi(c)] = 1;
 							} else {
-								printf("Error: wrong channel number\n");
+								rl_log(ERROR, "wrong channel number");
 								return FAILURE;
 							}
 						}													
 					} else {
-						printf("Error: no channel number\n");
+						rl_log(ERROR, "no channel number");
 						return FAILURE;
 					}
 					break;
@@ -195,7 +195,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 								conf->force_high_channels[atoi(c) - 1] = 1;
 							}
 						} else {
-							printf("Error: wrong force-channel number\n");
+							rl_log(ERROR, "wrong force-channel number");
 							return FAILURE;
 						}
 						// check second number
@@ -205,12 +205,12 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							if (atoi(c) < 3 && atoi(c) > 0) {
 								conf->force_high_channels[atoi(c) - 1] = 1;
 							} else {
-								printf("Error: wrong force-channel number\n");
+								rl_log(ERROR, "wrong force-channel number");
 								return FAILURE;
 							}
 						}
 					} else {
-						printf("Error: no force channel number\n");
+						rl_log(ERROR, "no force channel number");
 						return FAILURE;
 					}
 					break;
@@ -240,28 +240,28 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							} else if(strcmp(argv[i],"bin") == 0) {
 								conf->file_format = BIN;
 							} else {
-								printf("Error: wrong file format\n");
+								rl_log(ERROR, "wrong file format");
 								return FAILURE;
 							}
 						} else {
-							printf("Warning: file format ignored\n");
+							rl_log(WARNING, "file format ignored");
 						}
 					} else {
-						printf("Error: no file format\n");
+						rl_log(ERROR, "no file format");
 						return FAILURE;
 					}
 					break;
 				
 				case NO_OPTION:
-					printf("Error: wrong option\n");
+					rl_log(ERROR, "wrong option");
 					return FAILURE;
 				
 				default:
-					printf("Error: wrong option\n");
+					rl_log(ERROR, "wrong option");
 					return FAILURE;
 			}
 		} else {
-			printf("Error: use -[option] [value]\n");
+			rl_log(ERROR, "use -[option] [value]");
 			return FAILURE;
 		}
 	}
@@ -349,7 +349,7 @@ int read_default_config(struct rl_conf* conf) {
 	// open config file
 	FILE* file = fopen(DEFAULT_CONFIG, "r");
 	if(file == NULL) {
-		printf("Error opening configuration file.\n");
+		rl_log(ERROR, "failed to open configuration file");
 		return FAILURE;
 	}
 	// read values
@@ -368,7 +368,7 @@ int write_default_config(struct rl_conf* conf) {
 	// open config file
 	FILE* file = fopen(DEFAULT_CONFIG, "w");
 	if(file == NULL) {
-		printf("Error creating configuration file.\n");
+		rl_log(ERROR, "failed to create configuration file");
 		return FAILURE;
 	}
 	// write values
