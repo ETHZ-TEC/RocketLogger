@@ -17,28 +17,10 @@ int read_status(struct rl_status* status) {
 	// unmap shared memory
 	shmdt(shm_status);
 	
-	/*// check if status file existing
-	if(open(STATUS_FILE, O_RDWR) <= 0) {
-		status->state = RL_OFF;
-		return UNDEFINED;
-	}
-	
-	// open status file
-	FILE* file = fopen(STATUS_FILE, "r");
-	if(file == NULL) {
-		rl_log(ERROR, "failed to open status file");
-		return FAILURE;
-	}
-	// read values
-	fread(status, sizeof(struct rl_status), 1, file);
-	
-	//close file
-	fclose(file);*/
 	return SUCCESS;
 }
 
 int write_status(struct rl_status* status) {
-	
 	
 	// map shared memory
 	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), IPC_CREAT | SHMEM_PERMISSIONS);
@@ -54,21 +36,6 @@ int write_status(struct rl_status* status) {
 	
 	// unmap shared memory
 	shmdt(shm_status);
-	
-	
-	
-	/*// open status file
-	FILE* file = fopen(STATUS_FILE, "w");
-	if(file == NULL) {
-		rl_log(ERROR, "failed to create status file.\n");
-		return FAILURE;
-	}
-	
-	// write values
-	fwrite(status, sizeof(struct rl_status), 1, file);
-	
-	//close file
-	fclose(file);*/
 	
 	return SUCCESS;
 }
@@ -200,11 +167,9 @@ int read_file_value(char filename[]) {
 
 int log_created = 0;
 
-// TODO: change to : const char format ...
-
-void rl_log(rl_log_type type, char message[]) {
+void rl_log(rl_log_type type, const char* format, ... ) {
 	
-	// open file
+	// open/init file
 	FILE* log_fp;
 	if(log_created == 0) {
 		log_created = 1;
@@ -220,19 +185,46 @@ void rl_log(rl_log_type type, char message[]) {
 	time_t nowtime = current_time.tv_sec;
 	fprintf(log_fp, "  %s", ctime(&nowtime));
 	
+	// get arguments
+	va_list args;
+	va_start(args, format);
+	
 	// print error message
 	if(type == ERROR) {
-		fprintf(log_fp, "     Error: %s\n", message);
-		printf("Error: %s\n\n", message);
+		
+		// file
+		fprintf(log_fp, "     Error: ");
+		vfprintf(log_fp, format, args);
+		fprintf(log_fp, "\n");
+		// terminal
+		printf("Error: ");
+		vprintf(format, args);
+		printf("\n\n");
+		
 	} else if(type == WARNING) {
-		fprintf(log_fp, "     Warning: %s\n", message);
-		printf("Warning: %s\n\n", message);
+		
+		// file
+		fprintf(log_fp, "     Warning: ");
+		vfprintf(log_fp, format, args);
+		fprintf(log_fp, "\n");
+		// terminal
+		printf("Warning: ");
+		vprintf(format, args);
+		printf("\n\n");
+		
 	} else if(type == INFO) {
-		fprintf(log_fp, "     Info: %s\n", message);
+		
+		fprintf(log_fp, "     Info: ");
+		vfprintf(log_fp, format, args);
+		fprintf(log_fp, "\n");
+		
 	} else {
 		// for debugging purposes
 		printf("Error: wrong error-code\n");
 	}
+	
+	// facilitate return
+	va_end(args);
 	
 	// close file
 	fflush(log_fp);

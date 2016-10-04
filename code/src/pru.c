@@ -667,9 +667,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");
 	if(2*buffer_size_bytes > max_size) {
-		char message[100];
-		sprintf(message, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x", 2*buffer_size_bytes);
-		rl_log(ERROR, message);
+		rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x", 2*buffer_size_bytes);
 		pru.state = PRU_OFF; // TODO: remove?
 		status.state = RL_OFF;
 	}
@@ -730,9 +728,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (test_mode == 0) {
 			int buffer = *((uint32_t*) addr);
 			if (buffer != i) {
-				char message[100];
-				sprintf(message, "overrun: %d samples (%d buffer) lost", (buffer - i) * pru.buffer_size, buffer - i);
-				rl_log(WARNING, message);
+				rl_log(WARNING, "overrun: %d samples (%d buffer) lost", (buffer - i) * pru.buffer_size, buffer - i);
 				i = buffer;
 			}
 		}
@@ -754,9 +750,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// flush data if no error occured
 	if (store == 1 && status.state != RL_ERROR) {
 		// print info
-		char message[100];
-		sprintf(message, "stored %d samples to file", status.samples_taken);
-		rl_log(INFO, message);
+		rl_log(INFO,  "stored %d samples to file", status.samples_taken);
 		
 		printf("Stored %d samples to file.\n", status.samples_taken);
 		

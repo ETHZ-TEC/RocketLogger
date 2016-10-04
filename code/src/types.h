@@ -10,7 +10,6 @@
 // files
 #define CONFIG_FILE		"/var/run/rocketlogger.conf"
 #define PID_FILE		"/var/run/rocketlogger.pid"
-//#define STATUS_FILE	"/var/run/rocketlogger.stat"
 #define LOG_FILE		"/var/www/log/log.txt"
 
 #define SHMEM_KEY 1111 // TODO: usefull key
