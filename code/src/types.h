@@ -8,10 +8,12 @@
 #define FAILURE -1
 
 // files
-#define CONFIG_FILE	"/var/run/rocketlogger.conf"
-#define PID_FILE	"/var/run/rocketlogger.pid"
-#define STATUS_FILE	"/var/run/rocketlogger.stat"
-#define LOG_FILE	"/var/www/log/log.txt"
+#define CONFIG_FILE		"/var/run/rocketlogger.conf"
+#define PID_FILE		"/var/run/rocketlogger.pid"
+//#define STATUS_FILE	"/var/run/rocketlogger.stat"
+#define LOG_FILE		"/var/www/log/log.txt"
+
+#define SHMEM_KEY 1111 // TODO: usefull key
 
 // TODO: try to remove
 #define MAP_SIZE 0x0FFFFFFF
@@ -25,7 +27,7 @@
 #define NUM_TOT_I_CHANNELS 6
 #define NUM_V_CHANNELS 4
 
-// enumerations
+// enumerations TODO: typedefs
 enum rl_state {
 	RL_OFF = 0,
 	RL_RUNNING = 1,

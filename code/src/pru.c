@@ -472,7 +472,7 @@ void *pru_wait_event(void* voidEvent) {
 	return NULL;
 }
 
-int pru_wait_event_timeout(unsigned int event, unsigned int timeout) { //TODO: use everywhere
+int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 	
 	struct timespec abs_time;
 	pthread_t tid;
@@ -785,7 +785,7 @@ int pru_stop() {
 	// write OFF to PRU state (so PRU can clean up)
 	pru_set_state(PRU_OFF);
 	
-	// wait for interrupt (if no ERROR occured) -> TODO: use wait&timeout function
+	// wait for interrupt (if no ERROR occured)
 	if(status.state != RL_ERROR) {
 		pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT);
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event

@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <sys/shm.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,9 +12,12 @@
 #include <sys/mman.h>
 #include <time.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include "types.h"
 
+
+#define SHMEM_PERMISSIONS 0666
 
 int read_status(struct rl_status* status);
 int write_status(struct rl_status* status);

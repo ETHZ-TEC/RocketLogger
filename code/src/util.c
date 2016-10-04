@@ -2,7 +2,22 @@
 
 int read_status(struct rl_status* status) {
 	
-	// check if status file existing
+	// map shared memory
+	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), SHMEM_PERMISSIONS);
+	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);
+	
+	if (shm_status == (void *) -1) {
+		rl_log(ERROR, "failed to map shared status memory");
+		return FAILURE;
+	}
+	
+	// read status
+	*status = *shm_status;
+	
+	// unmap shared memory
+	shmdt(shm_status);
+	
+	/*// check if status file existing
 	if(open(STATUS_FILE, O_RDWR) <= 0) {
 		status->state = RL_OFF;
 		return UNDEFINED;
@@ -18,13 +33,31 @@ int read_status(struct rl_status* status) {
 	fread(status, sizeof(struct rl_status), 1, file);
 	
 	//close file
-	fclose(file);
+	fclose(file);*/
 	return SUCCESS;
 }
 
 int write_status(struct rl_status* status) {
 	
-	// open status file
+	
+	// map shared memory
+	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), IPC_CREAT | SHMEM_PERMISSIONS);
+	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);
+	
+	if (shm_status == (void *) -1) {
+		rl_log(ERROR, "failed to map shared status memory");
+		return FAILURE;
+	}
+	
+	// write status
+	*shm_status = *status;
+	
+	// unmap shared memory
+	shmdt(shm_status);
+	
+	
+	
+	/*// open status file
 	FILE* file = fopen(STATUS_FILE, "w");
 	if(file == NULL) {
 		rl_log(ERROR, "failed to create status file.\n");
@@ -35,7 +68,8 @@ int write_status(struct rl_status* status) {
 	fwrite(status, sizeof(struct rl_status), 1, file);
 	
 	//close file
-	fclose(file);
+	fclose(file);*/
+	
 	return SUCCESS;
 }
 
@@ -166,7 +200,6 @@ int read_file_value(char filename[]) {
 
 int log_created = 0;
 
-// TODO: add info
 // TODO: change to : const char format ...
 
 void rl_log(rl_log_type type, char message[]) {
