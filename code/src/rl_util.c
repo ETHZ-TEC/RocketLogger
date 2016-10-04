@@ -19,7 +19,7 @@ enum rl_mode get_mode(char* mode) {
 		return STOPPED;
 	} else if(strcmp(mode, "set") == 0) {
 		return SET_DEFAULT;
-	} else if(strcmp(mode, "print") == 0) {
+	} else if(strcmp(mode, "conf") == 0) {
 		return PRINT_DEFAULT;
 	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0) {
 		return HELP;
@@ -55,6 +55,7 @@ enum rl_option get_option(char* option) {
 int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default) {
 
 	int i; // argument count variable
+	int no_file = 0;
 	*set_as_default = 0;
 	
 	// need at least 2 arguments
@@ -109,6 +110,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				case FILE_NAME:
 					if (argc > ++i) {
 						if (isdigit(argv[i][0]) && atoi(argv[i]) == 0) { // no file write
+							no_file = 1;
 							conf->file_format = NO_FILE;
 						} else {
 							strcpy(conf->file_name, argv[i]);
@@ -215,6 +217,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case WEB:
 					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
+						i++;
 						conf->enable_web_server = 0;
 					} else {
 						conf->enable_web_server = 1;
@@ -231,13 +234,17 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case FILE_FORMAT:
 					if(argc > ++i) {
-						if(strcmp(argv[i],"csv") == 0) {
-							conf->file_format = CSV;
-						} else if(strcmp(argv[i],"bin") == 0) {
-							conf->file_format = BIN;
+						if(no_file == 0) { // ignore format, when no file is written
+							if(strcmp(argv[i],"csv") == 0) {
+								conf->file_format = CSV;
+							} else if(strcmp(argv[i],"bin") == 0) {
+								conf->file_format = BIN;
+							} else {
+								printf("Error: wrong file format\n");
+								return FAILURE;
+							}
 						} else {
-							printf("Error: wrong file format\n");
-							return FAILURE;
+							printf("Warning: file format ignored\n");
 						}
 					} else {
 						printf("Error: no file format\n");
@@ -278,7 +285,7 @@ void print_usage(struct rl_conf* conf) {
 	printf("    stop               Stops RocketLogger.\n");
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
 	printf("                         Use set 0 to reset the default configuration.\n");
-	printf("    print              Print default configuration of RocketLogger.\n");
+	printf("    conf               Print default configuration of RocketLogger.\n");
 	
 	printf("\n  Options:\n");
 	printf("    -r [number]        Acquisition rate selection.\n");

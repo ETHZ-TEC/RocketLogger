@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <time.h> 
 
 #include "types.h"
 
@@ -27,6 +28,6 @@ int memory_unmap(void* ptr, size_t size);
 
 int read_file_value(char filename[]);
 
-void rl_error(char message[]);
+void rl_error(rl_error_type type, char message[]);
 
 #endif

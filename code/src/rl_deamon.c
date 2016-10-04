@@ -19,7 +19,7 @@ void interrupt_handler(int value) {
 		// get RL status (without print)
 		int status = rl_get_status(0,0);
 		
-		if (status == RUNNING) {
+		if (status == RL_RUNNING) {
 			system("sudo rocketlogger stop > /dev/null");
 		} else {
 			system("sudo rocketlogger cont > /dev/null");

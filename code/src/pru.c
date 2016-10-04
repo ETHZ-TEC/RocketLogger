@@ -553,7 +553,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int number_buffers;
 	
 	// running state
-	status.state = RUNNING;
+	status.state = RL_RUNNING;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	
@@ -669,7 +669,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(2*buffer_size_bytes > max_size) {
 		printf("Not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x\n", 2*buffer_size_bytes);
 		pru.state = PRU_OFF; // TODO: remove?
-		status.state = OFF;
+		status.state = RL_OFF;
 	}
 	
 	// map PRU memory into userspace
@@ -688,7 +688,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int samples_buffer; // number of samples per buffer
 	
 	// continuous sampling loop
-	for(i=0; status.state == RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
+	for(i=0; status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
 		
 		// select current buffer
 		if(i%2 == 0) {
@@ -708,7 +708,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			if(pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT) == ETIMEDOUT) {
 				// timeout occured
 				printf("Error: ADC timout. Stopping ...\n");
-				status.state = ERROR;
+				status.state = RL_ERROR;
 				break;
 			}
 		} else {
@@ -748,7 +748,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	}
 	
 	// flush data if no error occured
-	if (store == 1 && status.state != ERROR) {
+	if (store == 1 && status.state != RL_ERROR) {
 		printf("Stored %d samples to file.\n", status.samples_taken);
 		fflush(data);
 	}
@@ -762,7 +762,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		close(control_fifo);
 	}
 	
-	if(status.state == ERROR) {
+	if(status.state == RL_ERROR) {
 		return FAILURE;
 	}
 	
@@ -776,7 +776,7 @@ int pru_stop() {
 	pru_set_state(PRU_OFF);
 	
 	// wait for interrupt (if no ERROR occured) -> TODO: use wait&timeout function
-	if(status.state != ERROR) {
+	if(status.state != RL_ERROR) {
 		pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT);
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
 	}

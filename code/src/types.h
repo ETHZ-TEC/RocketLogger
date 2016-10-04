@@ -8,9 +8,10 @@
 #define FAILURE -1
 
 // files
-#define CONFIG_FILE "/var/run/rocketlogger.conf"
-#define PID_FILE "/var/run/rocketlogger.pid"
-#define STATUS_FILE "/var/run/rocketlogger.stat"
+#define CONFIG_FILE	"/var/run/rocketlogger.conf"
+#define PID_FILE	"/var/run/rocketlogger.pid"
+#define STATUS_FILE	"/var/run/rocketlogger.stat"
+#define LOG_FILE	"/var/www/log/log.txt"
 
 // TODO: try to remove
 #define MAP_SIZE 0x0FFFFFFF
@@ -26,12 +27,14 @@
 
 // enumerations
 enum rl_state {
-	OFF = 0,
-	RUNNING = 1,
-	ERROR = -1
+	RL_OFF = 0,
+	RL_RUNNING = 1,
+	RL_ERROR = -1
 };
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
 enum rl_file_format {NO_FILE, CSV, BIN};
+
+typedef enum error_type {ERROR, WARNING} rl_error_type;
 
 // configuration struct
 struct rl_conf {

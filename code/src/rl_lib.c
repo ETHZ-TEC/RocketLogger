@@ -82,7 +82,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 
 void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
 	
-	if(status->state == OFF) {
+	if(status->state == RL_OFF) {
 		if (web == 1) {
 			printf("OFF\n");
 		} else {
@@ -112,7 +112,7 @@ enum rl_state rl_get_status(int print, int web) {
 	if(pid == FAILURE || kill(pid, 0) < 0) {
 		// process not running
 		// TODO: handle ERROR
-		status.state = OFF;
+		status.state = RL_OFF;
 	} else {
 		// read status
 		read_status(&status);
@@ -219,7 +219,7 @@ int rl_sample(struct rl_conf* conf) {
 int rl_stop() {
 	
 	// check if running
-	if(rl_get_status(0,0) != RUNNING) {
+	if(rl_get_status(0,0) != RL_RUNNING) {
 		printf("RocketLogger not running!\n");
 		return FAILURE;
 	}
