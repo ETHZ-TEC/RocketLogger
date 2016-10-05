@@ -42,6 +42,31 @@
 #define DIGIN6_BIT 8
 
 // enumerations TODO: typedefs
+
+// PRU 
+
+// PRU states
+enum pru_states {
+	PRU_OFF = 0,
+	PRU_LIMIT = 1,
+	PRU_CONTINUOUS = 3
+};
+
+#define NUMBER_PRU_COMMANDS 10
+struct pru_data_struct {
+	enum pru_states state;
+	unsigned int precision;
+	unsigned int sample_size;
+	unsigned int buffer0_location;
+	unsigned int buffer1_location;
+	unsigned int buffer_size;
+	unsigned int sample_limit;
+	unsigned int number_commands;
+	unsigned int commands[NUMBER_PRU_COMMANDS];
+};
+
+// ROCKETLOGGER
+
 enum rl_state {
 	RL_OFF = 0,
 	RL_RUNNING = 1,
@@ -51,17 +76,6 @@ enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DE
 enum rl_file_format {NO_FILE, CSV, BIN};
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
-
-// file header struct
-#define HEADERLENGTH 6
-struct header {
-	int header_length;
-	int number_samples;
-	int buffer_size;
-	int rate;
-	int channels;
-	int precision;
-};
 
 // configuration struct
 struct rl_conf {
@@ -81,6 +95,28 @@ struct rl_status {
 	enum rl_state state;
 	int samples_taken;
 	int buffer_number;
+};
+
+
+// FILE HEADER
+#define HEADERLENGTH 6
+struct header {
+	int header_length;
+	int number_samples;
+	int buffer_size;
+	int rate;
+	int channels;
+	int precision;
+};
+
+#define HEADER_VERSION 0
+struct file_header_new {
+	int header_version;
+	int number_samples;
+	int buffer_size;
+	int sample_rate;
+	int precision;
+	int channels[NUM_CHANNELS];
 };
 
 
