@@ -32,6 +32,15 @@
 
 #define RATE_SCALING 1000 // rates are in ksps
 
+#define I1L_VALID_BIT 1
+#define I2L_VALID_BIT 1
+#define DIGIN1_BIT 2
+#define DIGIN2_BIT 4
+#define DIGIN3_BIT 8
+#define DIGIN4_BIT 2
+#define DIGIN5_BIT 4
+#define DIGIN6_BIT 8
+
 // enumerations TODO: typedefs
 enum rl_state {
 	RL_OFF = 0,
