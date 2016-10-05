@@ -28,6 +28,10 @@
 
 #define METER_UPDATE_RATE 5
 
+#define STATUS_SIZE 2 // status size in bytes
+
+#define RATE_SCALING 1000 // rates are in ksps
+
 // enumerations TODO: typedefs
 enum rl_state {
 	RL_OFF = 0,

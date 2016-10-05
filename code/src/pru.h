@@ -26,11 +26,12 @@
 #include <sys/shm.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
-#include <ncurses.h>
+//#include <ncurses.h>
 
 #include "util.h"
 #include "types.h"
 #include "calibration.h"
+#include "meter.h"
 
 
 // ---------------------------------------------- ADC DEFINES -------------------------------------------------------//
@@ -107,7 +108,6 @@
 
 #define TIMEOUT 3 // 3s PRU timeout
 
-#define STATUSSIZE 2 //status size in bytes
 #define BUFFERSTATUSSIZE 4 //buffer status size in bytes
 #define WEB_BUFFER_SIZE 100
 #define NUMBER_WEB_CHANNELS 6
@@ -178,7 +178,7 @@ int store_header_bin(FILE* data, struct header* h);
 int store_header_csv(FILE* data, struct header* h);
 
 int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int number, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver);
-void print_meter(void* virt_addr, unsigned int number, unsigned int size, int channels);
+//void print_meter(struct rl_conf* conf, void* virt_addr, unsigned int size);
 void average_data(double* data_out, int* data_in, int length, int num_channels);
 void collapse_data(float* data_out, int* data_in, int channels);
 int store_web_data(int fifo_fd, int control_fifo, float* buffer);

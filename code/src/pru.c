@@ -5,10 +5,6 @@
 
 char channel_names[10][15] = {"I1H [nA]","I1M [nA]","I1L [10pA]","V1 [uV]","V2 [uV]","I2H [nA]","I2M [nA]","I2L [10pA]","V3 [uV]","V4 [uV]"};
 
-char meter_names[10][15] = {"I1H","I1M","I1L","V1","V2","I2H","I2M","I2L","V3","V4"};
-char meter_units[10][15] = {"mA","mA","uA","V","V","mA","mA","uA","V","V"};
-int meter_scales[10] = {1000000, 1000000, 100000, 1000000, 1000000,1000000, 1000000, 100000, 1000000, 1000000};
-
 
 struct header file_header;
 
@@ -128,7 +124,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int
 		// read status
 		line_int[0] = (int) (*((int8_t *) (virt_addr)));
 		line_int[1] = (int) (*((int8_t *) (virt_addr + 1)));
-		virt_addr += STATUSSIZE;
+		virt_addr += STATUS_SIZE;
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {
@@ -309,7 +305,7 @@ void collapse_data(float* data_out, int* data_in, int channels) {
 }*/
 
 // meter
-void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size, int channels) {
+/*void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size, int channels) {
 	
 	// print header
 	printf("\n\n\n\n\n\n\n\n\n\nRocketLogger Meter\n\n");
@@ -330,7 +326,7 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		printf("%-20d",(int)(*((int8_t *) (virt_addr + 1))));
 	}
 	printf("\n\n");
-	virt_addr += STATUSSIZE;
+	virt_addr += STATUS_SIZE;
 	
 	int i;
 	int j;
@@ -353,12 +349,12 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		if((channels & MASK) > 0) {
 			if(size == 4) {
 				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUSSIZE) + j*4))) + offsets24[j]) * scales24[j]);
+					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
 				}
 				value = value / (long) avg_number;
 			} else {
 				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUSSIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
+					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
 				}
 			}
 			printf("%-20d", (int) value); //---> for all channels!!
@@ -381,12 +377,12 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		if((channels & MASK) > 0) {
 			if(size == 4) {
 				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUSSIZE) + j*4))) + offsets24[j]) * scales24[j]);
+					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
 				}
 				value = value / (long) avg_number;
 			} else {
 				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUSSIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
+					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
 				}
 			}
 			printf("%-20d", (int) value);
@@ -410,12 +406,12 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		if((channels & MASK) > 0) {
 			if(size == 4) {
 				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUSSIZE) + j*4))) + offsets24[j]) * scales24[j]);
+					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
 				}
 				value = value / (long) avg_number;
 			} else {
 				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUSSIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
+					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
 				}
 			}
 			printf("%-20d", (int) value);
@@ -439,12 +435,12 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		if((channels & MASK) > 0) {
 			if(size == 4) {
 				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUSSIZE) + j*4))) + offsets24[j]) * scales24[j]);
+					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
 				}
 				value = value / (long) avg_number;
 			} else {
 				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUSSIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
+					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
 				}
 			}
 			printf("%-20d", (int) value);
@@ -452,119 +448,9 @@ void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size
 		MASK = MASK << 1;
 	}
 	printf("\n\n\n\n\n\n\n\n\n\n");
-}
+}*/
 
-void meter_init() {
-	// init ncurses mode
-	initscr();
-	// hide cursor
-	curs_set(0);
-	
-	mvprintw(1, 1, "Starting RocketLogger Meter ...");
-	refresh();
-}
 
-void meter_stop() {
-	endwin();
-}
-
-void print_meter_new(void* virt_addr, unsigned int samples_buffer, unsigned int size, int channels) { // TODO: use rl_conf
-
-	// TODO: average (see old code)
-
-	// clear screen
-	erase();
-	
-	int j = 0;
-	int k = 2;
-	int l = 0;
-	int MASK = 1;
-	
-	// TODO: define
-	int avg_number = 200; //sample_rate/update_rate
-	
-	// binary data
-	long value = 0;
-	int line[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-	
-	
-	
-	// read status
-	line[0] = (int) (*((int8_t *) (virt_addr)));
-	line[1] = (int) (*((int8_t *) (virt_addr + 1)));
-	virt_addr += STATUSSIZE;
-	
-	
-	// read and scale values (if channel selected)
-	for(j=0; j<NUM_CHANNELS; j++) {
-		if((channels & MASK) > 0) {
-			value = 0;
-			if(size == 4) {
-				for(l=0; l<avg_number; l++) {
-					value += *( (int32_t *) (virt_addr + 4*j + l*(NUM_CHANNELS*size + STATUSSIZE)) );
-				}
-				value = value / (long)avg_number;
-				line[k] = (int) (( (int) value + offsets24[j] ) * scales24[j]);
-			} else {
-				for(l=0; l<avg_number; l++) {
-					value += *( (int16_t *) (virt_addr + 2*j + l*(NUM_CHANNELS*size + STATUSSIZE)) );
-				}
-				value = value / (long)avg_number;
-				line[k] = (int) (( value + offsets16[j] ) * scales16[j]);
-			}
-			k++;
-		}
-		MASK = MASK << 1;
-	}
-	
-	// display values
-	mvprintw(1, 28, "RocketLogger Meter");
-	
-	int MASK_NAME = 1;
-	int i = 0;
-	int v = 0;
-	for(j=0; j<NUM_CHANNELS; j++) {
-		if((channels & MASK_NAME) > 0) {
-			if(j == 0 || j == 1 || j == 2 || j == 5 || j == 6 || j == 7) {
-				// current
-				mvprintw(i*2 + 5, 10, "%s", meter_names[j]);
-				mvprintw(i*2 + 5, 15, "%f%s", ((float) line[v+i+2]) / meter_scales[j], meter_units[j]);
-				i++;
-			} else {
-				// voltage
-				mvprintw(v*2 + 5, 55, "%s", meter_names[j]);
-				mvprintw(v*2 + 5, 60, "%f%s", ((float) line[v+i+2]) / meter_scales[j], meter_units[j]);
-				v++;
-			}
-		}
-		
-		MASK_NAME = MASK_NAME << 1;
-	}
-	
-	// display titles, range information
-	if(i > 0) { // currents
-		mvprintw(3, 10, "Currents:");
-		
-		// display range information
-		mvprintw(3, 30, "Low range:");
-		if((line[0] & 1) > 0) {
-			mvprintw(5, 30, "I1L valid");
-		} else {
-			mvprintw(5, 30, "I1L invalid");
-		}
-		if((line[1] & 1) > 0) {
-			mvprintw(11, 30, "I2L valid");
-		} else {
-			mvprintw(11, 30, "I2L invalid");
-		}
-	}
-	
-	if(v > 0) { // voltages
-		mvprintw(3, 55, "Voltages:");
-	}
-	
-    refresh();
-}
 
 // ------------------------------  PRU FUNCTIONS ------------------------------ //
 
@@ -752,7 +638,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	pru.buffer_size = (conf->sample_rate * 1000) / conf->update_rate;
 	
 	number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
-	buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUSSIZE) + BUFFERSTATUSSIZE;
+	buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	
 	pru.buffer0_location = read_file_value(MMAP_FILE "addr");
 	pru.buffer1_location = pru.buffer0_location + buffer_size_bytes;
@@ -868,8 +754,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// print meter output
 		if(conf->mode == METER) {
-			//print_meter(addr + 4, samples_buffer, pru.sample_size, channels);
-			print_meter_new(addr + 4, samples_buffer, pru.sample_size, channels);
+			print_meter(conf, addr + 4, pru.sample_size);
 		}
 	}
 	
