@@ -12,6 +12,35 @@
 
 #define STATUS_MASK 0x1
 
+// gpio registers
+#define SCLK		r30.t0
+#define MOSI		r30.t1
+#define MISO1		r31.t2
+#define MISO2		r31.t16
+#define CS1			r30.t3
+#define CS2			r30.t5
+#define START_PIN	r30.t7
+#define DR1			r31.t15
+#define DR2			r31.t14 // unused
+
+
+// register assignement
+#define ADC1_STATUS_REG r24
+#define ADC2_STATUS r25
+
+#define V1_REG r13
+#define V2_REG r14
+#define V3_REG r18
+#define V4_REG r19
+
+#define I1H_REG r10
+#define I1M_REG r11
+#define I1L_REG r12
+
+#define I2H_REG r15
+#define I2M_REG r16
+#define I2L_REG r17
+
  
 // --------------------------- Macros ------------------------------------------ //
  
