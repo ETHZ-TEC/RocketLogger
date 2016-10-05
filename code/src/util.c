@@ -150,11 +150,11 @@ int read_file_value(char filename[]) {
 	FILE* fp;
 	unsigned int value = 0;
 	fp = fopen(filename, "rt");
-	if (fp < 0) {
+	if (fp <= 0) {
 		rl_log(ERROR, "failed to open file");
 		return FAILURE;
 	}
-	if(fscanf(fp, "%x", &value) < 0) {
+	if(fscanf(fp, "%x", &value) <= 0) {
 		rl_log(ERROR, "failed to read from file");
 		return FAILURE;
 	}
@@ -174,9 +174,17 @@ void rl_log(rl_log_type type, const char* format, ... ) {
 	if(log_created == 0) {
 		log_created = 1;
 		log_fp = fopen(LOG_FILE, "w");
+		if (log_fp <= 0) {
+			printf("Error: failed to open log file\n");
+			return;
+		}
 		fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
 	} else {
 		log_fp = fopen(LOG_FILE, "a");
+		if (log_fp <= 0) {
+			printf("Error: failed to open log file\n");
+			return;
+		}
 	}
 	
 	// print date/time
