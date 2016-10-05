@@ -95,7 +95,7 @@
 // memory map
 #define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
 #define DEVICE_FILE			"/etc/rocketlogger/" // TODO: ???
-#define FIFO_FILE			"/etc/rocketlogger/fifo"
+#define FIFO_FILE			"/etc/rocketlogger/fifo" // TODO: in HW?
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/SPI.bin"
@@ -110,69 +110,21 @@
 
 #define TIMEOUT 3 // 3s PRU timeout
 
-#define BUFFERSTATUSSIZE 4 //buffer status size in bytes
-#define WEB_BUFFER_SIZE 100
-#define NUMBER_WEB_CHANNELS 6
-
-// ---------------------------------------------- CHANNEL DEFINES ----------------------------------------------------// 
-
-//#define NUMBERCHANNELS 10
-
-#define ALL 0x3FF
-
-#define I1H 1
-#define I1M 2
-#define I1L 4
-#define I1A (I1H|I1M|I1L) // all i1
-#define V1 8
-#define V2 16
-
-#define I2H 32
-#define I2M 64
-#define I2L 128
-#define I2A (I2H|I2M|I2L)
-#define V3 256
-#define V4 512
-
-// force high range channels
-#define I1 1
-#define I2 2
-
-// ---------------------------------------------- PRU ------------------------------------------------------------//
-
-// PRU states
-enum pru_states {
-	PRU_OFF = 0,
-	PRU_LIMIT = 1,
-	PRU_CONTINUOUS = 3
-};
-
-#define NUMBER_PRU_COMMANDS 10
-struct pru_data_struct {
-	enum pru_states state;
-	unsigned int precision;
-	unsigned int sample_size;
-	unsigned int buffer0_location;
-	unsigned int buffer1_location;
-	unsigned int buffer_size;
-	unsigned int sample_limit;
-	unsigned int number_commands;
-	unsigned int commands[NUMBER_PRU_COMMANDS];
-};
 
 // ---------------------------------------------- PROTOCOL FUNCTIONS ------------------------------------------------//
 
 
 // store functions
-int store_header_bin(FILE* data, struct header* h);
-int store_header_csv(FILE* data, struct header* h);
+//int store_header_bin(FILE* data, struct header* h);
+//int store_header_csv(FILE* data, struct header* h);
 
-int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int samples_buffer, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver, struct rl_conf* conf);
+/*int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int samples_buffer, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver, struct rl_conf* conf);
 void average_data(double* data_out, int* data_in, int length, int num_channels);
 void collapse_data(float* data_out, int* data_in, int channels);
-int store_web_data(int fifo_fd, int control_fifo, float* buffer);
+int store_web_data(int fifo_fd, int control_fifo, float* buffer);*/
 
 // PRU functions
+// TODO: add
 int pru_set_state(enum pru_states state);
 int pru_init();
 int pru_stop(); // stop pru when in continuous mode (has to be done before close)

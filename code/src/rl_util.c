@@ -158,7 +158,10 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							memset(conf->channels, 0, sizeof(conf->channels));
 							conf->channels[atoi(c)] = 1;
 							
-						} else {
+						} else if(strcmp(argv[i], "all") == 0) {
+							// all channels
+							memset(conf->channels, 1, sizeof(conf->channels));
+						}else {
 							rl_log(ERROR, "wrong channel number");
 							return FAILURE;
 						}
@@ -284,7 +287,7 @@ void print_usage(struct rl_conf* conf) {
 	printf("    data               Get current data.\n");
 	printf("    stop               Stops RocketLogger.\n");
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
-	printf("                         Use set 0 to reset the default configuration.\n");
+	printf("                         Use 'set 0' to reset the default configuration.\n");
 	printf("    conf               Print default configuration of RocketLogger.\n");
 	
 	printf("\n  Options:\n");
@@ -293,7 +296,7 @@ void print_usage(struct rl_conf* conf) {
 	printf("    -u [number]        Data update rate selection.\n");
 	printf("                         Possible update rates: 1, 2, 5, 10 (in Hz)\n");
 	printf("    -ch [number1,...]  Channel selection.\n");
-	printf("                       Possible channels:\n");
+	printf("                       Possible channels ('-ch all' to enable all):\n");
 	printf("                         0: I1H\t\t5: I2H\n");
 	printf("                         1: I1M\t\t6: I2M\n");
 	printf("                         2: I1L\t\t7: I2L\n");
@@ -302,11 +305,11 @@ void print_usage(struct rl_conf* conf) {
 	printf("    -fhr [0,1,2]       Force high-range.\n");
 	printf("                         0: no channel, 1: I1, 2: I2\n");
 	printf("    -f [file]          Stores data to specified file.\n");
-	printf("                         -f 0 will disable file storing.\n");
+	printf("                         '-f 0' will disable file storing.\n");
 	printf("    -b                 Set output file to binary.\n"); // TODO: adapt webserver and remove
 	printf("    -format [format]   Select file format: csv, bin.\n");
 	printf("    -w                 Enable webserver plotting.\n");
-	printf("                         Use -w 0 to disable webserver plotting.\n");
+	printf("                         Use '-w 0' to disable webserver plotting.\n");
 	printf("    -s                 Set configuration as default.\n");
 	
 	printf("\n");

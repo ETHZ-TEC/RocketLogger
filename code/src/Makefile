@@ -8,10 +8,10 @@ install: rocketlogger rl_deamon SPI.bin
 		cp rl_deamon /bin/rl_deamon
 		cp SPI.bin /lib/firmware/SPI.bin
 
-rocketlogger : rocketlogger.c util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o meter.o file_handling.o
+rocketlogger : rocketlogger.c util.o calibration.o pwm.o gpio.o meter.o file_handling.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o
 		gcc -Wall -O3 util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o meter.o file_handling.o rocketlogger.c -o rocketlogger -pthread -lprussdrv -lrt -lncurses
 
-rl_deamon : rl_deamon.c util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o meter.o file_handling.o
+rl_deamon : rl_deamon.c util.o calibration.o pwm.o gpio.o meter.o file_handling.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o
 		gcc -Wall -O3 util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o meter.o file_handling.o rl_deamon.c -o rl_deamon -pthread -lprussdrv -lrt -lncurses
 
 util.o : util.c
