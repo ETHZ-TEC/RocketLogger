@@ -27,8 +27,9 @@
 #define BUFFER1_POS			16
 #define BUFFER_SIZE_POS		20
 #define SAMPLE_LIMIT_POS	24
-#define NUMBER_COMMANDS_POS	28
-#define MEM_COMMANDS_POS	32
+#define ADD_CURRENTS_POS	28
+#define NUMBER_COMMANDS_POS	32
+#define MEM_COMMANDS_POS	36
 
 
 // gpio registers
@@ -83,7 +84,7 @@
 // status regs			r24-r25
 #define MASK_NEG		r26
 #define MASK_POS		r27
-#define SAMPLE_SIZE		r28 // unused? TODO: remove
+#define ADD_CURRENTS	r28
 #define WAIT_VAR		r29
 
 
@@ -301,7 +302,7 @@ LOAD:
 	LBBO NUMBER_SAMPLES,	BASE_ADDRESS, SAMPLE_LIMIT_POS, 4	// number of samples to get
 	LBBO BUFFER_SIZE,		BASE_ADDRESS, BUFFER_SIZE_POS, 4	// buffer size
 	LBBO PRECISION,			BASE_ADDRESS, PRECISION_POS, 4		// precision
-	LBBO SAMPLE_SIZE,		BASE_ADDRESS, SAMPLE_SIZE_POS, 4	// size (unused -> TODO)
+	LBBO ADD_CURRENTS,		BASE_ADDRESS, ADD_CURRENTS_POS, 4	// add currents
 	MOV BUFFER_NUMBER, 0										// buffer number
 	
 	// store buffer number to memory
@@ -368,6 +369,17 @@ READ:
 	
 	// receive data
 	receive_data
+	
+	// add current channels if requested
+	QBEQ NOTADD, ADD_CURRENTS, 0
+	
+	// v2
+	ADD I1H_REG, I1H_REG, I1H_2_REG
+	ADD I1L_REG, I1L_REG, I1L_2_REG
+	ADD I2H_REG, I2H_REG, I2H_2_REG
+	ADD I2L_REG, I2L_REG, I2L_2_REG
+	
+NOTADD:
 	
 	// mask and store status (low range valid)
 	AND ADC1_STATUS_REG, ADC1_STATUS_REG, STATUS_MASK

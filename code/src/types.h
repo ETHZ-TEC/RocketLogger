@@ -1,6 +1,8 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+// add currents (1: add, 0: not add)
+#define ADD_CURRENTS 0
 
 // return codes
 #define SUCCESS 1
@@ -61,6 +63,7 @@ struct pru_data_struct {
 	unsigned int buffer1_location;
 	unsigned int buffer_size;
 	unsigned int sample_limit;
+	unsigned int add_currents;
 	unsigned int number_commands;
 	unsigned int commands[NUMBER_PRU_COMMANDS];
 };

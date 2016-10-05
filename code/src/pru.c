@@ -140,6 +140,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
 	pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
+	pru->add_currents = ADD_CURRENTS;
 	
 	
 	// set commands
@@ -157,8 +158,6 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	
 	return SUCCESS;
 }
-
-
 
 
 
