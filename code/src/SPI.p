@@ -18,9 +18,6 @@
 #define STATUS_SIZE 24
 #define STATUS_MASK 0x1 // new: 0xF (for all 4 digital inputs)
 
-#define MASK_NEG r26
-#define MASK_POS r27
-
 
 // pru data (position in memory)
 #define STATE_POS			0
@@ -63,6 +60,12 @@
 #define I2M_REG r16
 #define I2L_REG r17
 
+// new channels
+#define I1H_2_REG r20
+#define I1L_2_REG r21
+#define I2H_2_REG r22
+#define I2L_2_REG r23
+
 
 // other registers
 #define STATUS			r0
@@ -76,9 +79,12 @@
 #define MEM_POINTER		r8
 #define NUMBER_SAMPLES	r9
 #define COMMANDS_POS	r11 // is reused by I1M
-// channel input regs	r10-r19
-#define WAIT_VAR		r20
+// channel input regs	r10-r23
+// status regs			r24-r25
+#define MASK_NEG		r26
+#define MASK_POS		r27
 #define SAMPLE_SIZE		r28 // unused? TODO: remove
+#define WAIT_VAR		r29
 
 
 // nop
