@@ -2,10 +2,6 @@
 
 // ---------------------------------------------- CONSTANTS----------------------------------------------------------//
 
-
-char channel_names[10][15] = {"I1H [nA]","I1M [nA]","I1L [10pA]","V1 [uV]","V2 [uV]","I2H [nA]","I2M [nA]","I2L [10pA]","V3 [uV]","V4 [uV]"};
-
-
 struct header file_header;
 
 struct pru_data_struct pru;
@@ -18,39 +14,6 @@ int test_mode = 0;
 
 // ------------------------------ STORE FUNCTIONS ------------------------------ //
 
-
-int store_header(FILE* data, struct header* h, int binary) {
-	
-	if (binary == 1) {
-		fwrite(h, sizeof(struct header), 1, data);
-	} else {
-		// information
-		fprintf(data, "Header Length:,%d\n", h->header_length);
-		fprintf(data, "Number Samples:,%-12d\n", h->number_samples);
-		fprintf(data, "Buffer Size:,%d\n", h->buffer_size);
-		fprintf(data, "Rate:,%d\n", h->rate);
-		fprintf(data, "Channels:,%d\n", h->channels);
-		fprintf(data, "Precision:,%d\n", h->precision);
-		
-		// title row
-		fprintf(data,"Time");
-		fprintf(data,",LOW1");
-		fprintf(data,",LOW2");
-		
-		// channel names
-		int i;
-		int MASK = 1;
-		for(i=0; i<NUM_CHANNELS; i++) {
-			if((h->channels & MASK) > 0) {
-				fprintf(data,",%s",channel_names[i]);
-			}
-			MASK = MASK << 1;
-		}
-		fprintf(data,"\n");
-	}
-	
-	return SUCCESS;
-}
 
 int update_sample_number(FILE* data, struct header* h, int binary) {
 	
@@ -73,7 +36,7 @@ int update_sample_number(FILE* data, struct header* h, int binary) {
 }
 
 // buffer
-int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int samples_buffer, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver) {
+int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int samples_buffer, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver, struct rl_conf* conf) {
 	
 	int i = 0;
 	int j = 0;
@@ -96,7 +59,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int
 	
 	// store header
 	if(buffer_number == 0 && store == 1) {
-		store_header(data, &file_header, binary);
+		store_header(data, &file_header, conf);
 	}
 	
 	// store buffer
@@ -304,153 +267,6 @@ void collapse_data(float* data_out, int* data_in, int channels) {
 	}
 }*/
 
-// meter
-/*void print_meter(void* virt_addr, unsigned int samples_buffer, unsigned int size, int channels) {
-	
-	// print header
-	printf("\n\n\n\n\n\n\n\n\n\nRocketLogger Meter\n\n");
-	
-	if ((channels & I1A) > 0 ) {
-		printf("%-20s","LOW1");
-	}
-	if ((channels & I2A) > 0 ) {
-		printf("LOW2");
-	}
-	printf("\n");
-	
-	// print status if channels selected
-	if ((channels & I1A) > 0 ) {
-		printf("%-20d",(int)(*((int8_t *) (virt_addr))));
-	}
-	if ((channels & I2A) > 0 ) {
-		printf("%-20d",(int)(*((int8_t *) (virt_addr + 1))));
-	}
-	printf("\n\n");
-	virt_addr += STATUS_SIZE;
-	
-	int i;
-	int j;
-	int k;
-	int MASK_NAME = 1;
-	int MASK = 1;
-	int avg_number = 10;
-	long value;
-	for(i=0; i<3; i++) {
-		if((channels & MASK_NAME) > 0) {
-			printf("%-20s", channel_names[i]);
-		}
-		MASK_NAME = MASK_NAME << 1;
-	}
-	printf("\n");
-	
-	// print i1
-	for(j=0; j<3; j++) {
-		value = 0;
-		if((channels & MASK) > 0) {
-			if(size == 4) {
-				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
-				}
-				value = value / (long) avg_number;
-			} else {
-				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
-				}
-			}
-			printf("%-20d", (int) value); //---> for all channels!!
-		}
-		MASK = MASK << 1;
-	}
-	printf("\n\n");
-	
-	// print v1,2
-	for(; i<5; i++) {
-		if((channels & MASK_NAME) > 0) {
-			printf("%-20s", channel_names[i]);
-		}
-		MASK_NAME = MASK_NAME << 1;
-	}
-	printf("\n");
-	
-	for(; j<5; j++) {
-		value = 0;
-		if((channels & MASK) > 0) {
-			if(size == 4) {
-				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
-				}
-				value = value / (long) avg_number;
-			} else {
-				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
-				}
-			}
-			printf("%-20d", (int) value);
-		}
-		MASK = MASK << 1;
-	}
-	printf("\n\n");
-	
-	
-	// print i2
-	for(; i<8; i++) {
-		if((channels & MASK_NAME) > 0) {
-			printf("%-20s", channel_names[i]);
-		}
-		MASK_NAME = MASK_NAME << 1;
-	}
-	printf("\n");
-	
-	for(; j<8; j++) {
-		value = 0;
-		if((channels & MASK) > 0) {
-			if(size == 4) {
-				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
-				}
-				value = value / (long) avg_number;
-			} else {
-				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
-				}
-			}
-			printf("%-20d", (int) value);
-		}
-		MASK = MASK << 1;
-	}
-	printf("\n\n");
-	
-	
-	// print v3,4
-	for(; i<10; i++) {
-		if((channels & MASK_NAME) > 0) {
-			printf("%-20s", channel_names[i]);
-		}
-		MASK_NAME = MASK_NAME << 1;
-	}
-	printf("\n");
-	
-	for(; j<10; j++) {
-		value = 0;
-		if((channels & MASK) > 0) {
-			if(size == 4) {
-				for (k=0; k<avg_number; k++) {
-					value += (long) (((*((int32_t *) (virt_addr + k * (4*NUM_CHANNELS + STATUS_SIZE) + j*4))) + offsets24[j]) * scales24[j]);
-				}
-				value = value / (long) avg_number;
-			} else {
-				for (k=0; k<samples_buffer; k++) {
-					value = (long) (((*((int16_t *) (virt_addr + k * (2*NUM_CHANNELS + STATUS_SIZE) + j*2))) + offsets16[j]) * scales16[j]); // do not average here
-				}
-			}
-			printf("%-20d", (int) value);
-		}
-		MASK = MASK << 1;
-	}
-	printf("\n\n\n\n\n\n\n\n\n\n");
-}*/
-
-
 
 // ------------------------------  PRU FUNCTIONS ------------------------------ //
 
@@ -593,7 +409,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		pru.state = PRU_CONTINUOUS;
 	}
 	
-	// set sampling rate configuration
+	// set sampling rate configuration // TODO: outsource
 	switch (conf->sample_rate) {
 		case 1:
 			pru_sample_rate = K1;
@@ -745,7 +561,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// store the buffer
-		store_buffer(data, fifo_fd, control_fifo, addr+4, i, samples_buffer, pru.sample_size, channels, &current_time, store, binary, conf->enable_web_server);
+		store_buffer(data, fifo_fd, control_fifo, addr+4, i, samples_buffer, pru.sample_size, channels, &current_time, store, binary, conf->enable_web_server, conf);
 		
 		// update and write state
 		status.samples_taken += samples_buffer;

@@ -52,6 +52,17 @@ enum rl_file_format {NO_FILE, CSV, BIN};
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
+// file header struct
+#define HEADERLENGTH 6
+struct header {
+	int header_length;
+	int number_samples;
+	int buffer_size;
+	int rate;
+	int channels;
+	int precision;
+};
+
 // configuration struct
 struct rl_conf {
 	enum rl_mode mode;
