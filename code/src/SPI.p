@@ -16,7 +16,7 @@
 
 // status
 #define STATUS_SIZE 24
-#define STATUS_MASK 0x1 // new: 0xF (for all 4 digital inputs)
+#define STATUS_MASK 0xF//0x1 // new: 0xF (for all 4 digital inputs)
 
 
 // pru data (position in memory)
