@@ -146,7 +146,7 @@ int rl_sample(struct rl_conf* conf) {
 			break;
 		case METER:
 			// set meter config
-			conf->update_rate = 10;
+			conf->update_rate = METER_UPDATE_RATE;
 			conf->sample_limit = 0;
 			conf->enable_web_server = 0;
 			conf->file_format = NO_FILE;

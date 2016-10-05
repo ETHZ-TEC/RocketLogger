@@ -26,6 +26,7 @@
 #include <sys/shm.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
+#include <ncurses.h>
 
 #include "util.h"
 #include "types.h"

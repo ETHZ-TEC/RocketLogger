@@ -26,6 +26,8 @@
 #define NUM_TOT_I_CHANNELS 6
 #define NUM_V_CHANNELS 4
 
+#define METER_UPDATE_RATE 5
+
 // enumerations TODO: typedefs
 enum rl_state {
 	RL_OFF = 0,
