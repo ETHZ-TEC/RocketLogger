@@ -207,17 +207,22 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	// running state
+	
+	// STATE
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	
-	// start meter window
+	
+	
+	// METER
 	if(conf->mode == METER) {
 		meter_init();
 	}
 	
-	// set up fifo for webserver data
+	
+	
+	// WEBSERVER
 	int fifo_fd = -1;
 	int control_fifo = -1;
 	
@@ -236,6 +241,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 	}
 	
+	
+	
+	// PRU SETUP
+	
 	// Map the PRU's interrupts
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
 	prussdrv_pruintc_init(&pruss_intc_initdata);
@@ -248,26 +257,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	
-	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
-	
-	
-	// old file header
-	struct header file_header;
-	if(store == 1) {
-		setup_header(&file_header, conf, &pru, pru_sample_rate);
-		// store header
-		store_header(data, &file_header, conf);
-	}
-	
-	
-	// new file header (unused): TODO: update_header_new function
-	struct file_header_new header_new;
-	if(store == 1) {
-		setup_header_new(&header_new, conf, &pru);
-		// store header
-		// TODO
-	}
-	
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");
 	if(2*buffer_size_bytes > max_size) {
@@ -279,6 +268,30 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// map PRU memory into userspace
 	void* buffer0 = map_pru_memory();
 	void* buffer1 = buffer0 + buffer_size_bytes; 
+	
+	
+	
+	// FILE STORING
+	
+	// old file header
+	struct header file_header;
+	if(conf->file_format != NO_FILE) {
+		setup_header(&file_header, conf, &pru, pru_sample_rate);
+		// store header
+		store_header(data, &file_header, conf);
+	}
+	
+	// new file header (unused): TODO: update_header_new function
+	struct file_header_new header_new;
+	if(conf->file_format != NO_FILE) {
+		setup_header_new(&header_new, conf, &pru);
+		// store header
+		// TODO
+	}
+	
+	
+	
+	// EXECUTION
 	
 	// write configuration to PRU memory
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));	
@@ -339,7 +352,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
 		
 		// update and write header
-		if (store == 1) {
+		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored // TODO: for new header
 			file_header.number_samples += samples_buffer;
 			update_sample_number(data, &file_header, conf);
@@ -357,13 +370,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 	}
 	
-	// stop meter window
-	if(conf->mode == METER) {
-		meter_stop();
-	}
 	
-	// flush data if no error occured
-	if (store == 1 && status.state != RL_ERROR) {
+	
+	// FILE FINISH (flush)
+	if (conf->file_format != NO_FILE && status.state != RL_ERROR) {
 		// print info
 		rl_log(INFO,  "stored %d samples to file", status.samples_taken);
 		
@@ -372,15 +382,29 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		fflush(data);
 	}
 	
-	// unmap memory
+	
+	// PRU FINISH (unmap memory)
 	unmap_pru_memory(buffer0);
 	
+	
+	
+	// WEBSERVER FINISH
 	// close FIFOs
 	if (conf->enable_web_server == 1) {
 		close(fifo_fd);
 		close(control_fifo);
 	}
 	
+	
+	
+	// METER FINISH
+	if(conf->mode == METER) {
+		meter_stop();
+	}
+	
+	
+	
+	// STATE
 	if(status.state == RL_ERROR) {
 		return FAILURE;
 	}

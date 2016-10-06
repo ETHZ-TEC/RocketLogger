@@ -146,8 +146,6 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	
 	// ------------------------- //
 	
-	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
-	
 	j = 0;
 	MASK = 1;
 	
@@ -179,7 +177,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		MASK = 1;
 		
 		// store timestamp
-		if (i == 0 && store == 1) {
+		if (i == 0 && conf->file_format != NO_FILE) {
 			if (binary == 1) {
 				fwrite(nowtm, 4, 9, data);
 			} else {
@@ -215,7 +213,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		buffer_addr+=NUM_CHANNELS*sample_size;
 		
 		// store values to file
-		if (store == 1) {
+		if (conf->file_format != NO_FILE) {
 			if (binary == 1) {
 				// binary
 				fwrite(line_int,4,num_channels+2,data);
