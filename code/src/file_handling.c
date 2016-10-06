@@ -11,17 +11,36 @@ time_t create_timestamp(struct rl_conf* conf) {
 }
 
 
-// setup new header
-void setup_header(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data) {
-	header->header_version = HEADER_VERSION;
-	header->number_samples = 0;
-	header->buffer_size = pru_data->buffer_size;
-	header->sample_rate = conf->sample_rate;
-	header->precision = pru_data->precision;
-	int i;
-	for(i=0; i<NUM_CHANNELS; i++) {
-		header->channels[i] = conf->channels[i];
+
+// HEADER
+
+void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate) {
+	
+	int j;
+	int MASK = 1;
+	int channels = 0;
+	for(j=0; j<NUM_CHANNELS; j++) {
+		if(conf->channels[j] > 0) {
+			channels = channels | MASK;
+		}
+		MASK = MASK << 1;
 	}
+		
+	// get header length
+	if(conf->file_format == BIN) {
+		file_header->header_length = HEADERLENGTH;
+	} else if (conf->file_format == CSV) {
+		file_header->header_length = HEADERLENGTH + 1;
+	} else {
+		rl_log(ERROR, "failed to update header, wrong file format");
+	}
+	
+	file_header->number_samples = 0; // number of samples taken
+	file_header->buffer_size = pru_data->buffer_size;
+	file_header->rate = pru_sample_rate;
+	file_header->channels = channels;
+	file_header->precision = pru_data->precision;
+	
 }
 
 // store old header // TODO: for new header
@@ -84,6 +103,23 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 	return SUCCESS;
 }
 
+// setup new header
+void setup_header_new(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data) {
+	header->header_version = HEADER_VERSION;
+	header->number_samples = 0;
+	header->buffer_size = pru_data->buffer_size;
+	header->sample_rate = conf->sample_rate;
+	header->precision = pru_data->precision;
+	int i;
+	for(i=0; i<NUM_CHANNELS; i++) {
+		header->channels[i] = conf->channels[i];
+	}
+}
+
+
+
+
+// FILE STORING
 
 int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf) {
 	
@@ -108,10 +144,9 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		MASK = MASK << 1;
 	}
 	
-	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
-	
 	// ------------------------- //
 	
+	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
 	
 	j = 0;
 	MASK = 1;
@@ -211,6 +246,11 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	
 	return SUCCESS;
 }
+
+
+
+// WEBSERVER STORING
+
 
 // store webserver data to fifo
 int store_web_data(int fifo_fd, int control_fifo, float* buffer) {

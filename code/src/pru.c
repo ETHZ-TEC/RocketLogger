@@ -207,17 +207,6 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	// TODO temporary solution !!!!!!!!
-	int j;
-	int MASK = 1;
-	int channels = 0;
-	for(j=0; j<NUM_CHANNELS; j++) {
-		if(conf->channels[j] > 0) {
-			channels = channels | MASK;
-		}
-		MASK = MASK << 1;
-	}
-	
 	// running state
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
@@ -254,7 +243,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// setup PRU
 	struct pru_data_struct pru;
-	unsigned int pru_sample_rate; // TODO: remove
+	unsigned int pru_sample_rate; // TODO: remove (with new header)
 	pru_setup(&pru, conf, &pru_sample_rate);
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
@@ -262,34 +251,22 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
 	
 	
-	// store old file header // TODO: functions
+	// old file header
 	struct header file_header;
 	if(store == 1) {
-		
-		// get header length
-		if(conf->file_format == BIN) {
-			file_header.header_length = HEADERLENGTH;
-		} else if (conf->file_format == CSV) {
-			file_header.header_length = HEADERLENGTH + 1;
-		} else {
-			rl_log(ERROR, "failed to update header, wrong file format");
-		}
-		
-		file_header.number_samples = 0; // number of samples taken
-		file_header.buffer_size = pru.buffer_size;
-		file_header.rate = pru_sample_rate;
-		file_header.channels = channels;
-		file_header.precision = pru.precision;
-		
+		setup_header(&file_header, conf, &pru, pru_sample_rate);
 		// store header
 		store_header(data, &file_header, conf);
 	}
 	
 	
-	// new file header (unused): TODO: store_header_new, update_header_new function
+	// new file header (unused): TODO: update_header_new function
 	struct file_header_new header_new;
-	setup_header(&header_new, conf, &pru);
-	
+	if(store == 1) {
+		setup_header_new(&header_new, conf, &pru);
+		// store header
+		// TODO
+	}
 	
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");
@@ -363,7 +340,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// update and write header
 		if (store == 1) {
-			// update the number of samples stored
+			// update the number of samples stored // TODO: for new header
 			file_header.number_samples += samples_buffer;
 			update_sample_number(data, &file_header, conf);
 			
