@@ -20,6 +20,10 @@
 
 #define SHMEM_PERMISSIONS 0666
 
+int is_current(int index);
+int count_channels(int channels[NUM_CHANNELS]);
+
+
 int read_status(struct rl_status* status);
 int write_status(struct rl_status* status);
 
@@ -28,9 +32,6 @@ int ceil_div(int n, int d);
 int count_bits(int x);
 
 void sig_handler(int signo);
-
-//void* memory_map(unsigned int addr, size_t size);
-//int memory_unmap(void* ptr, size_t size);
 
 int read_file_value(char filename[]);
 

@@ -52,7 +52,7 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 		if(conf->channels[j] > 0) {
 			value = 0;
 			if(sample_size == 4) {
-				for(l=0; l<avg_number; l++) {
+				for(l=0; l<avg_number; l++) { // TODO: combine (with sample_size)
 					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
 				}
 				value = value / (long)avg_number;
@@ -73,7 +73,7 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 	
 	for(j=0; j<NUM_CHANNELS; j++) {
 		if(conf->channels[j] > 0) {
-			if(j == 0 || j == 1 || j == 2 || j == 5 || j == 6 || j == 7) {
+			if(is_current(j)) {
 				// current
 				mvprintw(i*2 + 5, 10, "%s:", meter_names[j]);
 				mvprintw(i*2 + 5, 15, "%f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);

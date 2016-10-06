@@ -116,6 +116,19 @@ enum rl_file_format {NO_FILE, CSV, BIN};
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
 // configuration struct
+
+// channel indices in channels array
+#define I1H_INDEX	0
+#define I1M_INDEX	1
+#define I1L_INDEX	2
+#define V1_INDEX	3
+#define V2_INDEX	4
+#define I2H_INDEX	5
+#define I2M_INDEX	6
+#define I2L_INDEX	7
+#define V3_INDEX	8
+#define V4_INDEX	9
+
 struct rl_conf {
 	enum rl_mode mode;
 	int sample_rate;

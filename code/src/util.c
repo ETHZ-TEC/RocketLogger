@@ -1,5 +1,26 @@
 #include "util.h"
 
+// channel functions // TODO: use
+int is_current(int index) {
+	if(index == I1H_INDEX || index == I1M_INDEX || index == I1L_INDEX || index == I2H_INDEX || index == I2M_INDEX || index == I2L_INDEX) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int count_channels(int channels[NUM_CHANNELS]) {
+	int i = 0;
+	int c = 0;
+	for(i=0; i<NUM_CHANNELS; i++) {
+		if(channels[i] > 0) {
+			c++;
+		}
+	}
+	return c;
+}
+
+
 int read_status(struct rl_status* status) {
 	
 	// map shared memory

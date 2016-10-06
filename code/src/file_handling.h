@@ -41,7 +41,7 @@ void setup_header_new(struct file_header_new* header, struct rl_conf* conf, stru
 
 int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf);
 int store_web_data(int fifo_fd, int control_fifo, float* buffer);
-void collapse_data(float* data_out, int* data_in, int channels);
+void collapse_data(float* data_out, int* data_in, int channels, struct rl_conf* conf);
 
 // ToDo: use, remove?
 /*void average_data(double* data_out, int* data_in, int length, int num_channels); */

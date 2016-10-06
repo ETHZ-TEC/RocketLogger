@@ -149,14 +149,15 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	j = 0;
 	MASK = 1;
 	
+	//int num_channels = count_channels(conf->channels);
 	int num_channels = count_bits(channels);
 	
 	// create timestamp
 	time_t nowtime = create_timestamp(conf);
 	struct tm* nowtm = localtime(&nowtime);
 	
-	// binary data
-	int line_int[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+	// binary data (for status and samples)
+	int line_int[NUM_CHANNELS + 2] = {0,0,0,0,0,0,0,0,0,0,0,0};
 	int value_int = 0;
 	
 	// csv data TODO: defines
@@ -187,7 +188,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 			}
 		}
 		
-		// read status
+		// read status -> TODO: put in struct: DigInps, Range, Samples
 		line_int[0] = (int) (*((int8_t *) (buffer_addr)));
 		line_int[1] = (int) (*((int8_t *) (buffer_addr + 1)));
 		buffer_addr += STATUS_SIZE;
@@ -198,8 +199,8 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {
-			if((channels & MASK) > 0) {
-				if(sample_size == 4) {
+			if(conf->channels[j] > 0) {
+				if(sample_size == 4) { // TODO: combine (with sample_size)
 					value_int = *( (int32_t *) (buffer_addr + 4*j) );
 					line_int[k] = (int) (( value_int + offsets[j] ) * scales[j]);
 				} else {
@@ -230,9 +231,8 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		
 		// collapse and average values for webserver
 		if (conf->enable_web_server == 1) {
-			if (i % avg_buffer_size == 0) { // only store first sample
-				collapse_data(web_data[i/avg_buffer_size], line_int, channels); //collapse data to webserver buffer
-				//Todo: average data
+			if (i % avg_buffer_size == 0) { // only store first sample -> TODO: average over entire buffer
+				collapse_data(web_data[i/avg_buffer_size], line_int, channels, conf); //collapse data to webserver buffer
 			}
 		}
     }
@@ -283,7 +283,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 }
 
 // collapse current channels for webserver plotting (always take highest selected I-channel)
-void collapse_data(float* data_out, int* data_in, int channels) {
+void collapse_data(float* data_out, int* data_in, int channels, struct rl_conf* conf) {
 	
 	int j = 2; // first two elements are status
 	// specific number of channels
