@@ -55,10 +55,6 @@
 
 #define SHMEM_KEY 1111 // TODO: usefull key
 
-// TODO: try to remove
-#define MAP_SIZE 0x0FFFFFFF
-#define MAP_MASK (MAP_SIZE - 1)
-
 
 // constants
 #define MAX_PATH_LENGTH 100

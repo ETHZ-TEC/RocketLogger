@@ -1,14 +1,10 @@
 #include "pru.h"
 
-// ---------------------------------------------- CONSTANTS----------------------------------------------------------//
-
 int test_mode = 0;
 
 
-// ---------------------------------------------- FUNCTIONS --------------------------------------------------------//
 
-
-// ------------------------------  PRU FUNCTIONS ------------------------------ //
+// PRU TIMEOUT WRAPPER
 
 pthread_mutex_t calculating = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t done = PTHREAD_COND_INITIALIZER;
@@ -55,6 +51,62 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 }
 
 
+
+
+
+// PRU MEMORY MAPPING
+
+void* map_pru_memory() {
+	
+	unsigned int size = read_file_value(MMAP_FILE "size");
+	
+	// get pru memory location
+	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
+	off_t base = (off_t)pru_memory & ~PRU_MAP_MASK;
+	
+	// memory file
+	int fd;
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1){
+		rl_log(ERROR, "failed to open /dev/mem");
+		return NULL;
+    }
+	
+	// map shared memory into userspace
+	//void* map_base = mmap(0, PRU_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base);
+	void* map_base = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)pru_memory);
+	
+    if(map_base == (void *) -1) {
+		rl_log(ERROR, "failed to map base address");
+		return NULL;
+    }
+		
+	close(fd);
+	
+	return map_base; // + ( (off_t)pru_memory & PRU_MAP_MASK);
+}
+
+int unmap_pru_memory(void* buffer) {
+	
+	unsigned int size = read_file_value(MMAP_FILE "size");
+	
+	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
+	void* map_base = buffer - ( (off_t) pru_memory & PRU_MAP_MASK);
+	
+	//if(munmap(map_base, PRU_MAP_SIZE) == -1) {
+	if(munmap(buffer, size) == -1) {
+		rl_log(ERROR, "failed to unmap memory");
+		return FAILURE;
+    }
+    
+	return SUCCESS;
+	
+}
+
+
+
+
+// PRU INITIALISATION
+
 // set state to PRU
 int pru_set_state(enum pru_states state){ // TODO void functions
 		
@@ -77,10 +129,6 @@ int pru_init() {
 	
 	return SUCCESS;
 }
-
-
-
-
 
 int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* pru_sample_rate) { // TODO: remove pru_sample_rate
 
@@ -161,7 +209,9 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 
 
 
-// main sample function
+
+// MAIN SAMPLE FUNCTION
+
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// TODO temporary solution !!!!!!!!
@@ -185,11 +235,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		meter_init();
 	}
 	
-	// set up fifo for webserver data //TODO in hw_layer
+	// set up fifo for webserver data
 	int fifo_fd = -1;
 	int control_fifo = -1;
 	
-	if (conf->enable_web_server == 1) {// TODO: in hw_layer
+	if (conf->enable_web_server == 1) {
 		
 		// data fifo
 		fifo_fd = open(FIFO_FILE, O_NONBLOCK | O_RDWR);
@@ -213,14 +263,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	struct pru_data_struct pru;
 	unsigned int pru_sample_rate; // TODO: remove
 	pru_setup(&pru, conf, &pru_sample_rate);
-	
-	
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	
 	int store = ( (conf->file_format != NO_FILE) && (conf->mode !=  METER) );
 	
-	// store file header
+	
+	// store old file header // TODO: functions
 	struct header file_header;
 	if(store == 1) {
 		
@@ -243,6 +292,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_header(data, &file_header, conf);
 	}
 	
+	
 	// new file header (unused): TODO: store_header_new, update_header_new function
 	struct file_header_new header_new;
 	setup_header(&header_new, conf, &pru);
@@ -255,10 +305,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		pru.state = PRU_OFF;
 		status.state = RL_OFF;
 	}
-	
+		
 	// map PRU memory into userspace
-	void* map_base = memory_map(pru.buffer0_location, MAP_SIZE); // map base placed on start of block
-	void* buffer0 = map_base + ( (off_t) pru.buffer0_location & MAP_MASK);
+	void* buffer0 = map_pru_memory();
 	void* buffer1 = buffer0 + buffer_size_bytes; 
 	
 	// write configuration to PRU memory
@@ -291,7 +340,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (test_mode == 0) {
 			// only check for timout on first buffer (else it does not work!) -> TODO: check
 			if (i == 0) {
-				if(pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT) == ETIMEDOUT) {
+				if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
 					// timeout occured
 					rl_log(ERROR, "ADC timout. Stopping ...");
 					break;
@@ -354,7 +403,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	}
 	
 	// unmap memory
-	memory_unmap(map_base,MAP_SIZE);
+	unmap_pru_memory(buffer0);
 	
 	// close FIFOs
 	if (conf->enable_web_server == 1) {
@@ -370,6 +419,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 }
 
+
+
+
+// PRU STOPPING
+
 // stop PRU when in continuous mode
 int pru_stop() {
 	
@@ -378,7 +432,7 @@ int pru_stop() {
 	
 	// wait for interrupt (if no ERROR occured)
 	if(status.state != RL_ERROR) {
-		pru_wait_event_timeout(PRU_EVTOUT_0, TIMEOUT);
+		pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
 	}
 	

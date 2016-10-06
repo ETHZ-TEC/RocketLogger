@@ -29,8 +29,8 @@ int count_bits(int x);
 
 void sig_handler(int signo);
 
-void* memory_map(unsigned int addr, size_t size);
-int memory_unmap(void* ptr, size_t size);
+//void* memory_map(unsigned int addr, size_t size);
+//int memory_unmap(void* ptr, size_t size);
 
 int read_file_value(char filename[]);
 

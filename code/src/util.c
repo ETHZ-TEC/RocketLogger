@@ -94,39 +94,6 @@ void sig_handler(int signo) { // TODO: combine?
 }
 // TODO: allow forced Ctrl+C
 
-// ------------------------------ MEMORY MAP/UNMAP ------------------------------ // TODO: move to pru
-
-// map physical memory into virtual adress space
-void* memory_map(unsigned int addr, size_t size) {
-	// memory file
-	int fd;
-	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1){
-		rl_log(ERROR, "failed to open /dev/mem");
-		return NULL;
-    }
-	
-	// map shared memory into userspace
-	off_t target = addr;
-	void* map_base = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
-    if(map_base == (void *) -1) {
-		rl_log(ERROR, "failed to map base address");
-		return NULL;
-    }
-		
-	close(fd);
-	
-	return map_base;
-}
-
-// unmap the mapped memory
-int memory_unmap(void* ptr, size_t size) {
-	if(munmap(ptr, size) == -1) {
-		rl_log(ERROR, "failed to unmap memory");
-		return FAILURE;
-    }
-    
-	return SUCCESS;
-}
 
 // ------------------------------ FILE READING/WRITING  ------------------------------ //
 

@@ -1,7 +1,6 @@
 #ifndef ROCKETLOGGER_H
 #define ROCKETLOGGER_H
 
-#define _FILE_OFFSET_BITS  64
 
 // ---------------------------------------------- Includes ----------------------------------------------------------//
 
@@ -94,13 +93,12 @@
 
 // memory map
 #define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
-#define DEVICE_FILE			"/etc/rocketlogger/" // TODO: ???
-#define FIFO_FILE			"/etc/rocketlogger/fifo" // TODO: in HW?
+#define FIFO_FILE			"/etc/rocketlogger/fifo"
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/SPI.bin"
 
-// ---------------------------------------------- PRU/PWM DEFINES ---------------------------------------------------//
+// ---------------------------------------------- PRU DEFINES ---------------------------------------------------//
 
 #define PRECISION_HIGH 24
 #define PRECISION_LOW 16
@@ -108,7 +106,11 @@
 #define SIZE_HIGH 4
 #define SIZE_LOW 2
 
-#define TIMEOUT 3 // 3s PRU timeout
+#define PRU_TIMEOUT 3 // 3s PRU timeout
+
+// PRU memory
+#define PRU_MAP_SIZE 0x0FFFFFFF
+#define PRU_MAP_MASK (PRU_MAP_SIZE - 1)
 
 
 // ----------------------------------------------  FUNCTIONS ------------------------------------------------//
