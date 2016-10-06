@@ -4,7 +4,7 @@ Infos for installing RocketLogger (Makefile available):
 	+ libncurses5-dev
 
 2) Copy + compile code
-	sudo make instal (-> code copied to /bin/)
+	sudo make install (-> code copied to /bin/)
 
 3) Create init script (/etc/init.d/rocketlogger) and make it executable:
 	#!/bin/bash
