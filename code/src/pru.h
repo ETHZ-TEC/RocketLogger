@@ -108,17 +108,13 @@
 
 #define PRU_TIMEOUT 3 // 3s PRU timeout
 
-// PRU memory
-#define PRU_MAP_SIZE 0x0FFFFFFF
-#define PRU_MAP_MASK (PRU_MAP_SIZE - 1)
-
 
 // ----------------------------------------------  FUNCTIONS ------------------------------------------------//
 
 void *pru_wait_event(void* voidEvent);
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
-int pru_set_state(enum pru_states state);
+void pru_set_state(enum pru_states state);
 int pru_init();
 int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* pru_sample_rate);
 

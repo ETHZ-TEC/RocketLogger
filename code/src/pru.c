@@ -58,13 +58,11 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 
 void* map_pru_memory() {
 	
+	// get pru memory location and size
+	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
 	unsigned int size = read_file_value(MMAP_FILE "size");
 	
-	// get pru memory location
-	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
-	off_t base = (off_t)pru_memory & ~PRU_MAP_MASK;
-	
-	// memory file
+	// memory map file
 	int fd;
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1){
 		rl_log(ERROR, "failed to open /dev/mem");
@@ -72,28 +70,24 @@ void* map_pru_memory() {
     }
 	
 	// map shared memory into userspace
-	//void* map_base = mmap(0, PRU_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base);
-	void* map_base = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)pru_memory);
+	void* pru_mmap = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)pru_memory);
 	
-    if(map_base == (void *) -1) {
+    if(pru_mmap == (void *) -1) {
 		rl_log(ERROR, "failed to map base address");
 		return NULL;
     }
 		
 	close(fd);
 	
-	return map_base; // + ( (off_t)pru_memory & PRU_MAP_MASK);
+	return pru_mmap;
 }
 
-int unmap_pru_memory(void* buffer) {
+int unmap_pru_memory(void* pru_mmap) {
 	
+	// get pru memory size
 	unsigned int size = read_file_value(MMAP_FILE "size");
 	
-	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
-	void* map_base = buffer - ( (off_t) pru_memory & PRU_MAP_MASK);
-	
-	//if(munmap(map_base, PRU_MAP_SIZE) == -1) {
-	if(munmap(buffer, size) == -1) {
+	if(munmap(pru_mmap, size) == -1) {
 		rl_log(ERROR, "failed to unmap memory");
 		return FAILURE;
     }
@@ -108,11 +102,10 @@ int unmap_pru_memory(void* buffer) {
 // PRU INITIALISATION
 
 // set state to PRU
-int pru_set_state(enum pru_states state){ // TODO void functions
+void pru_set_state(enum pru_states state){
 		
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &state, sizeof(int));
 	
-	return SUCCESS;
 }
 
 // PRU initiation
