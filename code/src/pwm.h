@@ -48,7 +48,7 @@
 #define ADC_AQ				0x0025	// clear on zero and period, set at 50%
 
 int pwm_setup();
-int pwm_close();
+void pwm_close();
 
-int range_clock_setup(int sample_rate); // sampling rate [kHz]
-int adc_clock_setup();
+void range_clock_setup(int sample_rate); // sampling rate [kHz]
+void adc_clock_setup();

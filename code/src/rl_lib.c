@@ -11,7 +11,7 @@ void rl_reset_calibration() {
 }
 
 // get current data (used for webserver)
-int rl_get_data() {
+int rl_get_data() { // TODO: use timeout
 	
 	float data[WEB_BUFFER_SIZE][NUMBER_WEB_CHANNELS];
 	

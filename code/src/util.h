@@ -26,7 +26,6 @@ int write_status(struct rl_status* status);
 // standard functions
 int ceil_div(int n, int d);
 int count_bits(int x);
-int input_available();
 
 void sig_handler(int signo);
 
@@ -35,8 +34,6 @@ int memory_unmap(void* ptr, size_t size);
 
 int read_file_value(char filename[]);
 
-void rl_log_init();
-void rl_log_close();
 void rl_log(rl_log_type type, const char* format, ... );
 
 #endif

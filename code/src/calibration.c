@@ -5,24 +5,22 @@
  * Set all offsets to default state (0).
  * @return Indicates success.
  */
-int reset_offsets() {
+void reset_offsets() {
 	int i;
 	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
 		offsets[i] = 0;
 	}
-	return SUCCESS;
 }
 
 /**
  * Set all scales to default state (1).
  * @return Indicates success.
  */
-int reset_scales() {
+void reset_scales() {
 	int i;
 	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
 		scales[i] = 1;
 	}
-	return SUCCESS;
 }
 
 /**

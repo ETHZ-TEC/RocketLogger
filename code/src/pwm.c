@@ -34,7 +34,7 @@ int pwm_setup() {
 }
 
 // unmap pwm registers
-int pwm_close() {
+void pwm_close() {
 	
 	// unmap memory
 	munmap((void *)pwmss0_regs, PWM_SIZE);
@@ -43,13 +43,11 @@ int pwm_close() {
 	// close /dev/mem
 	close (mem_fd);
 	
-	return SUCCESS;
-	
 }
 
 
 // setup range clock pwm module
-int range_clock_setup(int sample_rate) {
+void range_clock_setup(int sample_rate) {
 	
 	int period = PERIOD_SCALE / sample_rate;	
 	
@@ -64,19 +62,15 @@ int range_clock_setup(int sample_rate) {
 	pwmss1_regs[AQCTLA] = RWC_AQ_A; // set actions
 	pwmss1_regs[AQCTLB] = RWC_AQ_B;
 	
-	return SUCCESS;
-	
 }
 
 // setup adc clock
-int adc_clock_setup() {
+void adc_clock_setup() {
 	
 	// setup ehrpwm
 	pwmss0_regs[TBCTL] = TBCTL_DEFAULT;
 	pwmss0_regs[TBPRD] = ADC_CLOCK_PERIOD;
 	pwmss0_regs[CMPA] =  ADC_CLOCK_PERIOD/2; // 50% duty
 	pwmss0_regs[AQCTLA] = ADC_AQ;
-
 	
-	return SUCCESS;
 }

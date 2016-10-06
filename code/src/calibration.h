@@ -13,7 +13,7 @@
 #define NUM_CALIBRATION_VALUES 10
 
 
-int reset_offsets();
-int reset_scales();
+void reset_offsets();
+void reset_scales();
 int read_calibration(struct rl_conf* conf);
 int write_calibration();

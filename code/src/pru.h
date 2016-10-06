@@ -111,25 +111,19 @@
 #define TIMEOUT 3 // 3s PRU timeout
 
 
-// ---------------------------------------------- PROTOCOL FUNCTIONS ------------------------------------------------//
+// ----------------------------------------------  FUNCTIONS ------------------------------------------------//
 
+void *pru_wait_event(void* voidEvent);
+int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
-// store functions
-//int store_header_bin(FILE* data, struct header* h);
-//int store_header_csv(FILE* data, struct header* h);
-
-/*int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* virt_addr, int buffer_number, unsigned int samples_buffer, unsigned int size, int channels, struct timeval* current_time, int store, int binary, int webserver, struct rl_conf* conf);
-void average_data(double* data_out, int* data_in, int length, int num_channels);
-void collapse_data(float* data_out, int* data_in, int channels);
-int store_web_data(int fifo_fd, int control_fifo, float* buffer);*/
-
-// PRU functions
-// TODO: add
 int pru_set_state(enum pru_states state);
 int pru_init();
+int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* pru_sample_rate);
+
+int pru_sample(FILE* data, struct rl_conf* conf);
+
 int pru_stop(); // stop pru when in continuous mode (has to be done before close)
 int pru_close();
-int pru_sample(FILE* data, struct rl_conf* conf);
 
 
 #endif
