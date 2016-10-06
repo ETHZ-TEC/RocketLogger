@@ -84,6 +84,8 @@ void print_channels_new(int channels[NUM_CHANNELS]) {
 	float iChannels[6] = {0,0,0,0,0,0};
 	float vChannels[4] = {0,0,0,0};
 	
+	// TODO: use new util-functions
+	
 	// currents
 	if((channels[0]) > 0 ) {
 		iChannels[0] = 1;

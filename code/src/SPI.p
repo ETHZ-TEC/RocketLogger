@@ -221,7 +221,7 @@ INP1LOW:
 	// read status word
 	receive_word ADC1_STATUS_REG, ADC2_STATUS_REG, STATUS_SIZE 
 	
-	// read all channels
+	// read all channels -> TODO: adapt to new hardware
 	receive_word I1H_REG,	I2H_REG,	PRECISION
 	receive_word I1M_REG,	I2M_REG,	PRECISION
 	receive_word I1L_REG,	I2L_REG,	PRECISION
