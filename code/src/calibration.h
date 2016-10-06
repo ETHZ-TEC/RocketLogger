@@ -1,10 +1,10 @@
-#include <sys/time.h>
+/*#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/mman.h>
+#include <sys/mman.h>*/
 
 #include "types.h"
 #include "util.h"
@@ -15,5 +15,5 @@
 
 int reset_offsets();
 int reset_scales();
-int read_calibration();
+int read_calibration(struct rl_conf* conf);
 int write_calibration();

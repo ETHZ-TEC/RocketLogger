@@ -1,6 +1,45 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+
+// INCLUDES
+
+// standard
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <ctype.h>
+
+// ipc, memory mapping, multithreading
+#include <signal.h>
+#include <sys/shm.h>
+#include <sys/mman.h>
+#include <pthread.h>
+
+// files
+#include <fcntl.h>
+#include <poll.h>
+#include <sys/stat.h>
+
+// time
+#include <time.h>
+#include <sys/time.h>
+
+// pru
+#include <prussdrv.h>
+#include <pruss_intc_mapping.h>
+
+// ncurses (text-based UI)
+#include <ncurses.h>
+
+
+
+// DEFINES
+
 // add currents (1: add, 0: not add)
 #define ADD_CURRENTS 0
 
@@ -127,12 +166,8 @@ struct file_header_new {
 
 struct rl_status status;
 
-// TODO: combine
-int offsets16[NUM_CHANNELS];
-int offsets24[NUM_CHANNELS];
-
-double scales24[NUM_CHANNELS];
-double scales16[NUM_CHANNELS];
+int offsets[NUM_CHANNELS];
+double scales[NUM_CHANNELS];
 
 
 #endif

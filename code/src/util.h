@@ -1,7 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <sys/shm.h>
+/*#include <sys/shm.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 #include <time.h>
 #include <syslog.h>
 #include <errno.h>
-#include <stdarg.h>
+#include <stdarg.h>*/
 
 #include "types.h"
 

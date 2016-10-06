@@ -56,13 +56,13 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
 				}
 				value = value / (long)avg_number;
-				line[k] = (int) (( (int) value + offsets24[j] ) * scales24[j]);
+				line[k] = (int) (( (int) value + offsets[j] ) * scales[j]);
 			} else {
 				for(l=0; l<avg_number; l++) {
 					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
 				}
 				value = value / (long)avg_number;
-				line[k] = (int) (( value + offsets16[j] ) * scales16[j]);
+				line[k] = (int) (( value + offsets[j] ) * scales[j]);
 			}
 			k++;
 		}

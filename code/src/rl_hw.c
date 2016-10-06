@@ -64,7 +64,7 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	if(read_calibration() == SUCCESS) {
+	if(read_calibration(conf) == SUCCESS) {
 		// TODO
 	}
 	

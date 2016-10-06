@@ -1,9 +1,9 @@
 #ifndef RL_UTIL_H
 #define RL_UTIL_H
 
-#include <stdio.h>
+/*#include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
+#include <string.h>*/
 
 #include "types.h"
 #include "rl_lib.h"

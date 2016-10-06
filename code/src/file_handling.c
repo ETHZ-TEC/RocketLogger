@@ -168,10 +168,10 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 			if((channels & MASK) > 0) {
 				if(sample_size == 4) {
 					value_int = *( (int32_t *) (buffer_addr + 4*j) );
-					line_int[k] = (int) (( value_int + offsets24[j] ) * scales24[j]);
+					line_int[k] = (int) (( value_int + offsets[j] ) * scales[j]);
 				} else {
 					value_int = *( (int16_t *) (buffer_addr + 2*j) );
-					line_int[k] = (int) (( value_int + offsets16[j] ) * scales16[j]);
+					line_int[k] = (int) (( value_int + offsets[j] ) * scales[j]);
 				}
 				k++;
 			}

@@ -1,9 +1,9 @@
 #ifndef LIB_UTIL_H
 #define LIB_UTIL_H
 
-#include <stdio.h>
+/*#include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
+#include <string.h>*/
 
 #include "types.h"
 

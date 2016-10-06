@@ -8,8 +8,7 @@
 int reset_offsets() {
 	int i;
 	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
-		offsets24[i] = 0;
-		offsets16[i] = 0;
+		offsets[i] = 0;
 	}
 	return SUCCESS;
 }
@@ -21,8 +20,7 @@ int reset_offsets() {
 int reset_scales() {
 	int i;
 	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
-		scales24[i] = 1;
-		scales16[i] = 1;
+		scales[i] = 1;
 	}
 	return SUCCESS;
 }
@@ -31,7 +29,7 @@ int reset_scales() {
  * Read in calibration file.
  * @return Indicates success.
  */
-int read_calibration() {
+int read_calibration(struct rl_conf* conf) {
 	// check if calibration file existing
 	if(open(CALIBRATION_FILE, O_RDWR) <= 0) {
 		rl_log(WARNING, "no calibration file, returning uncalibrated values");
@@ -46,14 +44,16 @@ int read_calibration() {
 		return FAILURE;
 	}
 	// read values
-	fread(offsets24, sizeof(int), NUM_CALIBRATION_VALUES, file);
-	fread(scales24, sizeof(double), NUM_CALIBRATION_VALUES, file);
+	fread(offsets, sizeof(int), NUM_CALIBRATION_VALUES, file);
+	fread(scales, sizeof(double), NUM_CALIBRATION_VALUES, file);
 	
 	// calculate values for high rates
-	int i;
-	for (i=0; i<NUM_CALIBRATION_VALUES; i++) {
-		offsets16[i] = offsets24[i]/256;
-		scales16[i] = scales24[i]*256;
+	if(conf->sample_rate == 32 || conf->sample_rate == 64) {
+		int i;
+		for (i=0; i<NUM_CALIBRATION_VALUES; i++) {
+			offsets[i] = offsets[i]/256;
+			scales[i] = scales[i]*256;
+		}
 	}
 	
 	//close file
@@ -73,8 +73,8 @@ int write_calibration() {
 		return FAILURE;
 	}
 	// write values
-	fwrite(offsets24, sizeof(int), NUM_CALIBRATION_VALUES, file);
-	fwrite(scales24, sizeof(double), NUM_CALIBRATION_VALUES, file);
+	fwrite(offsets, sizeof(int), NUM_CALIBRATION_VALUES, file);
+	fwrite(scales, sizeof(double), NUM_CALIBRATION_VALUES, file);
 	
 	//close file
 	fclose(file);
