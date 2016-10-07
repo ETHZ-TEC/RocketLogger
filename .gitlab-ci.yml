@@ -1,10 +1,11 @@
-# This file is a template, and might need editing before it works on your project.
-# Full project: https://gitlab.com/pages/doxygen
-image: alpine
-
-pages:
+stages:
+  - build
+  - test
+  - deploy
+  
+doxygen:
+  stage: deploy
   script:
-  - apk update && apk add doxygen
   - which doxygen
   - doxygen code/src/Doxyfile
   - mv doc/html/ public/
