@@ -22,6 +22,8 @@
 
 int is_current(int index);
 int count_channels(int channels[NUM_CHANNELS]);
+int count_i_channels(int channels[NUM_CHANNELS]);
+int count_v_channels(int channels[NUM_CHANNELS]);
 
 
 int read_status(struct rl_status* status);
