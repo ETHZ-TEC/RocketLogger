@@ -52,6 +52,40 @@ enum rl_option get_option(char* option) {
 	return NO_OPTION;
 }
 
+int parse_channels(int channels[], char* value) {
+	
+	// check first channel number
+	if(isdigit(value[0]) && atoi(value) >= 0 && atoi(value) <= 9) {
+		
+		// reset default channel selection
+		memset(channels, 0, sizeof(int) * NUM_CHANNELS);
+		channels[atoi(value)] = 1;
+		
+	} else if(strcmp(value, "all") == 0) {
+		// all channels
+		memset(channels, 1, sizeof(channels));
+	}else {
+		rl_log(ERROR, "wrong channel number");
+		return FAILURE;
+	}
+	
+	// loop
+	int j;
+	for (j=1; j < 2*(NUM_CHANNELS-1) && value[j] == ','; j=j+2){
+		
+		//check channel number
+		char* c = &value[j+1];
+		if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) {
+			channels[atoi(c)] = 1;
+		} else {
+			rl_log(ERROR, "wrong channel number");
+			return FAILURE;
+		}
+	}
+	
+	return SUCCESS;
+}
+
 int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default) {
 
 	int i; // argument count variable
@@ -149,36 +183,9 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case CHANNEL:
 					if (argc > ++i) {
-						
-						// check first channel number
-						char* c = argv[i];
-						if(isdigit(c[0]) && atoi(c) >= 0 && atoi(c) <= 9) {
-							
-							// reset default channel selection
-							memset(conf->channels, 0, sizeof(conf->channels));
-							conf->channels[atoi(c)] = 1;
-							
-						} else if(strcmp(argv[i], "all") == 0) {
-							// all channels
-							memset(conf->channels, 1, sizeof(conf->channels));
-						}else {
-							rl_log(ERROR, "wrong channel number");
+						if(parse_channels(conf->channels, argv[i]) == FAILURE) {
 							return FAILURE;
 						}
-						
-						// loop
-						int j;
-						for (j=1; j < 2*(NUM_CHANNELS-1) && argv[i][j] == ','; j=j+2){
-							
-							//check channel number
-							char* c = &argv[i][j+1];
-							if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) {
-								conf->channels[atoi(c)] = 1;
-							} else {
-								rl_log(ERROR, "wrong channel number");
-								return FAILURE;
-							}
-						}													
 					} else {
 						rl_log(ERROR, "no channel number");
 						return FAILURE;
@@ -332,9 +339,9 @@ void reset_config(struct rl_conf* conf) {
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
 	conf->enable_web_server = 1;
-	conf->file_format = BIN;
+	conf->file_format = CSV;//BIN;
 	
-	strcpy(conf->file_name, "/var/www/data/data.dat");
+	strcpy(conf->file_name, "/var/www/data/data.csv"); //"/var/www/data/data.dat");
 	
 	memset(conf->channels, 1, sizeof(conf->channels));
 	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
@@ -359,7 +366,11 @@ int read_default_config(struct rl_conf* conf) {
 	fread(conf, sizeof(struct rl_conf), 1, file);
 	
 	// reset mode
-	conf->mode = CONTINUOUS;
+	//if(conf->sample_limit == 0) { // TODO: check
+		conf->mode = CONTINUOUS;
+	/*} else {
+		conf->mode = LIMIT;
+	}*/
 	
 	//close file
 	fclose(file);
@@ -379,5 +390,106 @@ int write_default_config(struct rl_conf* conf) {
 	
 	//close file
 	fclose(file);
+	return SUCCESS;
+}	
+
+
+
+
+
+
+// conf file read helpers
+
+void remove_newline(char *line) {
+    int new_line = strlen(line) - 1;
+    if (line[new_line] == '\n') {
+        line[new_line] = '\0';
+	}
+}
+
+int parse_value(char* name, char* value, struct rl_conf* conf) {
+	if(name[0] == '#') { // comment
+		return SUCCESS;
+	} else if(strcmp(name, "SAMPLE_RATE") == 0) {
+		printf("Sampling rate = %d\n", atoi(value)); // TODO: integer test
+		
+	} else if(strcmp(name, "UPDATE_RATE") == 0) {
+		printf("Update rate = %d\n", atoi(value)); // TODO: integer test
+		
+	} else if(strcmp(name, "SAMPLE_LIMIT") == 0) {
+		printf("Sample limit = %d\n", atoi(value)); // TODO: integer test
+		
+	} else if(strcmp(name, "CHANNELS") == 0) {
+		printf("Channels = %s\n", value); // TODO: parse
+		return parse_channels(conf->channels, value);
+		
+	} else if(strcmp(name, "FORCE_HIGH_CHANNELS") == 0) {
+		printf("Forced channels = %s\n", value); // TODO: parse
+		
+	} else if(strcmp(name, "ENABLE_WEB_SERVER") == 0) {
+		printf("Web server = %s\n", value); // TODO: parse
+		
+	} else if(strcmp(name, "FILE_FORMAT") == 0) {
+		printf("File format = %s\n", value);// TODO: parse
+		
+	} else if(strcmp(name, "FILE_NAME") == 0) {
+		printf("File name = %s\n", value);
+		
+	} else {
+		return FAILURE;
+	}
+	
+	return SUCCESS;
+}
+
+int read_default_config_new(struct rl_conf* conf) {
+	
+	char line[MAX_LINE_LENGTH];
+	FILE* fp;
+	
+	fp = fopen(DEFAULT_CONFIG_NEW, "r");
+	if (fp == NULL) {
+		rl_log(ERROR, "failed to open default configuration file");
+		return FAILURE;
+	}
+	
+	
+	int j;
+	int i;
+	for(j=0; fgets(line, MAX_LINE_LENGTH, fp) != NULL; j++) {
+		
+		if(line[0] != '\n') { // ignore empty lines
+		
+			remove_newline(line);
+			
+			char* word;
+			char words[MAX_WORDS_PER_LINE][MAX_WORD_LENGTH];
+			
+			// extract words
+			word = strtok(line, " ");
+			for(i=0; i<MAX_WORDS_PER_LINE && word; i++) {
+				
+				strcpy(words[i], word);
+				word = strtok(NULL, " ");
+				
+			}
+			
+			
+			if(words[0][0] != '#'  && i<MAX_WORDS_PER_LINE) {
+				rl_log(ERROR, "config file parsing failed near line %d\n", j+1);
+				return FAILURE;
+			} else {
+			
+				// parse value
+				if(parse_value(words[0], words[2], conf) == FAILURE) {
+					rl_log(ERROR, "config file parsing failed near line %d\n", j+1);
+					return FAILURE;
+				}
+			}
+		}
+	}
+	
+	fclose(fp);
+	
 	return SUCCESS;
 }
