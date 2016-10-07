@@ -339,9 +339,9 @@ void reset_config(struct rl_conf* conf) {
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
 	conf->enable_web_server = 1;
-	conf->file_format = CSV;//BIN;
+	conf->file_format = BIN;
 	
-	strcpy(conf->file_name, "/var/www/data/data.csv"); //"/var/www/data/data.dat");
+	strcpy(conf->file_name, "/var/www/data/data.dat");
 	
 	memset(conf->channels, 1, sizeof(conf->channels));
 	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));

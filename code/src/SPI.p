@@ -223,8 +223,10 @@ INP1LOW:
 	
 	// read all channels -> TODO: adapt to new hardware
 	receive_word I1H_REG,	I2H_REG,	PRECISION
+	receive_word I1H_2_REG,	I2H_2_REG,	PRECISION
 	receive_word I1M_REG,	I2M_REG,	PRECISION
 	receive_word I1L_REG,	I2L_REG,	PRECISION
+	receive_word I1L_2_REG,	I2L_2_REG,	PRECISION
 	receive_word V1_REG,	V3_REG,		PRECISION
 	receive_word V2_REG,	V4_REG,		PRECISION
 	
