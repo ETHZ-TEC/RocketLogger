@@ -27,7 +27,7 @@ Prerequisites
  * To compile the RocketLogger software the following system components are requred (install using `apt`):
    `ntp gcc libncurses5-dev`
  * Additionally the PRU compiler for comiling the low level functions is required.
-   If you use an official BeagleBone image it comes pre-installed (TODO: validate),
+   If you use an official BeagleBone image it comes pre-installed,
    otherwise you have to follow the instructions on [PRU compiler (TBD)](https://beagleboard.org/)
  * For using the remote web interface these additional systems components will be needed:
    `lighttp php5-cgi`
