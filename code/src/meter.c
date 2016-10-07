@@ -76,12 +76,12 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 			if(is_current(j)) {
 				// current
 				mvprintw(i*2 + 5, 10, "%s:", meter_names[j]);
-				mvprintw(i*2 + 5, 15, "%f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
+				mvprintw(i*2 + 5, 15, "%12.6f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
 				i++;
 			} else {
 				// voltage
 				mvprintw(v*2 + 5, 55, "%s:", meter_names[j]);
-				mvprintw(v*2 + 5, 60, "%f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
+				mvprintw(v*2 + 5, 60, "%9.6f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
 				v++;
 			}
 		}
@@ -93,16 +93,16 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 		mvprintw(3, 10, "Currents:");
 		
 		// display range information
-		mvprintw(3, 30, "Low range:");
+		mvprintw(3, 33, "Low range:");
 		if((line[0] & I1L_VALID_BIT) > 0) {
-			mvprintw(5, 30, "I1L valid");
+			mvprintw(5, 33, "I1L valid");
 		} else {
-			mvprintw(5, 30, "I1L invalid");
+			mvprintw(5, 33, "I1L invalid");
 		}
 		if((line[1] & I2L_VALID_BIT) > 0) {
-			mvprintw(11, 30, "I2L valid");
+			mvprintw(11, 33, "I2L valid");
 		} else {
-			mvprintw(11, 30, "I2L invalid");
+			mvprintw(11, 33, "I2L invalid");
 		}
 	}
 	
