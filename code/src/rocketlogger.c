@@ -13,7 +13,8 @@ int main(int argc, char* argv[]) {
 	
 	// check if root
 	if(getuid() != 0){
-		rl_log(ERROR, "you must run this program as root");
+		// no logging here
+		printf("Error: you must run this program as root\n");
 		return FAILURE;
 	}
 	
