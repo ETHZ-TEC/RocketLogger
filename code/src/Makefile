@@ -7,6 +7,13 @@ install: rocketlogger rl_deamon SPI.bin
 		cp rocketlogger /bin/rocketlogger
 		cp rl_deamon /bin/rl_deamon
 		cp SPI.bin /lib/firmware/SPI.bin
+		
+		echo '#!/bin/bash' > /etc/init.d/rocketlogger
+		echo '/bin/rl_deamon &' >> /etc/init.d/rocketlogger
+		chmod +x /etc/init.d/rocketlogger
+		update-rc.d rocketlogger defaults
+				
+		echo 'options uio_pruss extram_pool_sz=0x300000' > /etc/modprobe.d/rl_pru.conf
 
 rocketlogger : rocketlogger.c util.o calibration.o pwm.o gpio.o meter.o file_handling.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o
 		gcc -Wall -O3 util.o calibration.o pwm.o gpio.o rl_hw.o pru.o lib_util.o rl_lib.o rl_util.o meter.o file_handling.o rocketlogger.c -o rocketlogger -pthread -lprussdrv -lrt -lncurses
