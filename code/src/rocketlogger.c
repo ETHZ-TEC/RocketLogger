@@ -59,8 +59,7 @@ int main(int argc, char* argv[]) {
 			break;
 		
 		case STATUS:
-			rl_get_status(1,conf.enable_web_server);
-			exit(EXIT_SUCCESS);
+			return rl_get_status(1,conf.enable_web_server);
 		
 		case STOPPED:
 			if(rl_get_status(0,0) != RL_RUNNING) {
