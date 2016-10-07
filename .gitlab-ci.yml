@@ -3,7 +3,7 @@ stages:
   - test
   - deploy
   
-doxygen:
+.doxygen:
   stage: deploy
   script:
   - which doxygen
