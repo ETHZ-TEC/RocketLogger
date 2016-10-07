@@ -146,6 +146,7 @@ struct rl_status {
 	enum rl_state state;
 	int samples_taken;
 	int buffer_number;
+	struct rl_conf conf;
 };
 
 

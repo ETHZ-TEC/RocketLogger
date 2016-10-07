@@ -10,9 +10,6 @@
 int check_sample_rate(int sample_rate);
 int check_update_rate(int update_rate);
 
-int read_config(struct rl_conf* conf);
-int write_config(struct rl_conf* conf);
-
 void print_json(float data[], int length);
 void print_channels_new(int channels[NUM_CHANNELS]);
 

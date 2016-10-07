@@ -26,44 +26,6 @@ int check_update_rate(int update_rate) {
 	return FAILURE;
 }
 
-int read_config(struct rl_conf* conf) {
-	
-	// check if config file existing
-	if(open(CONFIG_FILE, O_RDWR) <= 0) {
-		//conf->mode = IDLE;
-		return UNDEFINED;
-	}
-	
-	// open config file
-	FILE* file = fopen(CONFIG_FILE, "r");
-	if(file == NULL) {
-		rl_log(ERROR, "failed to open configuration file");
-		return FAILURE;
-	}
-	// read values
-	fread(conf, sizeof(struct rl_conf), 1, file);
-	
-	//close file
-	fclose(file);
-	return SUCCESS;
-}
-
-int write_config(struct rl_conf* conf) {
-	
-	// open config file
-	FILE* file = fopen(CONFIG_FILE, "w");
-	if(file == NULL) {
-		rl_log(ERROR, "failed to create configuration file");
-		return FAILURE;
-	}
-	// write values
-	fwrite(conf, sizeof(struct rl_conf), 1, file);
-	
-	//close file
-	fclose(file);
-	return SUCCESS;
-}
-
 // print data in json format for easy reading in javascript
 void print_json(float data[], int length) {
 	char str[150]; // TODO: adjustable length

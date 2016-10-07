@@ -43,6 +43,8 @@ int count_v_channels(int channels[NUM_CHANNELS]) {
 }
 
 
+// TODO: move to other file
+
 int read_status(struct rl_status* status) {
 	
 	// map shared memory

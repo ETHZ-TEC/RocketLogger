@@ -80,7 +80,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 	}
 }
 
-void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
+void rl_print_status(struct rl_status* status, int web) {
 	
 	if(status->state == RL_OFF) {
 		if (web == 1) {
@@ -95,7 +95,7 @@ void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
 		} else {
 			printf("\nRocketLogger Status: RUNNING\n");
 		}
-		rl_print_config(conf, web);
+		rl_print_config(&(status->conf), web);
 		printf("  Samples taken:   %d\n\n", status->samples_taken);
 	}
 }
@@ -103,8 +103,6 @@ void rl_print_status(struct rl_conf* conf, struct rl_status* status, int web) {
 // get status of RL (returns 1 when running)
 enum rl_state rl_get_status(int print, int web) {
 	
-	//int temp_status;
-	struct rl_conf conf;
 	struct rl_status status;
 	
 	// get pid
@@ -116,14 +114,11 @@ enum rl_state rl_get_status(int print, int web) {
 	} else {
 		// read status
 		read_status(&status);
-		
-		// read config
-		read_config(&conf);
 	}
 	
 	// print config if requested
 	if(print == 1) {
-		rl_print_status(&conf, &status, web);
+		rl_print_status(&status, web);
 	}
 	
 	return status.state;
@@ -189,9 +184,6 @@ int rl_sample(struct rl_conf* conf) {
         rl_log(ERROR, "can't register signal handler");
 		return FAILURE;
 	}
-
-	//write conf to file
-	write_config(conf);
 	
 	// INITIATION
 	hw_init(conf);

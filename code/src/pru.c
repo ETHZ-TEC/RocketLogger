@@ -212,6 +212,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
+	status.conf = *conf;
 	
 	
 	
