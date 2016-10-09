@@ -1,27 +1,28 @@
 ## Makefile for ambient sensor readout test
 
-#################   DEFINITIONS    #################
+#####  DEFINITIONS  #####
 
-## Directories and files
-
-# directories
+## directories
 BINDIR = bin
 LIBDIR = lib
 OBJDIR = obj
+DEPDIR = $(OBJDIR)/.dep
 SRCDIR = .
 
-# target binary
-
+## target binary
 TARGET = ambient_sensor
 
-# source files
+## source files
 SRC = main.c
-#SRC += #
+SRC += sensor/tsl256x.c
+
+## object files
+OBJ = $(addprefix $(OBJDIR)/, $(notdir $(addsuffix .o, $(basename $(SRC)))))
 
 
-## Programs and Tools
+#####  PROGRAMMS AND TOOLS  #####
 
-# program definitions
+## program definitions
 TOOLCHAIN_PREFIX = #
 CC = $(TOOLCHAIN_PREFIX)clang
 CXX = $(TOOLCHAIN_PREFIX)clang++
@@ -30,7 +31,7 @@ COPY = cp -rf
 REMOVE = rm -f
 
 
-################# COMPILER OPTIONS  #################
+#####  COMPILER OPTIONS  #####
 
 ## language standards
 CSTD = -std=gnu99
@@ -46,7 +47,7 @@ OPT = -O2 # -flto
 DEBUG = #-g3 -ggdb
 
 ## dependency file configurations
-#GENDEP = -MMD -MP -MF $(OBJDIR)/dep/$(@F).d
+GENDEP = -MMD -MP -MF $(DEPDIR)/$(@F).d
 
 ## misc C flags
 COTHER = #
@@ -56,7 +57,6 @@ COTHER = #
 CXXOTHER = -ffunction-sections -fdata-sections
 CXXOTHER += -finline-functions -finline-functions-called-once
 
-
 ## C compiler flags
 CFLAGS = $(WARNINGS) $(GENDEP) $(OPT) $(DEBUG) $(CSTD) $(DEFS) $(COTHER) $(INCS)
 
@@ -65,17 +65,38 @@ CXXFLAGS = $(WARNINGS) $(GENDEP) $(OPT) $(DEBUG) $(CXXSTD) $(DEFS) $(CXXOTHER) $
 
 
 ## Linker options
-
 LDFLAGS = # -rdynamic
 
 
-.PHONY: clean
+#####  TARGETS  #####
 
+## build targets
 all: $(TARGET)
 
-$(TARGET): main.c
-	$(CC) $(CFLAGS) $^ -o $@
+$(OBJDIR)/%.o: %.c $(OBJDIR) $(DEPDIR)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(OBJDIR)/%.o: %.cpp $(OBJDIR) $(DEPDIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJDIR)/%.o: sensor/%.c $(OBJDIR) $(DEPDIR)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(TARGET): $(OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $^
+
+
+## intermediate directories
+$(OBJDIR):
+	$(MAKEDIR) $(OBJDIR)
+
+$(DEPDIR):
+	$(MAKEDIR) $(DEPDIR)
+	
+
+## phony targets
+.PHONY: clean info
 
 clean:
-	$(REMOVE) *.o ambient_sensor
+	$(REMOVE) $(OBJDIR)/*.o $(DEPDIR)/*.d $(TARGET)
 

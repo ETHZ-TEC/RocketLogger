@@ -1,5 +1,7 @@
-#ifndef SENSOR_TSL256X_H
-#define SENSOR_TSL256X_H
+#ifndef SENSOR_TSL256X_H_
+#define SENSOR_TSL256X_H_
+
+#include <stdint.h>
 
 // TSL256x I2C address (0x29, 0x39, or 0x49, depending of hardware config)
 #define TSL256X_I2C_ADDRESS 0x29
@@ -26,4 +28,29 @@
 #define TSL256X_REG_DATA1LOW 0x0e
 #define TSL256X_REG_DATA1HIGH 0x0f
 
-#endif /* SENSOR_TSL256X_H */
+// TSL256x register bit definitions
+#define TSL256X_CONTROL_POWER 0x03
+
+#define TSL256X_TIMING_INTEG_13_7MS 0x00
+#define TSL256X_TIMING_INTEG_101MS 0x01
+#define TSL256X_TIMING_INTEG_402MS 0x02
+#define TSL256X_TIMING_MANUAL 0x08
+#define TSL256X_TIMING_GAIN 0x10
+
+#define TSL256X_INTERRUPT_PERSIST_MASK 0x0f
+#define TSL256X_INTERRUPT_DISABLED 0x00
+#define TSL256X_INTERRUPT_LEVEL 0x10
+#define TSL256X_INTERRUPT_SMBUS 0x20
+#define TSL256X_INTERRUPT_TEST 0x30
+
+#define TSL256X_ID_TSL2561 0x10
+#define TSL256X_ID_PACKAGE 0x40
+
+int TSL256x_init(int);
+int TSL256x_initComm(int);
+int TSL256x_getID(int, uint8_t*);
+int TSL256x_getLux(int, double*);
+int TSL256x_readValues(int, uint16_t*);
+double TSL256x_calculateLux(uint16_t, uint16_t);
+
+#endif /* SENSOR_TSL256X_H_ */
