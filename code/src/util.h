@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <errno.h>
 /*#include <sys/shm.h>
 #include <sys/time.h>
 #include <stdio.h>

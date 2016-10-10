@@ -49,10 +49,13 @@ int read_status(struct rl_status* status) {
 	
 	// map shared memory
 	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), SHMEM_PERMISSIONS);
+	if (shm_id == -1) {
+		rl_log(ERROR, "failed to get shared status memory id; %d message: %s", errno, strerror(errno));
+	}
 	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);
 	
 	if (shm_status == (void *) -1) {
-		rl_log(ERROR, "failed to map shared status memory");
+		rl_log(ERROR, "failed to map shared status memory; %d message: %s", errno, strerror(errno));
 		return FAILURE;
 	}
 	
@@ -69,10 +72,13 @@ int write_status(struct rl_status* status) {
 	
 	// map shared memory
 	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), IPC_CREAT | SHMEM_PERMISSIONS);
-	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);
-	
+	if (shm_id == -1) {
+		rl_log(ERROR, "failed to get shared status memory id; %d message: %s", errno, strerror(errno));
+	}
+
+	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);	
 	if (shm_status == (void *) -1) {
-		rl_log(ERROR, "failed to map shared status memory");
+		rl_log(ERROR, "failed to map shared status memory; %d message: %s", errno, strerror(errno));
 		return FAILURE;
 	}
 	
