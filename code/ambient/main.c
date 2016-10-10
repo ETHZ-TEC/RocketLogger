@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "sensor/tsl256x.h"
@@ -40,15 +41,15 @@ int main(void) {
     exit(1);
   }
 
-  printf("Start reading sensor every second for 1min...\n");
-  for (int i = 0; i < 60; i++) {
+  printf("Start reading sensor...\n");
+  printf("time;lux\n");
+  while (1) {
     double lux = 0;
+    unsigned long timestamp = (unsigned long)time(NULL);
     sleep(1);
     TSL256x_getLux(i2c_file, &lux);
-    printf("Read sensor value:\t% 9.2f\n", lux);
+    printf("%lu;%9.2f\n", timestamp, lux);
   }
-
-  printf("Test program run complete\n");
 
   return 0;
 }
