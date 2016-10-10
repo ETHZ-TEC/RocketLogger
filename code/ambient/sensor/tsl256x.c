@@ -205,25 +205,29 @@ double TSL256x_calculateLux(uint16_t channel_ambient, uint16_t channel_ir) {
   double ratio = ch1 / ch0;
   double lux = 0;
 
-  // TODO: include scaling based on timing configuration
+  // gain correction
   double gain = 1;
   if (tsl256x_timing & TSL256X_TIMING_GAIN_16) {
     gain = 1 * gain;
   }
+  else {
+    gain = 16 * gain;
+  }
   switch (tsl256x_timing & TSL256X_TIMING_INTEG_MASK) {
     case TSL256X_TIMING_INTEG_13_7MS:
-      gain = 1 * gain;
+      gain = gain / 0.034;
       break;
     case TSL256X_TIMING_INTEG_101MS:
-      gain = 1 * gain;
+      gain = gain / 0.252;
       break;
     case TSL256X_TIMING_INTEG_402MS:
-      gain = 1 * gain;
+      gain = gain / 1;
       break;
     default:
       break;
   }
 
+  // lux value calculation
   if (tsl256x_id & TSL256X_ID_PACKAGE) {
     // TSL256x T, FN, and CL Package
     if (ratio <= 0.50) {
