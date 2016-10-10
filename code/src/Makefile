@@ -5,6 +5,7 @@ all: rocketlogger rl_deamon SPI.bin
 
 install: rocketlogger rl_deamon SPI.bin
 		cp rocketlogger /bin/rocketlogger
+		sudo rm -f /bin/rl_deamon
 		cp rl_deamon /bin/rl_deamon
 		cp SPI.bin /lib/firmware/SPI.bin
 		

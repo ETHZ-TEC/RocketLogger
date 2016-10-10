@@ -51,6 +51,7 @@ int read_status(struct rl_status* status) {
 	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), SHMEM_PERMISSIONS);
 	if (shm_id == -1) {
 		rl_log(ERROR, "failed to get shared status memory id; %d message: %s", errno, strerror(errno));
+		return FAILURE;
 	}
 	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);
 	
@@ -74,6 +75,7 @@ int write_status(struct rl_status* status) {
 	int shm_id = shmget(SHMEM_KEY, sizeof(struct rl_status), IPC_CREAT | SHMEM_PERMISSIONS);
 	if (shm_id == -1) {
 		rl_log(ERROR, "failed to get shared status memory id; %d message: %s", errno, strerror(errno));
+		return FAILURE;
 	}
 
 	struct rl_status* shm_status = (struct rl_status*) shmat(shm_id, NULL, 0);	
