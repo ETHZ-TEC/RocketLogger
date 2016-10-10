@@ -17,12 +17,20 @@ uint8_t tsl256x_id = 0;
 /// TSL256x timing configuration
 uint8_t tsl256x_timing = 0;
 
+/**
+ * Initialize the light sensor
+ * @param i2c_bus The I2C bus for communication
+ * @return Status code
+ */
 int TSL256x_init(int i2c_bus) {
-  TSL256x_initComm(i2c_bus);
+  int result = TSL256x_initComm(i2c_bus);
+  if (result < 0) {
+    return result;
+  }
 
   // enable power
   uint8_t command = TSL256X_CMD_CMD | TSL256X_REG_CONTROL;
-  int result = i2c_smbus_write_byte_data(i2c_bus, command, 0x03);
+  result = i2c_smbus_write_byte_data(i2c_bus, command, 0x03);
   if (result < 0) {
     return result;
   }
@@ -33,9 +41,21 @@ int TSL256x_init(int i2c_bus) {
     return result;
   }
 
+  // get sensor timing configuration
+  result = TSL256x_getTiming(i2c_bus, &tsl256x_timing);
+  if (result < 0) {
+    return result;
+  }
+
   return 0;
 }
 
+/**
+ * Get reading from sensor and calculate lux value
+ * @param i2c_bus The I2C bus for communication
+ * @param lux
+ * @return
+ */
 int TSL256x_getLux(int i2c_bus, double* lux) {
   uint16_t data[2] = { 0 };
   *lux = 0.0;
@@ -52,7 +72,7 @@ int TSL256x_getLux(int i2c_bus, double* lux) {
 
 /**
  * Initiate an I2C communication
- * @param i2c_bus The I2C bus used for communication
+ * @param i2c_bus The I2C bus for communication
  * @return Status code
  */
 int TSL256x_initComm(int i2c_bus) {
@@ -61,7 +81,7 @@ int TSL256x_initComm(int i2c_bus) {
 
 /**
  * Get the device ID
- * @param i2c_bus The I2C bus used for communication
+ * @param i2c_bus The I2C bus for communication
  * @param id The device id read
  * @return Status code
  */
@@ -83,7 +103,61 @@ int TSL256x_getID(int i2c_bus, uint8_t* id) {
 }
 
 /**
+ * Get the timing and gain configuration of the sensor
+ * @param i2c_bus The I2C bus for communication
+ * @param timing The timing setting read
+ * @return Status code
+ */
+int TSL256x_getTiming(int i2c_bus, uint8_t* timing) {
+  int result = TSL256x_initComm(i2c_bus);
+  if (result < 0) {
+    return result;
+  }
+
+  uint8_t command = TSL256X_CMD_CMD | TSL256X_REG_TIMING;
+  result = i2c_smbus_read_byte_data(i2c_bus, command);
+  if (result < 0) {
+    *timing = 0;
+    return result;
+  }
+
+  *timing = (uint8_t)result;
+  return 0;
+}
+
+/**
+ * Set the timing and gain configuration of the sensor
+ * @param i2c_bus The I2C bus for communication
+ * @param integration_time The integration time to set
+ * @param gain The gain selection to set
+ * @return Status code
+ */
+int TSL256x_setTiming(int i2c_bus, uint8_t integration_time, uint8_t gain) {
+  int result = TSL256x_initComm(i2c_bus);
+  if (result < 0) {
+    return result;
+  }
+
+  // set sensor timing configuration
+  uint8_t command = TSL256X_CMD_CMD | TSL256X_REG_TIMING;
+  uint8_t value = gain | integration_time;
+  result = i2c_smbus_write_byte_data(i2c_bus, command, value);
+  if (result < 0) {
+    return result;
+  }
+
+  // read back timing configuration
+  result = TSL256x_getTiming(i2c_bus, &tsl256x_timing);
+  if (result < 0) {
+    return result;
+  }
+
+  return 0;
+}
+
+/**
  * Read raw sensor value output
+ * @param i2c_bus The I2C bus for communication
  * @param data Sensor data buffer
  * @return Status code
  */
@@ -114,17 +188,41 @@ int TSL256x_readValues(int i2c_bus, uint16_t* data) {
   return 0;
 }
 
+/**
+ * Calculate the lux value from raw sensor readings
+ * @param channel_ambient The raw ambient channel reading (CH0)
+ * @param channel_ir The raw IR channel reading (CH1)
+ * @return The calcualted lux value
+ */
 double TSL256x_calculateLux(uint16_t channel_ambient, uint16_t channel_ir) {
   // 0 Lux (prevent division by 0)
   if (channel_ambient == 0) {
     return 0;
   }
 
-  // TODO: include scaling based on timing configuration
   double ch0 = (double)channel_ambient;
   double ch1 = (double)channel_ir;
   double ratio = ch1 / ch0;
   double lux = 0;
+
+  // TODO: include scaling based on timing configuration
+  double gain = 1;
+  if (tsl256x_timing & TSL256X_TIMING_GAIN_16) {
+    gain = 1 * gain;
+  }
+  switch (tsl256x_timing & TSL256X_TIMING_INTEG_MASK) {
+    case TSL256X_TIMING_INTEG_13_7MS:
+      gain = 1 * gain;
+      break;
+    case TSL256X_TIMING_INTEG_101MS:
+      gain = 1 * gain;
+      break;
+    case TSL256X_TIMING_INTEG_402MS:
+      gain = 1 * gain;
+      break;
+    default:
+      break;
+  }
 
   if (tsl256x_id & TSL256X_ID_PACKAGE) {
     // TSL256x T, FN, and CL Package
@@ -157,5 +255,5 @@ double TSL256x_calculateLux(uint16_t channel_ambient, uint16_t channel_ir) {
     }
   }
 
-  return lux;
+  return gain * lux;
 }
