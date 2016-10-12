@@ -25,7 +25,9 @@ Prerequisites
 
 ### Software Installation
  * To compile the RocketLogger software the following system components are requred (install using `apt`):
-   `ntp gcc libncurses5-dev`
+```
+ntp gcc libncurses5-dev libi2c-dev
+```
  * Additionally the PRU compiler for comiling the low level functions is required.
    If you use an official BeagleBone image it comes pre-installed,
    otherwise you have to follow the instructions on [PRU compiler (TBD)](https://beagleboard.org/)
