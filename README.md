@@ -32,6 +32,8 @@ ntp gcc libncurses5-dev libi2c-dev
    If you use an official BeagleBone image it comes pre-installed,
    otherwise you have to follow the instructions on [PRU compiler (TBD)](https://beagleboard.org/)
  * For using the remote web interface these additional systems components will be needed:
-   `lighttp php5-cgi`
+```
+lighttp php5-cgi
+```
 
 For further details regarding software installation and system configuration check the [RocketLogger Software Stack](software) page.
