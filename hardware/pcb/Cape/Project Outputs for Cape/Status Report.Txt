@@ -1,10 +1,10 @@
-Output: Generates pick and place files
-Type  : Pick Place
-From  : Variant [[No Variations]] of PCB Document [PCB.PcbDoc]
-   Generated File[Pick Place for PCB.txt]
+Output: Test Point Report
+Type  : Test Points
+From  : PCB Document [PCB.PcbDoc]
+   Generated File[Fabrication Testpoint Report for PCB.csv]
 
 
 Files Generated   : 1
 Documents Printed : 0
 
-Finished Output Generation At 15:55:52 On 14.10.2016
+Finished Output Generation At 16:08:47 On 14.10.2016
