@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------------
-Gerber File Extension Report For: PCB.GBR   14.10.2016  16:08:41
+Gerber File Extension Report For: PCB.GBR   14.10.2016  16:16:50
 ------------------------------------------------------------------------------------------
 
 
@@ -19,4 +19,8 @@ Layer Extension     Layer Description
 .gbr                Bottom Overlay                          
 .gbr                Top Paste                               
 .gbr                Profile                                 
+.gbr                Non-plated through-hole drill file      
+.gbr                Plated through-hole drill file          
+.gbr                Drill Drawing                           
+.gbr                Drill Guide                             
 ------------------------------------------------------------------------------------------

@@ -547,3 +547,50 @@ Used DCodes :
     D196
 *************************************************************
 
+*************************************************************
+Generating : Non-plated through-hole drill file
+      File : PCB_NPTH_Drill.gbr
+
+
+Used DCodes :
+*************************************************************
+
+*************************************************************
+Generating : Plated through-hole drill file
+      File : PCB_PTH_Drill.gbr
+
+
+Used DCodes :
+    D197
+    D198
+    D199
+    D200
+*************************************************************
+
+*************************************************************
+Generating : Drill Drawing
+      File : PCB_Drawing_1.gbr
+
+    Adding Drill Pair : Bottom Side-Component Side
+
+    Adding Layer      : Drill Drawing
+
+
+Used DCodes :
+    D145
+    D202
+*************************************************************
+
+*************************************************************
+Generating : Drill Guide
+      File : PCB_Drillmap_1.gbr
+
+    Adding Drill Pair : Bottom Side-Component Side
+
+    Adding Layer      : Drill Guide
+
+
+Used DCodes :
+    D145
+*************************************************************
+
