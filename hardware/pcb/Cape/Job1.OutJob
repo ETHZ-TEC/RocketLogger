@@ -254,6 +254,20 @@ OutputEnabled9_OutputMedium5=1
 OutputDefault9=0
 Configuration9_Name1=OutputConfigurationParameter1
 Configuration9_Item1=FileComment= |FileSubject=Autodetect|GenerateDRCRulesFile=True|GerberUnit=Imperial|MinusApertureTolerance=50|NumberOfDecimals=6|OptimizeChangeLocationCommands=True|PlotBlindViasPairs=False|PlotBoardProfile=True|PlotDrillDrawingPairs=False|PlotDrillGuidePairs=False|PlotNPTHPairs=False|PlotPTHPairs=False|PlotX2.Set=SerializeLayerHash.Version~2,ClassName~TLayerToBoolean,16973835~1,16777221~1,16777217~1,16777220~1,16777219~1,16973830~1,16973834~1,16973833~1,16973831~1,16842751~1,16777218~1,16973832~1|PlusApertureTolerance=50|Record=GerberX2View|Sorted=False
+OutputType10=Pick Place
+OutputName10=Generates pick and place files
+OutputCategory10=Assembly
+OutputDocumentPath10=
+OutputVariantName10=
+OutputEnabled10=1
+OutputEnabled10_OutputMedium1=0
+OutputEnabled10_OutputMedium2=0
+OutputEnabled10_OutputMedium3=0
+OutputEnabled10_OutputMedium4=0
+OutputEnabled10_OutputMedium5=2
+OutputDefault10=0
+Configuration10_Name1=OutputConfigurationParameter1
+Configuration10_Item1=Record=PickPlaceView|Units=Metric|GenerateCSVFormat=False|GenerateTextFormat=True
 
 [PublishSettings]
 OutputFilePath2=C:\Users\stefan\Documents\svn\code\pcb\Cape\.\Cape.PDF
@@ -331,7 +345,7 @@ FFmpegPixelFormat4=0
 FFmpegQuality4=80
 WmvVideoCodecName4=Windows Media Video V7
 WmvQuality4=80
-OutputFilePath5=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\Project Outputs for Cape\
+OutputFilePath5=C:\Users\user\Documents\RocketLogger\hardware\pcb\Cape\Project Outputs for Cape\
 ReleaseManaged5=1
 OutputBasePath5=Project Outputs for Cape
 OutputPathMedia5=
@@ -360,7 +374,7 @@ OpenIPCOutput3=0
 EnableReload3=0
 RelativeOutputPath4=
 OpenOutputs4=1
-RelativeOutputPath5=C:\Users\user\Documents\RocketLogger\code\pcb\Cape\Project Outputs for Cape\
+RelativeOutputPath5=C:\Users\user\Documents\RocketLogger\hardware\pcb\Cape\Project Outputs for Cape\
 OpenOutputs5=1
 AddToProject5=1
 TimestampFolder5=0

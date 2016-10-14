@@ -1,10 +1,10 @@
-Output: Design Rules Check
-Type  : DRC
-From  : PCB Document [PCB.PcbDoc]
-   Generated File[PCB.html]
+Output: Generates pick and place files
+Type  : Pick Place
+From  : Variant [[No Variations]] of PCB Document [PCB.PcbDoc]
+   Generated File[Pick Place for PCB.txt]
 
 
 Files Generated   : 1
 Documents Printed : 0
 
-Finished Output Generation At 13:58:08 On 29.09.2016
+Finished Output Generation At 15:51:17 On 14.10.2016
