@@ -111,7 +111,7 @@ Generating : GND
 
 Used DCodes :
     D77
-    D78
+    D79
     D80
     D91
     D92
@@ -131,7 +131,7 @@ Generating : Inner Layer 1
 
 
 Used DCodes :
-    D77
+    D79
     D91
     D92
     D93
@@ -151,7 +151,7 @@ Generating : V+
 
 Used DCodes :
     D77
-    D78
+    D79
     D84
     D91
     D92
@@ -172,7 +172,7 @@ Generating : V-
 
 Used DCodes :
     D77
-    D78
+    D79
     D80
     D84
     D91
