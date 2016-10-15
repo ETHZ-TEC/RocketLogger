@@ -8,7 +8,8 @@ intervals = zeros(2,num_points);
 i=1;
 v0 = points(i);
 v1 = points(i);
-while(abs(v0-v1) < num_points/10 * step_size) % larger first step ( to avoid noise triggering )
+while(abs(v0-v1) < step_size) % larger first step ( to avoid noise triggering )
+%TODO: why is num_points used here?! while(abs(v0-v1) < num_points/10 * step_size) % larger first step ( to avoid noise triggering )
     i = i+1;
     v0 = points(i);
 end
