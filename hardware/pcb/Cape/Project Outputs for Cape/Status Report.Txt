@@ -1,10 +1,27 @@
-Output: Test Point Report
-Type  : Test Points
-From  : PCB Document [PCB.PcbDoc]
-   Generated File[Fabrication Testpoint Report for PCB.csv]
+Output: Gerber Files
+Type  : Gerber
+From  : Variant [[No Variations]] of PCB Document [PCB.PcbDoc]
+   Generated File[PCB.GTL]
+   Generated File[PCB.G1]
+   Generated File[PCB.G2]
+   Generated File[PCB.G3]
+   Generated File[PCB.G4]
+   Generated File[PCB.GBL]
+   Generated File[PCB.GTO]
+   Generated File[PCB.GTP]
+   Generated File[PCB.GTS]
+   Generated File[PCB.GBS]
+   Generated File[PCB.GBP]
+   Generated File[PCB.GBO]
+   Generated File[PCB.GM4]
+   Generated File[PCB.GD1]
+   Generated File[PCB.GG1]
+   Generated File[PCB.RUL]
+   Generated File[PCB.EXTREP]
+   Generated File[PCB.REP]
 
 
-Files Generated   : 1
+Files Generated   : 18
 Documents Printed : 0
 
-Finished Output Generation At 16:17:00 On 14.10.2016
+Finished Output Generation At 16:37:07 On 17.10.2016
