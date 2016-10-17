@@ -197,7 +197,7 @@
         pwms = <&ehrpwm0 0 500000 1>;
         pwm-names = "RL_PWM_0";
         pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm_0>;
+        pinctrl-0 = <&rl_pwm0_pins>;
         enabled = <1>;
         duty = <0>;
         status = "okay";
@@ -213,7 +213,7 @@
         pwms = <&ehrpwm1 0 500000 1>;
         pwm-names = "RL_PWM_1";
         pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm_1>;
+        pinctrl-0 = <&rl_pwm1_pins>;
         enabled = <1>;
         duty = <0>;
         status = "okay";
