@@ -32,6 +32,13 @@ end
 % scale (per bit) for each channel
 scale      = [1e-9;  1e-9;1e-11; 1e-6;   1e-6; 1e-9; 1e-9;  1e-11; 1e-6; 1e-6];
 
+% size of timestamp depends on file format version
+if old_file == 1
+    timestamp_size = 1;
+else
+    timestamp_size = 9;
+end
+
 % open file
 file = fopen(num2str(filename));
 if file == -1
@@ -64,6 +71,18 @@ if data_points_per_buffer*decimation_factor ~= input_buffer_size
     error('The buffer size needs to be divisible by the decimation factor');
 end
 
+
+% sanity check file size
+f = dir(filename);
+number_samples_expected = (f.bytes-header_length*4)/ ...
+    (input_buffer_size*(number_channels+2)*4+timestamp_size*4)*input_buffer_size;
+if number_samples ~= number_samples_expected 
+    warning(['The number of samples in this file seems wrong (expected from filesize: ', ...
+        num2str(number_samples_expected), ', header: ', num2str(number_samples), ...
+        '). Ignoring file header.']);
+    number_buffers = floor(number_samples_expected/input_buffer_size);
+end
+
 % determine the last buffer
 if max_buffer_count ~= -1
     read_buffer_count = min(number_buffers-start_buffer_index, max_buffer_count);
@@ -82,11 +101,7 @@ values = zeros(read_buffer_count*data_points_per_buffer, number_channels + 2);
 decimated_values = zeros(data_points_per_buffer, number_channels + 2);
 
 % skip the first startBuffer buffers if this was specified
-if old_file == 1
-    buffer_size_bytes = (1+(number_channels + 2)*input_buffer_size)*4;
-else
-    buffer_size_bytes = (9+(number_channels + 2)*input_buffer_size)*4;    
-end
+buffer_size_bytes = (timestamp_size+(number_channels + 2)*input_buffer_size)*4;    
 fseek(file, start_buffer_index*buffer_size_bytes, 'cof');
 
 % read values
