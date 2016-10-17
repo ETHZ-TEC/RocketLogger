@@ -14,6 +14,8 @@ elseif inp == 1280
     oup = 2000;
 elseif inp == 1536
     oup = 1000;
+else
+    error('Invalid range field in header');
 end
 
 end
