@@ -107,14 +107,17 @@
 		};  
 	};  
 	
-	// force_high_range_pins
+	// gpio_pins
 	fragment@7 {
         target = <&am33xx_pinmux>;
         __overlay__ {
-            fhr_pins: pinmux_fhr_pins {
+            gpio_pins: pinmux_gpio_pins {
                 pinctrl-single,pins = <
-					0x070 0x07
-					0x078 0x07
+					0x070 0x0F
+					0x078 0x0F
+					0x028 0x3F	// button pin
+					0x034 0x07	// LED status pin
+					0x030 0x07	// LED error pin
 				>;
             };
         };
@@ -168,7 +171,7 @@
 			fhr {
 				compatible = "bone-pinmux-helper";
 				pinctrl-names = "default";
-				pinctrl-0 = <&fhr_pins>;
+				pinctrl-0 = <&gpio_pins>;
 				status = "okay";
             };
         };
