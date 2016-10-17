@@ -111,7 +111,7 @@ Generating : GND
 
 Used DCodes :
     D77
-    D78
+    D79
     D80
     D91
     D92
@@ -131,7 +131,7 @@ Generating : Inner Layer 1
 
 
 Used DCodes :
-    D77
+    D79
     D91
     D92
     D93
@@ -151,8 +151,8 @@ Generating : V+
 
 Used DCodes :
     D77
-    D78
-    D81
+    D79
+    D84
     D91
     D92
     D93
@@ -172,9 +172,9 @@ Generating : V-
 
 Used DCodes :
     D77
-    D78
+    D79
     D80
-    D81
+    D84
     D91
     D92
     D93
@@ -193,24 +193,24 @@ Generating : Bottom Side
 
 
 Used DCodes :
-    D15
-    D16
+    D10
+    D11
+    D12
+    D13
     D17
     D18
-    D19
-    D38
-    D43
-    D46
+    D25
+    D35
+    D36
+    D39
+    D44
     D48
-    D49
-    D60
-    D73
     D77
     D78
     D79
     D80
-    D81
-    D87
+    D84
+    D85
     D91
     D92
     D93
@@ -313,41 +313,41 @@ Generating : Top Solder
 
 
 Used DCodes :
-    D20
-    D21
-    D22
-    D23
-    D24
-    D25
-    D26
-    D27
-    D28
-    D29
-    D30
-    D31
-    D32
-    D33
-    D34
-    D35
-    D36
-    D37
+    D54
+    D55
+    D56
+    D57
+    D58
+    D59
+    D60
+    D61
+    D62
+    D63
+    D64
+    D65
+    D66
+    D67
+    D68
+    D69
+    D70
+    D71
     D77
     D78
     D79
     D88
     D89
+    D111
+    D112
+    D113
     D115
+    D116
+    D117
     D119
-    D121
+    D120
     D122
-    D124
+    D123
     D126
-    D127
     D128
-    D130
-    D133
-    D134
-    D136
     D137
     D138
     D139
@@ -405,29 +405,29 @@ Generating : Bottom Paste
 
 
 Used DCodes :
-    D15
-    D16
+    D10
+    D11
+    D12
+    D13
     D17
     D18
-    D19
-    D38
-    D43
-    D46
+    D25
+    D35
+    D36
+    D39
+    D44
     D48
-    D49
-    D60
-    D73
     D97
     D98
     D99
-    D100
-    D101
     D102
     D103
     D104
     D105
     D106
     D107
+    D108
+    D109
     D110
     D192
     D193
@@ -446,8 +446,8 @@ Used DCodes :
     D88
     D89
     D141
+    D142
     D143
-    D144
     D146
     D147
     D148
@@ -545,5 +545,52 @@ Generating : Profile
 
 Used DCodes :
     D196
+*************************************************************
+
+*************************************************************
+Generating : Non-plated through-hole drill file
+      File : PCB_NPTH_Drill.gbr
+
+
+Used DCodes :
+*************************************************************
+
+*************************************************************
+Generating : Plated through-hole drill file
+      File : PCB_PTH_Drill.gbr
+
+
+Used DCodes :
+    D197
+    D198
+    D199
+    D200
+*************************************************************
+
+*************************************************************
+Generating : Drill Drawing
+      File : PCB_Drawing_1.gbr
+
+    Adding Drill Pair : Bottom Side-Component Side
+
+    Adding Layer      : Drill Drawing
+
+
+Used DCodes :
+    D145
+    D202
+*************************************************************
+
+*************************************************************
+Generating : Drill Guide
+      File : PCB_Drillmap_1.gbr
+
+    Adding Drill Pair : Bottom Side-Component Side
+
+    Adding Layer      : Drill Guide
+
+
+Used DCodes :
+    D145
 *************************************************************
 

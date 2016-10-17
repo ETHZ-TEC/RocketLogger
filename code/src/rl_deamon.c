@@ -7,14 +7,14 @@ int gpio_setup() {
 	
 	gpio_export(GPIO_BUTTON);
 	gpio_dir(GPIO_BUTTON, IN);
-	gpio_interrupt(GPIO_BUTTON, RISING);
+	gpio_interrupt(GPIO_BUTTON, FALLING);
 	
 	return SUCCESS; // TODO: add possibility to fail
 }
 
 void interrupt_handler(int value) {
 	
-	if (value == 1) { // only react if button pressed enough long
+	if (value == 0) { // only react if button pressed enough long
 		
 		// get RL status
 		int status = system("sudo rocketlogger status > /dev/null");
