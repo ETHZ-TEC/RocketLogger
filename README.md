@@ -27,7 +27,7 @@ More details regarding the hardware design can be found on the [RocketLogger Har
 
 ### Software Installation
  * To compile the RocketLogger software the following system components are required (install using `apt`):
-   `ntp gcc libncurses5-dev libi2c-dev`
+   `ntp gcc libncurses5-dev libi2c-dev clang`
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
 ```bash
