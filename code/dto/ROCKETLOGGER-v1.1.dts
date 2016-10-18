@@ -6,7 +6,7 @@
 /plugin/;
 
 #include <dt-bindings/pinctrl/am33xx.h>
-//#include <dt-bindings/pwm/pwm.h>
+#include <dt-bindings/pwm/pwm.h>
 
 #include "am335x-bbw-bbb-base.h"
 
@@ -140,7 +140,7 @@
         pinctrl-names = "default";
         pinctrl-0 = <&rl_digital_pins>;
       };
-/*
+
       rl_pwm0_pinmux {
         compatible = "bone-pinmux-helper";
         status = "okay";
@@ -161,7 +161,6 @@
         pinctrl-names = "default";
         pinctrl-0 = <&rl_pru0_pins>;
       };
-*/
     };
   };
 
