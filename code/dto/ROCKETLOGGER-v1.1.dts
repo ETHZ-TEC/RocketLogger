@@ -73,7 +73,7 @@
         >;
       };
 
-      rl_pru_adc_pins: pinmux_rl_pru_adc_pins {
+      rl_pru0_pins: pinmux_rl_pru0_pins {
         pinctrl-single,pins = <
           BONE_P9_24 (PIN_INPUT_PULLDOWN | MUX_MODE6) /* MISO1 pin, PRU0 controlled */
           BONE_P9_25 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* START pin, PRU0 controlled */
@@ -140,6 +140,28 @@
         pinctrl-names = "default";
         pinctrl-0 = <&rl_digital_pins>;
       };
+/*
+      rl_pwm0_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_pwm0_pins>;
+      };
+
+      rl_pwm1_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_pwm1_pins>;
+      };
+
+      rl_pru0_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_pru0_pins>;
+      };
+*/
     };
   };
 
@@ -150,7 +172,7 @@
     __overlay__ {
       status = "okay";
       pinctrl-names = "default";
-      pinctrl-0 = <&rl_pru_adc_pins>;
+      pinctrl-0 = <&rl_pru0_pins>;
     };  
   }; 
 
@@ -185,22 +207,19 @@
   };
 
 
-
-
   /* PWM configuration */  
-/*
-  fragment@40 {
+/*  fragment@40 {
     target = <&ocp>;
     __overlay__ {
       adc_clock {
-        compatible = "pwm_test";
-        pwms = <&ehrpwm0 0 500000 1>;
-        pwm-names = "RL_PWM_0";
+	      compatible = "ti,am33xx-ehrpwm";
+        pwms = <&ehrpwm0 0 500000 PWM_POLARITY_INVERTED>
+        pwm-names = "rl_pwm0";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_pwm0_pins>;
-        enabled = <1>;
-        duty = <0>;
         status = "okay";
+//        enabled = <1>;
+//        duty = <0>;
       };
     };
   };
@@ -209,18 +228,17 @@
     target = <&ocp>;
     __overlay__ {
       range_switch_clock {
-        compatible = "pwm_test";
-        pwms = <&ehrpwm1 0 500000 1>;
-        pwm-names = "RL_PWM_1";
+	      compatible = "ti,am33xx-ehrpwm";
+        pwms = <&ehrpwm1 0 500000 PWM_POLARITY_INVERTED>
+        pwm-names = "rl_pwm1";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_pwm1_pins>;
-        enabled = <1>;
-        duty = <0>;
         status = "okay";
+//        enabled = <1>;
+//        duty = <0>;
       };
     };
   };
 */
-
 };
 
