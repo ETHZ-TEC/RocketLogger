@@ -372,17 +372,6 @@ READ:
 	// receive data
 	receive_data
 	
-	// add current channels if requested
-	QBEQ NOTADD, ADD_CURRENTS, 0
-	
-	// v2
-	ADD I1H_REG, I1H_REG, I1H_2_REG
-	ADD I1L_REG, I1L_REG, I1L_2_REG
-	ADD I2H_REG, I2H_REG, I2H_2_REG
-	ADD I2L_REG, I2L_REG, I2L_2_REG
-	
-NOTADD:
-	
 	// mask and store status (low range valid)
 	AND ADC1_STATUS_REG, ADC1_STATUS_REG, STATUS_MASK
 	AND ADC2_STATUS_REG, ADC2_STATUS_REG, STATUS_MASK
@@ -393,6 +382,18 @@ NOTADD:
 	
 	// sign extension and storing
 	QBEQ HIGHPRECISION, PRECISION, 24
+	
+	
+	// add current channels if requested
+	QBEQ NOTADDLOW, ADD_CURRENTS, 0
+	
+	// v2
+	ADD I1H_REG, I1H_REG, I1H_2_REG
+	ADD I1L_REG, I1L_REG, I1L_2_REG
+	ADD I2H_REG, I2H_REG, I2H_2_REG
+	ADD I2L_REG, I2L_REG, I2L_2_REG
+	
+NOTADDLOW:
 	
 	// I1
 	SBBO I1H_REG, MEM_POINTER, 0, 2
@@ -427,15 +428,32 @@ NOTADD:
 HIGHPRECISION:
 
 	sign_extend I1H_REG
+	sign_extend I1H_2_REG
 	sign_extend I1M_REG
 	sign_extend I1L_REG
+	sign_extend I1L_2_REG
 	sign_extend V1_REG
 	sign_extend V2_REG
 	sign_extend I2H_REG
+	sign_extend I2H_2_REG
 	sign_extend I2M_REG
 	sign_extend I2L_REG
+	sign_extend I2L_2_REG
 	sign_extend V3_REG
 	sign_extend V4_REG
+	
+	
+	// add current channels if requested
+	QBEQ NOTADDHIGH, ADD_CURRENTS, 0
+	
+	// v2
+	ADD I1H_REG, I1H_REG, I1H_2_REG
+	ADD I1L_REG, I1L_REG, I1L_2_REG
+	ADD I2H_REG, I2H_REG, I2H_2_REG
+	ADD I2L_REG, I2L_REG, I2L_2_REG
+	
+NOTADDHIGH:
+	
 	
 	// I1
 	SBBO I1H_REG, MEM_POINTER, 0, 4
