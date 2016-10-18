@@ -1,0 +1,39 @@
+[   10.704809] davinci-mcasp 48038000.mcasp: invalid tdm slots: 0
+[   10.816230] IPv6: ADDRCONF(NETDEV_UP): usb0: link is not ready
+[   11.080514] omap_rng 48310000.rng: OMAP Random Number Generator ver. 20
+[   11.082802] davinci-mcasp 4803c000.mcasp: invalid tdm slots: 0
+[   12.534571] ti-pruss 4a300000.pruss: creating PRU cores and other child platform devices
+[   12.637792] omap-sham 53100000.sham: hw accel on OMAP rev 4.3
+[   12.702701]  remoteproc1: 4a334000.pru0 is available
+[   12.702724]  remoteproc1: Note: remoteproc is still under development and considered experimental.
+[   12.702732]  remoteproc1: THE BINARY FORMAT IS NOT YET FINALIZED, and backward compatibility isn't yet guaranteed.
+[   12.703039]  remoteproc1: Direct firmware load for am335x-pru0-fw failed with error -2
+[   12.703059]  remoteproc1: failed to load am335x-pru0-fw
+[   12.784229] omap-aes 53500000.aes: OMAP AES hw accel rev: 3.2
+[   12.849850] pru-rproc 4a334000.pru0: booting the PRU core manually
+[   12.849880]  remoteproc1: powering up 4a334000.pru0
+[   12.849956]  remoteproc1: Direct firmware load for am335x-pru0-fw failed with error -2
+[   12.849972]  remoteproc1: request_firmware failed: -2
+[   12.855174] pru-rproc 4a334000.pru0: rproc_boot failed
+[   13.049896] cpsw 4a100000.ethernet eth0: Link is Up - 100Mbps/Full - flow control rx/tx
+[   13.049969] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   13.173761] 8021q: 802.1Q VLAN Support v1.8
+[   13.173835] 8021q: adding VLAN 0 to HW filter on device eth0
+[   13.395065]  remoteproc1: releasing 4a334000.pru0
+[   13.395230] pru-rproc: probe of 4a334000.pru0 failed with error -2
+[   13.398795]  remoteproc1: 4a338000.pru1 is available
+[   13.398815]  remoteproc1: Note: remoteproc is still under development and considered experimental.
+[   13.398824]  remoteproc1: THE BINARY FORMAT IS NOT YET FINALIZED, and backward compatibility isn't yet guaranteed.
+[   13.399101]  remoteproc1: Direct firmware load for am335x-pru1-fw failed with error -2
+[   13.399122]  remoteproc1: failed to load am335x-pru1-fw
+[   13.413235] pru-rproc 4a338000.pru1: booting the PRU core manually
+[   13.413267]  remoteproc1: powering up 4a338000.pru1
+[   13.413343]  remoteproc1: Direct firmware load for am335x-pru1-fw failed with error -2
+[   13.413358]  remoteproc1: request_firmware failed: -2
+[   13.418543] pru-rproc 4a338000.pru1: rproc_boot failed
+[   13.860912]  remoteproc1: releasing 4a338000.pru1
+[   13.863945] pru-rproc: probe of 4a338000.pru1 failed with error -2
+[   15.221462] ehrpwm ocp:adc_clock: invalid resource
+[   15.314284] ehrpwm: probe of ocp:adc_clock failed with error -22
+[   15.314519] ehrpwm ocp:range_switch_clock: invalid resource
+[   15.494487] ehrpwm: probe of ocp:range_switch_clock failed with error -22
