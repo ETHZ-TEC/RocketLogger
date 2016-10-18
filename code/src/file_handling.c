@@ -82,7 +82,6 @@ int store_header(FILE* data, struct header* file_header, struct rl_conf* conf) {
 int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf) {
 	
 	// store file pointer position
-	long pos = ftell(data);
 	rewind(data);
 	
 	// only store header until number samples updated
@@ -97,8 +96,7 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 		rl_log(ERROR, "failed to update header, wrong file format");
 	}
 	
-	fseek(data, pos, SEEK_SET);
-	
+	fseek(data, 0, SEEK_END);
 	
 	return SUCCESS;
 }
