@@ -95,14 +95,14 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 		// display range information
 		mvprintw(3, 33, "Low range:");
 		if((line[0] & I1L_VALID_BIT) > 0) {
-			mvprintw(5, 33, "I1L valid");
-		} else {
 			mvprintw(5, 33, "I1L invalid");
+		} else {
+			mvprintw(5, 33, "I1L valid");
 		}
 		if((line[1] & I2L_VALID_BIT) > 0) {
-			mvprintw(11, 33, "I2L valid");
-		} else {
 			mvprintw(11, 33, "I2L invalid");
+		} else {
+			mvprintw(11, 33, "I2L valid");
 		}
 	}
 	
