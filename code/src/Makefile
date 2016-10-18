@@ -56,6 +56,7 @@ CXXSTD = -std=c++11
 LIBS = -pthread
 LIBS += -lprussdrv
 LIBS += -lncurses
+LIBS += -lrt
 
 ## warnings
 WARNINGS = -Wall -Wextra -fmessage-length=0
