@@ -82,7 +82,6 @@ int store_header(FILE* data, struct header* file_header, struct rl_conf* conf) {
 int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf) {
 	
 	// store file pointer position
-	long pos = ftell(data);
 	rewind(data);
 	
 	// only store header until number samples updated
@@ -97,8 +96,7 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 		rl_log(ERROR, "failed to update header, wrong file format");
 	}
 	
-	fseek(data, pos, SEEK_SET);
-	
+	fseek(data, 0, SEEK_END);
 	
 	return SUCCESS;
 }
@@ -194,8 +192,8 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		buffer_addr += STATUS_SIZE;
 		
 		// TODO: fix for dig inputs
-		line_int[0] = ((line_int[0] & I1L_VALID_BIT) > 0);
-		line_int[1] = ((line_int[1] & I2L_VALID_BIT) > 0);
+		//line_int[0] = ((line_int[0] & I1L_VALID_BIT) > 0);
+		//line_int[1] = ((line_int[1] & I2L_VALID_BIT) > 0);
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {

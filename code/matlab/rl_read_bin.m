@@ -1,4 +1,4 @@
-function [ values, header, time ] = rl_read_bin( filename, old_file, start_buffer_index, max_buffer_count, decimation_factor)
+function [ values, header, dig_inps, time ] = rl_read_bin( filename, old_file, start_buffer_index, max_buffer_count, decimation_factor)
 %RL_READ_BIN Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -15,6 +15,7 @@ function [ values, header, time ] = rl_read_bin( filename, old_file, start_buffe
 %    values
 %    header
 %    time                  Timestamps (note: this will take a long time!)
+%    dig_inps              Digital inputs (note: this will take a long time too)
 
 if ~exist('old_file', 'var')
     old_file = 0;
@@ -111,7 +112,7 @@ for i=0:read_buffer_count-1
     else
         % time = [sec, min, hour, month_day, month, year, week_day, year_day, magic]
         temp = fread(file, 9, 'uint');
-        if nargout > 2
+        if nargout > 3
             time(i+1,:) = datetime(temp(6)+1900, temp(5)+1, temp(4), temp(3)+2, temp(2), temp(1));
         end
     end
@@ -137,5 +138,19 @@ for i=0:9
        j = j+1;
     end
 end
+
+%% Digital Inputs (workaround)
+l = size(values(:,1));
+dig_inps = nan(l(:,1), 6);
+
+for i=1:l
+    for j=1:3
+        dig_inps(i,j) = rl_channel_on(values(i,1),j);
+        dig_inps(i,j+3) = rl_channel_on(values(i,2),j); 
+    end
+    values(i,1) = rl_channel_on(values(i,1),0);
+    values(i,2) = rl_channel_on(values(i,2),0);
+end
+
 end
 

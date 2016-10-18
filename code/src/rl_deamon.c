@@ -17,12 +17,12 @@ void interrupt_handler(int value) {
 	if (value == 0) { // only react if button pressed enough long
 		
 		// get RL status
-		int status = system("sudo rocketlogger status > /dev/null");
+		int status = system("rocketlogger status > /dev/null");
 		
 		if (status > 0) {
-			system("sudo rocketlogger stop > /dev/null");
+			system("rocketlogger stop > /dev/null");
 		} else {
-			system("sudo rocketlogger cont > /dev/null");
+			system("rocketlogger cont > /dev/null");
 		}
 		
 		// debouncing

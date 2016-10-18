@@ -11,13 +11,6 @@ int main(int argc, char* argv[]) {
 	struct rl_conf conf;
 	int set_as_default;
 	
-	// check if root
-	if(getuid() != 0){
-		// no logging here
-		printf("Error: you must run this program as root\n");
-		return FAILURE;
-	}
-	
 	// get default config
 	read_default_config(&conf);
 	
