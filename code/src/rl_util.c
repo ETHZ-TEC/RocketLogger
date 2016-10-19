@@ -63,7 +63,7 @@ int parse_channels(int channels[], char* value) {
 		
 	} else if(strcmp(value, "all") == 0) {
 		// all channels
-		memset(channels, 1, sizeof(channels));
+		memset(channels, 1, sizeof(int) * NUM_CHANNELS);
 	}else {
 		rl_log(ERROR, "wrong channel number");
 		return FAILURE;
