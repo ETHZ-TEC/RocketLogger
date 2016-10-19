@@ -102,7 +102,7 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 }
 
 // setup new header
-void setup_header_new(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data) {
+/*void setup_header_new(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data) {
 	header->header_version = HEADER_VERSION;
 	header->number_samples = 0;
 	header->buffer_size = pru_data->buffer_size;
@@ -112,7 +112,7 @@ void setup_header_new(struct file_header_new* header, struct rl_conf* conf, stru
 	for(i=0; i<NUM_CHANNELS; i++) {
 		header->channels[i] = conf->channels[i];
 	}
-}
+}*/
 
 
 
@@ -160,7 +160,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	
 	// csv data TODO: defines
 	char line_char[200] = "";
-	char value_char[20];
+	char value_char[50];
 	
 	// webserver data
 	int avg_buffer_size = ceil_div(samples_buffer, WEB_BUFFER_SIZE); // size of buffer to average

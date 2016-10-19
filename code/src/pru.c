@@ -286,13 +286,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_header(data, &file_header, conf);
 	}
 	
-	// new file header (unused): TODO: update_header_new function
+	/*// new file header (unused): TODO: update_header_new function
 	struct file_header_new header_new;
 	if(conf->file_format != NO_FILE) {
 		setup_header_new(&header_new, conf, &pru);
 		// store header
 		// TODO
-	}
+	}*/
 	
 	
 	
