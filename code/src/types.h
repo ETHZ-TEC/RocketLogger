@@ -161,26 +161,38 @@ struct header {
 	int precision;
 };
 
+
+// --- NEW FILE HEADER STRUCTS --- //
+
 #define MAX_CHANNEL_NAME 50
 struct channel_header {
 	char name[MAX_CHANNEL_NAME];
-	int type; //???
-	int offset; //???
+	int type; //current, voltage, digital input, range ???
+	int unit; //scaling ???
+	int offset; //position in data block???
+	// valid info?
+	// range forced?
 	// ...
 };
 
+#define MAGIC_NUMBER 0x42420000
 #define HEADER_VERSION 0
-#define NEW_NUMBER_CHANNELS 1
+#define MAX_CHANNEL_COUNT 1 // TODO: adapt
 struct file_header_new {
+	// header information
 	int version_number;
+	int total_header_length; // ???
 	int header_length;
+	// data information
 	int buffer_count;
 	int buffer_size;
+	// additional information
 	int sample_rate;
-	int precision;
+	int precision; //??
+	// channel information
 	int channel_count;
 	int channel_header_size;
-	struct channel_header channel[NEW_NUMBER_CHANNELS];
+	struct channel_header channel[MAX_CHANNEL_COUNT]; // variable channel count?
 };
 
 
