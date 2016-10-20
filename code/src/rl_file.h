@@ -33,14 +33,10 @@ const uint32_t RL_FILE_MAGIC = 0x25524C42;
 /// File format version of current implementation
 const uint8_t RL_FILE_VERSION = 0x01;
 
-/// Maximum number of binary channels supported (TODO: remove?)
-const uint8_t RL_FILE_BIN_MAX_CHANNEL_COUNT = 8;
-
-/// Maximum number of channels supported (TODO: remove?)
-const uint8_t RL_FILE_MAX_CHANNEL_COUNT = 16;
-
 /// Maximum channel description length
 const uint8_t RL_FILE_CHANNEL_NAME_LENGTH = 16;
+
+const uint16_t NO_VALID_DATA = 0xFFFF;
 
 
 // Types
@@ -52,9 +48,8 @@ typedef enum rl_unit {
 	RL_UNIT_UNDEFINED = 0,
 	RL_UNIT_VOLT,
 	RL_UNIT_AMPERE,
-	RL_UNIT_DIGITAL,
+	RL_UNIT_BINARY,
 	RL_UNIT_RANGE_VALID,
-	//RL_UNIT_WATT,
 } rl_unit;
 
 
@@ -65,17 +60,14 @@ typedef enum rl_unit {
  */
 struct rl_file_header {
 	
-	// constant size fields
-	
+	/// constant size file header lead in
 	struct rl_file_lead_in lead_in;
 
-	// dynamic size fields
-
 	/// comment field
-	char* comment;
+	char* comment = NULL;
 
 	/// Channels definitions (binary and normal)
-	rl_file_channel* channel;
+	rl_file_channel* channel = NULL;
 };
 
 /**
@@ -86,13 +78,10 @@ struct rl_file_lead_in {
 	const uint32_t magic = MAGIC_NUMBER;
 
 	/// file version number
-	uint8_t file_version = 0x01;
-
-	/// channel version number
-	uint8_t channel_version = 0x01;
+	uint16_t file_version = RL_FILE_VERSION;
 
 	/// total size of the header in bytes
-	uint16_t header_length = sizeof(rl_file_header) / sizeof(uint8_t);
+	uint16_t header_length = 0;
 
 	/// size of the data blocks in the file in rows
 	uint32_t data_block_size = 0;
@@ -116,10 +105,10 @@ struct rl_file_lead_in {
 	uint32_t comment_length = 0;
 
 	/// binary channel count
-	uint16_t bin_channel_count = RL_FILE_BIN_MAX_CHANNEL_COUNT;
+	uint16_t channel_bin_count = 0;
 
 	/// number of channels in the file
-	uint16_t channel_count = RL_FILE_MAX_CHANNEL_COUNT;
+	uint16_t channel_count = 0;
 	
 };
 
@@ -132,52 +121,17 @@ struct rl_file_channel {
 	/// channel unit (binary, voltage or current)
 	rl_unit unit = RL_UNIT_UNDEFINED;
 	
-	/// datum size in bytes (for voltage and current)
-	uint8_t data_size = 0;
-	
-	/// valid link (for low-range current channels)
-	uint8_t valid_data_channel = -1;
-
 	/// channel scale (in power of ten, for voltage and current)
 	int32_t channel_scale = RL_SCALE_NONE;
+	
+	/// datum size in bytes (for voltage and current)
+	uint16_t data_size = 0;
+	
+	/// link to channel valid data (for low-range current channels)
+	uint16_t valid_data_channel = NO_VALID_DATA;
 
-	// channel name/description
+	/// channel name/description
 	char name[RL_FILE_CHANNEL_NAME_LENGTH];
 };
-
-
-// --------------------------------------------------------
-/*
-#define MAX_CHANNEL_NAME 50
-struct channel_header {
-	char name[MAX_CHANNEL_NAME];
-	int type; //current, voltage, digital input, range ???
-	int unit; //scaling ???
-	int offset; //position in data block???
-	// valid info?
-	// range forced?
-	// ...
-};
-
-#define MAGIC_NUMBER 0x42420000
-#define HEADER_VERSION 0
-#define MAX_CHANNEL_COUNT 1 // TODO: adapt
-struct file_header_new {
-	// header information
-	int version_number;
-	int total_header_length; // ???
-	int header_length;
-	// data information
-	int buffer_count;
-	int buffer_size;
-	// additional information
-	int sample_rate;
-	int precision; //??
-	// channel information
-	int channel_count;
-	int channel_header_size;
-	struct channel_header channel[MAX_CHANNEL_COUNT]; // variable channel count?
-};
-*/
 
 #endif /* RL_FILE_H */
