@@ -53,7 +53,7 @@ int hw_sample(struct rl_conf* conf) {
 	
 	// open data file
 	FILE* data = (FILE*) -1;
-	if (conf->file_format != NO_FILE) { // open file only if storing requested
+	if (conf->file_format != NO_FILE) { // open file only if storing requested -> TODO: in file_handling.c ??
 		data = fopen(conf->file_name, "w+");
 		if(data == NULL) {
 			rl_log(ERROR, "failed to open data-file");
