@@ -52,7 +52,8 @@ typedef enum rl_unit {
 	RL_UNIT_UNDEFINED = 0,
 	RL_UNIT_VOLT,
 	RL_UNIT_AMPERE,
-	RL_UNIT_BINARY,
+	RL_UNIT_DIGITAL,
+	RL_UNIT_RANGE_VALID,
 	//RL_UNIT_WATT,
 } rl_unit;
 
