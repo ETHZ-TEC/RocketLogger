@@ -1,6 +1,6 @@
 #include "pru.h"
 
-int test_mode = 1;
+int test_mode = 0;
 
 
 
@@ -212,6 +212,15 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
+	// TEST -> TODO: remove
+	FILE* test = fopen("test.rld", "w+");
+	if(test == NULL) {
+		rl_log(ERROR, "failed to open data-file");
+		return;
+	}
+	
+	
+	
 	// STATE
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
@@ -302,7 +311,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// store header
 	if(conf->file_format != NO_FILE) {
-		store_header_new(data, &file_header_new);
+		store_header_new(test, &file_header_new);
 	}
 	
 	
@@ -369,7 +378,12 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
-			// update the number of samples stored // TODO: for new header
+			// update the number of samples stored
+			file_header_new.lead_in.data_block_count = i+1;
+			file_header_new.lead_in.sample_count += samples_buffer;
+			update_header(test, &file_header_new);
+			
+			// OLD
 			file_header.number_samples += samples_buffer;
 			update_sample_number(data, &file_header, conf);
 			
@@ -377,7 +391,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// update and write state
 		status.samples_taken += samples_buffer;
-		status.buffer_number = i;
+		status.buffer_number = i+1;
 		write_status(&status);
 		
 		// print meter output
@@ -397,6 +411,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		fflush(data);
 	}
+	
+	
+	
+	// TEST -> TODO: remove
+	fclose(test);
+	
+	
 	
 	
 	// PRU FINISH (unmap memory)
