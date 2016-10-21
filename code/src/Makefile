@@ -101,6 +101,9 @@ install: all
 	chmod 4755 $(INSTALL_BIN_DIR)/$(BINARY_NAME) $(INSTALL_BIN_DIR)/$(DEAMON_NAME)
 	echo "#!/bin/bash" > /etc/init.d/rocketlogger
 	echo "$(INSTALL_BIN_DIR)/$(DEAMON_NAME) &" >> /etc/init.d/rocketlogger
+	echo "echo 31 > /sys/class/gpio/export" >> /etc/init.d/rocketlogger
+	echo "echo out > /sys/class/gpio/gpio31/direction" >> /etc/init.d/rocketlogger
+	echo "echo 1 > /sys/class/gpio/gpio31/value" >> /etc/init.d/rocketlogger
 	chmod +x /etc/init.d/rocketlogger
 	update-rc.d rocketlogger defaults
 	echo "options uio_pruss extram_pool_sz=0x300000" > /etc/modprobe.d/rl_pru.conf
