@@ -180,24 +180,23 @@ void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf) 
 
 void store_header_new(FILE* data, struct rl_file_header* file_header) {
 	
-	
-	// TODO: replace
-	FILE* test = fopen("/home/test/test.rld", "w+");
-	if(test == NULL) {
-		rl_log(ERROR, "failed to open data-file");
-		return;
-	}
-	
 	int total_channel_count = file_header->lead_in.channel_bin_count + file_header->lead_in.channel_count;
 	
 	// write lead in
-	fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1, test);
+	fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1, data);
 	// write comment
-	fwrite(file_header->comment, file_header->lead_in.comment_length, 1, test);
+	fwrite(file_header->comment, file_header->lead_in.comment_length, 1, data);
 	// write channel information
-	fwrite(file_header->channel, sizeof(struct rl_file_channel), total_channel_count, test);
+	fwrite(file_header->channel, sizeof(struct rl_file_channel), total_channel_count, data);
 	
-	fclose(test);
+}
+
+void update_header(FILE* data, struct rl_file_header* file_header) {
+	
+	// seek to beginning and rewrite lead_in
+	rewind(data);
+	fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1, data);
+	fseek(data, 0, SEEK_END);
 }
 
 
@@ -262,6 +261,7 @@ int store_header(FILE* data, struct header* file_header, struct rl_conf* conf) {
 		fprintf(data,"\n");
 	} else {
 		rl_log(ERROR, "failed to store header, wrong file format");
+		return FAILURE;
 	}
 	
 	return SUCCESS;
@@ -283,6 +283,7 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 		
 	} else {
 		rl_log(ERROR, "failed to update header, wrong file format");
+		return FAILURE;
 	}
 	
 	fseek(data, 0, SEEK_END);
