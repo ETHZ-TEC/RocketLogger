@@ -4,6 +4,11 @@ char channel_names[NUM_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1H [nA]","I1M
 char digital_input_names[NUM_DIGITAL_INPUTS][RL_FILE_CHANNEL_NAME_LENGTH] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
 char valid_info_names[NUM_I_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1L range valid", "I2L range valid"};
 
+/// Global variable to determine i1l valid channel
+int i1l_valid_channel = 0;
+/// Global variable to determine i2l valid channel
+int i2l_valid_channel = 0;
+
 
 time_t create_timestamp(struct rl_conf* conf) {
 	struct timeval time;
@@ -60,10 +65,10 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 		channel_bin_count = NUM_DIGITAL_INPUTS;
 	}
 	if(conf->channels[I1L_INDEX] > 0) {
-		channel_bin_count++;
+		i1l_valid_channel = ++channel_bin_count;
 	}
 	if(conf->channels[I2L_INDEX] > 0) {
-		channel_bin_count++;
+		i2l_valid_channel = ++channel_bin_count;
 	}
 	// comment length
 	int comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
@@ -132,10 +137,29 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 	// analog channels
 	for(i=0; i<NUM_CHANNELS; i++) {
 		if(conf->channels[i] > 0) {
-			file_header->channel[j].unit = RL_UNIT_VOLT; // TODO;
-			file_header->channel[j].channel_scale = RL_SCALE_NONE;// TODO
+			// current
+			if(is_current(i)){
+				// low
+				if(is_low_current(i)) {
+					file_header->channel[j].channel_scale = RL_SCALE_TEN_PICO;
+					if(i == I1L_INDEX) {
+						file_header->channel[j].valid_data_channel = i1l_valid_channel;
+					} else {
+						file_header->channel[j].valid_data_channel = i2l_valid_channel;
+					}
+				// high
+				} else {
+					file_header->channel[j].channel_scale = RL_SCALE_NANO;
+					file_header->channel[j].valid_data_channel = NO_VALID_DATA;
+				}
+				file_header->channel[j].unit = RL_UNIT_AMPERE;
+			// voltage
+			} else {
+				file_header->channel[j].unit = RL_UNIT_VOLT;
+				file_header->channel[j].channel_scale = RL_SCALE_MICRO;
+				file_header->channel[j].valid_data_channel = NO_VALID_DATA;
+			}
 			file_header->channel[j].data_size = 4;
-			file_header->channel[j].valid_data_channel = NO_VALID_DATA;// TODO
 			strcpy(file_header->channel[j].name, channel_names[i]);
 			j++;
 		}
