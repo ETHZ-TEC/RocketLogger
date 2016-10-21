@@ -216,7 +216,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	FILE* test = fopen("test.rld", "w+");
 	if(test == NULL) {
 		rl_log(ERROR, "failed to open data-file");
-		return;
+		return FAILURE;
 	}
 	
 	
@@ -299,7 +299,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// file header lead-in TODO: update_header_new function
 	struct rl_file_header file_header_new;
-	setup_lead_in(&file_header_new, conf);
+	setup_lead_in(&(file_header_new.lead_in), conf);
 
 	// channel array
 	int total_channel_count = file_header_new.lead_in.channel_bin_count + file_header_new.lead_in.channel_count;
