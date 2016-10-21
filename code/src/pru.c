@@ -1,6 +1,6 @@
 #include "pru.h"
 
-int test_mode = 0;
+int test_mode = 1;
 
 
 
@@ -176,7 +176,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	
 	// set buffer infos
 	pru->sample_limit = conf->sample_limit;
-	pru->buffer_size = (conf->sample_rate * 1000) / conf->update_rate;
+	pru->buffer_size = (conf->sample_rate * RATE_SCALING) / conf->update_rate;
 	
 	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
@@ -286,13 +286,24 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_header(data, &file_header, conf);
 	}
 	
-	/*// new file header (unused): TODO: update_header_new function
-	struct file_header_new header_new;
+	
+	
+	// file header lead-in TODO: update_header_new function
+	struct rl_file_header file_header_new;
+	setup_lead_in(&file_header_new, conf);
+
+	// channel array
+	int total_channel_count = file_header_new.lead_in.channel_bin_count + file_header_new.lead_in.channel_count;
+	struct rl_file_channel file_channel[total_channel_count];
+	file_header_new.channel = file_channel;
+
+	// complete file header
+	setup_header_new(&file_header_new, conf);
+	
+	// store header
 	if(conf->file_format != NO_FILE) {
-		setup_header_new(&header_new, conf, &pru);
-		// store header
-		// TODO
-	}*/
+		store_header_new(data, &file_header_new);
+	}
 	
 	
 	

@@ -1,9 +1,14 @@
 /*#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>*/
+#include <string.h>
+#include <time.h>*/
 
 #include "types.h"
+#include "rl_file.h"
 #include "util.h"
+
+
+#define MAC_ADDRESS_FILE "/sys/class/net/eth0/address" // TODO: move to types.h?
 
 // DEFINES
 
@@ -37,7 +42,9 @@ void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_d
 int store_header(FILE* data, struct header* file_header, struct rl_conf* conf);
 int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf);
 
-void setup_header_new(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data);
+void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
+void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf);
+void store_header_new(FILE* data, struct rl_file_header* file_header);
 
 int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf);
 int store_web_data(int fifo_fd, int control_fifo, float* buffer);
