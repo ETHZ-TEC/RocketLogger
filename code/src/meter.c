@@ -4,8 +4,8 @@ char meter_names[10][15] = {"I1H","I1M","I1L","V1","V2","I2H","I2M","I2L","V3","
 char channel_units[10][15] = {"mA","mA","uA","V","V","mA","mA","uA","V","V"};
 int channel_scales[10] = {1000000, 1000000, 100000, 1000000, 1000000,1000000, 1000000, 100000, 1000000, 1000000};
 
-char digital_input_names[6][15] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
-int digital_input_bits[6] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
+char meter_digital_input_names[6][15] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
+int meter_digital_input_bits[6] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
 void meter_init() {
 	// init ncurses mode
@@ -115,12 +115,12 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 	
 	j=0;
 	for( ; j<3; j++) {
-		mvprintw(20 + 2*j, 30, "%s:", digital_input_names[j]);
-		mvprintw(20 + 2*j, 38, "%d", (line[0] & digital_input_bits[j]) > 0);
+		mvprintw(20 + 2*j, 30, "%s:", meter_digital_input_names[j]);
+		mvprintw(20 + 2*j, 38, "%d", (line[0] & meter_digital_input_bits[j]) > 0);
 	}
 	for( ; j<6; j++) {
-		mvprintw(20 + 2*(j-3), 50, "%s:", digital_input_names[j]);
-		mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & digital_input_bits[j]) > 0);
+		mvprintw(20 + 2*(j-3), 50, "%s:", meter_digital_input_names[j]);
+		mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & meter_digital_input_bits[j]) > 0);
 	}
 	
     refresh();
