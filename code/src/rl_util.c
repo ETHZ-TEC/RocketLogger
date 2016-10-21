@@ -338,13 +338,14 @@ void reset_config(struct rl_conf* conf) {
 	conf->sample_rate = 1;
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
+	conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
 	conf->enable_web_server = 1;
 	conf->file_format = BIN;
 	
 	strcpy(conf->file_name, "/var/www/data/data.dat");
 	
-	memset(conf->channels, 1, sizeof(conf->channels));
-	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
+	memset(conf->channels, 1, sizeof(conf->channels)); // TODO: use define
+	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels)); // TODO: use define
 	
 }
 
