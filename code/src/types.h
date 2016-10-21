@@ -62,6 +62,7 @@
 #define NUM_I_CHANNELS 2
 #define NUM_TOT_I_CHANNELS 6
 #define NUM_V_CHANNELS 4
+#define NUM_DIGITAL_INPUTS 6
 
 #define METER_UPDATE_RATE 5
 
@@ -117,6 +118,10 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
 // configuration struct
 
+// TODO: use
+#define CHANNEL_DISABLED 0
+#define CHANNEL_ENABLED 1
+
 // channel indices in channels array
 #define I1H_INDEX	0
 #define I1M_INDEX	1
@@ -129,6 +134,10 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 #define V3_INDEX	8
 #define V4_INDEX	9
 
+// digital inputs
+#define DIGITAL_INPUTS_DISABLED 0
+#define DIGITAL_INPUTS_ENABLED 1
+
 struct rl_conf {
 	enum rl_mode mode;
 	int sample_rate;
@@ -136,6 +145,7 @@ struct rl_conf {
 	int sample_limit;
 	int channels[NUM_CHANNELS];
 	int force_high_channels[NUM_I_CHANNELS];
+	int digital_inputs;
 	int enable_web_server;
 	enum rl_file_format file_format;
 	char file_name[MAX_PATH_LENGTH];
@@ -150,7 +160,7 @@ struct rl_status {
 };
 
 
-// FILE HEADER
+// FILE STUFF (TODO: move to rl_file.h)
 #define HEADERLENGTH 6
 struct header {
 	int header_length;
@@ -162,38 +172,6 @@ struct header {
 };
 
 
-// --- NEW FILE HEADER STRUCTS --- //
-
-#define MAX_CHANNEL_NAME 50
-struct channel_header {
-	char name[MAX_CHANNEL_NAME];
-	int type; //current, voltage, digital input, range ???
-	int unit; //scaling ???
-	int offset; //position in data block???
-	// valid info?
-	// range forced?
-	// ...
-};
-
-#define MAGIC_NUMBER 0x42420000
-#define HEADER_VERSION 0
-#define MAX_CHANNEL_COUNT 1 // TODO: adapt
-struct file_header_new {
-	// header information
-	int version_number;
-	int total_header_length; // ???
-	int header_length;
-	// data information
-	int buffer_count;
-	int buffer_size;
-	// additional information
-	int sample_rate;
-	int precision; //??
-	// channel information
-	int channel_count;
-	int channel_header_size;
-	struct channel_header channel[MAX_CHANNEL_COUNT]; // variable channel count?
-};
 
 
 // ----- GLOBAL VARIABLES ----- //
