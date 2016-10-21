@@ -111,16 +111,18 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 	}
 	
 	// digital inputs
-	mvprintw(20, 10, "Digital Inputs:");
-	
-	j=0;
-	for( ; j<3; j++) {
-		mvprintw(20 + 2*j, 30, "%s:", meter_digital_input_names[j]);
-		mvprintw(20 + 2*j, 38, "%d", (line[0] & meter_digital_input_bits[j]) > 0);
-	}
-	for( ; j<6; j++) {
-		mvprintw(20 + 2*(j-3), 50, "%s:", meter_digital_input_names[j]);
-		mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & meter_digital_input_bits[j]) > 0);
+	if(conf->digital_inputs > 0) {
+		mvprintw(20, 10, "Digital Inputs:");
+		
+		j=0;
+		for( ; j<3; j++) {
+			mvprintw(20 + 2*j, 30, "%s:", meter_digital_input_names[j]);
+			mvprintw(20 + 2*j, 38, "%d", (line[0] & meter_digital_input_bits[j]) > 0);
+		}
+		for( ; j<6; j++) {
+			mvprintw(20 + 2*(j-3), 50, "%s:", meter_digital_input_names[j]);
+			mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & meter_digital_input_bits[j]) > 0);
+		}
 	}
 	
     refresh();
