@@ -9,6 +9,14 @@ int is_current(int index) {
 	}
 }
 
+int is_low_current(int index) {
+	if(index == I1L_INDEX || index == I2L_INDEX) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 int count_channels(int channels[NUM_CHANNELS]) {
 	int i = 0;
 	int c = 0;
