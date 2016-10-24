@@ -2,6 +2,7 @@
 
 char channel_names[NUM_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1H [nA]","I1M [nA]","I1L [10pA]","V1 [uV]","V2 [uV]","I2H [nA]","I2M [nA]","I2L [10pA]","V3 [uV]","V4 [uV]"}; // TODO: change
 char digital_input_names[NUM_DIGITAL_INPUTS][RL_FILE_CHANNEL_NAME_LENGTH] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
+int digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT}; // TODO: combine with meter?
 char valid_info_names[NUM_I_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1L range valid", "I2L range valid"};
 
 /// Global variable to determine i1l valid channel
@@ -199,6 +200,98 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
+int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf) {
+	
+	int i;
+	int j;
+	int k;
+	
+	int num_bin_channels;
+	int num_channels = count_channels(conf->channels);
+	
+	
+	// create timestamp
+	struct time_stamp time_real;
+	struct time_stamp time_monotonic;
+	create_time_stamp_new(&time_real, &time_monotonic);
+	
+	// adjust time with buffer latency
+	time_real.sec -= 1 / conf->update_rate;
+	time_monotonic.sec -= 1 / conf->update_rate;
+	
+	// store timestamp
+	if (conf->file_format != NO_FILE) {
+			fwrite(&time_real, sizeof(struct time_stamp), 1, data);
+			fwrite(&time_monotonic, sizeof(struct time_stamp), 1, data);
+	}
+	
+	
+	// binary data (for status and samples)
+	uint32_t bin_data;
+	int32_t channel_data[num_channels];
+	
+	int value = 0;
+
+	
+	// store buffer
+    for(i=0; i<samples_buffer; i++){
+		
+		// reset values
+		k = 0;
+		bin_data = 0;
+		
+		
+		// read binary channels
+		uint8_t bin_adc1 = (*((int8_t *) (buffer_addr)));
+		uint8_t bin_adc2 = (*((int8_t *) (buffer_addr + 1)));
+		
+		buffer_addr += STATUS_SIZE; // TODO: rename to digital_size ...
+		
+		// mask and combine digital inputs, if requestet
+		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+			bin_data = (bin_adc1 & BINARY_MASK) | ((bin_adc2 & BINARY_MASK) << 3);
+			num_bin_channels = NUM_DIGITAL_INPUTS;
+		} else {
+			num_bin_channels = 0;
+		}
+		
+		// Mask valid info
+		uint8_t valid1 = bin_adc1 & VALID_MASK;
+		uint8_t valid2 = bin_adc2 & VALID_MASK;
+		
+		if(conf->channels[I1L_INDEX] > 0) {
+			bin_data = bin_data | (valid1 << num_bin_channels);
+			num_bin_channels++;
+		}
+		if(conf->channels[I2L_INDEX] > 0) {
+			bin_data = bin_data | (valid2 << num_bin_channels);
+		}
+		
+		// write binary channels
+		fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		
+		// read and scale values (if channel selected)
+		for(j=0; j<NUM_CHANNELS; j++) {
+			if(conf->channels[j] > 0) {
+				if(sample_size == 4) {
+					value = *( (int32_t *) (buffer_addr + sample_size*j) );
+				} else {
+					value = *( (int16_t *) (buffer_addr + sample_size*j) );
+				}
+				channel_data[k] = (int) (( value + offsets[j] ) * scales[j]);
+				k++;
+			}
+		}
+		buffer_addr+=NUM_CHANNELS*sample_size;
+		
+		// store values to file
+		if (conf->file_format != NO_FILE) {
+			fwrite(channel_data, sizeof(int32_t), num_channels, data);
+		}
+    }
+	
+	return SUCCESS;
+}
 
 // HEADER
 
@@ -267,7 +360,7 @@ int store_header(FILE* data, struct header* file_header, struct rl_conf* conf) {
 	return SUCCESS;
 }
 
-// update sample number of old header // TODO: for new header
+// update sample number of old header
 int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf) {
 	
 	// store file pointer position
@@ -290,19 +383,6 @@ int update_sample_number(FILE* data, struct header* file_header, struct rl_conf*
 	
 	return SUCCESS;
 }
-
-// setup new header
-/*void setup_header_new(struct file_header_new* header, struct rl_conf* conf, struct pru_data_struct* pru_data) {
-	header->header_version = HEADER_VERSION;
-	header->number_samples = 0;
-	header->buffer_size = pru_data->buffer_size;
-	header->sample_rate = conf->sample_rate;
-	header->precision = pru_data->precision;
-	int i;
-	for(i=0; i<NUM_CHANNELS; i++) {
-		header->channels[i] = conf->channels[i];
-	}
-}*/
 
 
 
