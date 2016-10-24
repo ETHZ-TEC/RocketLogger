@@ -30,7 +30,7 @@ More details regarding the hardware design can be found on the [RocketLogger Har
    `ntp gcc libncurses5-dev libi2c-dev clang`
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
-```bash
+```
 apt install linux-headers-$(uname -r)
 ```
  * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
