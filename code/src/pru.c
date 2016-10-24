@@ -375,6 +375,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		store_buffer_new(test, buffer_addr+4, pru.sample_size, samples_buffer, conf);
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
