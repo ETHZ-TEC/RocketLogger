@@ -1,11 +1,12 @@
 #include "meter.h"
 
-char meter_names[10][15] = {"I1H","I1M","I1L","V1","V2","I2H","I2M","I2L","V3","V4"};
-char channel_units[10][15] = {"mA","mA","uA","V","V","mA","mA","uA","V","V"};
-int channel_scales[10] = {1000000, 1000000, 100000, 1000000, 1000000,1000000, 1000000, 100000, 1000000, 1000000};
+// TODO: use defines
+char meter_names[NUM_CHANNELS][15] = {"I1H","I1M","I1L","V1","V2","I2H","I2M","I2L","V3","V4"};
+char channel_units[NUM_CHANNELS][15] = {"mA","mA","uA","V","V","mA","mA","uA","V","V"};
+int channel_scales[NUM_CHANNELS] = {1000000, 1000000, 100000, 1000000, 1000000,1000000, 1000000, 100000, 1000000, 1000000};
 
-char meter_digital_input_names[6][15] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
-int meter_digital_input_bits[6] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
+char meter_digital_input_names[NUM_DIGITAL_INPUTS][15] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
+int meter_digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
 void meter_init() {
 	// init ncurses mode

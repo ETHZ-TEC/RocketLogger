@@ -70,7 +70,7 @@
 
 #define RATE_SCALING 1000 // rates are in ksps
 
-#define I1L_VALID_BIT 1
+#define I1L_VALID_BIT 1 // TODO: unused?
 #define I2L_VALID_BIT 1
 #define DIGIN1_BIT 2
 #define DIGIN2_BIT 4

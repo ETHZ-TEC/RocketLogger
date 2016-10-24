@@ -243,9 +243,9 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				case DIGITAL_INPUTS:
 					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
 						i++;
-						conf->digital_inputs = 0;
+						conf->digital_inputs = DIGITAL_INPUTS_DISABLED;
 					} else {
-						conf->digital_inputs = 1;
+						conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
 					}
 					break;
 				
