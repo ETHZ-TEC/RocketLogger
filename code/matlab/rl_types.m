@@ -20,4 +20,6 @@ RL_FILE_SAMPLE_SIZE = 4; % sample size in byte
 % time stamp
 TIME_STAMP_SIZE = 4; % 4 * int64
 
-UNIT_NAMES = ['undefined'; 'voltage  '; 'current  '; 'digital  '; 'valid    '];
+
+
+UNIT_NAMES = [cellstr('undefined'); cellstr('voltage'); cellstr('current'); cellstr('digital'); cellstr('valid')];
