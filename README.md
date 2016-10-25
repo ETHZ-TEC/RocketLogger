@@ -41,7 +41,7 @@ apt install linux-headers-$(uname -r)
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
  * For using the remote web interface these additional systems components will be needed:
 ```
-lighttp php5-cgi
+lighttpd php5-cgi
 ```
 
 For further details regarding software installation and system configuration check the [RocketLogger Software Stack](wikis/software) wiki page.
