@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>RocketLogger</title>
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+	<link href="flot/examples/examples.css" rel="stylesheet" type="text/css">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+	
+	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+	<script type="text/javascript" src="rl.js"></script>
+
+</head>
+<body>
+
+	<div class="container">
+		
+		<div class="page-header">
+			<h1>RocketLogger Remote Control</h1>
+		</div>
+
+		<div id="content">
+			<div class="row">
+				<div class="col-md-3">
+					<div id="status"> </div>
+				 </div>
+				 <div class="col-md-3">
+					<div id="webserver"> </div>
+				 </div>
+			 </div>
+		
+			<h2>Configuration</h2>
+			
+				<!-- Control Section -->
+				<p>Choose your configuration and press 'Start'.</p>
+				<div class="row">
+					<div class="col-md-1">
+						<button id="start" class="btn btn-default">Start</button>
+					</div>
+					<div class="col-md-1">
+						<button id="stop" class="btn btn-default">Stop</button>
+					</div>
+					<div class="col-md-1">
+					</div>
+					<div class="col-md-2">
+						<button id="calibrate" class="btn btn-default">Reset Calibration</button>
+					</div>
+				</div>
+				
+				<!-- File Section -->
+				<div class="row">
+					<div class="col-md-6">
+						<h3>File</h3>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="checkbox">
+									<label><input id="enable_storing" type="checkbox" checked="checked"></input>Enable File Storing</label>
+								</div>
+							</div>
+							<!--<div class="col-md-6">
+								<div class="checkbox">
+									<label><input id="network_store" type="checkbox"></input>Network Store</label>
+								</div>
+							</div>-->
+						</div>
+						<div class="row">
+							<div class="col-md-3">
+								File Format:
+							</div>
+							<div class="col-md-4">
+								<select class="form-control"  id="file_format">
+									<option value="dat">binary</option>
+									<option value="csv">csv</option>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-3">
+								Filename:
+							</div>
+							<div class="col-md-7">
+								<input class="form-control" id="filename" placeholder=filename type="text" value="">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-3">
+								Options:
+							</div>
+							<div class="col-md-3">
+								<button id="download" class="btn btn-default">Download</button>
+							</div>	
+							<div class="col-md-3">
+								<button id="delete" class="btn btn-default">Delete</button>
+							</div>
+						</div>
+						<!--<div class="row">
+							<div class="col-md-3">
+								Log:
+							</div>
+							<div class="col-md-3">
+								<button id="download_log" class="btn btn-default">Log</button>
+							</div>
+						</div>-->
+					</div>
+					
+					<!-- Channels Section -->
+					<div class="col-md-6">
+						<h3>Channels</h3>
+						<div class="row">
+							<div class="col-md-4">
+								<b>Voltage</b>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="v1" type="checkbox" checked="checked">V1</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="v2" type="checkbox" checked="checked">V2</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="v3" type="checkbox" checked="checked">V3</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="v4" type="checkbox" checked="checked">V4</label>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<b>Current 1</b>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i1h" type="checkbox" checked="checked">I1H</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i1m" type="checkbox" checked="checked">I1M</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i1l" type="checkbox" checked="checked">I1L</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="fhr1" type="checkbox">Force High Range</label>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<b>Current 2</b>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i2h" type="checkbox" checked="checked">I2H</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i2m" type="checkbox" checked="checked">I2M</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="i2l" type="checkbox" checked="checked">I2L</label>
+									</div>
+								</div>
+								<div class="row">
+									<div class="checkbox">
+										<label><input id="fhr2" type="checkbox">Force High Range</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-4">
+								<button id="select" class="btn btn-default">Select All</button>
+							</div>
+							<div class="col-md-4">
+								<button id="deselect" class="btn btn-default">Deselect All</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Rate Section -->
+				<div class="row">
+					<div class="col-md-6">
+						<h3>Rates</h3>
+						<div class="row">
+							<div class="col-md-3">
+								Samplerate:
+							</div>
+							<div class="col-md-4">
+								<select class="form-control"  id="sample_rate">
+									<option value="1">1kSps</option>
+									<option value="2">2kSps</option>
+									<option value="4">4kSps</option>
+									<option value="8">8kSps</option>
+									<option value="16">16kSps</option>
+									<option value="32">32kSps</option>
+									<option value="64">64kSps</option>
+								</select>
+							</div>
+						</div>
+						<!--<div class="row">
+							<div class="col-md-3">
+								Updaterate:
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" id="update_rate">
+									<option value="1">1Hz</option>
+									<option value="2">2Hz</option>
+									<option value="5">5Hz</option>
+									<option value="10">10Hz</option>
+								</select>
+							</div>
+						</div>-->
+					</div>
+					<div class="col-md-6">
+						
+					</div>
+				</div>	
+
+			<!-- Debug Section
+			<h2>Debug</h2>
+				<p id="test"> No debug message 1. </p> 
+			-->
+		
+			<!-- Plot Section -->
+			<div class="row">
+				<div class="col-md-3">
+					<h2>Plots</h2>
+				</div>
+			</div>
+			<div class="row">
+				<div class="checkbox">
+					<label><input id="plotting" type="checkbox" checked="checked">Enable</label>
+				</div>
+			</div>
+				<div class="row">
+					<h3 class="text-center">Voltages:</h3>
+				</div>
+				<div class="row">
+					<div class="demo-container">
+						<div id="vPlaceholder" class="demo-placeholder"></div>
+					</div>
+				</div>
+				<div class="row">
+					<h3 class="text-center">Currents:</h3>
+				</div>
+				<div class="row">
+					<div class="demo-container">
+						<div id="iPlaceholder" class="demo-placeholder"></div>
+					</div>
+				</div>
+
+		</div>
+
+		<div id="footer">
+			RocketLogger by Stefan Lippuner and Matthias Leubin - ETH Zürich - 2016
+		</div>
+	</div>
+</body>
+</html>
+
+

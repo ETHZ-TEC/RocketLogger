@@ -1,0 +1,17 @@
+- Disable apache2
+	rm /etc/init.d/apache2
+- Disable BBB 101 page (in console):
+	systemctl disable bonescript.service              
+	systemctl disable bonescript.socket
+	systemctl disable bonescript-autorun.service
+	reboot
+- Install lighthttpd: apt-get install lighttpd
+- Put files to /var/www
+	Main page called index.html
+- install php (see main setup file)
+- set default .html file to rl.html
+	
+service lighttpd restart
+
+- set up all folders (data, log)
+- change mode of /var/www/data folder to 777
