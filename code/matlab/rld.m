@@ -9,7 +9,7 @@ classdef rld
     properties
         header;
         channels;
-        time;
+        time; % TODO: do something
     end
     
     methods
@@ -68,7 +68,7 @@ classdef rld
             % channels
             % initialize
             obj.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
-                    'valid_data_channel', 0, 'name', 0);
+                    'valid_data_channel', 0, 'name',0);
             % read
             for i=1:channel_bin_count+channel_count
 
@@ -77,7 +77,7 @@ classdef rld
                 channel_scale = fread(file, 1, 'int32');
                 data_size = fread(file, 1, 'uint16');
                 valid_data_channel = fread(file, 1, 'uint16');
-                name = fread(file, RL_FILE_CHANNEL_NAME_LENGTH, 'int8=>char');
+                name = cellstr(fread(file, RL_FILE_CHANNEL_NAME_LENGTH, 'int8=>char')');
 
                 % channel struct
                 obj.channels(i) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, 'data_size', data_size, ...
@@ -174,8 +174,27 @@ classdef rld
             end
         end
         
+        % get channels
+        function show_channels(obj)
+            for i=1:length(obj.channels(1,:))
+                disp(obj.channels(i).name);
+            end
+        end
+        
         % get channel data
-        % TODO
+        function values = get_data(obj, channel)
+            for i=1:length(obj.channels(1,:))
+                if strcmp(channel, obj.channels(i).name) == 1
+                    values = obj.channels(i).values;
+                    break;
+                end
+                values = nan;
+            end
+            if isnan(values)
+                warning('No such channel found');
+            end
+        end
+        
     end 
 end
 
