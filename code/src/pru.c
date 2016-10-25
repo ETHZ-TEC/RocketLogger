@@ -322,7 +322,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));	
 
 	// run SPI on PRU0
-	prussdrv_exec_program (0, PRU_CODE);
+	if (prussdrv_exec_program (0, PRU_CODE) < 0) {
+		rl_log(ERROR, "PRU code not found");
+		pru.state = PRU_OFF;
+		status.state = RL_OFF;
+	}
 
 	int i;
 	void* buffer_addr;
