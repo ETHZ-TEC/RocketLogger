@@ -272,6 +272,9 @@ START:
 	CLR START_PIN	// START low
 	MOV r10, 0		// receive register (unused)
 	
+	// notify user-space program
+	MOV r31.b0, PRU0_R31_VEC_VALID | PRU_EVTOUT_0
+	
 	
 	// load number of commands to set
 	LBBO NUMBER_COMMANDS, BASE_ADDRESS, NUMBER_COMMANDS_POS, 4
