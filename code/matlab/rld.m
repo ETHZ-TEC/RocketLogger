@@ -34,7 +34,8 @@ classdef rld
             end
 
             % check magic number
-            assert(fread(file, 1, 'uint32') == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
+            [magic, bytes_read] = fread(file, 1, 'uint32');
+            assert(magic == RL_FILE_MAGIC && bytes_read > 0, 'File is no correct RocketLogger data file');
 
             % check file version
             file_version = fread(file, 1, 'uint16');
@@ -105,7 +106,7 @@ classdef rld
             for i=1:channel_count
                 channel_scales(i) = obj.channels(channel_bin_count + i).channel_scale;
             end
-
+            
             %% READ DATA
             num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
 
@@ -128,7 +129,7 @@ classdef rld
                 end
 
                 buffer_values = fread(file, [num_bin_vals + channel_count, buffer_size], 'int32=>int32')';
-
+                
                 % split data
                 bin_channel_data(i*data_block_size+1 : (i*data_block_size + buffer_size), :) = buffer_values(:,1:num_bin_vals);
                 vals(i*data_block_size+1 : (i*data_block_size + buffer_size), :) = buffer_values(:,num_bin_vals+1:end);
@@ -140,12 +141,12 @@ classdef rld
             
             % digital inputs
             for i=1:digital_inputs_count
-                obj.channels(i).values = bitand(bin_channel_data, 2^i) > 0;
+                obj.channels(i).values = bitand(bin_channel_data, 2^(i-1)) > 0;
             end
             
             % valid data
              for i=digital_inputs_count+1:channel_bin_count
-                obj.channels(i).values = ~(bitand(bin_channel_data, 2^i) > 0);
+                obj.channels(i).values = ~(bitand(bin_channel_data, 2^(i-1)) > 0);
             end
 
             %% PROCESS CHANNEL DATA
@@ -162,8 +163,7 @@ classdef rld
         end 
         
         % plotting
-        function plot(obj, pretty_plot, varargin )
-            
+        function plot(obj, time, pretty_plot, varargin )
             % constants
             rl_types;
             
@@ -171,10 +171,13 @@ classdef rld
             if ~exist('pretty_plot', 'var')
                 pretty_plot = false;
             end
+            if ~exist('time', 'var')
+                time = false;
+            end
             separate_axis = true;
             
             % selective plot
-            if nargin > 2
+            if nargin > 3
                 num_channels = length(varargin);
                 plot_channels = zeros(1,num_channels);
                 for i=1:num_channels
@@ -201,7 +204,11 @@ classdef rld
             % time interpolation
             points = 0:(obj.header.data_block_count - 1);
             interp_points = (0:(obj.header.sample_count - 1)) / obj.header.data_block_size;
-            t = interp1(points, obj.time, interp_points);%(1:obj.header.sample_count)/obj.header.sample_rate;
+            if time
+                t = interp1(points, obj.time, interp_points);
+            else
+                t = (1:obj.header.sample_count)/obj.header.sample_rate;
+            end
             
             colormap = [
                 0    0.4470    0.7410
@@ -219,7 +226,7 @@ classdef rld
                     %channel_ind = i + obj.header.channel_bin_count;
                     if (separate_axis && obj.channels(channel_ind).unit == RL_UNIT_AMPERE)
                         yyaxis right;
-                    elseif (separate_axis &&  obj.channels(channel_ind).unit == RL_UNIT_VOLT)
+                    elseif (separate_axis &&  obj.channels(channel_ind).unit ~= RL_UNIT_AMPERE)
                         yyaxis left;
                     end
                     plot(t,obj.channels(channel_ind).values, 'LineStyle', '-', 'Color', ...
@@ -260,7 +267,6 @@ classdef rld
                 ylabel('Voltage [V], current [A]');
             end
             xlabel('Time [s]');
-            
         end
         
         % get channels
@@ -318,10 +324,10 @@ classdef rld
             r1 = channel_index(obj, VALID_NAMES(1));
             r2 = channel_index(obj, VALID_NAMES(2));
             if r1 > 0
-                values(1) = obj.channels(r1).values;
+                values(:,1) = obj.channels(r1).values;
             end
             if r2 > 0
-                values(2) = obj.channels(r2).values;
+                values(:,2) = obj.channels(r2).values;
             end
             
             % channels
@@ -356,6 +362,49 @@ classdef rld
             end
         end
         
+        % merges two channels to a new one
+        function obj = merge_channels(obj, low, high)
+            rl_types;
+            
+            low_ind = channel_index(obj, low);
+            high_ind = channel_index(obj, high);
+            
+            if low_ind < 1 || high_ind < 1
+                error('One channel not valid');
+            end
+            if obj.channels(low_ind).valid_data_channel == NO_VALID_CHANNEL
+                error('Low range has no valid data');
+            end
+            
+            % filter range valid data
+            filter_size = 2*RANGE_MARGIN + 1;
+            filter = ones(1, filter_size);
+            range_valid = ~(conv(double(~obj.channels(low_ind).valid), filter) > 0);
+            range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
+            
+            % set properties
+            new_channel_ind = length(obj.channels) + 1;
+            unit = RL_UNIT_AMPERE;
+            unit_text = UNIT_NAMES(unit+1);
+            channel_scale = 0; % TODO
+            data_size = 0; % TODO
+            valid_data_channel = NO_VALID_CHANNEL;
+            name = [low, '_' ,high];
+            if channel_index(obj, name) > 0
+                error('Channels already merged');
+            end
+            valid = 0;
+            
+            % merge values
+            values = obj.channels(low_ind).values .* range_valid + obj.channels(high_ind).values .* ~range_valid;
+            
+            
+            % add new channel
+            obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
+                'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
+            obj.header.channel_count = obj.header.channel_count  + 1;
+            
+        end
         
     end 
 end
