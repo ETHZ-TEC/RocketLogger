@@ -249,7 +249,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		
 		// mask and combine digital inputs, if requestet
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-			bin_data = (bin_adc1 & BINARY_MASK) | ((bin_adc2 & BINARY_MASK) << 3);
+			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
 			num_bin_channels = NUM_DIGITAL_INPUTS;
 		} else {
 			num_bin_channels = 0;
