@@ -2,6 +2,10 @@ classdef rld
     %RL_MEASUREMENT Summary of this class goes here
     %   Detailed explanation goes here
     
+    % TODO: check decimate on range valid
+    % TODO: check performance
+    % TODO: loop performance
+    
     properties (Constant)
         % TODO: rl_types here?
     end
@@ -14,17 +18,26 @@ classdef rld
     
     methods
         % constructor
-        function obj = rld(file_name)
-            obj = read_file(obj, file_name );
+        function obj = rld(file_name, decimation_factor)
+            
+            if ~exist('decimation_factor', 'var')
+                decimation_factor = 1;
+            end
+            
+            obj = read_file(obj, file_name, decimation_factor );
         end
         
         % file reading
-        function obj = read_file(obj, file_name )
+        function obj = read_file(obj, file_name, decimation_factor )
             %RL_READ_FILE Read in RocketLogger binary file
             %   Detailed explanation goes here
 
             %% IMPORT CONSTANTS
             rl_types;
+            
+            if ~exist('decimation_factor', 'var')
+                decimation_factor = 1;
+            end
 
             %% CHECK FILE
             % open file
@@ -101,19 +114,43 @@ classdef rld
                 end
             end
             
+            % valid
+            range_valid_count = 0;
+            for i=1:channel_bin_count
+                if obj.channels(i).unit == RL_UNIT_RANGE_VALID
+                    range_valid_count = range_valid_count+1;
+                end
+            end
+            
             % scales
             channel_scales = ones(1, channel_count);
             for i=1:channel_count
                 channel_scales(i) = obj.channels(channel_bin_count + i).channel_scale;
             end
             
+            % decimation
+            data_points_per_buffer = ceil(data_block_size/decimation_factor);
+            decimated_rate = sample_rate/data_block_size*data_points_per_buffer;
+            if data_points_per_buffer*decimation_factor ~= data_block_size
+                error('The buffer size needs to be divisible by the decimation factor');
+            end
+            
+            % update header for decimation
+            decimated_sample_count = floor(sample_count/decimation_factor);
+            
+            obj.header.sample_count = decimated_sample_count;
+            obj.header.data_block_size = data_points_per_buffer;
+            obj.header.sample_rate = decimated_rate;
+            
+            
             %% READ DATA
             num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
 
             % values
-            obj.time = datetime(0, 'ConvertFrom', 'posixTime');
-            bin_channel_data = zeros(sample_count, num_bin_vals);
-            vals = zeros(sample_count, channel_count);
+            obj.time = datetime(0, 0, 0);
+            digital_data = zeros(decimated_sample_count, digital_inputs_count);
+            valid_data = zeros(decimated_sample_count, range_valid_count);
+            vals = zeros(decimated_sample_count, channel_count);
 
             % read values
             for i=0:data_block_count-1
@@ -121,37 +158,77 @@ classdef rld
                 temp_time = fread(file, TIME_STAMP_SIZE, 'uint64')';
                 obj.time(i+1, :) = datetime(temp_time(1) + temp_time(2) * 1e-9, 'ConvertFrom', 'posixTime');
 
-                % read
+                % read values
                 if i == data_block_count-1 && mod(sample_count, data_block_size) ~= 0
-                    buffer_size = mod(sample_count, data_block_size); % unfull buffer size
+                    input_buffer_size = mod(sample_count, data_points_per_buffer); % unfull buffer size
+                    buffer_size = mod(decimated_sample_count, data_points_per_buffer); 
                 else
-                    buffer_size = data_block_size;
+                    input_buffer_size = data_block_size;
+                    buffer_size = data_points_per_buffer;
                 end
 
-                buffer_values = fread(file, [num_bin_vals + channel_count, buffer_size], 'int32=>int32')';
+                buffer_values = fread(file, [num_bin_vals + channel_count, input_buffer_size], 'int32=>int32')';
                 
                 % split data
-                bin_channel_data(i*data_block_size+1 : (i*data_block_size + buffer_size), :) = buffer_values(:,1:num_bin_vals);
-                vals(i*data_block_size+1 : (i*data_block_size + buffer_size), :) = buffer_values(:,num_bin_vals+1:end);
+                % binary
+                bin_buffer_values = buffer_values(:,1:num_bin_vals);
+                
+                digital_values = nan(input_buffer_size, digital_inputs_count);
+                valid_values = nan(input_buffer_size, range_valid_count);
+                
+                % TODO: implement if num_bin_vals > 1
+                for j=1:digital_inputs_count % digital inputs
+                    digital_values(:,j) = bitand(bin_buffer_values, 2^(j-1)) > 0;
+                end
+                
+                k = 1;
+                for j=digital_inputs_count+1:channel_bin_count % valid data
+                    valid_values(:,k) = ~(bitand(bin_buffer_values, 2^(j-1)) > 0);
+                    k = k + 1;
+                end
+                
+                % other
+                buffer_values = buffer_values(:,num_bin_vals+1:end);
+                
+                
+                % decimation
+                if decimation_factor == 1
+                    decimated_digital_values = digital_values;
+                    decimated_valid_values = valid_values;
+                    decimated_values = buffer_values;
+                else
+                    for j=1:digital_inputs_count
+                        decimated_digital_values(:,j) = rld.decimate_min(digital_values(:,j), decimation_factor);
+                    end
+                    for j=1:range_valid_count
+                        decimated_valid_values(:,j) = rld.decimate_min(valid_values(:,j), decimation_factor);
+                    end
+                    for j=1:channel_count
+                        decimated_values(:,j) = rld.decimate_mean(buffer_values(:,j), decimation_factor);
+                    end
+                end
+                
+                % merge buffers
+                digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
+                valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
+                vals(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_values;
 
             end
 
-            %% SPLIT BINARY DATA
-            % TODO: implement if num_bin_vals > 1
+            %% STORE BINARY DATA
             
-            % digital inputs
             for i=1:digital_inputs_count
-                obj.channels(i).values = bitand(bin_channel_data, 2^(i-1)) > 0;
+                obj.channels(i).values = digital_data(:,i);
             end
-            
-            % valid data
-             for i=digital_inputs_count+1:channel_bin_count
-                obj.channels(i).values = ~(bitand(bin_channel_data, 2^(i-1)) > 0);
+            j=1;
+            for i=digital_inputs_count+1:channel_bin_count
+                obj.channels(i).values = valid_data(:,j);
+                j = j + 1;
             end
 
             %% PROCESS CHANNEL DATA
             % scaling
-            vals = double(vals) .* repmat((10 .^ channel_scales), sample_count, 1);
+            vals = double(vals) .* repmat((10 .^ channel_scales), decimated_sample_count, 1);
             for i=1:channel_count
                 obj.channels(channel_bin_count+i).values = vals(:,i);
                 if obj.channels(channel_bin_count+i).valid_data_channel ~= NO_VALID_CHANNEL
@@ -183,7 +260,7 @@ classdef rld
                 for i=1:num_channels
                     plot_channels(i) =  channel_index(obj, varargin{i});
                     if channel_index(obj, varargin{i}) < 1
-                        warning(['Channel ', varargin{i}, ' not found']);
+                        error(['Channel ', varargin{i}, ' not found']);
                     end
                 end
             else
@@ -219,20 +296,23 @@ classdef rld
                 0.3010    0.7450    0.9330
                 0.6350    0.0780    0.1840];
 
-            j = 1;
+            j1=1;
+            j2=1;
             for i=1:num_channels
                 channel_ind = plot_channels(i);
                 if channel_ind > 0
                     %channel_ind = i + obj.header.channel_bin_count;
                     if (separate_axis && obj.channels(channel_ind).unit == RL_UNIT_AMPERE)
                         yyaxis right;
+                        legends_i{j1} = obj.channels(channel_ind).name;
+                        j1 = j1 + 1;
                     elseif (separate_axis &&  obj.channels(channel_ind).unit ~= RL_UNIT_AMPERE)
                         yyaxis left;
+                        legends_v{j2} = obj.channels(channel_ind).name;
+                        j2 = j2 + 1;
                     end
                     plot(t,obj.channels(channel_ind).values, 'LineStyle', '-', 'Color', ...
                         colormap(mod(i-1,size(colormap, 1))+1,:), 'Marker', 'none');%*scales_on(i));
-                    legends{j} = obj.channels(channel_ind).name;
-                    j = j+1;
                 end
             end
 
@@ -254,8 +334,17 @@ classdef rld
             elseif pretty_plot
                 prettyPlot(fig)       
             end
-
-            legend(legends);
+            
+            % legend
+            if exist('legends_v', 'var')
+                if exist('legends_i', 'var')
+                    legend([legends_v, legends_i]);
+                else
+                    legend(legends_v);
+                end
+            else
+                legend(legends_i);
+            end
             
             title('Data xxx');
             if separate_axis
@@ -311,7 +400,7 @@ classdef rld
             
             % rate
             rate = obj.header.sample_rate;
-            if rate == 1 || rate == 1 || rate == 1 || rate == 1 || rate == 1
+            if rate == 1000 || rate == 2000 || rate == 4000 || rate == 8000 || rate == 16000
                 precision = 24;
             else
                 precision = 16;
@@ -407,5 +496,32 @@ classdef rld
         end
         
     end 
+    
+    methods(Static)
+        
+        % decimate functions
+        % TODO: test unfull buffer size
+        function decimated_values = decimate_bin(values, decimation_factor)
+            new_num = floor(length(values)/decimation_factor);
+            old_num = new_num * decimation_factor;
+            M = reshape(values(1:old_num), [decimation_factor, new_num]);
+            decimated_values = mean(M, 1)>0.5;
+        end
+        
+        function decimated_values = decimate_min(values, decimation_factor)
+            new_num = floor(length(values)/decimation_factor);
+            old_num = new_num * decimation_factor;
+            M = reshape(values(1:old_num), [decimation_factor, new_num]);
+            decimated_values = ~(mean(M, 1)<1);
+        end
+
+        function decimated_values = decimate_mean(values, decimation_factor)
+            new_num = floor(length(values)/decimation_factor);
+            old_num = new_num * decimation_factor;
+            M = reshape(values(1:old_num), [decimation_factor, new_num]);
+            decimated_values = mean(M, 1);
+        end
+
+    end
 end
 
