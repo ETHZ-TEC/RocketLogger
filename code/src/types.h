@@ -62,6 +62,7 @@
 #define NUM_I_CHANNELS 2
 #define NUM_TOT_I_CHANNELS 6
 #define NUM_V_CHANNELS 4
+#define NUM_DIGITAL_INPUTS 6
 
 #define METER_UPDATE_RATE 5
 
@@ -69,7 +70,7 @@
 
 #define RATE_SCALING 1000 // rates are in ksps
 
-#define I1L_VALID_BIT 1
+#define I1L_VALID_BIT 1 // TODO: unused?
 #define I2L_VALID_BIT 1
 #define DIGIN1_BIT 2
 #define DIGIN2_BIT 4
@@ -117,6 +118,10 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
 // configuration struct
 
+// TODO: use
+#define CHANNEL_DISABLED 0
+#define CHANNEL_ENABLED 1
+
 // channel indices in channels array
 #define I1H_INDEX	0
 #define I1M_INDEX	1
@@ -129,6 +134,10 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 #define V3_INDEX	8
 #define V4_INDEX	9
 
+// digital inputs
+#define DIGITAL_INPUTS_DISABLED 0
+#define DIGITAL_INPUTS_ENABLED 1
+
 struct rl_conf {
 	enum rl_mode mode;
 	int sample_rate;
@@ -136,6 +145,7 @@ struct rl_conf {
 	int sample_limit;
 	int channels[NUM_CHANNELS];
 	int force_high_channels[NUM_I_CHANNELS];
+	int digital_inputs;
 	int enable_web_server;
 	enum rl_file_format file_format;
 	char file_name[MAX_PATH_LENGTH];
@@ -150,7 +160,7 @@ struct rl_status {
 };
 
 
-// FILE HEADER
+// FILE STUFF (TODO: move to rl_file.h)
 #define HEADERLENGTH 6
 struct header {
 	int header_length;
@@ -161,15 +171,7 @@ struct header {
 	int precision;
 };
 
-#define HEADER_VERSION 0
-struct file_header_new {
-	int header_version;
-	int number_samples;
-	int buffer_size;
-	int sample_rate;
-	int precision;
-	int channels[NUM_CHANNELS];
-};
+
 
 
 // ----- GLOBAL VARIABLES ----- //

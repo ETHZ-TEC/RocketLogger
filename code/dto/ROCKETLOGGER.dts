@@ -118,6 +118,7 @@
 					0x028 0x3F	// button pin
 					0x034 0x07	// LED status pin
 					0x030 0x07	// LED error pin
+					0x074 0x07	// RL power pin
 				>;
             };
         };

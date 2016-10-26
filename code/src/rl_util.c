@@ -43,6 +43,8 @@ enum rl_option get_option(char* option) {
 		return WEB;
 	} else if(strcmp(option, "b") == 0) {
 		return BINARY_FILE;
+	} else if(strcmp(option, "d") == 0) {
+		return DIGITAL_INPUTS;
 	} else if(strcmp(option, "s") == 0) {
 		return DEF_CONF;
 	} else if(strcmp(option, "format") == 0) {
@@ -63,7 +65,7 @@ int parse_channels(int channels[], char* value) {
 		
 	} else if(strcmp(value, "all") == 0) {
 		// all channels
-		memset(channels, 1, sizeof(channels));
+		memset(channels, 1, sizeof(int) * NUM_CHANNELS);
 	}else {
 		rl_log(ERROR, "wrong channel number");
 		return FAILURE;
@@ -238,6 +240,15 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 					conf->file_format = BIN;	
 					break;
 				
+				case DIGITAL_INPUTS:
+					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
+						i++;
+						conf->digital_inputs = DIGITAL_INPUTS_DISABLED;
+					} else {
+						conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
+					}
+					break;
+				
 				case DEF_CONF:
 					*set_as_default = 1;
 					break;
@@ -282,7 +293,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 
 // help
 
-void print_usage(struct rl_conf* conf) {
+void print_usage() {
 	printf("\nUsage:\n");
 	printf("  rocketlogger [mode] -[option] [value]\n\n");
 	printf("  Modes:\n");
@@ -314,6 +325,8 @@ void print_usage(struct rl_conf* conf) {
 	printf("    -f [file]          Stores data to specified file.\n");
 	printf("                         '-f 0' will disable file storing.\n");
 	printf("    -b                 Set output file to binary.\n"); // TODO: adapt webserver and remove
+	printf("    -d                 Log digital inputs.\n");
+	printf("                         Use '-d 0' to disable digital input logging.\n");
 	printf("    -format [format]   Select file format: csv, bin.\n");
 	printf("    -w                 Enable webserver plotting.\n");
 	printf("                         Use '-w 0' to disable webserver plotting.\n");
@@ -338,13 +351,14 @@ void reset_config(struct rl_conf* conf) {
 	conf->sample_rate = 1;
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
+	conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
 	conf->enable_web_server = 1;
 	conf->file_format = BIN;
 	
 	strcpy(conf->file_name, "/var/www/data/data.dat");
 	
-	memset(conf->channels, 1, sizeof(conf->channels));
-	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
+	memset(conf->channels, 1, sizeof(conf->channels)); // TODO: use define
+	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels)); // TODO: use define
 	
 }
 
@@ -399,6 +413,8 @@ int write_default_config(struct rl_conf* conf) {
 
 
 // conf file read helpers
+
+// TODO: add digital inputs
 
 void remove_newline(char *line) {
     int new_line = strlen(line) - 1;

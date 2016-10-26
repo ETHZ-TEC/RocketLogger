@@ -21,14 +21,14 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_WORDS_PER_LINE 3
 
-enum rl_option { FILE_NAME, SAMPLE_RATE, UPDATE_RATE, CHANNEL, FHR, WEB, BINARY_FILE, DEF_CONF, FILE_FORMAT, NO_OPTION };
+enum rl_option { FILE_NAME, SAMPLE_RATE, UPDATE_RATE, CHANNEL, FHR, WEB, BINARY_FILE, DIGITAL_INPUTS, DEF_CONF, FILE_FORMAT, NO_OPTION };
 
 
 enum rl_mode get_mode(char* mode);
 enum rl_option get_option(char* option);
 int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default);
 
-void print_usage(struct rl_conf* conf);
+void print_usage();
 
 void print_config(struct rl_conf* conf);
 void reset_config(struct rl_conf* conf);

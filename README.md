@@ -30,7 +30,7 @@ More details regarding the hardware design can be found on the [RocketLogger Har
    `ntp gcc libncurses5-dev libi2c-dev clang`
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
-```bash
+```
 apt install linux-headers-$(uname -r)
 ```
  * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
@@ -41,7 +41,7 @@ apt install linux-headers-$(uname -r)
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
  * For using the remote web interface these additional systems components will be needed:
 ```
-lighttp php5-cgi
+lighttpd php5-cgi
 ```
 
 For further details regarding software installation and system configuration check the [RocketLogger Software Stack](wikis/software) wiki page.

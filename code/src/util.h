@@ -22,6 +22,7 @@
 #define SHMEM_PERMISSIONS 0666
 
 int is_current(int index);
+int is_low_current(int index);
 int count_channels(int channels[NUM_CHANNELS]);
 int count_i_channels(int channels[NUM_CHANNELS]);
 int count_v_channels(int channels[NUM_CHANNELS]);

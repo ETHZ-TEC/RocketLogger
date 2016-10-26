@@ -50,12 +50,16 @@ void rl_print_config(struct rl_conf* conf, int web) {
 		printf("%d\n",conf->file_format == BIN); // TODO: add no-file field
 		// TODO: add fhr
 		// TODO: add #samples
+		// TODO: add dig inps
 		
 	} else {
 
 											printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
 											printf("  Update rate:     %dHz\n", conf->update_rate);
 		if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
+		else								printf("  Webserver:       disabled\n");
+		if(conf->digital_inputs == 1)		printf("  Digital inputs:  enabled\n");
+		else								printf("  Digital inputs:  disabled\n");
 											printf("  File format:     %s\n", file_format_names[conf->file_format]);
 		if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
 											printf("  Channels:        ");

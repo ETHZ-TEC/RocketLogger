@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 	// get default config
 	read_default_config(&conf);
 	
-	// parse arguments
+	// parse arguments -> TODO: add digital inputs
 	if (parse_args(argc, argv, &conf, &set_as_default) == FAILURE) {
 		print_usage(&conf);
 		exit(EXIT_FAILURE);

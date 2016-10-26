@@ -140,17 +140,18 @@ for i=0:9
 end
 
 %% Digital Inputs (workaround)
-l = size(values(:,1));
-dig_inps = nan(l(:,1), 6);
+if nargout > 2
+    l = size(values(:,1));
+    dig_inps = nan(l(:,1), 6);
 
-for i=1:l
-    for j=1:3
-        dig_inps(i,j) = rl_channel_on(values(i,1),j);
-        dig_inps(i,j+3) = rl_channel_on(values(i,2),j); 
+    for i=1:l
+        for j=1:3
+            dig_inps(i,j) = rl_channel_on(values(i,1),j);
+            dig_inps(i,j+3) = rl_channel_on(values(i,2),j); 
+        end
+        values(i,1) = rl_channel_on(values(i,1),0);
+        values(i,2) = rl_channel_on(values(i,2),0);
     end
-    values(i,1) = rl_channel_on(values(i,1),0);
-    values(i,2) = rl_channel_on(values(i,2),0);
 end
-
 end
 

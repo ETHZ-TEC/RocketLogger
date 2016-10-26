@@ -33,7 +33,7 @@ void interrupt_handler(int value) {
 }
 
 
-int main(int argc, char **argv) {
+int main() {
 	
 	int timeout = -1; //infinite timeout
 	gpio_setup();

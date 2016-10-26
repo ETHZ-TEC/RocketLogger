@@ -176,7 +176,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	
 	// set buffer infos
 	pru->sample_limit = conf->sample_limit;
-	pru->buffer_size = (conf->sample_rate * 1000) / conf->update_rate;
+	pru->buffer_size = (conf->sample_rate * RATE_SCALING) / conf->update_rate;
 	
 	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
@@ -210,6 +210,15 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 // MAIN SAMPLE FUNCTION
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
+	
+	
+	// TEST -> TODO: remove
+	FILE* test = fopen("test.rld", "w+");
+	if(test == NULL) {
+		rl_log(ERROR, "failed to open data-file");
+		return FAILURE;
+	}
+	
 	
 	
 	// STATE
@@ -286,12 +295,23 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_header(data, &file_header, conf);
 	}
 	
-	// new file header (unused): TODO: update_header_new function
-	struct file_header_new header_new;
+	
+	
+	// file header lead-in TODO: update_header_new function
+	struct rl_file_header file_header_new;
+	setup_lead_in(&(file_header_new.lead_in), conf);
+
+	// channel array
+	int total_channel_count = file_header_new.lead_in.channel_bin_count + file_header_new.lead_in.channel_count;
+	struct rl_file_channel file_channel[total_channel_count];
+	file_header_new.channel = file_channel;
+
+	// complete file header
+	setup_header_new(&file_header_new, conf);
+	
+	// store header
 	if(conf->file_format != NO_FILE) {
-		setup_header_new(&header_new, conf, &pru);
-		// store header
-		// TODO
+		store_header_new(test, &file_header_new);
 	}
 	
 	
@@ -302,7 +322,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));	
 
 	// run SPI on PRU0
-	prussdrv_exec_program (0, PRU_CODE);
+	if (prussdrv_exec_program (0, PRU_CODE) < 0) {
+		rl_log(ERROR, "PRU code not found");
+		pru.state = PRU_OFF;
+		status.state = RL_OFF;
+	}
 
 	int i;
 	void* buffer_addr;
@@ -355,10 +379,16 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		store_buffer_new(test, buffer_addr+4, pru.sample_size, samples_buffer, conf);
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
-			// update the number of samples stored // TODO: for new header
+			// update the number of samples stored
+			file_header_new.lead_in.data_block_count = i+1;
+			file_header_new.lead_in.sample_count += samples_buffer;
+			update_header(test, &file_header_new);
+			
+			// OLD
 			file_header.number_samples += samples_buffer;
 			update_sample_number(data, &file_header, conf);
 			
@@ -366,7 +396,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// update and write state
 		status.samples_taken += samples_buffer;
-		status.buffer_number = i;
+		status.buffer_number = i+1;
 		write_status(&status);
 		
 		// print meter output
@@ -386,6 +416,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		fflush(data);
 	}
+	
+	
+	
+	// TEST -> TODO: remove
+	fclose(test);
+	
+	
 	
 	
 	// PRU FINISH (unmap memory)
