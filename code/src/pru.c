@@ -1,3 +1,5 @@
+#define _FILE_OFFSET_BITS 64
+
 #include "pru.h"
 
 int test_mode = 0;
@@ -340,6 +342,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
 	int i;
+	uint32_t buffer_lost = 0;
 	void* buffer_addr;
 	unsigned int samples_buffer; // number of samples per buffer
 	
@@ -383,7 +386,8 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (test_mode == 0) {
 			int buffer = *((uint32_t*) buffer_addr);
 			if (buffer != i) {
-				rl_log(WARNING, "overrun: %d samples (%d buffer) lost", (buffer - i) * pru.buffer_size, buffer - i);
+				buffer_lost += (buffer - i);
+				rl_log(WARNING, "overrun: %d samples (%d buffer) lost (%d in total)", (buffer - i) * pru.buffer_size, buffer - i, buffer_lost);
 				i = buffer;
 			}
 		}
@@ -395,7 +399,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// update and write header
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
-			file_header_new.lead_in.data_block_count = i+1;
+			file_header_new.lead_in.data_block_count = i+1 - buffer_lost;
 			file_header_new.lead_in.sample_count += samples_buffer;
 			update_header(test, &file_header_new);
 			
@@ -407,7 +411,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// update and write state
 		status.samples_taken += samples_buffer;
-		status.buffer_number = i+1;
+		status.buffer_number = i+1 - buffer_lost;
 		write_status(&status);
 		
 		// print meter output

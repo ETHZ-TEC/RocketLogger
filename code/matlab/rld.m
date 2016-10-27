@@ -106,6 +106,13 @@ classdef rld
                 'channel_bin_count', channel_bin_count, 'channel_count', channel_count, 'comment', comment);
 
             %% PARSE HEADER
+            % sanity checks
+            if sample_count ~= data_block_count*data_block_size
+                warning('Inconsistency in number of samples taken');
+                data_block_count = floor(sample_count / data_block_size);
+                obj.header.data_block_count = data_block_count;
+            end
+            
             % digital inputs
             digital_inputs_count = 0;
             for i=1:channel_bin_count
@@ -147,17 +154,17 @@ classdef rld
             num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
 
             % values
-            obj.time = datetime(0, 0, 0);
+            temp_time = nan(data_block_count, TIME_STAMP_SIZE);
             digital_data = zeros(decimated_sample_count, digital_inputs_count);
             valid_data = zeros(decimated_sample_count, range_valid_count);
             vals = zeros(decimated_sample_count, channel_count);
 
             % read values
             for i=0:data_block_count-1
+                
                 % read time stamps
-                temp_time = fread(file, TIME_STAMP_SIZE, 'uint64')';
-                obj.time(i+1, :) = datetime(temp_time(1) + temp_time(2) * 1e-9, 'ConvertFrom', 'posixTime');
-
+                temp_time(i+1, :) = fread(file, TIME_STAMP_SIZE, 'uint64')';
+                
                 % read values
                 if i == data_block_count-1 && mod(sample_count, data_block_size) ~= 0
                     input_buffer_size = mod(sample_count, data_points_per_buffer); % unfull buffer size
@@ -198,7 +205,7 @@ classdef rld
                     decimated_values = buffer_values;
                 else
                     for j=1:digital_inputs_count
-                        decimated_digital_values(:,j) = rld.decimate_min(digital_values(:,j), decimation_factor);
+                        decimated_digital_values(:,j) = rld.decimate_min(digital_values(:,j), decimation_factor); % TODO: preallocating
                     end
                     for j=1:range_valid_count
                         decimated_valid_values(:,j) = rld.decimate_min(valid_values(:,j), decimation_factor);
@@ -214,6 +221,9 @@ classdef rld
                 vals(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_values;
 
             end
+            
+            %% PROCESS TIMESTAMPS
+            obj.time = datetime(temp_time(:, 1) + temp_time(:, 2) .* 1e-9, 'ConvertFrom', 'posixTime');
 
             %% STORE BINARY DATA
             
