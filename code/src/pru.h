@@ -96,7 +96,7 @@
 #define FIFO_FILE			"/etc/rocketlogger/fifo"
 #define CONTROL_FIFO		"/etc/rocketlogger/control"
 #define WEB_DATA_FILE		"/etc/rocketlogger/data"
-#define PRU_CODE			"/lib/firmware/SPI.bin"
+#define PRU_CODE			"/lib/firmware/rocketlogger_spi.bin"
 
 // ---------------------------------------------- PRU DEFINES ---------------------------------------------------//
 

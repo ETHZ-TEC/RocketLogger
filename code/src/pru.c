@@ -213,7 +213,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// TEST -> TODO: remove
-	FILE* test = fopen("test.rld", "w+");
+	FILE* test = fopen("/home/test.rld", "w+");
 	if(test == NULL) {
 		rl_log(ERROR, "failed to open data-file");
 		return FAILURE;
@@ -322,7 +322,22 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &pru, sizeof(struct pru_data_struct));	
 
 	// run SPI on PRU0
-	prussdrv_exec_program (0, PRU_CODE);
+	if (prussdrv_exec_program (0, PRU_CODE) < 0) {
+		rl_log(ERROR, "PRU code not found");
+		pru.state = PRU_OFF;
+		status.state = RL_OFF;
+	}
+	
+	// wait for first PRU event
+	if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
+		// timeout occured
+		rl_log(ERROR, "PRU not responding");
+		pru.state = PRU_OFF;
+		status.state = RL_OFF;
+	}
+	
+	// clear event
+	prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
 	int i;
 	void* buffer_addr;
@@ -350,7 +365,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			if (i == 0) {
 				if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
 					// timeout occured
-					rl_log(ERROR, "ADC timout. Stopping ...");
+					rl_log(ERROR, "ADC not responding");
 					break;
 				}
 			} else {
