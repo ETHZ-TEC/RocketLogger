@@ -1,3 +1,5 @@
+#define _FILE_OFFSET_BITS 64
+
 #include "pru.h"
 
 int test_mode = 0;
