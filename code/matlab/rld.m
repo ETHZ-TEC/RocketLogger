@@ -47,7 +47,7 @@ classdef rld
 
             % check magic number
             [magic, bytes_read] = fread(file, 1, 'uint32');
-            assert(magic == RL_FILE_MAGIC && bytes_read > 0, 'File is no correct RocketLogger data file');
+            assert(bytes_read > 0 && magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
 
             % check file version
             file_version = fread(file, 1, 'uint16');
