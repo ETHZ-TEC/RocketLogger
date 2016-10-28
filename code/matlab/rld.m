@@ -2,9 +2,8 @@ classdef rld
     %RL_MEASUREMENT Summary of this class goes here
     %   Detailed explanation goes here
     
-    % TODO: check decimate on range valid
-    % TODO: check performance
-    % TODO: loop performance
+    % TODO: loop performance (preallocation)
+    % TODO: unfull buffer size
     
     properties (Constant)
         % TODO: rl_types here?
@@ -216,8 +215,12 @@ classdef rld
                 end
                 
                 % merge buffers
-                digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
-                valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
+                if digital_inputs_count > 0
+                    digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
+                end
+                if range_valid_count > 0
+                    valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
+                end
                 vals(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_values;
 
             end
@@ -289,10 +292,11 @@ classdef rld
             grid on;
             
             % time interpolation
-            points = 0:(obj.header.data_block_count - 1);
-            interp_points = (0:(obj.header.sample_count - 1)) / obj.header.data_block_size;
             if time
-                t = interp1(points, obj.time, interp_points);
+                points = 0:obj.header.data_block_count;
+                temp_time = [obj.time; obj.time(end) + seconds(1)];
+                interp_points = (0:(obj.header.sample_count-1)) / obj.header.data_block_size;
+                t = interp1(points, temp_time, interp_points);
             else
                 t = (1:obj.header.sample_count)/obj.header.sample_rate;
             end
