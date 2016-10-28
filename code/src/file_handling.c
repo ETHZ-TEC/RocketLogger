@@ -268,7 +268,9 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		}
 		
 		// write binary channels
-		fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		if (conf->file_format != NO_FILE && num_bin_channels > 0) { // TODO: NO_FILE check in pru.c
+			fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		}
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {
