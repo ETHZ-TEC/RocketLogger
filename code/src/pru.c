@@ -1,4 +1,4 @@
-#define _FILE_OFFSET_BITS 64
+//#define _FILE_OFFSET_BITS 64
 
 #include "pru.h"
 
@@ -215,11 +215,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// TEST -> TODO: remove
-	FILE* test = fopen("/home/test.rld", "w+");
+	/*FILE* test = fopen("/home/test.rld", "w+");
 	if(test == NULL) {
 		rl_log(ERROR, "failed to open data-file");
 		return FAILURE;
-	}
+	}*/
 	
 	
 	
@@ -290,16 +290,16 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// FILE STORING
 	
 	// old file header
-	struct header file_header;
+	/*struct header file_header;
 	if(conf->file_format != NO_FILE) {
 		setup_header(&file_header, conf, &pru, pru_sample_rate);
 		// store header
 		store_header(data, &file_header, conf);
-	}
+	}*/
 	
 	
 	
-	// file header lead-in TODO: update_header_new function
+	// file header lead-in
 	struct rl_file_header file_header_new;
 	setup_lead_in(&(file_header_new.lead_in), conf);
 
@@ -313,7 +313,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// store header
 	if(conf->file_format != NO_FILE) {
-		store_header_new(test, &file_header_new);
+		store_header_new(data, &file_header_new);
 	}
 	
 	
@@ -394,18 +394,20 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
-		store_buffer_new(test, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		if(conf->file_format != NO_FILE) {
+			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		}
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
 			file_header_new.lead_in.data_block_count = i+1 - buffer_lost;
 			file_header_new.lead_in.sample_count += samples_buffer;
-			update_header(test, &file_header_new);
+			update_header(data, &file_header_new);
 			
-			// OLD
+			/*// OLD
 			file_header.number_samples += samples_buffer;
-			update_sample_number(data, &file_header, conf);
+			update_sample_number(data, &file_header, conf);*/
 			
 		}
 		
@@ -435,14 +437,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// TEST -> TODO: remove
-	fclose(test);
+	//fclose(test);
 	
 	
 	
 	
 	// PRU FINISH (unmap memory)
 	unmap_pru_memory(buffer0);
-	
 	
 	
 	// WEBSERVER FINISH
@@ -458,8 +459,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(conf->mode == METER) {
 		meter_stop();
 	}
-	
-	
 	
 	// STATE
 	if(status.state == RL_ERROR) {
