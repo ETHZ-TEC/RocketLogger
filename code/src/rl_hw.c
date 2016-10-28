@@ -59,10 +59,6 @@ int hw_sample(struct rl_conf* conf) {
 			rl_log(ERROR, "failed to open data-file");
 			return FAILURE;
 		}
-		// change access rights to data file
-		char cmd[50];
-		sprintf(cmd, "chmod 777 %s", conf->file_name);
-		system(cmd);
 	}
 	
 	// read calibration
