@@ -171,7 +171,18 @@ struct header {
 	int precision;
 };
 
+// SEMAPHORES
+#define SEM_KEY 2222 // TODO: usefull key
+#define NUM_SEMS 2
+#define SEM_TIME_OUT 10
+#define SEM_SET_TIME_OUT 1
 
+#define DATA_SEM 0
+#define WAIT_SEM 1
+
+#define NO_FLAG 0
+
+#define TIME_OUT 0
 
 
 // ----- GLOBAL VARIABLES ----- //
