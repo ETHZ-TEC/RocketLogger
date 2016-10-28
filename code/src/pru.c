@@ -214,15 +214,6 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
-	// TEST -> TODO: remove
-	/*FILE* test = fopen("/home/test.rld", "w+");
-	if(test == NULL) {
-		rl_log(ERROR, "failed to open data-file");
-		return FAILURE;
-	}*/
-	
-	
-	
 	// STATE
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
@@ -290,16 +281,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// FILE STORING
-	
-	// old file header
-	/*struct header file_header;
-	if(conf->file_format != NO_FILE) {
-		setup_header(&file_header, conf, &pru, pru_sample_rate);
-		// store header
-		store_header(data, &file_header, conf);
-	}*/
-	
-	
 	
 	// file header lead-in
 	struct rl_file_header file_header_new;
@@ -407,10 +388,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			file_header_new.lead_in.sample_count += samples_buffer;
 			update_header(data, &file_header_new);
 			
-			/*// OLD
-			file_header.number_samples += samples_buffer;
-			update_sample_number(data, &file_header, conf);*/
-			
 		}
 		
 		// update and write state
@@ -435,13 +412,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		fflush(data);
 	}
-	
-	
-	
-	// TEST -> TODO: remove
-	//fclose(test);
-	
-	
 	
 	
 	// PRU FINISH (unmap memory)
