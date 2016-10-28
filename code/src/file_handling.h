@@ -42,9 +42,9 @@
 
 // FUNCTIONS
 
-void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate);
-int store_header(FILE* data, struct header* file_header, struct rl_conf* conf);
-int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf);
+//void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate);
+//int store_header(FILE* data, struct header* file_header, struct rl_conf* conf);
+//int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf);
 
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
 void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf);

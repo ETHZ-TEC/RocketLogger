@@ -448,7 +448,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		// store timestamp
 		if (i == 0 && conf->file_format != NO_FILE) {
 			if (binary == 1) {
-				fwrite(nowtm, 4, 9, data);
+				//fwrite(nowtm, 4, 9, data);
 			} else {
 				sprintf (value_char, "%s", ctime (&nowtime));
 				value_char[strlen(value_char)-1] = '\0'; // remove \n
@@ -485,7 +485,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		if (conf->file_format != NO_FILE) {
 			if (binary == 1) {
 				// binary
-				fwrite(line_int,4,num_channels+2,data);
+				//fwrite(line_int,4,num_channels+2,data);
 			} else {
 				// csv
 				for(j=0; j < num_channels+2; j++) {

@@ -355,7 +355,7 @@ void reset_config(struct rl_conf* conf) {
 	conf->enable_web_server = 1;
 	conf->file_format = BIN;
 	
-	strcpy(conf->file_name, "/var/www/data/data.dat");
+	strcpy(conf->file_name, "/var/www/data/data.rld");
 	
 	memset(conf->channels, 1, sizeof(conf->channels)); // TODO: use define
 	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels)); // TODO: use define
