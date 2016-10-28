@@ -231,6 +231,31 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// WEBSERVER
+	
+	// NEW
+	int sem_id = -1;
+	int64_t* web_data = (int64_t*) -1;
+	
+	if (conf->enable_web_server == 1) {
+		// semaphores
+		sem_id =  create_sem();
+		set_sem(sem_id, DATA_SEM, 1);
+		// shared memory (TODO: function?)
+		int shm_id = shmget(SHMEM_DATA_KEY, sizeof(long), IPC_CREAT | SHMEM_PERMISSIONS);
+		if (shm_id == -1) {
+			rl_log(ERROR, "In pru_sample: failed to get shared data memory id; %d message: %s", errno, strerror(errno));
+			return FAILURE;
+		}
+		web_data = (int64_t*) shmat(shm_id, NULL, 0);
+		
+		if (web_data == (void *) -1) {
+			rl_log(ERROR, "In pru_sample: failed to map shared data memory; %d message: %s", errno, strerror(errno));
+			return FAILURE;
+		}
+	}
+	
+	
+	// OLD
 	int fifo_fd = -1;
 	int control_fifo = -1;
 	
@@ -376,9 +401,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
-		if(conf->file_format != NO_FILE) {
-			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf);
-		}
+		//if(conf->file_format != NO_FILE) {
+			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
+		//}
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
@@ -418,6 +443,15 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// WEBSERVER FINISH
+	
+	// NEW
+	// unmap shared memory
+	if (conf->enable_web_server == 1) {
+		remove_sem(sem_id);
+		shmdt(web_data);
+	}
+	
+	// OLD
 	// close FIFOs
 	if (conf->enable_web_server == 1) {
 		close(fifo_fd);
