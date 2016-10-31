@@ -1,6 +1,8 @@
 #include "sem.h"
 #include "types.h"
 #include "rl_lib.h"
+#include "ipc.h"
+#include "util.h"
 
 #define ARG_COUNT 4
 
@@ -21,12 +23,89 @@ struct rl_web_resp {
 	float* data;
 };
 
+// Global variables
+int sem_id;
+struct web_shm* web_data;
+
+// functions
+
+void print_status(struct rl_status* status) {
+	printf("%d\n", status->state);
+	if(status->state == RL_RUNNING) {
+		printf("%d\n", status->conf.sample_rate);
+		printf("%d\n", status->conf.update_rate);
+		printf("%d\n", status->conf.enable_web_server);
+		printf("%d\n", status->conf.digital_inputs);
+		printf("%d\n", status->conf.file_format != NO_FILE);
+		printf("%d\n", status->conf.file_format);
+		printf("%s\n", status->conf.file_name);
+		// TODO
+		// 	channels
+		// 	fhrs
+		printf("%d\n", status->samples_taken);
+	}
+		
+}
+
+void print_json_new(int32_t data[], int length) {
+	char str[150]; // TODO: adjustable length
+	char val[20];
+	int i;
+	sprintf(str, "[\"%d\"", data[0]);
+	for (i=1; i < length; i++) {
+		sprintf(val, ",\"%d\"", data[i]);
+		strcat(str, val);
+	}
+	strcat(str, "]\n");
+	printf(str);
+}
+
+void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int num_channels) {
+	
+	// print time
+	printf("%lld\n", time);
+	
+	// print data length
+	int data_length = time - last_time;
+	if(data_length > WEB_BUFFER_ELEMENTS) {
+		data_length = WEB_BUFFER_ELEMENTS;
+	}
+	
+	// get available buffers
+	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+	int buffer_available = web_data->buffer[t_scale].filled;
+	set_sem(sem_id, DATA_SEM, 1);
+	if(data_length > buffer_available) {
+		data_length = buffer_available;
+	}
+	
+	printf("%d\n", data_length);
+	
+	// print data
+	int32_t data[WEB_BUFFER_SIZE][num_channels];
+	int i;
+	for(i=0; i<data_length; i++) {
+		// read data
+		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
+		memcpy(&data[0][0], shm_data, web_data->buffer[t_scale].size);
+		set_sem(sem_id, DATA_SEM, 1);
+		
+		// print data
+		int j;
+		for(j=0; j<1; j++) {//WEB_BUFFER_SIZE; j++) {
+			print_json_new(data[j], num_channels);
+		}
+	}
+}
+
+
 int main(int argc, char* argv[]) {
 	
 	// parse arguments
 	
 	if(argc != ARG_COUNT + 1) {
-		// TODO: log
+		rl_log(ERROR, "in rl_server: not enough arguments");
 		exit(FAILURE);
 	}
 	
@@ -36,40 +115,46 @@ int main(int argc, char* argv[]) {
 	uint32_t t_scale = atoi(argv[3]);
 	int64_t last_time = atoi(argv[4]);
 	
-	//struct rl_web_req req = {id, get_data, t_scale, last_time};
-	//struct rl_web_resp resp;
+	// TODO: expand for multiple time scales
+	if (t_scale != 0) {
+		rl_log(WARNING, "only time scale 0 implemented");
+		t_scale == 0;
+	}
 	
 	
-	// get and print status
+	// get status
+	struct rl_status status;
+	int state = rl_read_status(&status);
+	
 	printf("%d\n", id);
-	int state =  rl_get_status(1, 1);
+	print_status(&status);
 	
-	// only get data, if requested and running
-	// TODO: and only if web enabled
-	if(state != RL_RUNNING || get_data == 0) {
+	// only get data, if requested and running and web enabled
+	if(state != RL_RUNNING || status.conf.enable_web_server == 0 || get_data == 0) {
 		exit(EXIT_SUCCESS);
 	}
 	
+	// print time scale
+	printf("%d\n", t_scale);
+	
 	// open semaphore
-	int sem_id = open_sem();
+	sem_id = open_sem();
 	if(sem_id < 0) {
 		// error already logged
 		exit(EXIT_FAILURE);
 	}
 	
-	// open shared memory (TODO: function)
-	int shm_id = shmget(SHMEM_DATA_KEY, sizeof(uint32_t), SHMEM_PERMISSIONS);
-	if (shm_id == -1) {
-		rl_log(ERROR, "In read_status: failed to get shared status memory id; %d message: %s", errno, strerror(errno));
-		return FAILURE;
+	// determine number of channels
+	int num_channels = count_channels(status.conf.channels);
+	if(status.conf.channels[I1H_INDEX] > 0 && status.conf.channels[I1L_INDEX] > 0) {
+		num_channels--;
 	}
-	int64_t* web_data = (int64_t*) shmat(shm_id, NULL, 0);
-	
-	if (web_data == (void *) -1) {
-		rl_log(ERROR, "In pru_sample: failed to map shared status memory; %d message: %s", errno, strerror(errno));
-		return FAILURE;
+	if(status.conf.channels[I2H_INDEX] > 0 && status.conf.channels[I2L_INDEX] > 0) {
+		num_channels--;
 	}
 	
+	// open shared memory
+	web_data = open_web_shm();
 	
 	uint8_t data_read = 0;
 	
@@ -77,13 +162,15 @@ int main(int argc, char* argv[]) {
 		
 		// get current time
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
-		int64_t time = *web_data;
+		int64_t time = web_data->time;
 		set_sem(sem_id, DATA_SEM, 1);
+		
+		
 		
 		if(time > last_time) {
 			
-			// TODO read data last_time
-			printf("reading data\n");
+			// read and print data
+			print_data(t_scale, time, last_time, num_channels);
 			
 			data_read = 1;
 		} else {
@@ -93,18 +180,16 @@ int main(int argc, char* argv[]) {
 				last_time = 0;
 			}
 			
-			printf("waiting on data\n");
 			// wait on new data
 			if(data_read == 0) {
 				if(wait_sem(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
 					// time-out or error
+					// TODO: exit failure?
 					break;
 				}
 			}
 		}
 	}
-	
-	// send data
 	
 	// unmap shared memory
 	shmdt(web_data);
