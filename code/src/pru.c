@@ -234,24 +234,28 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// NEW
 	int sem_id = -1;
-	int64_t* web_data = (int64_t*) -1;
+	struct web_shm* web_data = (struct web_shm*) -1;
 	
 	if (conf->enable_web_server == 1) {
 		// semaphores
 		sem_id =  create_sem();
 		set_sem(sem_id, DATA_SEM, 1);
-		// shared memory (TODO: function?)
-		int shm_id = shmget(SHMEM_DATA_KEY, sizeof(long), IPC_CREAT | SHMEM_PERMISSIONS);
-		if (shm_id == -1) {
-			rl_log(ERROR, "In pru_sample: failed to get shared data memory id; %d message: %s", errno, strerror(errno));
-			return FAILURE;
-		}
-		web_data = (int64_t*) shmat(shm_id, NULL, 0);
 		
-		if (web_data == (void *) -1) {
-			rl_log(ERROR, "In pru_sample: failed to map shared data memory; %d message: %s", errno, strerror(errno));
-			return FAILURE;
+		// shared memory
+		web_data = create_web_shm();
+		int i;
+		int num_web_channels = count_channels(conf->channels);
+		if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
+			num_web_channels--;
 		}
+		if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
+			num_web_channels--;
+		}
+		int web_buffer_size = WEB_BUFFER_SIZE*num_web_channels*sizeof(int32_t);
+		for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
+			reset_buffer(&web_data->buffer[i], web_buffer_size);
+		}
+		
 	}
 	
 	
