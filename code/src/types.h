@@ -53,6 +53,8 @@
 #define PID_FILE		"/var/run/rocketlogger.pid"
 #define LOG_FILE		"/var/www/log/log.txt"
 
+#define MAX_LOG_FILE_SIZE 1000000 // log file size in bytes
+
 #define SHMEM_STATUS_KEY 1111 // TODO: usefull key
 #define SHMEM_DATA_KEY 4443
 
