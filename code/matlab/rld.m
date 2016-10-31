@@ -383,6 +383,10 @@ classdef rld
         % get channel data
         function values = get_data(obj, channel)
             
+            if nargin == 1
+                channel = obj.get_channels();
+            end
+            
             assert(iscell(channel), 'Channel argument has to be of type cell array');
             
             num_channels = numel(channel);
