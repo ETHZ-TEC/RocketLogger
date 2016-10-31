@@ -13,7 +13,7 @@ void rl_reset_calibration() {
 // get current data (used for webserver)
 int rl_get_data() { // TODO: use timeout
 	
-	float data[WEB_BUFFER_SIZE][NUMBER_WEB_CHANNELS];
+	float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
 	
 	// write ready to control fifo
 	int ready = 1;
@@ -23,13 +23,13 @@ int rl_get_data() { // TODO: use timeout
 	
 	// read data fifo (in blocking mode)
 	int fifo_fd = open(FIFO_FILE, O_RDONLY);
-	read(fifo_fd, &data[0][0],  sizeof(float) * WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS);
+	read(fifo_fd, &data[0][0],  sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
 	close(fifo_fd);
 	
 	// print buffer
 	int i;
 	for (i=0; i<WEB_BUFFER_SIZE; i++) {
-		print_json(data[i], NUMBER_WEB_CHANNELS);
+		print_json(data[i], NUM_WEB_CHANNELS);
 	}
 	
 	return SUCCESS;

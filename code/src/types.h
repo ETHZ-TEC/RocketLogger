@@ -82,6 +82,12 @@
 #define DIGIN5_BIT 4
 #define DIGIN6_BIT 8
 
+// WEB
+#define WEB_BUFFER_SIZE 100
+#define NUM_WEB_CHANNELS 6
+
+
+
 // enumerations TODO: typedefs
 
 // PRU 
