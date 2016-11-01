@@ -40,7 +40,7 @@ PrefsRevisionGUID=
 
 [Document1]
 DocumentPath=top.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=0
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -57,7 +57,7 @@ DocumentUniqueId=YTGDVYOH
 
 [Document2]
 DocumentPath=cape.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=200
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -91,7 +91,7 @@ DocumentUniqueId=SJSKRXRC
 
 [Document4]
 DocumentPath=adc.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=100
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -108,7 +108,7 @@ DocumentUniqueId=RALEHPDJ
 
 [Document5]
 DocumentPath=current_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=300
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -125,7 +125,7 @@ DocumentUniqueId=TRSJLDGV
 
 [Document6]
 DocumentPath=voltage_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=500
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -142,7 +142,7 @@ DocumentUniqueId=XSNVNKUW
 
 [Document7]
 DocumentPath=digital_voltage_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=600
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -210,7 +210,7 @@ DocumentUniqueId=SFPYFWOM
 
 [Document11]
 DocumentPath=range_valid_stretching.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=700
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
