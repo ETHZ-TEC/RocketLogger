@@ -1,4 +1,4 @@
-#define _FILE_OFFSET_BITS 64
+//#define _FILE_OFFSET_BITS 64
 
 #include "pru.h"
 
@@ -214,20 +214,12 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
-	// TEST -> TODO: remove
-	FILE* test = fopen("/home/test.rld", "w+");
-	if(test == NULL) {
-		rl_log(ERROR, "failed to open data-file");
-		return FAILURE;
-	}
-	
-	
-	
 	// STATE
 	status.state = RL_RUNNING;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	status.conf = *conf;
+	write_status(&status);
 	
 	
 	
@@ -239,6 +231,31 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// WEBSERVER
+	
+	// NEW
+	int sem_id = -1;
+	int64_t* web_data = (int64_t*) -1;
+	
+	if (conf->enable_web_server == 1) {
+		// semaphores
+		sem_id =  create_sem();
+		set_sem(sem_id, DATA_SEM, 1);
+		// shared memory (TODO: function?)
+		int shm_id = shmget(SHMEM_DATA_KEY, sizeof(long), IPC_CREAT | SHMEM_PERMISSIONS);
+		if (shm_id == -1) {
+			rl_log(ERROR, "In pru_sample: failed to get shared data memory id; %d message: %s", errno, strerror(errno));
+			return FAILURE;
+		}
+		web_data = (int64_t*) shmat(shm_id, NULL, 0);
+		
+		if (web_data == (void *) -1) {
+			rl_log(ERROR, "In pru_sample: failed to map shared data memory; %d message: %s", errno, strerror(errno));
+			return FAILURE;
+		}
+	}
+	
+	
+	// OLD
 	int fifo_fd = -1;
 	int control_fifo = -1;
 	
@@ -289,17 +306,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// FILE STORING
 	
-	// old file header
-	struct header file_header;
-	if(conf->file_format != NO_FILE) {
-		setup_header(&file_header, conf, &pru, pru_sample_rate);
-		// store header
-		store_header(data, &file_header, conf);
-	}
-	
-	
-	
-	// file header lead-in TODO: update_header_new function
+	// file header lead-in
 	struct rl_file_header file_header_new;
 	setup_lead_in(&(file_header_new.lead_in), conf);
 
@@ -313,7 +320,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// store header
 	if(conf->file_format != NO_FILE) {
-		store_header_new(test, &file_header_new);
+		store_header_new(data, &file_header_new);
 	}
 	
 	
@@ -394,18 +401,16 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// store the buffer
 		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
-		store_buffer_new(test, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		//if(conf->file_format != NO_FILE) {
+			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
+		//}
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
 			file_header_new.lead_in.data_block_count = i+1 - buffer_lost;
 			file_header_new.lead_in.sample_count += samples_buffer;
-			update_header(test, &file_header_new);
-			
-			// OLD
-			file_header.number_samples += samples_buffer;
-			update_sample_number(data, &file_header, conf);
+			update_header(data, &file_header_new);
 			
 		}
 		
@@ -433,19 +438,20 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	}
 	
 	
-	
-	// TEST -> TODO: remove
-	fclose(test);
-	
-	
-	
-	
 	// PRU FINISH (unmap memory)
 	unmap_pru_memory(buffer0);
 	
 	
-	
 	// WEBSERVER FINISH
+	
+	// NEW
+	// unmap shared memory
+	if (conf->enable_web_server == 1) {
+		remove_sem(sem_id);
+		shmdt(web_data);
+	}
+	
+	// OLD
 	// close FIFOs
 	if (conf->enable_web_server == 1) {
 		close(fifo_fd);
@@ -458,8 +464,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(conf->mode == METER) {
 		meter_stop();
 	}
-	
-	
 	
 	// STATE
 	if(status.state == RL_ERROR) {

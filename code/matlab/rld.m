@@ -2,9 +2,8 @@ classdef rld
     %RL_MEASUREMENT Summary of this class goes here
     %   Detailed explanation goes here
     
-    % TODO: check decimate on range valid
-    % TODO: check performance
-    % TODO: loop performance
+    % TODO: loop performance (preallocation)
+    % TODO: unfull buffer size
     
     properties (Constant)
         % TODO: rl_types here?
@@ -48,7 +47,7 @@ classdef rld
 
             % check magic number
             [magic, bytes_read] = fread(file, 1, 'uint32');
-            assert(magic == RL_FILE_MAGIC && bytes_read > 0, 'File is no correct RocketLogger data file');
+            assert(bytes_read > 0 && magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
 
             % check file version
             file_version = fread(file, 1, 'uint16');
@@ -216,8 +215,12 @@ classdef rld
                 end
                 
                 % merge buffers
-                digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
-                valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
+                if digital_inputs_count > 0
+                    digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
+                end
+                if range_valid_count > 0
+                    valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
+                end
                 vals(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_values;
 
             end
@@ -250,7 +253,7 @@ classdef rld
         end 
         
         % plotting
-        function plot(obj, time, pretty_plot, varargin )
+        function plot(obj, channel, time, pretty_plot )
             % constants
             rl_types;
             
@@ -264,13 +267,14 @@ classdef rld
             separate_axis = true;
             
             % selective plot
-            if nargin > 3
-                num_channels = length(varargin);
+            if nargin > 1
+                assert(iscell(channel), 'Channel argument has to be of type cell array');
+                num_channels = numel(channel);
                 plot_channels = zeros(1,num_channels);
                 for i=1:num_channels
-                    plot_channels(i) =  channel_index(obj, varargin{i});
-                    if channel_index(obj, varargin{i}) < 1
-                        error(['Channel ', varargin{i}, ' not found']);
+                    plot_channels(i) =  channel_index(obj, channel{i});
+                    if channel_index(obj, channel{i}) < 1
+                        error(['Channel ', channel{i}, ' not found']);
                     end
                 end
             else
@@ -289,10 +293,11 @@ classdef rld
             grid on;
             
             % time interpolation
-            points = 0:(obj.header.data_block_count - 1);
-            interp_points = (0:(obj.header.sample_count - 1)) / obj.header.data_block_size;
             if time
-                t = interp1(points, obj.time, interp_points);
+                points = 0:obj.header.data_block_count;
+                temp_time = [obj.time; obj.time(end) + seconds(1)];
+                interp_points = (0:(obj.header.sample_count-1)) / obj.header.data_block_size;
+                t = interp1(points, temp_time, interp_points);
             else
                 t = (1:obj.header.sample_count)/obj.header.sample_rate;
             end
@@ -378,23 +383,23 @@ classdef rld
         % get channel data
         function values = get_data(obj, channel)
             
-            ch_ind = channel_index(obj, channel);
-            if ch_ind > 0
-                values = obj.channels(ch_ind).values;
-            else
-                values = nan;
-                warning('No such channel found');
+            if nargin == 1
+                channel = obj.get_channels();
             end
-%             for i=1:length(obj.channels(1,:))
-%                 if strcmp(channel, obj.channels(i).name) == 1
-%                     values = obj.channels(i).values;
-%                     break;
-%                 end
-%                 values = nan;
-%             end
-%             if isnan(values)
-%                 warning('No such channel found');
-%             end
+            
+            assert(iscell(channel), 'Channel argument has to be of type cell array');
+            
+            num_channels = numel(channel);
+            values = nan(obj.header.sample_count, num_channels);
+            
+            for i=1:num_channels
+                ch_ind = channel_index(obj, channel{i});
+                if ch_ind > 0
+                    values(:,i) = obj.channels(ch_ind).values;
+                else
+                    error(['No channel ', channel{i}, ' found']);
+                end
+            end
         end
         
         % convert to old format (for backward comptability)
@@ -465,45 +470,64 @@ classdef rld
         function obj = merge_channels(obj, low, high)
             rl_types;
             
-            low_ind = channel_index(obj, low);
-            high_ind = channel_index(obj, high);
-            
-            if low_ind < 1 || high_ind < 1
-                error('One channel not valid');
+            if nargin == 1
+                num_channels_to_merge = 2;
+                low_ind(1) = channel_index(obj, 'I1L');
+                high_ind(1) = channel_index(obj, 'I1H');
+                low_ind(2) = channel_index(obj, 'I2L');
+                high_ind(2) = channel_index(obj, 'I2H');
+                
+                merged_name = {'I1', 'I2'};
+            else
+                num_channels_to_merge = 1;
+                low_ind = channel_index(obj, low);
+                high_ind = channel_index(obj, high);
+                
+                merged_name = {[low, '_', high]};
             end
-            if obj.channels(low_ind).valid_data_channel == NO_VALID_CHANNEL
-                error('Low range has no valid data');
+            
+            for i=1:num_channels_to_merge
+                
+                
+
+                if low_ind(i) < 1 || high_ind(i) < 1
+                    error('One channel not valid');
+                end
+                if obj.channels(low_ind(i)).valid_data_channel == NO_VALID_CHANNEL
+                    error('Low range has no valid data');
+                end
+
+                % filter range valid data
+                filter_size = 2*RANGE_MARGIN + 1;
+                filter = ones(1, filter_size);
+                range_valid = ~(conv(double(~obj.channels(low_ind(i)).valid), filter) > 0);
+                range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
+
+                % set properties
+                new_channel_ind = length(obj.channels) + 1;
+                unit = RL_UNIT_AMPERE;
+                unit_text = UNIT_NAMES(unit+1);
+                channel_scale = 0; % TODO
+                data_size = 0; % TODO
+                valid_data_channel = NO_VALID_CHANNEL;
+                name = [merged_name{i}];
+                if channel_index(obj, name) > 0
+                    error(['Channel name ', name, ' already used']);
+                end
+                valid = 0;
+
+                % merge values
+                values = obj.channels(low_ind(i)).values .* range_valid + obj.channels(high_ind(i)).values .* ~range_valid;
+
+
+                % add new channel
+                obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
+                    'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
+                obj.header.channel_count = obj.header.channel_count  + 1;
+            
             end
-            
-            % filter range valid data
-            filter_size = 2*RANGE_MARGIN + 1;
-            filter = ones(1, filter_size);
-            range_valid = ~(conv(double(~obj.channels(low_ind).valid), filter) > 0);
-            range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
-            
-            % set properties
-            new_channel_ind = length(obj.channels) + 1;
-            unit = RL_UNIT_AMPERE;
-            unit_text = UNIT_NAMES(unit+1);
-            channel_scale = 0; % TODO
-            data_size = 0; % TODO
-            valid_data_channel = NO_VALID_CHANNEL;
-            name = [low, '_' ,high];
-            if channel_index(obj, name) > 0
-                error('Channels already merged');
-            end
-            valid = 0;
-            
-            % merge values
-            values = obj.channels(low_ind).values .* range_valid + obj.channels(high_ind).values .* ~range_valid;
-            
-            
-            % add new channel
-            obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
-                'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
-            obj.header.channel_count = obj.header.channel_count  + 1;
-            
         end
+        
         
     end 
     

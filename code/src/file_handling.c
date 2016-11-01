@@ -200,7 +200,7 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
-int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf) {
+int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, int64_t* web_data) {
 	
 	int i;
 	int j;
@@ -268,7 +268,9 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		}
 		
 		// write binary channels
-		fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		if (conf->file_format != NO_FILE && num_bin_channels > 0) { // TODO: NO_FILE check in pru.c
+			fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		}
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {
@@ -289,6 +291,21 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 			fwrite(channel_data, sizeof(int32_t), num_channels, data);
 		}
     }
+	
+	if (conf->enable_web_server == 1) {
+		
+		// get shared memory access
+		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		// write time
+		*web_data = time_real.sec;
+		// TODO: write data
+		// release shared memory
+		set_sem(sem_id, DATA_SEM, 1);
+		
+		// notify web clients
+		int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
+		set_sem(sem_id, WAIT_SEM, num_web_clients);
+	}
 	
 	return SUCCESS;
 }
@@ -448,7 +465,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		// store timestamp
 		if (i == 0 && conf->file_format != NO_FILE) {
 			if (binary == 1) {
-				fwrite(nowtm, 4, 9, data);
+				//fwrite(nowtm, 4, 9, data);
 			} else {
 				sprintf (value_char, "%s", ctime (&nowtime));
 				value_char[strlen(value_char)-1] = '\0'; // remove \n
@@ -485,7 +502,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 		if (conf->file_format != NO_FILE) {
 			if (binary == 1) {
 				// binary
-				fwrite(line_int,4,num_channels+2,data);
+				//fwrite(line_int,4,num_channels+2,data);
 			} else {
 				// csv
 				for(j=0; j < num_channels+2; j++) {

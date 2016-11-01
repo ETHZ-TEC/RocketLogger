@@ -18,6 +18,7 @@ INSTALL_FIRMWARE_DIR = /lib/firmware
 ## binary names
 BINARY_NAME = rocketlogger
 DEAMON_NAME = rocketloggerd
+SERVER_NAME = rocketloggers
 FIRMWARE_NAME = rocketlogger_spi.bin
 
 ## source files
@@ -31,6 +32,7 @@ OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .o, $(basename $(SRC)))))
 ## target binary
 TARGET_BINARY = $(BIN_DIR)/$(BINARY_NAME)
 TARGET_DEAMON = $(BIN_DIR)/$(DEAMON_NAME)
+TARGET_SERVER = $(BIN_DIR)/$(SERVER_NAME)
 TARGET_FIRMWARE = $(BIN_DIR)/$(FIRMWARE_NAME)
 
 
@@ -92,13 +94,14 @@ LDFLAGS = $(LIBS)
 #####  TARGETS  #####
 
 ## build targets
-all:  $(BIN_DIR) $(TARGET_BINARY) $(TARGET_DEAMON) $(TARGET_FIRMWARE)
+all:  $(BIN_DIR) $(TARGET_BINARY) $(TARGET_DEAMON) $(TARGET_SERVER) $(TARGET_FIRMWARE)
 
 install: all
 	$(COPY) $(TARGET_BINARY) $(INSTALL_BIN_DIR)
 	$(COPY) $(TARGET_DEAMON) $(INSTALL_BIN_DIR)
+	$(COPY) $(TARGET_SERVER) $(INSTALL_BIN_DIR)
 	$(COPY) $(TARGET_FIRMWARE) $(INSTALL_FIRMWARE_DIR)
-	chmod 4755 $(INSTALL_BIN_DIR)/$(BINARY_NAME) $(INSTALL_BIN_DIR)/$(DEAMON_NAME)
+	chmod 4755 $(INSTALL_BIN_DIR)/$(BINARY_NAME) $(INSTALL_BIN_DIR)/$(DEAMON_NAME) $(INSTALL_BIN_DIR)/$(SERVER_NAME)
 	echo "#!/bin/bash" > /etc/init.d/rocketlogger
 	echo "$(INSTALL_BIN_DIR)/$(DEAMON_NAME) &" >> /etc/init.d/rocketlogger
 	echo "echo 31 > /sys/class/gpio/export" >> /etc/init.d/rocketlogger
@@ -116,11 +119,15 @@ uninstall:
 	update-rc.d rocketlogger remove
 	$(REMOVE) /etc/modprobe.d/rl_pru.conf
 
-$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rl_deamon.o, $(OBJ))
+$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rl_deamon.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 	
-$(TARGET_DEAMON): $(filter-out $(OBJ_DIR)/rocketlogger.o, $(OBJ))
+$(TARGET_DEAMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o, $(OBJ))
+	@$(MAKEDIR) $(@D)
+	$(CXX) $(LDFLAGS) -o $@ $^
+	
+$(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_deamon.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 	

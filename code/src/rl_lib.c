@@ -100,7 +100,14 @@ void rl_print_status(struct rl_status* status, int web) {
 			printf("\nRocketLogger Status: RUNNING\n");
 		}
 		rl_print_config(&(status->conf), web);
-		printf("  Samples taken:   %d\n\n", status->samples_taken);
+		if (web == 1) {
+			// TODO:
+			//printf("%d\n", status->samples_taken);
+			
+		} else {
+			printf("  Samples taken:   %d\n\n", status->samples_taken);
+		}
+		
 	}
 }
 

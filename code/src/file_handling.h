@@ -6,6 +6,7 @@
 #include "types.h"
 #include "rl_file.h"
 #include "util.h"
+#include "sem.h"
 
 
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address" // TODO: move to types.h?
@@ -42,15 +43,15 @@
 
 // FUNCTIONS
 
-void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate);
-int store_header(FILE* data, struct header* file_header, struct rl_conf* conf);
-int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf);
+//void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate);
+//int store_header(FILE* data, struct header* file_header, struct rl_conf* conf);
+//int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf);
 
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
 void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf);
 void store_header_new(FILE* data, struct rl_file_header* file_header);
 void update_header(FILE* data, struct rl_file_header* file_header);
-int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf);
+int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, int64_t* web_data);
 
 int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf);
 int store_web_data(int fifo_fd, int control_fifo, float* buffer);
