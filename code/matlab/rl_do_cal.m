@@ -4,14 +4,14 @@ if ~exist('createPlots', 'var')
     createPlots = 0;
 end
 
-rld_il1 = rld('C:\Users\user\Desktop\data\20161031_cal_il1.rld');
-rld_il2 = rld('C:\Users\user\Desktop\data\20161031_cal_il2.rld');
+rld_il1 = rld('C:\Users\user\Desktop\data\20161102_cal_i1l_auto.rld');
+rld_il2 = rld('C:\Users\user\Desktop\data\20161102_cal_i2l_auto.rld');
 rld_ih = rld('C:\Users\user\Desktop\data\20161101_cal_ih.rld');
 rld_v = rld('C:\Users\user\Desktop\data\20161027_cal_v_auto_500ms.rld');
 
 
-values_i1l = rld_il1.get_data({'I1L_valid','I2L_valid','I1L'});
-values_i2l = rld_il2.get_data({'I1L_valid','I2L_valid','I2L'});
+values_i1l = rld_il1.get_data({'I1L_valid','I1L_valid','I1L'});
+values_i2l = rld_il2.get_data({'I2L_valid','I2L_valid','I2L'});
 
 values_i1h = rld_ih.get_data({'I1H','I1H','I1H'});
 values_i2h = rld_ih.get_data({'I2H','I2H','I2H'});

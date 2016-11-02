@@ -21,18 +21,17 @@ i2h = i2h / scale(6);
 i2m = i2m / scale(7);
 i2l = i2l / scale(8);
 
-v_step = 50000;                    % actual steps are about 80k
+v_step = 80e3;                    % actual steps are about 80k
 v_step_ideal = 100000;
 
-il_step = 30000;                   % actual steps are about 45k
+il_step = 45e3;                   % actual steps are about 45k
 il_step_ideal = 2000000;
 
-im_step = 30e3;                    % actual steps are about 40k
-im_step_ideal = 700000;
-
-ih_step = 7.5e3;                   % actual steps are about 11k
+ih_step = 11e3;                   % actual steps are about 11k
 ih_step_ideal = 2000000;
 ih_max = 100e6;
+
+min_stable_samples = 200;
 
 % init
 scales = zeros(1,10);
@@ -54,7 +53,7 @@ avg_points = zeros(4,num_points);
 % average and fitting
 for i=1:4
     disp(['Voltage Channel: ', int2str(i)]);
-    avg_points(i,:) = average_points(v(:,i+2), num_points, v_step);
+    avg_points(i,:) = average_points(v(:,i+2), num_points, v_step, min_stable_samples);
     [scales(v_indices(i)), offsets(v_indices(i)), ~ ] = lin_fit(avg_points(i,:),v_ideal);
     residual(i,:) = (scales(v_indices(i))*avg_points(i,:)+offsets(v_indices(i))-v_ideal)*1e-6;
 end
@@ -80,11 +79,11 @@ avg_points = zeros(2,num_points);
 
 % average and fitting
 disp('Current Channel 1, LOW');
-avg_points(1,:) = average_points(i1l(:,3), num_points, il_step);
+avg_points(1,:) = average_points(i1l(:,3), num_points, il_step, min_stable_samples);
 [scales(il_indices(1)), offsets(il_indices(1)), ~ ] = lin_fit(avg_points(1,:),il_ideal);
 
 disp('Current Channel 2, LOW');
-avg_points(2,:) = average_points(i2l(:,3), num_points, il_step);
+avg_points(2,:) = average_points(i2l(:,3), num_points, il_step, min_stable_samples);
 [scales(il_indices(2)), offsets(il_indices(2)), ~ ] = lin_fit(avg_points(2,:),il_ideal);
 
 residual = [];
@@ -95,38 +94,6 @@ if plotPareto ~= 0
     title('Current Low Pareto Optimal Error Numbers');
 end
 
-
-%% Medium Currents
-
-
-
-% indices in all channels
-im_indices = [2,7];
-
-% ideal values
-tmp1 = -35000000:im_step_ideal:(35000000-im_step_ideal);
-tmp2 = 35000000:-im_step_ideal:-35000000;
-im_ideal = horzcat(tmp1, tmp2);
-
-% init
-avg_points = zeros(2,num_points);
-
-% average and fitting
-disp('Current Channel 1, MED');
-avg_points(1,:) = average_points(i1m(:,3), num_points, im_step);
-[scales(im_indices(1)), offsets(im_indices(1)), ~ ] = lin_fit(avg_points(1,:),im_ideal);
-
-disp('Current Channel 2, MED');
-avg_points(2,:) = average_points(i2m(:,3), num_points, im_step);
-[scales(im_indices(2)), offsets(im_indices(2)), ~ ] = lin_fit(avg_points(2,:),im_ideal);
-
-residual = [];
-residual(1,:) = (scales(im_indices(1))*avg_points(1,:)+offsets(im_indices(1))-im_ideal)*1e-9;
-residual(2,:) = (scales(im_indices(2))*avg_points(2,:)+offsets(im_indices(2))-im_ideal)*1e-9;
-if plotPareto ~= 0
-    rl_pareto_error(im_ideal*1e-9, residual);
-    title('Current Medium Pareto Optimal Error Numbers');
-end
 
 %% High Currents
 
@@ -143,11 +110,11 @@ avg_points = zeros(2,num_points);
 
 % average and fitting
 disp('Current Channel 1, HIGH');
-avg_points(1,:) = average_points(i1h(:,3), num_points, ih_step);
+avg_points(1,:) = average_points(i1h(:,3), num_points, ih_step, min_stable_samples);
 [scales(ih_indices(1)), offsets(ih_indices(1)), ~ ] = lin_fit(avg_points(1,:),ih_ideal);
 
 disp('Current Channel 2, HIGH');
-avg_points(2,:) = average_points(i2h(:,3), num_points, ih_step);
+avg_points(2,:) = average_points(i2h(:,3), num_points, ih_step, min_stable_samples);
 [scales(ih_indices(2)), offsets(ih_indices(2)), ~ ] = lin_fit(avg_points(2,:),ih_ideal);
 
 residual = [];
