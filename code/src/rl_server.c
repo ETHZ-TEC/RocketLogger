@@ -29,24 +29,6 @@ struct web_shm* web_data;
 
 // functions
 
-void print_status(struct rl_status* status) {
-	printf("%d\n", status->state);
-	if(status->state == RL_RUNNING) {
-		printf("%d\n", status->conf.sample_rate);
-		printf("%d\n", status->conf.update_rate);
-		printf("%d\n", status->conf.enable_web_server);
-		printf("%d\n", status->conf.digital_inputs);
-		printf("%d\n", status->conf.file_format != NO_FILE);
-		printf("%d\n", status->conf.file_format);
-		printf("%s\n", status->conf.file_name);
-		// TODO
-		// 	channels
-		// 	fhrs
-		printf("%d\n", status->samples_taken);
-	}
-		
-}
-
 void print_json_new(int32_t data[], int length) {
 	char str[150]; // TODO: adjustable length
 	char val[20];
@@ -60,7 +42,26 @@ void print_json_new(int32_t data[], int length) {
 	printf(str);
 }
 
-void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int num_channels) {
+void print_status(struct rl_status* status) {
+	printf("%d\n", status->state);
+	if(status->state == RL_RUNNING) {
+		printf("%d\n", status->conf.sample_rate);
+		printf("%d\n", status->conf.update_rate);
+		printf("%d\n", status->conf.digital_inputs);
+		printf("%d\n", status->conf.file_format);
+		printf("%s\n", status->conf.file_name);
+		print_json_new(status->conf.channels, NUM_CHANNELS);
+		print_json_new(status->conf.force_high_channels, NUM_I_CHANNELS);
+		printf("%d\n", status->samples_taken);
+		printf("%d\n", status->conf.enable_web_server);
+		
+		// TODO: print channels for plot
+	}
+		
+}
+
+
+void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_channels) {
 	
 	// print time
 	printf("%lld\n", time);
@@ -93,7 +94,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int num_chann
 		
 		// print data
 		int j;
-		for(j=0; j<1; j++) {//WEB_BUFFER_SIZE; j++) {
+		for(j=0; j<WEB_BUFFER_SIZE; j++) {
 			print_json_new(data[j], num_channels);
 		}
 	}
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
 	// TODO: expand for multiple time scales
 	if (t_scale != 0) {
 		rl_log(WARNING, "only time scale 0 implemented");
-		t_scale == 0;
+		t_scale = 0;
 	}
 	
 	
@@ -132,7 +133,9 @@ int main(int argc, char* argv[]) {
 	// only get data, if requested and running and web enabled
 	if(state != RL_RUNNING || status.conf.enable_web_server == 0 || get_data == 0) {
 		exit(EXIT_SUCCESS);
+		printf("0\n");
 	}
+	printf("1\n");
 	
 	// print time scale
 	printf("%d\n", t_scale);
@@ -145,13 +148,13 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// determine number of channels
-	int num_channels = count_channels(status.conf.channels);
+	/*int num_channels = count_channels(status.conf.channels);
 	if(status.conf.channels[I1H_INDEX] > 0 && status.conf.channels[I1L_INDEX] > 0) {
 		num_channels--;
 	}
 	if(status.conf.channels[I2H_INDEX] > 0 && status.conf.channels[I2L_INDEX] > 0) {
 		num_channels--;
-	}
+	}*/
 	
 	// open shared memory
 	web_data = open_web_shm();
@@ -163,6 +166,7 @@ int main(int argc, char* argv[]) {
 		// get current time
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 		int64_t time = web_data->time;
+		int8_t num_channels = web_data->num_channels;
 		set_sem(sem_id, DATA_SEM, 1);
 		
 		
