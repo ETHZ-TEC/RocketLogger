@@ -200,7 +200,49 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
-int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, int64_t* web_data) {
+void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, struct rl_conf* conf) {
+	
+	int ch_in = 0;
+	int ch_out = 0;
+	
+	// TODO: only works wo IxM!! TODO: TEST
+	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
+		if(valid1 == 1) {
+			dest[ch_out++] = src[++ch_in];
+		} else {
+			dest[ch_out++] = src[ch_in++];
+		}
+		ch_in++;
+	} else if(conf->channels[I1H_INDEX] > 0 || conf->channels[I1L_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+	if(conf->channels[V1_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+	if(conf->channels[V2_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+	
+	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
+		if(valid2 == 1) {
+			dest[ch_out++] = src[++ch_in];
+		} else {
+			dest[ch_out++] = src[ch_in++];
+		}
+		ch_in++;
+	} else if(conf->channels[I2H_INDEX] > 0 || conf->channels[I2L_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+	if(conf->channels[V3_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+	if(conf->channels[V4_INDEX] > 0) {
+		dest[ch_out++] = src[ch_in++];
+	}
+}
+
+int test = 0;
+int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
 	int i;
 	int j;
@@ -208,6 +250,13 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	
 	int num_bin_channels;
 	int num_channels = count_channels(conf->channels);
+	int num_web_channels = num_channels;
+	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
+		num_web_channels--;
+	}
+	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
+		num_web_channels--;
+	}
 	
 	
 	// create timestamp
@@ -231,6 +280,15 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int32_t channel_data[num_channels];
 	
 	int value = 0;
+	
+	// data for web interface
+	int avg_number = samples_buffer / WEB_BUFFER_SIZE;
+	int64_t avg_data[num_channels];
+	memset(avg_data, 0, sizeof(int64_t) * num_channels);
+	uint8_t web_valid1 = 1;
+	uint8_t web_valid2 = 1;
+	
+	int32_t temp_web_data[WEB_BUFFER_SIZE][num_web_channels];
 
 	
 	// store buffer
@@ -256,8 +314,12 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		}
 		
 		// Mask valid info
-		uint8_t valid1 = bin_adc1 & VALID_MASK;
-		uint8_t valid2 = bin_adc2 & VALID_MASK;
+		uint8_t valid1 = (~bin_adc1) & VALID_MASK;
+		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
+		
+		// web
+		web_valid1 = web_valid1 & valid1;
+		web_valid2 = web_valid2 & valid2;
 		
 		if(conf->channels[I1L_INDEX] > 0) {
 			bin_data = bin_data | (valid1 << num_bin_channels);
@@ -268,7 +330,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		}
 		
 		// write binary channels
-		if (conf->file_format != NO_FILE && num_bin_channels > 0) { // TODO: NO_FILE check in pru.c
+		if (conf->file_format != NO_FILE && num_bin_channels > 0) {
 			fwrite(&bin_data, sizeof(uint32_t), 1, data);
 		}
 		
@@ -281,6 +343,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
 				channel_data[k] = (int) (( value + offsets[j] ) * scales[j]);
+				avg_data[k] += channel_data[k];
 				k++;
 			}
 		}
@@ -290,15 +353,46 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		if (conf->file_format != NO_FILE) {
 			fwrite(channel_data, sizeof(int32_t), num_channels, data);
 		}
+		
+		if(conf->enable_web_server == 1) {
+			if((i+1)%avg_number == 0) {
+				
+				// average
+				int j;
+				for(j=0; j<num_channels; j++) {
+					avg_data[j] /= avg_number;
+				}
+				
+				// merge_currents
+				merge_currents(web_valid1, web_valid2, temp_web_data[i/avg_number], avg_data, conf);
+				
+				// TODO: avg for buffer10 - 1000
+				
+				// reset values
+				memset(avg_data, 0, sizeof(int64_t) * num_channels);
+				web_valid1 = 1;
+				web_valid2 = 1;
+			}
+		}
     }
 	
 	if (conf->enable_web_server == 1) {
 		
 		// get shared memory access
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		
 		// write time
-		*web_data = time_real.sec;
-		// TODO: write data
+		web_data->time = time_real.sec;
+		
+		// write data to ring buffer
+		
+		
+		// TODO: remove
+		temp_web_data[0][0] = test;
+		test++;
+		buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
+		// TODO: for buffer10-1000
+		
 		// release shared memory
 		set_sem(sem_id, DATA_SEM, 1);
 		
@@ -309,100 +403,6 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	
 	return SUCCESS;
 }
-
-// HEADER
-
-void setup_header(struct header* file_header, struct rl_conf* conf, struct pru_data_struct* pru_data, int pru_sample_rate) {
-	
-	int j;
-	int MASK = 1;
-	int channels = 0;
-	for(j=0; j<NUM_CHANNELS; j++) {
-		if(conf->channels[j] > 0) {
-			channels = channels | MASK;
-		}
-		MASK = MASK << 1;
-	}
-		
-	// get header length
-	if(conf->file_format == BIN) {
-		file_header->header_length = HEADERLENGTH;
-	} else if (conf->file_format == CSV) {
-		file_header->header_length = HEADERLENGTH + 1;
-	} else {
-		rl_log(ERROR, "failed to update header, wrong file format");
-	}
-	
-	file_header->number_samples = 0; // number of samples taken
-	file_header->buffer_size = pru_data->buffer_size;
-	file_header->rate = pru_sample_rate;
-	file_header->channels = channels;
-	file_header->precision = pru_data->precision;
-	
-}
-
-// store old header // TODO: for new header
-int store_header(FILE* data, struct header* file_header, struct rl_conf* conf) {
-	
-	if (conf->file_format == BIN) {
-		fwrite(file_header, sizeof(struct header), 1, data);
-		
-	} else if (conf->file_format == CSV){
-		// information
-		fprintf(data, "Header Length:,%d\n", file_header->header_length);
-		fprintf(data, "Number Samples:,%-12d\n", file_header->number_samples);
-		fprintf(data, "Buffer Size:,%d\n", file_header->buffer_size);
-		fprintf(data, "Rate:,%d\n", file_header->rate);
-		fprintf(data, "Channels:,%d\n", file_header->channels);
-		fprintf(data, "Precision:,%d\n", file_header->precision);
-		
-		// title row
-		fprintf(data,"Time");
-		fprintf(data,",LOW1");
-		fprintf(data,",LOW2");
-		
-		// channel names
-		int i;
-		for(i=0; i<NUM_CHANNELS; i++) {
-			if(conf->channels[i] > 0) {
-				fprintf(data,",%s",channel_names[i]);
-			}
-		}
-		fprintf(data,"\n");
-	} else {
-		rl_log(ERROR, "failed to store header, wrong file format");
-		return FAILURE;
-	}
-	
-	return SUCCESS;
-}
-
-// update sample number of old header
-int update_sample_number(FILE* data, struct header* file_header, struct rl_conf* conf) {
-	
-	// store file pointer position
-	rewind(data);
-	
-	// only store header until number samples updated
-	if (conf->file_format == BIN) {
-		fwrite(file_header, 2, sizeof(int), data);
-		
-	} else if (conf->file_format == CSV){
-		fprintf(data, "Header Length:,%d\n", file_header->header_length);
-		fprintf(data, "Number Samples:,%-12d\n", file_header->number_samples);
-		
-	} else {
-		rl_log(ERROR, "failed to update header, wrong file format");
-		return FAILURE;
-	}
-	
-	fseek(data, 0, SEEK_END);
-	
-	return SUCCESS;
-}
-
-
-
 
 // FILE STORING
 
@@ -451,8 +451,8 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	
 	// webserver data
 	int avg_buffer_size = ceil_div(samples_buffer, WEB_BUFFER_SIZE); // size of buffer to average
-	float web_data[WEB_BUFFER_SIZE][NUMBER_WEB_CHANNELS];
-	memset(web_data, 0, WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS * sizeof(float)); // reset data (needed due to unfull buffer sizes)
+	float web_data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
+	memset(web_data, 0, WEB_BUFFER_SIZE * NUM_WEB_CHANNELS * sizeof(float)); // reset data (needed due to unfull buffer sizes)
 	
 	// store buffer
     for(i=0; i<samples_buffer; i++){
@@ -544,7 +544,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 	
 	// only write to data fifo, if webserver online
 	if(check > 0) {
-		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS);
+		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
 	}
 	
 	// count number of tokens in control fifo (count will be the number of listeners) ---> not working very nice
@@ -561,7 +561,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 	// write data for every user once
 	int i;
 	for(i=0; i<count; i++) {
-		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS);
+		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
 	}*/
 	
 	return SUCCESS;

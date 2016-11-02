@@ -53,6 +53,8 @@
 #define PID_FILE		"/var/run/rocketlogger.pid"
 #define LOG_FILE		"/var/www/log/log.txt"
 
+#define MAX_LOG_FILE_SIZE 1000000 // log file size in bytes
+
 #define SHMEM_STATUS_KEY 1111 // TODO: usefull key
 #define SHMEM_DATA_KEY 4443
 
@@ -79,6 +81,12 @@
 #define DIGIN4_BIT 2
 #define DIGIN5_BIT 4
 #define DIGIN6_BIT 8
+
+// WEB
+#define WEB_BUFFER_SIZE 100
+#define NUM_WEB_CHANNELS 6
+
+
 
 // enumerations TODO: typedefs
 
@@ -113,7 +121,11 @@ enum rl_state {
 	RL_ERROR = -1
 };
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
-enum rl_file_format {NO_FILE, CSV, BIN};
+enum rl_file_format {
+	NO_FILE = 0,
+	CSV = 1,
+	BIN = 2
+};
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 

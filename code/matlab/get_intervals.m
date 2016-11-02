@@ -1,61 +1,64 @@
-function [ intervals ] = get_intervals( points , num_points, step_size)
-global failCount;
+function [ intervals ] = get_intervals( points , num_points, expected_step_size, min_stable_points)
 
-margin = 10;
+% magic constants
+margin = 20;
+step_size = expected_step_size * 0.2;
+stable_pp_max = expected_step_size * 0.05;
+
 intervals = zeros(2,num_points);
 
-% find starting point
+%% find starting point
 i=1;
-v0 = points(i);
-v1 = points(i);
-while(abs(v0-v1) < step_size) % larger first step ( to avoid noise triggering )
-%TODO: why is num_points used here?! while(abs(v0-v1) < num_points/10 * step_size) % larger first step ( to avoid noise triggering )
-    i = i+1;
-    v0 = points(i);
-end
-intervals(1,1) = i + margin;
-
-% find all transitions
-for j=1:num_points-1
-    i = intervals(1,j) + margin;
-    v0 = points(i);
-    v1 = points(i);
-    while(abs(v0-v1) < step_size && i <= length(points))
-        i = i+1;
-        v1 = points(i);
-    end
-    assert(i <= length(points), ['One of the input waveforms does not have enough transitions: ', num2str(j)]);
-
-    intervals(2,j) = i - margin;
-    intervals(1,j+1) = i + margin;
-end
-
-% find end point
-j = j+1;
-i = intervals(1,j) + margin;
 v0 = points(i);
 v1 = points(i);
 while(abs(v0-v1) < step_size)
     i = i+1;
-    v1 = points(i); % IF YOU GET AN ERROR HERE: you may probably have chosen wrong values on the SMU
+    v0 = points(i);
 end
 
-intervals(2,j) = i - margin;
+%% find all transitions
+j = 1;
+i = i + margin;
 
-% sanity check
-for i=1:num_points
-    var = abs(min(points(intervals(1,i):intervals(2,i))) - max(points(intervals(1,i):intervals(2,i))));
-    if var > step_size/3
-        figure;
-        plot(points(intervals(1,i):intervals(2,i)));
-        disp(['Warning: Sanity check failed. Large variation on interval ', int2str(i), ': x = [', int2str(intervals(1,i)),',', int2str(intervals(2,i)),'].']);
-        disp(['   Variation is: ' , int2str(var)]);
-        
-        % avoid 200 plots
-        failCount = failCount + 1;
-        assert(failCount < 10, 'To many sanity checks failed');
+while (i <= length(points) && j <= num_points)
+    
+    % find stable region
+    while( i+min_stable_points <= length(points) && max(points(i:i+min_stable_points)) - ...
+            min(points(i:i+min_stable_points)) > stable_pp_max)
+        i = i + 1;
+    end
+    i = i + margin;
+    if i+min_stable_points > length(points)
+        break;
+    end
+    intervals(1, j) = i;
+    stable_value = mean(points(i:i+min_stable_points));
+    
+    % find end of stable region
+    while(i <= length(points) && abs(points(i) - stable_value) < stable_pp_max/2)
+        i = i+1;
+    end
+    intervals(2,j) = i - margin;
+    j = j + 1;
+    
+    % find transition
+    while(i <= length(points) && abs(points(i) - stable_value) < step_size)
+        i = i+1;
     end
 end
+
+% Debug Plot:
+%
+% figure;
+% plot(points);
+% y0 = min(points);
+% y1 = max(points);
+% for i = 1:size(intervals, 2)
+%     line([intervals(1,i) intervals(1,i)],[y0 y1],'LineWidth',1, 'Color', 'Black');
+%     line([intervals(2,i) intervals(2,i)],[y0 y1],'LineWidth',1, 'Color', 'Green');
+% end
+
+assert(j == num_points + 1, 'Could not find enough valid regions in the provided data.');
 
 end
 

@@ -184,8 +184,8 @@ void rl_log(rl_log_type type, const char* format, ... ) {
 	
 	// open/init file
 	FILE* log_fp;
-	if(log_created == 0) {
-		log_created = 1;
+	if(access( LOG_FILE, F_OK ) == -1) {
+		// create file
 		log_fp = fopen(LOG_FILE, "w");
 		if (log_fp == NULL) {
 			printf("Error: failed to open log file\n");
@@ -199,6 +199,16 @@ void rl_log(rl_log_type type, const char* format, ... ) {
 			return;
 		}
 	}
+	
+	// reset, if file too large
+	int file_size = ftell(log_fp);
+	if (file_size > MAX_LOG_FILE_SIZE) {
+		fclose(log_fp);
+		fopen(LOG_FILE, "w");
+		fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
+	}
+	
+	
 	
 	// print date/time
 	struct timeval current_time;

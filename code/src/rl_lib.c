@@ -13,7 +13,7 @@ void rl_reset_calibration() {
 // get current data (used for webserver)
 int rl_get_data() { // TODO: use timeout
 	
-	float data[WEB_BUFFER_SIZE][NUMBER_WEB_CHANNELS];
+	float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
 	
 	// write ready to control fifo
 	int ready = 1;
@@ -23,13 +23,13 @@ int rl_get_data() { // TODO: use timeout
 	
 	// read data fifo (in blocking mode)
 	int fifo_fd = open(FIFO_FILE, O_RDONLY);
-	read(fifo_fd, &data[0][0],  sizeof(float) * WEB_BUFFER_SIZE * NUMBER_WEB_CHANNELS);
+	read(fifo_fd, &data[0][0],  sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
 	close(fifo_fd);
 	
 	// print buffer
 	int i;
 	for (i=0; i<WEB_BUFFER_SIZE; i++) {
-		print_json(data[i], NUMBER_WEB_CHANNELS);
+		print_json(data[i], NUM_WEB_CHANNELS);
 	}
 	
 	return SUCCESS;
@@ -84,7 +84,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 	}
 }
 
-void rl_print_status(struct rl_status* status, int web) {
+void rl_print_status(struct rl_status* status, int web) { // TODO: remove web
 	
 	if(status->state == RL_OFF) {
 		if (web == 1) {
@@ -112,7 +112,7 @@ void rl_print_status(struct rl_status* status, int web) {
 }
 
 // get status of RL (returns 1 when running)
-enum rl_state rl_get_status(int print, int web) {
+enum rl_state rl_get_status(int print, int web) { // TODO: remove web
 	
 	struct rl_status status;
 	
@@ -133,6 +133,22 @@ enum rl_state rl_get_status(int print, int web) {
 	}
 	
 	return status.state;
+}
+
+int rl_read_status(struct rl_status* status) {
+	
+	// get pid
+	pid_t pid = get_pid();
+	if(pid == FAILURE || kill(pid, 0) < 0) {
+		// process not running
+		// TODO: handle ERROR
+		status->state = RL_OFF;
+	} else {
+		// read status
+		read_status(status);
+	}
+	
+	return status->state;
 }
 
 
