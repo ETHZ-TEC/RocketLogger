@@ -40,7 +40,7 @@ PrefsRevisionGUID=
 
 [Document1]
 DocumentPath=top.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=0
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -57,7 +57,7 @@ DocumentUniqueId=YTGDVYOH
 
 [Document2]
 DocumentPath=cape.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=200
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -74,7 +74,7 @@ DocumentUniqueId=UGXHLPTY
 
 [Document3]
 DocumentPath=psu.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=400
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -91,7 +91,7 @@ DocumentUniqueId=SJSKRXRC
 
 [Document4]
 DocumentPath=adc.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=100
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -125,7 +125,7 @@ DocumentUniqueId=TRSJLDGV
 
 [Document6]
 DocumentPath=voltage_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=500
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -142,7 +142,7 @@ DocumentUniqueId=XSNVNKUW
 
 [Document7]
 DocumentPath=digital_voltage_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=600
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -210,7 +210,7 @@ DocumentUniqueId=SFPYFWOM
 
 [Document11]
 DocumentPath=range_valid_stretching.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=700
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -294,194 +294,198 @@ GenerateClassCluster=0
 DocumentUniqueId=NIQBRMKK
 
 [GeneratedDocument1]
-DocumentPath=Project Outputs for Cape\BOM\Bill of Materials-Cape.xls
+DocumentPath=Project Outputs for Cape\Test Points\Assembly Testpoint Report for PCB.csv
 DItemRevisionGUID=
 
 [GeneratedDocument2]
-DocumentPath=Project Outputs for Cape\ERC\Cape.html
+DocumentPath=Project Outputs for Cape\BOM\Bill of Materials-Cape.xls
 DItemRevisionGUID=
 
 [GeneratedDocument3]
-DocumentPath=Project Outputs for Cape\Design Rule Check - PCB.html
+DocumentPath=Project Outputs for Cape\ERC\Cape.html
 DItemRevisionGUID=
 
 [GeneratedDocument4]
-DocumentPath=Project Outputs for Cape\Test Points\Fabrication Testpoint Report for PCB.csv
+DocumentPath=Project Outputs for Cape\Design Rule Check - PCB.html
 DItemRevisionGUID=
 
 [GeneratedDocument5]
-DocumentPath=Project Outputs for Cape\NC Drill\PCB.DRR
+DocumentPath=Project Outputs for Cape\Test Points\Fabrication Testpoint Report for PCB.csv
 DItemRevisionGUID=
 
 [GeneratedDocument6]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.EXTREP
+DocumentPath=Project Outputs for Cape\NC Drill\PCB.DRR
 DItemRevisionGUID=
 
 [GeneratedDocument7]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB.EXTREP
+DocumentPath=Project Outputs for Cape\Gerber\PCB.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument8]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.G1
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument9]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.G2
+DocumentPath=Project Outputs for Cape\Gerber\PCB.G1
 DItemRevisionGUID=
 
 [GeneratedDocument10]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.G3
+DocumentPath=Project Outputs for Cape\Gerber\PCB.G2
 DItemRevisionGUID=
 
 [GeneratedDocument11]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.G4
+DocumentPath=Project Outputs for Cape\Gerber\PCB.G3
 DItemRevisionGUID=
 
 [GeneratedDocument12]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GBL
+DocumentPath=Project Outputs for Cape\Gerber\PCB.G4
 DItemRevisionGUID=
 
 [GeneratedDocument13]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GBO
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GBL
 DItemRevisionGUID=
 
 [GeneratedDocument14]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GBP
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GBO
 DItemRevisionGUID=
 
 [GeneratedDocument15]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GBS
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GBP
 DItemRevisionGUID=
 
 [GeneratedDocument16]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GD1
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GBS
 DItemRevisionGUID=
 
 [GeneratedDocument17]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GG1
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GD1
 DItemRevisionGUID=
 
 [GeneratedDocument18]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GM4
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GG1
 DItemRevisionGUID=
 
 [GeneratedDocument19]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GTL
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GM4
 DItemRevisionGUID=
 
 [GeneratedDocument20]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GTO
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GTL
 DItemRevisionGUID=
 
 [GeneratedDocument21]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GTP
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GTO
 DItemRevisionGUID=
 
 [GeneratedDocument22]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.GTS
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GTP
 DItemRevisionGUID=
 
 [GeneratedDocument23]
-DocumentPath=Project Outputs for Cape\DRC\PCB.html
+DocumentPath=Project Outputs for Cape\Gerber\PCB.GTS
 DItemRevisionGUID=
 
 [GeneratedDocument24]
-DocumentPath=Project Outputs for Cape\NC Drill\PCB.LDP
+DocumentPath=Project Outputs for Cape\DRC\PCB.html
 DItemRevisionGUID=
 
 [GeneratedDocument25]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.REP
+DocumentPath=Project Outputs for Cape\NC Drill\PCB.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument26]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB.REP
+DocumentPath=Project Outputs for Cape\Gerber\PCB.REP
 DItemRevisionGUID=
 
 [GeneratedDocument27]
-DocumentPath=Project Outputs for Cape\Gerber\PCB.RUL
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.REP
 DItemRevisionGUID=
 
 [GeneratedDocument28]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB.RUL
+DocumentPath=Project Outputs for Cape\Gerber\PCB.RUL
 DItemRevisionGUID=
 
 [GeneratedDocument29]
-DocumentPath=Project Outputs for Cape\NC Drill\PCB.TXT
+DocumentPath=Project Outputs for Cape\GerberX2\PCB.RUL
 DItemRevisionGUID=
 
 [GeneratedDocument30]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_1.gbr
+DocumentPath=Project Outputs for Cape\NC Drill\PCB.TXT
 DItemRevisionGUID=
 
 [GeneratedDocument31]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_2.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_1.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument32]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_3.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_2.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument33]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_4.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_3.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument34]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Bot.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_4.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument35]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Top.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Bot.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument36]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Drawing_1.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Copper_Signal_Top.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument37]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Drillmap_1.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Drawing_1.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument38]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Bot.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Drillmap_1.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument39]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Top.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Bot.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument40]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Mechanical_4.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Legend_Top.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument41]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_NPTH_Drill.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Mechanical_4.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument42]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Bot.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_NPTH_Drill.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument43]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Top.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Bot.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument44]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Profile.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Paste_Top.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument45]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_PTH_Drill.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Profile.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument46]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Bot.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_PTH_Drill.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument47]
-DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Top.gbr
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Bot.gbr
 DItemRevisionGUID=
 
 [GeneratedDocument48]
+DocumentPath=Project Outputs for Cape\GerberX2\PCB_Soldermask_Top.gbr
+DItemRevisionGUID=
+
+[GeneratedDocument49]
 DocumentPath=Project Outputs for Cape\Pick Place\Pick Place for PCB.txt
 DItemRevisionGUID=
 

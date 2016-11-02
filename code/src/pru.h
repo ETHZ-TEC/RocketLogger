@@ -33,6 +33,7 @@
 #include "meter.h"
 #include "file_handling.h"
 #include "sem.h"
+#include "ipc.h"
 
 
 
