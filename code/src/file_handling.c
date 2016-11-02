@@ -205,7 +205,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	int ch_in = 0;
 	int ch_out = 0;
 	
-	// TODO: only works wo IxM!!
+	// TODO: only works wo IxM!! TODO: TEST
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		if(valid1 == 1) {
 			dest[ch_out++] = src[++ch_in];
@@ -314,8 +314,8 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		}
 		
 		// Mask valid info
-		uint8_t valid1 = bin_adc1 & VALID_MASK;
-		uint8_t valid2 = bin_adc2 & VALID_MASK;
+		uint8_t valid1 = (~bin_adc1) & VALID_MASK;
+		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
 		// web
 		web_valid1 = web_valid1 & valid1;
@@ -385,6 +385,9 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		web_data->time = time_real.sec;
 		
 		// write data to ring buffer
+		
+		
+		// TODO: remove
 		temp_web_data[0][0] = test;
 		test++;
 		buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);

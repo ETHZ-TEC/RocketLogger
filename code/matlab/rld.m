@@ -189,7 +189,7 @@ classdef rld
                 
                 k = 1;
                 for j=digital_inputs_count+1:channel_bin_count % valid data
-                    valid_values(:,k) = ~(bitand(bin_buffer_values, 2^(j-1)) > 0);
+                    valid_values(:,k) = bitand(bin_buffer_values, 2^(j-1)) > 0;
                     k = k + 1;
                 end
                 
