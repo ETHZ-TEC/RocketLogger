@@ -243,7 +243,8 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// shared memory
 		web_data = create_web_shm();
-		int i;
+		
+		// determine web channels count (merged)
 		int num_web_channels = count_channels(conf->channels);
 		if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 			num_web_channels--;
@@ -251,7 +252,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
 			num_web_channels--;
 		}
+		web_data->num_channels = num_web_channels;
+		
+		// web buffer size
 		int web_buffer_size = WEB_BUFFER_SIZE*num_web_channels*sizeof(int32_t);
+		
+		// init web buffers
+		int i;
 		for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
 			reset_buffer(&web_data->buffer[i], web_buffer_size);
 		}

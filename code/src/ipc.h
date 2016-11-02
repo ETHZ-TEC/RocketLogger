@@ -16,6 +16,7 @@ struct ringbuffer {
 
 struct web_shm {
 	int64_t time;
+	int8_t num_channels;
 	struct ringbuffer buffer[WEB_RING_BUFFER_COUNT];
 };
 
