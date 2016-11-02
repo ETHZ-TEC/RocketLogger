@@ -20,11 +20,11 @@ for j=1:num_points-1
     i = intervals(1,j) + margin;
     v0 = points(i);
     v1 = points(i);
-    while(abs(v0-v1) < step_size)
+    while(abs(v0-v1) < step_size && i <= length(points))
         i = i+1;
-        assert(i <= length(points), ['One of the input waveforms does not have enough transitions: ', num2str(j)]);
         v1 = points(i);
     end
+    assert(i <= length(points), ['One of the input waveforms does not have enough transitions: ', num2str(j)]);
 
     intervals(2,j) = i - margin;
     intervals(1,j+1) = i + margin;
