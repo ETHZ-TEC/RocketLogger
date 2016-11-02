@@ -121,7 +121,11 @@ enum rl_state {
 	RL_ERROR = -1
 };
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, DATA, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
-enum rl_file_format {NO_FILE, CSV, BIN};
+enum rl_file_format {
+	NO_FILE = 0,
+	CSV = 1,
+	BIN = 2
+};
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
