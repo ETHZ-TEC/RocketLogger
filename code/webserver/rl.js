@@ -357,6 +357,9 @@ $(function() {
 			xaxis: {
 				mode: "time",
 				show: true
+			},
+			yaxis: {
+				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Voltage [V]";}
 			}
 		});
 		
@@ -367,6 +370,9 @@ $(function() {
 			xaxis: {
 				mode: "time",
 				show: true
+			},
+			yaxis: {
+				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Current [µA]";}
 			}
 		});
 		
