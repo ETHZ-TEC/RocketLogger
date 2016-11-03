@@ -2,7 +2,7 @@
 
 #include "pru.h"
 
-int test_mode = 0;
+int test_mode = 1;
 
 
 

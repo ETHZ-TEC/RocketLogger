@@ -7,7 +7,7 @@
 #include "rl_file.h"
 #include "util.h"
 #include "sem.h"
-#include "ipc.h"
+#include "web.h"
 
 
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address" // TODO: move to types.h?
