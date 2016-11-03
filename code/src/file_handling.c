@@ -1,6 +1,6 @@
 #include "file_handling.h"
 
-char channel_names[NUM_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1H","I1M","I1L","V1","V2","I2H","I2M","I2L","V3","V4"};
+char channel_names[NUM_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1H","I1L","V1","V2","I2H","I2L","V3","V4"};
 char digital_input_names[NUM_DIGITAL_INPUTS][RL_FILE_CHANNEL_NAME_LENGTH] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
 int digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT}; // TODO: combine with meter?
 char valid_info_names[NUM_I_CHANNELS][RL_FILE_CHANNEL_NAME_LENGTH] = {"I1L_valid", "I2L_valid"};
@@ -442,7 +442,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	struct tm* nowtm = localtime(&nowtime);
 	
 	// binary data (for status and samples)
-	int line_int[NUM_CHANNELS + 2] = {0,0,0,0,0,0,0,0,0,0,0,0};
+	int line_int[NUM_CHANNELS + 2] = {0,0,0,0,0,0,0,0,0,0};
 	int value_int = 0;
 	
 	// csv data TODO: defines

@@ -315,11 +315,11 @@ void print_usage() {
 	printf("                         Possible update rates: 1, 2, 5, 10 (in Hz)\n");
 	printf("    -ch [number1,...]  Channel selection.\n");
 	printf("                       Possible channels ('-ch all' to enable all):\n");
-	printf("                         0: I1H\t\t5: I2H\n");
-	printf("                         1: I1M\t\t6: I2M\n");
-	printf("                         2: I1L\t\t7: I2L\n");
-	printf("                         3: V1 \t\t8: V3\n");
-	printf("                         4: V2 \t\t9: V4\n");
+	printf("                         0: I1H\t\t4: I2H\n");
+	//printf("                         1: I1M\t\t6: I2M\n");
+	printf("                         1: I1L\t\t5: I2L\n");
+	printf("                         2: V1 \t\t6: V3\n");
+	printf("                         3: V2 \t\t7: V4\n");
 	printf("    -fhr [0,1,2]       Force high-range.\n");
 	printf("                         0: no channel, 1: I1, 2: I2\n");
 	printf("    -f [file]          Stores data to specified file.\n");
