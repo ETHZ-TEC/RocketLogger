@@ -69,7 +69,6 @@ int parse_channels(int channels[], char* value) {
 		for(i=0; i<NUM_CHANNELS; i++) {
 			channels[i] = CHANNEL_ENABLED;
 		}
-		//memset(channels, 1, sizeof(int) * NUM_CHANNELS);
 	}else {
 		rl_log(ERROR, "wrong channel number");
 		return FAILURE;
@@ -361,7 +360,6 @@ void reset_config(struct rl_conf* conf) {
 	
 	strcpy(conf->file_name, "/var/www/data/data.rld");
 	
-	//memset(conf->channels, 1, sizeof(conf->channels)); // TODO: use define
 	int i;
 	for(i=0; i<NUM_CHANNELS; i++) {
 		conf->channels[i] = CHANNEL_ENABLED;
