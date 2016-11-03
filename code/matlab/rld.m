@@ -267,7 +267,7 @@ classdef rld
             separate_axis = true;
             
             % selective plot
-            if nargin > 1
+            if exist('channel', 'var') && strcmp(channel, 'all') ~= 1
                 assert(iscell(channel), 'Channel argument has to be of type cell array');
                 num_channels = numel(channel);
                 plot_channels = zeros(1,num_channels);
@@ -383,7 +383,7 @@ classdef rld
         % get channel data
         function values = get_data(obj, channel)
             
-            if nargin == 1
+            if ~exist('channel', 'var') || strcmp(channel, 'all') == 1
                 channel = obj.get_channels();
             end
             
