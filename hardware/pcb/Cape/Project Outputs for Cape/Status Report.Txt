@@ -1,10 +1,10 @@
-Output: Design Rules Check
-Type  : DRC
-From  : PCB Document [PCB.PcbDoc]
-   Generated File[PCB.html]
+Output: Test Point Report
+Type  : Test Points
+From  : Variant [[No Variations]] of PCB Document [PCB.PcbDoc]
+   Generated File[Assembly Testpoint Report for PCB.csv]
 
 
 Files Generated   : 1
 Documents Printed : 0
 
-Finished Output Generation At 15:11:04 On 18.10.2016
+Finished Output Generation At 14:13:39 On 03.11.2016
