@@ -1,6 +1,7 @@
-function [ avg_points ] = average_points( points, num_points, step_size)
+function [ avg_points ] = average_points( points, num_points, ...
+    expceted_step_size, min_stable_points)
 
-intervals = get_intervals( points, num_points, step_size );
+intervals = get_intervals( points, num_points, expceted_step_size, min_stable_points );
 
 num_points = length(intervals);
 avg_points = zeros(1,num_points);
