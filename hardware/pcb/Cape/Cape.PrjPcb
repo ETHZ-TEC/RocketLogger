@@ -74,7 +74,7 @@ DocumentUniqueId=UGXHLPTY
 
 [Document3]
 DocumentPath=psu.SchDoc
-AnnotationEnabled=0
+AnnotationEnabled=1
 AnnotateStartValue=400
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -108,7 +108,7 @@ DocumentUniqueId=RALEHPDJ
 
 [Document5]
 DocumentPath=current_channel.SchDoc
-AnnotationEnabled=1
+AnnotationEnabled=0
 AnnotateStartValue=300
 AnnotationIndexControlEnabled=1
 AnnotateSuffix=
@@ -257,7 +257,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=
+DocumentUniqueId=VLQLMJXW
 
 [Document14]
 DocumentPath=..\Libraries\AP2204.SchLib
@@ -309,6 +309,40 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=EIKEXPYV
+
+[Document17]
+DocumentPath=..\Libraries\TSW-107-07-L-S.PcbLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=FQQDESBK
+
+[Document18]
+DocumentPath=..\Libraries\TSW-107-07-L-S.SchLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=CGWHXMBO
 
 [GeneratedDocument1]
 DocumentPath=Project Outputs for Cape\Test Points\Assembly Testpoint Report for PCB.csv
