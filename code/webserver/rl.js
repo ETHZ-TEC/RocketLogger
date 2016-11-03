@@ -9,7 +9,7 @@ $(function() {
 		// remove -b (in c code)
 		
 		
-		// CONSTANTS (TODO: check)
+		// CONSTANTS
 		RL_RUNNING = "1";
 		RL_OFF = "0";
 		RL_ERROR = "-1";
@@ -19,7 +19,7 @@ $(function() {
 		BIN = "2";
 		
 		BUFFER_SIZE  = 100;
-		MAX_BUFFER_COUNT = 10;
+		TIME_DIV = 10;
 		
 		NUM_PLOT_CHANNELS = 6;
 		
@@ -30,6 +30,8 @@ $(function() {
 		STATUS_TIMEOUT_TIME = 3000;
 		STOP_TIMEOUT_TIME = 3000;
 		
+		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		
 		
 		
 		
@@ -37,55 +39,25 @@ $(function() {
 		var state = RL_OFF;
 		var stopping = 0;
 		var starting = 0;
-		
-		
-		
 		var timeOut;
-		
-		// ----- new variables -----
-		var reqId = 0; // TODO: something usefull
-		var plotDataLength = 0;
-		var newPlotData = [[],[],[],[],[],[]]; // TODO: rename
+		var reqId = 0; // TODO: something usefull (random?)
 		var plotEnabled = 1;
 		var tScale = 0; // TODO: dropdown menu
 		var currentTime = 0;
-		
-		
-		
-		// ----------
-		
 		var filename = "data.rld";
-		
-		var currentData = [];
-		var vData = [];
-		var iData = [];
-		timeDiv = 10;		// time span displayed
+		// data
+		var plotDataLength = 0;
+		var newPlotData = [[],[],[],[],[],[]]; // TODO: rename
 		
 		// ajax post object
 		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
 		
-		
+		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
-		isCurrent = [true, false, false, true, false, false];
+		isCurrent = [true, false, false, true, false, false];	
 		
-		var vChannels = [true, true, true, true];
-		var iChannels = [true, true, true, true, true, true];
-		//var numChannels = 0;
-		var numVChannels = 0;
-		var numIChannels = 0;
-		maxVChannels = 4;
-		maxIChannels = 2;
-		vNames = ["V1 [mV]", "V2 [mV]", "V3 [mV]", "V4 [mV]"];
-		iNames = ["I1 [uA]", "I2 [uA]"];
-		names = ["I1", "V1", "V2", "I2", "V3", "V4"];
-		
-		function newResetData() {
-			plotDataLength = 0;
-			newPlotData = [[],[],[],[],[],[]];
-			
-		}
 		
 		// UPDATE
 		
@@ -95,67 +67,6 @@ $(function() {
 			getStatus();
 			
 			timeOut = setTimeout(update, STATUS_TIMEOUT_TIME);			
-			
-		}
-		
-		function dataReceived (tempState) {
-			
-			// extract information
-			var tempTScale = tempState[12];
-			var tempTime = parseInt(tempState[13]);
-			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
-				//newRun = 1;
-				newResetData();
-			}
-			currentTime = tempTime;
-			var dataLength = parseInt(tempState[14]);
-			
-			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
-			
-			
-			// TODO:
-			/*var hours = date.getHours();
-			var minutes = "0" + date.getMinutes();
-			var seconds = "0" + date.getSeconds();
-			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
-			
-			// process data
-			if (dataLength > 0) {
-				
-				plotDataLength += dataLength;
-				
-				if(plotDataLength >= MAX_BUFFER_COUNT) {
-					// client buffer already full
-					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-						newPlotData[i] = newPlotData[i].slice((plotDataLength-MAX_BUFFER_COUNT) * BUFFER_SIZE);
-					}
-					plotDataLength = MAX_BUFFER_COUNT;
-				}
-				
-				for (var i = 0; i < dataLength * BUFFER_SIZE; i++) {
-					var tempData = JSON.parse(tempState[15 + i]);
-					var k = 0;
-					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
-						if(plotChannels[j]) {
-							if(isCurrent[j]) {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000]);
-							//newPlotData[j].push([i, tempData[k]]);
-							} else {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000000]);
-							}
-							k++;
-						}
-					}
-				}
-				updatePlot();
-			}
-			
-			document.getElementById("test").innerHTML = reqId;
-			
-			
-			
-			
-			
 			
 		}
 		
@@ -314,96 +225,73 @@ $(function() {
 		
 		// DATA HANDLING
 		
-		// fetch data from server
-		/*function fetchData() {
+		function newResetData() {
 			
-			var tempData;
-			currentData = [];
+			plotDataLength = 0;
+			newPlotData = [[],[],[],[],[],[]];
 			
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'get_data'},
+		}
+		
+		
+		function dataReceived (tempState) {
+			
+			// extract information
+			var tempTScale = tempState[12];
+			var tempTime = parseInt(tempState[13]);
+			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
+				//newRun = 1;
+				newResetData();
+			}
+			currentTime = tempTime;
+			var dataLength = parseInt(tempState[14]);
+			
+			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
+			
+			
+			// TODO:
+			/*var hours = date.getHours();
+			var minutes = "0" + date.getMinutes();
+			var seconds = "0" + date.getSeconds();
+			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
+			
+			// process data
+			if (dataLength > 0) {
 				
-				complete: function (response) {
-					$('#output').html(response.responseText);
-					tempData = JSON.parse(response.responseText);
-					for (var i = 0; i < bufferSize; i++) {
-						currentData.push(JSON.parse(tempData[i]));
+				plotDataLength += dataLength;
+				
+				if(plotDataLength >= TIME_DIV) {
+					// client buffer already full
+					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
+						newPlotData[i] = newPlotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
 					}
-					
-					// debug outputs
-					//document.getElementById("test").innerHTML = "" + currentData[2];
-					
-					// callback function
-					dataReceived();
+					plotDataLength = TIME_DIV;
 				}
-			});
-		}*/
-		
-		/*function updateData() {
-			
-			// remove old data
-			if (vData.length > 0) {
-				vData = vData.slice(bufferSize);
-			}
-			if (iData.length > 0) {
-				iData = iData.slice(bufferSize);
-			}
-			var vDataArray;
-			var iDataArray;
-			// extract data
-			for (var i = 0; i < bufferSize; i++ ) {
-				vDataArray = currentData[i].slice(1,3).concat(currentData[i].slice(4));
-				iDataArray = currentData[i].slice(0,1).concat(currentData[i].slice(3,4));
-				iData.push(iDataArray);
-				vData.push(vDataArray);
+				
+				for (var i = 0; i < dataLength * BUFFER_SIZE; i++) {
+					var tempData = JSON.parse(tempState[15 + i]);
+					var k = 0;
+					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
+						if(plotChannels[j]) {
+							if(isCurrent[j]) {
+								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000]);
+							//newPlotData[j].push([i, tempData[k]]);
+							} else {
+								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000000]);
+							}
+							k++;
+						}
+					}
+				}
+				updatePlot();
 			}
 			
-		}*/
-		
-		// reset data
-		/*function resetData() {
-			// volts
-			vData = [];
-			var dataArray = [];
-			for (var i=0; i < maxVChannels; i++) {
-					dataArray.push(0);
-			}
-			while (vData.length < totalPoints) {
-				vData.push(dataArray);
-			}
-			// currents
-			iData = [];
-			var dataArray = [];
-			for (var i=0; i < maxIChannels; i++) {
-					dataArray.push(0);
-			}
-			while (iData.length < totalPoints) {
-				iData.push(dataArray);
-			}
-		}*/
+			document.getElementById("test").innerHTML = reqId;
+			
+		}
+
 		
 		// convert data for plotting
 		function getVData() {
-			
-			/*// generate for plot
-			var plotData = [];
-			
-			//for (var j = 0; j < maxVChannels; j++) {
-			for (var j = 0; j < 1; j++) {
-				//if( vChannels[j] ) {
-					var channelData = [];
-					for (var i = 0; i < vData.length; ++i) { // Zip the generated y values with the x values
-						channelData.push([1000*currentTime + 10*i, vData[i][j]])
-					}
-					var channelLabel = vNames[j];
-					var plotChannel = {label: channelLabel, data: channelData};
-					plotData.push(plotChannel);
-				//}
-			}
-			return plotData;*/
 			
 			// generate for plot
 			var plotData = [];
@@ -411,7 +299,7 @@ $(function() {
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( !isCurrent[i] ) {
 					
-					var plotChannel = {label: names[i], data: newPlotData[i]};
+					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
 					plotData.push(plotChannel);
 				}
 			}
@@ -423,29 +311,13 @@ $(function() {
 		// convert data for plotting
 		function getIData() {
 			
-			/*// generate for plot
-			var plotData = [];
-			
-			for (var j = 0; j < maxIChannels; j++) {
-				if( iChannels[j] || iChannels[j+2] || iChannels[j+4] ) {
-					var channelData = [];
-					for (var i = 0; i < iData.length; ++i) { // Zip the generated y values with the x values
-						channelData.push([i, iData[i][j]])
-					}
-					var channelLabel = iNames[j];
-					var plotChannel = {label: channelLabel, data: channelData};
-					plotData.push(plotChannel);
-				}
-			}
-			return plotData;*/
-			
 			// generate for plot
 			var plotData = [];
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( isCurrent[i] ) {
 					
-					var plotChannel = {label: names[i], data: newPlotData[i]};
+					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
 					plotData.push(plotChannel);
 				}
 			}
@@ -453,6 +325,7 @@ $(function() {
 			return plotData;
 			
 		}
+		
 		
 		// PLOTTING
 		
@@ -466,7 +339,6 @@ $(function() {
 		});
 		
 		// reset plot
-		//resetData();
 		newResetData();
 		
 		function updatePlot () {
@@ -480,7 +352,7 @@ $(function() {
 
 		var vPlot = $.plot("#vPlaceholder", getVData(), {
 			series: {
-				shadowSize: 0	// Drawing is faster without shadows
+				shadowSize: 0
 			},
 			xaxis: {
 				mode: "time",
@@ -490,7 +362,7 @@ $(function() {
 		
 		var iPlot = $.plot("#iPlaceholder", getIData(), {
 			series: {
-				shadowSize: 0	// Drawing is faster without shadows
+				shadowSize: 0
 			},
 			xaxis: {
 				mode: "time",
@@ -599,16 +471,12 @@ $(function() {
 		
 		// deselect button
 		$("#deselect").click(function () {
-			//vChannels.fill(false);
-			//iChannels.fill(false);
 			channels.fill(false);
 			updateChannels();
 		});
 		
 		// select button
 		$("#select").click(function () {
-			//vChannels.fill(true);
-			//iChannels.fill(true);
 			channels.fill(true);
 			updateChannels();
 		});
@@ -622,17 +490,6 @@ $(function() {
 			document.getElementById("i2l").checked = channels[5];
 			document.getElementById("v3").checked = channels[6];
 			document.getElementById("v4").checked = channels[7];
-			
-			/*document.getElementById("v1").checked = vChannels[0];
-			document.getElementById("v2").checked = vChannels[1];
-			document.getElementById("v3").checked = vChannels[2];
-			document.getElementById("v4").checked = vChannels[3];
-			document.getElementById("i1l").checked = iChannels[2];
-			document.getElementById("i2l").checked = iChannels[5];
-			document.getElementById("i1m").checked = iChannels[1];
-			document.getElementById("i2m").checked = iChannels[4];
-			document.getElementById("i1h").checked = iChannels[0];
-			document.getElementById("i2h").checked = iChannels[3];*/
 		}
 		
 		function updateFhrs () {
@@ -685,22 +542,12 @@ $(function() {
 				channels[0] = true;
 				numChannels++;
 			}
-			/*if ($("#i1m:checked").length > 0) {
-				if (numChannels == 0) {
-					cmd_obj.channels += "1";
-				} else {
-					cmd_obj.channels += ",1";
-				}
-				iChannels[2] = true;
-				numChannels++;
-			}*/
 			if ($("#i1l:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "1";
 				} else {
 					cmd_obj.channels += ",1";
 				}
-				//iChannels[0] = true;
 				channels[1] = true;
 				numChannels++;
 			}
@@ -710,7 +557,6 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",2";
 				}
-				//vChannels[0] = true;
 				channels[2] = true;
 				numChannels++;
 			}
@@ -720,7 +566,6 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",3";
 				}
-				//vChannels[1] = true;
 				channels[3] = true;
 				numChannels++;
 			}
@@ -731,26 +576,15 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",4";
 				}
-				//iChannels[5] = true;
 				channels[4] = true;
 				numChannels++;
 			}
-			/*if ($("#i2m:checked").length > 0) {
-				if (numChannels == 0) {
-					cmd_obj.channels += "6";
-				} else {
-					cmd_obj.channels += ",6";
-				}
-				iChannels[3] = true;
-				numChannels++;
-			}*/
 			if ($("#i2l:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "5";
 				} else {
 					cmd_obj.channels += ",5";
 				}
-				//iChannels[1] = true;
 				channels[5] = true;
 				numChannels++;
 			}
@@ -760,7 +594,6 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",6";
 				}
-				//vChannels[2] = true;
 				channels[6] = true;
 				numChannels++;
 			}
@@ -770,7 +603,6 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",7";
 				}
-				//vChannels[3] = true;
 				channels[7] = true;
 				numChannels++;
 			}
