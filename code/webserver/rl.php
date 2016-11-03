@@ -3,11 +3,12 @@
     if (isset($_POST['command'])) {
 		switch($_POST['command']) {
 			case 'start':
-				$command = 'sudo rocketlogger cont' . $_POST['file'] . $_POST['rate'] . $_POST['update_rate'] . $_POST['channels'] . $_POST['force'] . ' > /dev/null &';
+				$command = 'sudo rocketlogger cont -w -u 1' . $_POST['file'] . $_POST['file_format'] . $_POST['rate'] . $_POST['channels'] . $_POST['force'] . $_POST['digital_inputs'] . ' > /dev/null &';
 				exec($command);
 				break;
             case 'status':
-				exec('sudo rocketlogger status -w',$output);
+			$command = 'rocketloggers ' . $_POST['id'] . ' ' . $_POST['fetchData'] . ' ' . $_POST['timeScale'] . ' ' . $_POST['time'];
+				exec($command, $output);
 				echo json_encode($output);
 				break;
 			case 'stop':
