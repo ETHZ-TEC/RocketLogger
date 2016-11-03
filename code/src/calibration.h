@@ -10,7 +10,6 @@
 #include "util.h"
 
 #define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
-#define NUM_CALIBRATION_VALUES 10
 
 
 void reset_offsets();
