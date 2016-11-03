@@ -411,7 +411,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// store the buffer
-		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		//store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
 		//if(conf->file_format != NO_FILE) {
 			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
 		//}
