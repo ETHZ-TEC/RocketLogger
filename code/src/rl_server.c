@@ -1,7 +1,7 @@
 #include "sem.h"
 #include "types.h"
 #include "rl_lib.h"
-#include "ipc.h"
+#include "web.h"
 #include "util.h"
 
 #define ARG_COUNT 4
@@ -85,7 +85,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	// print data
 	int32_t data[WEB_BUFFER_SIZE][num_channels];
 	int i;
-	for(i=0; i<data_length; i++) {
+	for(i=data_length-1; i>=0; i--) {
 		// read data
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
@@ -146,15 +146,6 @@ int main(int argc, char* argv[]) {
 		// error already logged
 		exit(EXIT_FAILURE);
 	}
-	
-	// determine number of channels
-	/*int num_channels = count_channels(status.conf.channels);
-	if(status.conf.channels[I1H_INDEX] > 0 && status.conf.channels[I1L_INDEX] > 0) {
-		num_channels--;
-	}
-	if(status.conf.channels[I2H_INDEX] > 0 && status.conf.channels[I2L_INDEX] > 0) {
-		num_channels--;
-	}*/
 	
 	// open shared memory
 	web_data = open_web_shm();

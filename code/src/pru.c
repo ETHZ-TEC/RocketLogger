@@ -2,7 +2,7 @@
 
 #include "pru.h"
 
-int test_mode = 0;
+int test_mode = 1;
 
 
 
@@ -194,13 +194,14 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	pru->commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | *pru_sample_rate;
 
 	// set channel gains
+	// TODO: set all channels
 	pru->commands[4] = WREG|CH1SET|GAIN2;								// High Range A
-	pru->commands[4] = WREG|CH2SET|GAIN2;								// High Range B
+	//pru->commands[4] = WREG|CH2SET|GAIN2;								// High Range B
 	pru->commands[5] = WREG|CH3SET|GAIN1;								// Medium Range							
 	pru->commands[6] = WREG|CH4SET|GAIN1;								// Low Range A
 	pru->commands[7] = WREG|CH5SET|GAIN1;								// Low Range B
 	pru->commands[8] = WREG|CH6SET|GAIN1;								// Voltage 1
-	pru->commands[8] = WREG|CH7SET|GAIN1;								// Voltage 2
+	//pru->commands[8] = WREG|CH7SET|GAIN1;								// Voltage 2
 	pru->commands[9] = RDATAC;											// continuous reading
 	
 	return SUCCESS;
@@ -411,7 +412,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// store the buffer
-		store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
+		//store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
 		//if(conf->file_format != NO_FILE) {
 			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
 		//}

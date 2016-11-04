@@ -65,7 +65,10 @@ int parse_channels(int channels[], char* value) {
 		
 	} else if(strcmp(value, "all") == 0) {
 		// all channels
-		memset(channels, 1, sizeof(int) * NUM_CHANNELS);
+		int i;
+		for(i=0; i<NUM_CHANNELS; i++) {
+			channels[i] = CHANNEL_ENABLED;
+		}
 	}else {
 		rl_log(ERROR, "wrong channel number");
 		return FAILURE;
@@ -315,11 +318,11 @@ void print_usage() {
 	printf("                         Possible update rates: 1, 2, 5, 10 (in Hz)\n");
 	printf("    -ch [number1,...]  Channel selection.\n");
 	printf("                       Possible channels ('-ch all' to enable all):\n");
-	printf("                         0: I1H\t\t5: I2H\n");
-	printf("                         1: I1M\t\t6: I2M\n");
-	printf("                         2: I1L\t\t7: I2L\n");
-	printf("                         3: V1 \t\t8: V3\n");
-	printf("                         4: V2 \t\t9: V4\n");
+	printf("                         0: I1H\t\t4: I2H\n");
+	//printf("                         1: I1M\t\t6: I2M\n");
+	printf("                         1: I1L\t\t5: I2L\n");
+	printf("                         2: V1 \t\t6: V3\n");
+	printf("                         3: V2 \t\t7: V4\n");
 	printf("    -fhr [0,1,2]       Force high-range.\n");
 	printf("                         0: no channel, 1: I1, 2: I2\n");
 	printf("    -f [file]          Stores data to specified file.\n");
@@ -357,8 +360,11 @@ void reset_config(struct rl_conf* conf) {
 	
 	strcpy(conf->file_name, "/var/www/data/data.rld");
 	
-	memset(conf->channels, 1, sizeof(conf->channels)); // TODO: use define
-	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels)); // TODO: use define
+	int i;
+	for(i=0; i<NUM_CHANNELS; i++) {
+		conf->channels[i] = CHANNEL_ENABLED;
+	}
+	memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
 	
 }
 

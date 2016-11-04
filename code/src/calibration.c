@@ -7,7 +7,7 @@
  */
 void reset_offsets() {
 	int i;
-	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
+	for (i=0; i< NUM_CHANNELS; i++) {
 		offsets[i] = 0;
 	}
 }
@@ -18,7 +18,7 @@ void reset_offsets() {
  */
 void reset_scales() {
 	int i;
-	for (i=0; i< NUM_CALIBRATION_VALUES; i++) {
+	for (i=0; i< NUM_CHANNELS; i++) {
 		scales[i] = 1;
 	}
 }
@@ -42,13 +42,13 @@ int read_calibration(struct rl_conf* conf) {
 		return FAILURE;
 	}
 	// read values
-	fread(offsets, sizeof(int), NUM_CALIBRATION_VALUES, file);
-	fread(scales, sizeof(double), NUM_CALIBRATION_VALUES, file);
+	fread(offsets, sizeof(int), NUM_CHANNELS, file);
+	fread(scales, sizeof(double), NUM_CHANNELS, file);
 	
 	// calculate values for high rates
 	if(conf->sample_rate == 32 || conf->sample_rate == 64) {
 		int i;
-		for (i=0; i<NUM_CALIBRATION_VALUES; i++) {
+		for (i=0; i<NUM_CHANNELS; i++) {
 			offsets[i] = offsets[i]/256;
 			scales[i] = scales[i]*256;
 		}
@@ -71,8 +71,8 @@ int write_calibration() {
 		return FAILURE;
 	}
 	// write values
-	fwrite(offsets, sizeof(int), NUM_CALIBRATION_VALUES, file);
-	fwrite(scales, sizeof(double), NUM_CALIBRATION_VALUES, file);
+	fwrite(offsets, sizeof(int), NUM_CHANNELS, file);
+	fwrite(scales, sizeof(double), NUM_CHANNELS, file);
 	
 	//close file
 	fclose(file);

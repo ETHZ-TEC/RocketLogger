@@ -2,7 +2,7 @@
 
 // channel functions // TODO: use
 int is_current(int index) {
-	if(index == I1H_INDEX || index == I1M_INDEX || index == I1L_INDEX || index == I2H_INDEX || index == I2M_INDEX || index == I2L_INDEX) {
+	if(index == I1H_INDEX || index == I1L_INDEX || index == I2H_INDEX || index == I2L_INDEX) {
 		return 1;
 	} else {
 		return 0;
