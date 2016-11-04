@@ -150,7 +150,7 @@ classdef rld
             
             
             %% READ DATA
-            num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
+            num_bin_vals = 1;%ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
 
             % values
             temp_time = nan(data_block_count, TIME_STAMP_SIZE);
@@ -267,7 +267,10 @@ classdef rld
             separate_axis = true;
             
             % selective plot
-            if exist('channel', 'var') && strcmp(channel, 'all') ~= 1
+            if ~exist('channel', 'var') || sum(strcmp(channel, 'all')) == 1
+                num_channels = obj.header.channel_count;
+                plot_channels = (1:num_channels) + obj.header.channel_bin_count;
+            else
                 assert(iscell(channel), 'Channel argument has to be of type cell array');
                 num_channels = numel(channel);
                 plot_channels = zeros(1,num_channels);
@@ -277,9 +280,6 @@ classdef rld
                         error(['Channel ', channel{i}, ' not found']);
                     end
                 end
-            else
-                num_channels = obj.header.channel_count;
-                plot_channels = (1:num_channels) + obj.header.channel_bin_count;
             end
             
             % no valid channels
