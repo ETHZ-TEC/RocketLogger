@@ -93,7 +93,7 @@ Generating : GND
 
 Used DCodes :
     D59
-    D61
+    D60
     D66
     D73
     D74
@@ -113,7 +113,7 @@ Generating : Inner Layer 1
 
 
 Used DCodes :
-    D61
+    D59
     D73
     D74
     D75
@@ -133,7 +133,7 @@ Generating : V+
 
 Used DCodes :
     D59
-    D61
+    D60
     D64
     D73
     D74
@@ -154,7 +154,7 @@ Generating : V-
 
 Used DCodes :
     D59
-    D61
+    D60
     D64
     D66
     D73

@@ -92,7 +92,7 @@ Generating : GND
 Used DCodes :
     D21
     D59
-    D61
+    D60
     D66
     D72
     D74
@@ -111,7 +111,7 @@ Generating : Inner Layer 1
 
 Used DCodes :
     D21
-    D61
+    D59
     D72
     D74
     D75
@@ -130,7 +130,7 @@ Generating : V+
 Used DCodes :
     D21
     D59
-    D61
+    D60
     D64
     D74
     D75
@@ -149,7 +149,7 @@ Generating : V-
 Used DCodes :
     D21
     D59
-    D61
+    D60
     D64
     D66
     D74
@@ -216,7 +216,7 @@ Generating : Top Overlay
 
 
 Used DCodes :
-    D61
+    D59
     D63
     D69
     D70
@@ -464,7 +464,7 @@ Generating : Bottom Overlay
 
 
 Used DCodes :
-    D61
+    D59
     D63
     D69
     D70
