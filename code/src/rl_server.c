@@ -19,7 +19,7 @@ struct rl_web_resp {
 	uint32_t id;
 	uint8_t t_scale;
 	int64_t time;
-	uint32_t data_length;
+	uint32_t buffer_count;
 	float* data;
 };
 
@@ -67,25 +67,29 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	printf("%lld\n", time);
 	
 	// print data length
-	int data_length = time - last_time;
-	if(data_length > WEB_BUFFER_ELEMENTS) {
-		data_length = WEB_BUFFER_ELEMENTS;
-	}
+	int buffer_count = time - last_time;
+	/*if(buffer_count > WEB_BUFFER_ELEMENTS) {
+		buffer_count = WEB_BUFFER_ELEMENTS;
+	}*/
 	
 	// get available buffers
 	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 	int buffer_available = web_data->buffer[t_scale].filled;
 	set_sem(sem_id, DATA_SEM, 1);
-	if(data_length > buffer_available) {
-		data_length = buffer_available;
+	if(buffer_count > buffer_available) {
+		buffer_count = buffer_available;
 	}
 	
-	printf("%d\n", data_length);
+	// TODO: variable
+	int buffer_size = 100;
+	
+	printf("%d\n", buffer_count);
+	printf("%d\n", buffer_size);
 	
 	// print data
 	int32_t data[WEB_BUFFER_SIZE][num_channels];
 	int i;
-	for(i=data_length-1; i>=0; i--) {
+	for(i=buffer_count-1; i>=0; i--) {
 		// read data
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
