@@ -45,11 +45,13 @@ $(function() {
 		var tScale = 0; // TODO: dropdown menu
 		var currentTime = 0;
 		var filename = "data.rld";
+		
 		// data
 		var plotDataLength = 0;
-		var newPlotData = [[],[],[],[],[],[]]; // TODO: rename
+		var plotData = [[],[],[],[],[],[]];
 		
 		// ajax post object
+		var statusObj;
 		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
 		
 		// channel information
@@ -57,6 +59,7 @@ $(function() {
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
 		isCurrent = [true, false, false, true, false, false];	
+		
 		
 		
 		// UPDATE
@@ -73,11 +76,13 @@ $(function() {
 		// STATUS CHECK
 		function getStatus() {
 			
+			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tScale.toString(), time: currentTime.toString()};
+			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tScale.toString(), time: currentTime.toString()},
+				data: statusObj,
 				
 				complete: function (response) {
 					$('#output').html(response.responseText);
@@ -225,10 +230,10 @@ $(function() {
 		
 		// DATA HANDLING
 		
-		function newResetData() {
+		function resetData() {
 			
 			plotDataLength = 0;
-			newPlotData = [[],[],[],[],[],[]];
+			plotData = [[],[],[],[],[],[]];
 			
 		}
 		
@@ -239,8 +244,7 @@ $(function() {
 			var tempTScale = tempState[12];
 			var tempTime = parseInt(tempState[13]);
 			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
-				//newRun = 1;
-				newResetData();
+				resetData();
 			}
 			currentTime = tempTime;
 			var dataLength = parseInt(tempState[14]);
@@ -259,10 +263,10 @@ $(function() {
 				
 				plotDataLength += dataLength;
 				
-				if(plotDataLength >= TIME_DIV) {
+				if(plotDataLength > TIME_DIV) {
 					// client buffer already full
 					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-						newPlotData[i] = newPlotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
+						plotData[i] = plotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
 					}
 					plotDataLength = TIME_DIV;
 				}
@@ -273,10 +277,9 @@ $(function() {
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
 							if(isCurrent[j]) {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000]);
-							//newPlotData[j].push([i, tempData[k]]);
+								plotData[j].push([1000*(currentTime-dataLength+1) + 10*i, tempData[k]/1000]);
 							} else {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-dataLength+1) + 10*i, tempData[k]/1000000]);
 							}
 							k++;
 						}
@@ -284,9 +287,6 @@ $(function() {
 				}
 				updatePlot();
 			}
-			
-			document.getElementById("test").innerHTML = reqId;
-			
 		}
 
 		
@@ -294,17 +294,18 @@ $(function() {
 		function getVData() {
 			
 			// generate for plot
-			var plotData = [];
+			var vData = [];
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( !isCurrent[i] ) {
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
-					plotData.push(plotChannel);
+					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					vData.push(plotChannel);
 				}
 			}
 			
-			return plotData;
+			return vData;
+			
 			
 		}
 		
@@ -312,17 +313,17 @@ $(function() {
 		function getIData() {
 			
 			// generate for plot
-			var plotData = [];
+			var iData = [];
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( isCurrent[i] ) {
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
-					plotData.push(plotChannel);
+					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					iData.push(plotChannel);
 				}
 			}
 			
-			return plotData;
+			return iData;
 			
 		}
 		
@@ -339,12 +340,17 @@ $(function() {
 		});
 		
 		// reset plot
-		newResetData();
+		resetData();
 		
 		function updatePlot () {
+			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - TIME_DIV + 1);
+            vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			vPlot.setupGrid();
 			vPlot.setData(getVData());
 			vPlot.draw();
+			
+			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - TIME_DIV + 1);
+            iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			iPlot.setupGrid();
 			iPlot.setData(getIData());
 			iPlot.draw();
@@ -399,8 +405,8 @@ $(function() {
 				return false;
 			}
 			
-			//resetData();
-			newResetData();
+			// reset data
+			resetData();
 			starting = 1;
 			
 			$.ajax({
