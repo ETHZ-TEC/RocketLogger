@@ -6,7 +6,7 @@ end
 
 rld_il1 = rld('C:\Users\user\Desktop\data\20161102_cal_i1l_auto.rld');
 rld_il2 = rld('C:\Users\user\Desktop\data\20161102_cal_i2l_auto.rld');
-rld_ih = rld('C:\Users\user\Desktop\data\20161101_cal_ih.rld');
+rld_ih = rld('C:\Users\user\Desktop\data\20161103_cal_ih_2x_auto.rld');
 rld_v = rld('C:\Users\user\Desktop\data\20161027_cal_v_auto_500ms.rld');
 
 
