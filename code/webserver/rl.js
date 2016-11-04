@@ -1,37 +1,63 @@
 $(function() {
+	
+		// TODO
+		// digital inputs
+		// display sampling time
+		// display disk space available
+		// remove update rate
+		// default conf
+		// remove -b (in c code)
+		
+		
+		// CONSTANTS
+		RL_RUNNING = "1";
+		RL_OFF = "0";
+		RL_ERROR = "-1";
+		
+		NO_FILE = "0";
+		CSV = "1";
+		BIN = "2";
+		
+		BUFFER_SIZE  = 100;
+		TIME_DIV = 10;
+		
+		NUM_PLOT_CHANNELS = 6;
+		
+		NUM_CHANNELS = 8;
+		NUM_I_CHANNELS = 2;
+		
+		UPDATE_INTERVAL = 500;
+		STATUS_TIMEOUT_TIME = 3000;
+		STOP_TIMEOUT_TIME = 3000;
+		
+		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		
+		
+		
 		
 		// GLOBAL VARIABLES
-		var state = "OFF";
-		var webserverEnabled = "0";
+		var state = RL_OFF;
 		var stopping = 0;
-		updateInterval = 500;
-		dataTimeoutTime = 2000;
-		stopTimeoutTime = 3000;
+		var starting = 0;
 		var timeOut;
-		
-		var filename = "data.dat";
-		var normalFilename = "data.dat";
-		var networkFilename = "xxx/yyy/zzz.dat";
-		
-		var currentData = [];
-		var vData = [];
-		var iData = [];
-		bufferSize = 100;	// number of values per buffer
-		timeDiv = 10;		// time span displayed
-		totalPoints = timeDiv * bufferSize;
+		var reqId = 0; // TODO: something usefull (random?)
+		var plotEnabled = 1;
+		var tScale = 0; // TODO: dropdown menu
+		var currentTime = 0;
+		var filename = "data.rld";
+		// data
+		var plotDataLength = 0;
+		var newPlotData = [[],[],[],[],[],[]]; // TODO: rename
 		
 		// ajax post object
-		var cmd_obj = {command: 'start', file: ' -f data.csv -b -w', rate: ' -r 1', update_rate: ' -u 1', channels: ' -ch 0,1,2,3,4,5,6,7,8,9', force: ' -fhr 1,2'};
-			
-		var vChannels = [true, true, true, true];
-		var iChannels = [true, true, true, true, true, true];
-		var numChannels = 0;
-		var numVChannels = 0;
-		var numIChannels = 0;
-		maxVChannels = 4;
-		maxIChannels = 2;
-		vNames = ["V1 [mV]", "V2 [mV]", "V3 [mV]", "V4 [mV]"];
-		iNames = ["I1 [uA]", "I2 [uA]"];
+		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
+		
+		// channel information
+		var channels = [true, true, true, true, true, true, true, true];
+		var forceHighChannels = [false, false];
+		var plotChannels = [false, false, false, false, false, false];
+		isCurrent = [true, false, false, true, false, false];	
+		
 		
 		// UPDATE
 		
@@ -40,203 +66,229 @@ $(function() {
 			// get status
 			getStatus();
 			
-			if (state != "OFF" && webserverEnabled == "1" && stopping != 1) {
-				// fetch data
-				fetchData();
-				timeOut = setTimeout(update, dataTimeoutTime);
-			} else {
-				// set timer
-				setTimeout(update, updateInterval);
-			}
-		}
-		
-		function dataReceived () {
-			// clear time-out
-			clearTimeout(timeOut);
-			// update data arrays
-			updateData();
-			// plot
-			updatePlot();
-			// re-update
-			update();
+			timeOut = setTimeout(update, STATUS_TIMEOUT_TIME);			
+			
 		}
 		
 		// STATUS CHECK
 		function getStatus() {
+			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: {command: 'status'},
+				data: {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tScale.toString(), time: currentTime.toString()},
 				
 				complete: function (response) {
 					$('#output').html(response.responseText);
 					var tempState = JSON.parse(response.responseText);
 					
-					// extract state
-					state = tempState[0];
-					// display status on page
-					document.getElementById("status").innerHTML = 'Status: ' + state;
+					// clear time-out
+					clearTimeout(timeOut);
 					
-					if (state == "OFF") {
-						stopping = 0;
-						// no info about webserver plotting
-						document.getElementById("webserver").innerHTML = '';
-					} else if (state == "RUNNING") {
-						// get additional status info
-						webserverEnabled = tempState[1];
-						var currentRate = tempState[2];
-						var activeVChannels = JSON.parse(tempState[5]);
-						var activeIChannels = JSON.parse(tempState[6]);
-						var tempFilename = tempState[7];
-						var binary_file = tempState[8];
-						
-						
-						// display webserver plotting info
-						if(webserverEnabled == "1") {
-							webEn = "ENABLED";
+					// extract state
+					respId = tempState[0];
+					if (respId == reqId) {
+						reqId++;
+						state = tempState[1];
+						// display status on page
+						if (state == RL_RUNNING) {
+							// parse status and data
+							starting = 0;
+							document.getElementById("status").innerHTML = 'Status: RUNNING';
+							parseStatus(tempState);
+							
+							// re-update
+							update();
 						} else {
-							webEn = "DISABLED";
-						}
-						document.getElementById("webserver").innerHTML = 'Webserver Plotting: ' + webEn;
-						
-						if (webserverEnabled == "1") {
-							// parse channel info
-							for (var i=0; i<4; i++) { // voltages
-								if (activeVChannels[i] == 1) {
-									vChannels[i] = true;
-								} else {
-									vChannels[i] = false;
-								}
-							}
-							
-							for (var i=0; i<6; i++) { // currents
-								if (activeIChannels[i] == 1) {
-									iChannels[i] = true;
-								} else {
-									iChannels[i] = false;
-								}
-							}
-							updateChannels();
-							
-							// parse filename
-							normalFilename = tempFilename.slice(14);
-							//if ($("#network_store:checked").length > 0) {
-							filename = normalFilename;
-							//}
-							$("#filename").val(filename);
-							
-							// parse file format
-							var e = document.getElementById("file_format");
-							if (binary_file == "1") {
-								e.selectedIndex = 0;
+							if(state == RL_ERROR) {
+								// TODO: check
+								document.getElementById("status").innerHTML = 'Status: ERROR';
+							} else if(state == RL_OFF) {
+								document.getElementById("status").innerHTML = 'Status: IDLE';
+								stopping = 0;
 							} else {
-								e.selectedIndex = 1;
+								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
 							}
 							
-							// sample rate
-							var e = document.getElementById("sample_rate");
-							// switch statement didn't work ...
-							if (currentRate == 1) {
-								e.selectedIndex = 0;
-							}
-							if (currentRate == 2) {
-								e.selectedIndex = 1;
-							}
-							if (currentRate == 4) {
-								e.selectedIndex = 2;
-							}
-							if (currentRate == 8) {
-								e.selectedIndex = 3;
-							}
-							if (currentRate == 16) {
-								e.selectedIndex = 4;
-							}
-							if (currentRate == 32) {
-								e.selectedIndex = 5;
-							}
-							if (currentRate == 64) {
-								e.selectedIndex = 6;
-							}
+							// reset displays
+							document.getElementById("dataAvailable").innerHTML = "";
+							document.getElementById("webserver").innerHTML = "";
+							// set timer
+							setTimeout(update, UPDATE_INTERVAL);
 						}
-					}
+					}					
 				}
 			});
+		}
+		
+		function parseStatus(tempState) {
+			
+			// EXTRACT STATUS INFO
+			var sampleRate = tempState[2];
+			var digitalInputs = tempState[4];
+			var fileFormat = tempState[5];
+			var tempFilename = tempState[6];
+			var tempChannels = JSON.parse(tempState[7]);
+			var tempForceHighChannels = JSON.parse(tempState[8]);
+			var samplesTaken = tempState[9];
+			var dataAvailable = tempState[10];
+			var newData = tempState[11];
+			
+			// PARSE STATUS INFO
+			
+			// sample rate
+			var e = document.getElementById("sample_rate");
+			// switch statement didn't work ...
+			if (sampleRate == 1) {
+				e.selectedIndex = 0;
+			}
+			if (sampleRate == 2) {
+				e.selectedIndex = 1;
+			}
+			if (sampleRate == 4) {
+				e.selectedIndex = 2;
+			}
+			if (sampleRate == 8) {
+				e.selectedIndex = 3;
+			}
+			if (sampleRate == 16) {
+				e.selectedIndex = 4;
+			}
+			if (sampleRate == 32) {
+				e.selectedIndex = 5;
+			}
+			if (sampleRate == 64) {
+				e.selectedIndex = 6;
+			}
+			
+			// digital inputs
+			document.getElementById("digital_inputs").checked = (digitalInputs == "1");
+			
+			
+			
+			// file format
+			var e = document.getElementById("file_format");
+			
+			if (fileFormat == NO_FILE) {
+				document.getElementById("enable_storing").checked = false;
+			} else {
+				if (fileFormat == CSV) {
+					e.selectedIndex = 1;
+				} else {
+					e.selectedIndex = 0;
+				}
+				document.getElementById("enable_storing").checked = true;
+			}
+			
+			// file name
+			filename = tempFilename.slice(14);
+			$("#filename").val(filename);
+			
+			// channels
+			for (var i=0; i<NUM_CHANNELS; i++) { // voltages
+				if (tempChannels[i] == 1) {
+					channels[i] = true;
+				} else {
+					channels[i] = false;
+				}
+			}
+			updateChannels();
+			
+			plotChannels = [channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
+			
+			// fhrs
+			for (var i=0; i<NUM_I_CHANNELS; i++) { // voltages
+				if (tempForceHighChannels[i] == 1) {
+					forceHighChannels[i] = true;
+				} else {
+					forceHighChannels[i] = false;
+				}
+			}
+			updateFhrs();
+			
+			// samples taken
+			document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+			
+			// data
+			if (dataAvailable == "1") {
+				document.getElementById("dataAvailable").innerHTML = "";
+				if (plotEnabled == 1 && newData == "1") {
+					// handle data
+					dataReceived(tempState);
+				}
+			} else {
+				document.getElementById("dataAvailable").innerHTML = "No data available!";
+			}
 		}
 		
 		
 		// DATA HANDLING
 		
-		// fetch data from server
-		function fetchData() {
+		function newResetData() {
 			
-			var tempData;
-			currentData = [];
+			plotDataLength = 0;
+			newPlotData = [[],[],[],[],[],[]];
 			
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'get_data'},
+		}
+		
+		
+		function dataReceived (tempState) {
+			
+			// extract information
+			var tempTScale = tempState[12];
+			var tempTime = parseInt(tempState[13]);
+			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
+				//newRun = 1;
+				newResetData();
+			}
+			currentTime = tempTime;
+			var dataLength = parseInt(tempState[14]);
+			
+			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
+			
+			
+			// TODO:
+			/*var hours = date.getHours();
+			var minutes = "0" + date.getMinutes();
+			var seconds = "0" + date.getSeconds();
+			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
+			
+			// process data
+			if (dataLength > 0) {
 				
-				complete: function (response) {
-					$('#output').html(response.responseText);
-					tempData = JSON.parse(response.responseText);
-					for (var i = 0; i < bufferSize; i++) {
-						currentData.push(JSON.parse(tempData[i]));
+				plotDataLength += dataLength;
+				
+				if(plotDataLength >= TIME_DIV) {
+					// client buffer already full
+					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
+						newPlotData[i] = newPlotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
 					}
-					
-					// debug outputs
-					//document.getElementById("test").innerHTML = "" + currentData[2];
-					
-					// callback function
-					dataReceived();
+					plotDataLength = TIME_DIV;
 				}
-			});
-		}
-		
-		function updateData() {
-			
-			// remove old data
-			if (vData.length > 0) {
-				vData = vData.slice(bufferSize);
-			}
-			if (iData.length > 0) {
-				iData = iData.slice(bufferSize);
-			}
-			var vDataArray;
-			var iDataArray;
-			// extract data
-			for (var i = 0; i < bufferSize; i++ ) {
-				vDataArray = currentData[i].slice(1,3).concat(currentData[i].slice(4));
-				iDataArray = currentData[i].slice(0,1).concat(currentData[i].slice(3,4));
-				iData.push(iDataArray);
-				vData.push(vDataArray);
+				
+				for (var i = 0; i < dataLength * BUFFER_SIZE; i++) {
+					var tempData = JSON.parse(tempState[15 + i]);
+					var k = 0;
+					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
+						if(plotChannels[j]) {
+							if(isCurrent[j]) {
+								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000]);
+							//newPlotData[j].push([i, tempData[k]]);
+							} else {
+								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000000]);
+							}
+							k++;
+						}
+					}
+				}
+				updatePlot();
 			}
 			
+			document.getElementById("test").innerHTML = reqId;
+			
 		}
-		
-		// reset data
-		function resetData() {
-			// volts
-			vData = [];
-			var dataArray = [];
-			for (var i=0; i < maxVChannels; i++) {
-					dataArray.push(0);
-			}
-			while (vData.length < totalPoints) {
-				vData.push(dataArray);
-			}
-			// currents
-			iData = [];
-			var dataArray = [];
-			for (var i=0; i < maxIChannels; i++) {
-					dataArray.push(0);
-			}
-			while (iData.length < totalPoints) {
-				iData.push(dataArray);
-			}
-		}
+
 		
 		// convert data for plotting
 		function getVData() {
@@ -244,18 +296,16 @@ $(function() {
 			// generate for plot
 			var plotData = [];
 			
-			for (var j = 0; j < maxVChannels; j++) {
-				if( vChannels[j] ) {
-					var channelData = [];
-					for (var i = 0; i < vData.length; ++i) { // Zip the generated y values with the x values
-						channelData.push([i, vData[i][j]])
-					}
-					var channelLabel = vNames[j];
-					var plotChannel = {label: channelLabel, data: channelData};
+			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
+				if( !isCurrent[i] ) {
+					
+					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
 					plotData.push(plotChannel);
 				}
 			}
+			
 			return plotData;
+			
 		}
 		
 		// convert data for plotting
@@ -264,24 +314,32 @@ $(function() {
 			// generate for plot
 			var plotData = [];
 			
-			for (var j = 0; j < maxIChannels; j++) {
-				if( iChannels[j] || iChannels[j+2] || iChannels[j+4] ) {
-					var channelData = [];
-					for (var i = 0; i < iData.length; ++i) { // Zip the generated y values with the x values
-						channelData.push([i, iData[i][j]])
-					}
-					var channelLabel = iNames[j];
-					var plotChannel = {label: channelLabel, data: channelData};
+			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
+				if( isCurrent[i] ) {
+					
+					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
 					plotData.push(plotChannel);
 				}
 			}
+			
 			return plotData;
+			
 		}
+		
 		
 		// PLOTTING
 		
+		// enable checkbox
+		$("#plotting").change(function () {
+			if ($("#plotting:checked").length > 0) {
+				plotEnabled = 1;
+			} else {
+				plotEnabled = 0;
+			}
+		});
+		
 		// reset plot
-		resetData();
+		newResetData();
 		
 		function updatePlot () {
 			vPlot.setupGrid();
@@ -294,18 +352,20 @@ $(function() {
 
 		var vPlot = $.plot("#vPlaceholder", getVData(), {
 			series: {
-				shadowSize: 0	// Drawing is faster without shadows
+				shadowSize: 0
 			},
 			xaxis: {
+				mode: "time",
 				show: true
 			}
 		});
 		
 		var iPlot = $.plot("#iPlaceholder", getIData(), {
 			series: {
-				shadowSize: 0	// Drawing is faster without shadows
+				shadowSize: 0
 			},
 			xaxis: {
+				mode: "time",
 				show: true
 			}
 		});
@@ -320,8 +380,12 @@ $(function() {
 		
 		function start() {
 		
-			if(state != "OFF") {
+			if(state == RL_RUNNING) {
 				alert("Rocketlogger already running.\nPress Stop!");
+				return false;
+			}
+			if(starting == 1) {
+				alert("Rocketlogger already starting!");
 				return false;
 			}
 		
@@ -329,7 +393,9 @@ $(function() {
 				return false;
 			}
 			
-			resetData();
+			//resetData();
+			newResetData();
+			starting = 1;
 			
 			$.ajax({
 				type: "post",
@@ -349,7 +415,7 @@ $(function() {
 		});
 		
 		function stop() {
-			if (state == "OFF") {
+			if (state == RL_OFF) {
 				alert("RocketLogger not running!");
 				return;
 			} 
@@ -368,11 +434,11 @@ $(function() {
 					}
 				});
 				// set time-out, if stopping fails
-				setTimeout(stopped, stopTimeoutTime);
+				setTimeout(stopFailed, STOP_TIMEOUT_TIME);
 			}
 		}
 		
-		function stopped() {
+		function stopFailed() {
 			stopping = 0;
 		}
 		
@@ -382,7 +448,7 @@ $(function() {
 		});
 		
 		function calibrate() {
-			if(state != "OFF") {
+			if(state == RL_RUNNING) {
 				alert("Rocketlogger already running.\nPress Stop!");
 				return false;
 			}
@@ -405,29 +471,31 @@ $(function() {
 		
 		// deselect button
 		$("#deselect").click(function () {
-			vChannels.fill(false);
-			iChannels.fill(false);
+			channels.fill(false);
 			updateChannels();
 		});
 		
 		// select button
 		$("#select").click(function () {
-			vChannels.fill(true);
-			iChannels.fill(true);
+			channels.fill(true);
 			updateChannels();
 		});
 		
 		function updateChannels () {
-			document.getElementById("v1").checked = vChannels[0];
-			document.getElementById("v2").checked = vChannels[1];
-			document.getElementById("v3").checked = vChannels[2];
-			document.getElementById("v4").checked = vChannels[3];
-			document.getElementById("i1l").checked = iChannels[0];
-			document.getElementById("i2l").checked = iChannels[1];
-			document.getElementById("i1m").checked = iChannels[2];
-			document.getElementById("i2m").checked = iChannels[3];
-			document.getElementById("i1h").checked = iChannels[4];
-			document.getElementById("i2h").checked = iChannels[5];
+			document.getElementById("i1h").checked = channels[0];
+			document.getElementById("i1l").checked = channels[1];
+			document.getElementById("v1").checked = channels[2];
+			document.getElementById("v2").checked = channels[3];
+			document.getElementById("i2h").checked = channels[4];
+			document.getElementById("i2l").checked = channels[5];
+			document.getElementById("v3").checked = channels[6];
+			document.getElementById("v4").checked = channels[7];
+		}
+		
+		function updateFhrs () {
+			
+			document.getElementById("fhr1").checked = forceHighChannels[0];
+			document.getElementById("fhr2").checked = forceHighChannels[1];
 		}
 		
 		// CONFIGURATION PARSING
@@ -438,25 +506,20 @@ $(function() {
 			var e = document.getElementById("sample_rate");
 			cmd_obj.rate = " -r " + e.options[e.selectedIndex].value;
 			
-			// update rate (ToDo: remove?)
-			//var e = document.getElementById("update_rate");
-			//cmd_obj.update_rate = " -u " + e.options[e.selectedIndex].value;
 			
 			// file
 			if ($("#enable_storing:checked").length > 0) {
-				//if ($("#network_store:checked").length > 0) {
-				//	cmd_obj.file = " -f " + filename;
-				//} else {
-					cmd_obj.file = " -f /var/www/data/" +  filename;
-				//}
+				cmd_obj.file = " -f /var/www/data/" +  filename;
 			} else {
 				cmd_obj.file = " -f 0"; // no storing
 			}
+			
 			// file format
 			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "dat") {
-				cmd_obj.file += " -b";
+			if (e.options[e.selectedIndex].value == "bin") {
+				cmd_obj.file_format = " -format bin";
 			} else {
+				cmd_obj.file_format = " -format csv";
 				var r = document.getElementById("sample_rate");
 				if (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32") {
 					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
@@ -465,15 +528,10 @@ $(function() {
 				}
 			}
 			
-			// webserver plotting
-			if ($("#plotting:checked").length > 0) {
-				cmd_obj.file += " -w";
-			}
-			
 			// channels
-			numChannels = 0;
-			vChannels.fill(false);
-			iChannels.fill(false);
+			var numChannels = 0;
+			channels.fill(false);
+			
 			cmd_obj.channels = " -ch ";
 			if ($("#i1h:checked").length > 0) {
 				if (numChannels == 0) {
@@ -481,89 +539,71 @@ $(function() {
 				} else {
 					cmd_obj.channels += ",0";
 				}
-				iChannels[4] = true;
+				channels[0] = true;
 				numChannels++;
 			}
-			if ($("#i1m:checked").length > 0) {
+			if ($("#i1l:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "1";
 				} else {
 					cmd_obj.channels += ",1";
 				}
-				iChannels[2] = true;
+				channels[1] = true;
 				numChannels++;
 			}
-			if ($("#i1l:checked").length > 0) {
+			if ($("#v1:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "2";
 				} else {
 					cmd_obj.channels += ",2";
 				}
-				iChannels[0] = true;
+				channels[2] = true;
 				numChannels++;
 			}
-			if ($("#v1:checked").length > 0) {
+			if ($("#v2:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "3";
 				} else {
 					cmd_obj.channels += ",3";
 				}
-				vChannels[0] = true;
-				numChannels++;
-			}
-			if ($("#v2:checked").length > 0) {
-				if (numChannels == 0) {
-					cmd_obj.channels += "4";
-				} else {
-					cmd_obj.channels += ",4";
-				}
-				vChannels[1] = true;
+				channels[3] = true;
 				numChannels++;
 			}
 			
 			if ($("#i2h:checked").length > 0) {
 				if (numChannels == 0) {
+					cmd_obj.channels += "4";
+				} else {
+					cmd_obj.channels += ",4";
+				}
+				channels[4] = true;
+				numChannels++;
+			}
+			if ($("#i2l:checked").length > 0) {
+				if (numChannels == 0) {
 					cmd_obj.channels += "5";
 				} else {
 					cmd_obj.channels += ",5";
 				}
-				iChannels[5] = true;
+				channels[5] = true;
 				numChannels++;
 			}
-			if ($("#i2m:checked").length > 0) {
+			if ($("#v3:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "6";
 				} else {
 					cmd_obj.channels += ",6";
 				}
-				iChannels[3] = true;
+				channels[6] = true;
 				numChannels++;
 			}
-			if ($("#i2l:checked").length > 0) {
+			if ($("#v4:checked").length > 0) {
 				if (numChannels == 0) {
 					cmd_obj.channels += "7";
 				} else {
 					cmd_obj.channels += ",7";
 				}
-				iChannels[1] = true;
-				numChannels++;
-			}
-			if ($("#v3:checked").length > 0) {
-				if (numChannels == 0) {
-					cmd_obj.channels += "8";
-				} else {
-					cmd_obj.channels += ",8";
-				}
-				vChannels[2] = true;
-				numChannels++;
-			}
-			if ($("#v4:checked").length > 0) {
-				if (numChannels == 0) {
-					cmd_obj.channels += "9";
-				} else {
-					cmd_obj.channels += ",9";
-				}
-				vChannels[3] = true;
+				channels[7] = true;
 				numChannels++;
 			}
 			if(numChannels == 0) {
@@ -590,7 +630,15 @@ $(function() {
 				}
 			}
 			if(first == 1) { // no forcing
-				cmd_obj.force = "";
+				cmd_obj.force = " -fhr 0";
+			}
+			
+			
+			// digital inputs
+			if ($("#digital_inputs:checked").length > 0) {
+				cmd_obj.digital_inputs = " -d";
+			} else {
+				cmd_obj.digital_inputs = " -d 0";
 			}
 			
 			return true;
@@ -607,37 +655,20 @@ $(function() {
 			}
 		});
 		
-		$("#file_format").change(function () { // swap all filenames between csv and dat
+		
+		$("#file_format").change(function () { // swap all filenames between csv and rld
 			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "dat") {
-				networkFilename = networkFilename.slice(0,-4) + ".dat";
-				normalFilename = normalFilename.slice(0,-4) + ".dat";
-				filename = filename.slice(0,-4) + ".dat";
+			if (e.options[e.selectedIndex].value == "bin") {
+				filename = filename.slice(0,-4) + ".rld";
 			} else {
-				networkFilename = networkFilename.slice(0,-4) + ".csv";
-				normalFilename = normalFilename.slice(0,-4) + ".csv";
 				filename = filename.slice(0,-4) + ".csv";
 			}
 			$("#filename").val(filename);
 		});
 		
-		/*$("#network_store").change(function () { // swap between network and normal filename
-			if ($("#network_store:checked").length > 0) {
-				normalFilename = filename;
-				filename = networkFilename;
-			} else {
-				networkFilename = filename;
-				filename = normalFilename;
-			}
-			$("#filename").val(filename);
-		});*/
 		
 		// download button
 		$("#download").click(function () {
-			/*if ($("#network_store:checked").length > 0) {
-				alert("Network download does not work yet!"); //ToDo: network download
-				return false;
-			}*/
 			file = 'data/' + filename;
 			window.open(file);
 		});
@@ -651,7 +682,7 @@ $(function() {
 		// delete button
 		$("#delete").click(function () {
 			
-			if(state != "OFF") {
+			if(state == RL_RUNNING) {
 				alert("Rocketlogger running.\nPress 'Stop' before deleting files!");
 				return;
 			}

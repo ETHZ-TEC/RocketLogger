@@ -10,6 +10,7 @@
 	
 	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
 	<script type="text/javascript" src="rl.js"></script>
 
 </head>
@@ -71,7 +72,7 @@
 							</div>
 							<div class="col-md-4">
 								<select class="form-control"  id="file_format">
-									<option value="dat">binary</option>
+									<option value="bin">binary</option>
 									<option value="csv">csv</option>
 								</select>
 							</div>
@@ -141,13 +142,11 @@
 								</div>
 								<div class="row">
 									<div class="checkbox">
-										<label><input id="i1m" type="checkbox" checked="checked">I1M</label>
+										<label><input id="i1l" type="checkbox" checked="checked">I1L</label>
 									</div>
 								</div>
 								<div class="row">
-									<div class="checkbox">
-										<label><input id="i1l" type="checkbox" checked="checked">I1L</label>
-									</div>
+									<p></p> 
 								</div>
 								<div class="row">
 									<div class="checkbox">
@@ -164,13 +163,11 @@
 								</div>
 								<div class="row">
 									<div class="checkbox">
-										<label><input id="i2m" type="checkbox" checked="checked">I2M</label>
+										<label><input id="i2l" type="checkbox" checked="checked">I2L</label>
 									</div>
 								</div>
 								<div class="row">
-									<div class="checkbox">
-										<label><input id="i2l" type="checkbox" checked="checked">I2L</label>
-									</div>
+									<p></p> 
 								</div>
 								<div class="row">
 									<div class="checkbox">
@@ -189,7 +186,7 @@
 						</div>
 					</div>
 				</div>
-
+				
 				<!-- Rate Section -->
 				<div class="row">
 					<div class="col-md-6">
@@ -225,14 +222,20 @@
 						</div>-->
 					</div>
 					<div class="col-md-6">
-						
+						<h3>Digital Inputs</h3>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="digital_inputs" type="checkbox" checked="checked">Log Digital Inputs</label>
+							</div>
+						</div>
 					</div>
 				</div>	
 
 			<!-- Debug Section
+			-->
 			<h2>Debug</h2>
 				<p id="test"> No debug message 1. </p> 
-			-->
+			
 		
 			<!-- Plot Section -->
 			<div class="row">
@@ -241,8 +244,13 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="checkbox">
-					<label><input id="plotting" type="checkbox" checked="checked">Enable</label>
+				<div class="col-md-2">
+					<div class="checkbox">
+						<label><input id="plotting" type="checkbox" checked="checked">Enable</label>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div id="dataAvailable"></div>
 				</div>
 			</div>
 				<div class="row">

@@ -37,6 +37,12 @@ int wait_sem(int sem_id, int sem_num, int time_out) {
 		if(errno == EAGAIN) {
 			rl_log(ERROR, "time-out waiting on semaphore");
 			return TIME_OUT;
+		} else if(errno == EIDRM) {
+			rl_log(INFO, "waiting on semaphore failed: semaphore removed");
+			return TIME_OUT;
+		} else if(errno == EINVAL) {
+			rl_log(WARNING, "waiting on semaphore failed: semaphore not existing");
+			return FAILURE;
 		} else {
 			rl_log(ERROR, "failed doing operation on semaphore. Errno = %d", errno);
 			return FAILURE;

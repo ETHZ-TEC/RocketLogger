@@ -205,43 +205,47 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	int ch_in = 0;
 	int ch_out = 0;
 	
-	// TODO: only works wo IxM!! TODO: TEST
+		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		if(valid1 == 1) {
-			dest[ch_out++] = src[++ch_in];
+			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
-			dest[ch_out++] = src[ch_in++];
+			dest[ch_out++] = (int32_t) src[ch_in++];
 		}
 		ch_in++;
-	} else if(conf->channels[I1H_INDEX] > 0 || conf->channels[I1L_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+	} else if(conf->channels[I1H_INDEX] > 0) {
+		dest[ch_out++] = (int32_t) src[ch_in++];
+	} else if(conf->channels[I1L_INDEX] > 0){
+		dest[ch_out++] = (int32_t) src[ch_in++]/H_L_SCALE;
 	}
 	if(conf->channels[V1_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+		dest[ch_out++] = (int32_t) src[ch_in++];
 	}
 	if(conf->channels[V2_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+		dest[ch_out++] = (int32_t) src[ch_in++];
 	}
 	
 	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
 		if(valid2 == 1) {
-			dest[ch_out++] = src[++ch_in];
+			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
-			dest[ch_out++] = src[ch_in++];
+			dest[ch_out++] = (int32_t) src[ch_in++];
 		}
 		ch_in++;
-	} else if(conf->channels[I2H_INDEX] > 0 || conf->channels[I2L_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+	} else if(conf->channels[I2H_INDEX] > 0) {
+		dest[ch_out++] = (int32_t) src[ch_in++];
+	} else if(conf->channels[I2L_INDEX] > 0){
+		dest[ch_out++] = (int32_t) src[ch_in++]/H_L_SCALE;
 	}
+	
 	if(conf->channels[V3_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+		dest[ch_out++] = (int32_t) src[ch_in++];
 	}
 	if(conf->channels[V4_INDEX] > 0) {
-		dest[ch_out++] = src[ch_in++];
+		dest[ch_out++] = (int32_t) src[ch_in++];
 	}
 }
 
-int test = 0;
 int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
 	int i;
@@ -385,11 +389,6 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		web_data->time = time_real.sec;
 		
 		// write data to ring buffer
-		
-		
-		// TODO: remove
-		temp_web_data[0][0] = test;
-		test++;
 		buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
 		// TODO: for buffer10-1000
 		
@@ -406,7 +405,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 
 // FILE STORING
 
-int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf) {
+/*int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf) {
 	
 	int i = 0;
 	int j = 0;
@@ -528,7 +527,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 	}
 	
 	return SUCCESS;
-}
+}*/
 
 
 
@@ -536,7 +535,7 @@ int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, u
 
 
 // store webserver data to fifo
-int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
+/*int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 	
 	// check control fifo
 	int tmp;
@@ -548,7 +547,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 	}
 	
 	// count number of tokens in control fifo (count will be the number of listeners) ---> not working very nice
-	/*int tmp;
+	int tmp;
 	int count = 0;
 	int check = read(control_fifo, &tmp, sizeof(int));
 	while(check > 3) {
@@ -562,7 +561,7 @@ int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
 	int i;
 	for(i=0; i<count; i++) {
 		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
-	}*/
+	}
 	
 	return SUCCESS;
 }

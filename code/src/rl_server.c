@@ -147,15 +147,6 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	// determine number of channels
-	/*int num_channels = count_channels(status.conf.channels);
-	if(status.conf.channels[I1H_INDEX] > 0 && status.conf.channels[I1L_INDEX] > 0) {
-		num_channels--;
-	}
-	if(status.conf.channels[I2H_INDEX] > 0 && status.conf.channels[I2L_INDEX] > 0) {
-		num_channels--;
-	}*/
-	
 	// open shared memory
 	web_data = open_web_shm();
 	
