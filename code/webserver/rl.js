@@ -77,7 +77,7 @@ $(function() {
 		function update() {
 
 			// get status
-			if(isActive) {
+			if(isActive || $("#active:checked").length > 0) {
 				getStatus();
 			}
 			
