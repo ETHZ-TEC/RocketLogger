@@ -29,25 +29,32 @@ $(function() {
 		UPDATE_INTERVAL = 500;
 		STATUS_TIMEOUT_TIME = 3000;
 		STOP_TIMEOUT_TIME = 3000;
+		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		
+		tScales = [1,10,100];
 		
 		
 		
 		
 		// GLOBAL VARIABLES
+		
 		var state = RL_OFF;
 		var stopping = 0;
 		var starting = 0;
-		var timeOut;
 		var reqId = 0; // TODO: something usefull (random?)
 		var plotEnabled = 1;
 		var tScale = 0; // TODO: dropdown menu
+		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
 		
+		var timeOut;
+		var idMismatch;
+		
 		// data
-		var plotDataLength = 0;
+		var plotBufferCount = 0;
 		var plotData = [[],[],[],[],[],[]];
 		
 		// ajax post object
@@ -88,7 +95,10 @@ $(function() {
 		// STATUS CHECK
 		function getStatus() {
 			
-			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tScale.toString(), time: currentTime.toString()};
+			var e = document.getElementById("time_scale");
+			var tempTScale = parseInt(e.options[e.selectedIndex].value);
+			
+			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tempTScale.toString(), time: currentTime.toString()};
 			
 			$.ajax({
 				type: "post",
@@ -102,6 +112,7 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
+					clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -134,12 +145,18 @@ $(function() {
 							setTimeout(update, UPDATE_INTERVAL);
 						}
 					} else {
-						document.getElementById("status").innerHTML = 'Status: ERROR';
-						// set timer
-						setTimeout(update, UPDATE_INTERVAL);
-					}				
+						
+						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
+					}		
 				}
 			});
+		}
+		
+		function mismatch() {
+			// ID mismatch -> error
+			document.getElementById("status").innerHTML = 'Status: ERROR';
+			// set timer
+			setTimeout(update, UPDATE_INTERVAL);
 		}
 		
 		function parseStatus(tempState) {
@@ -253,7 +270,7 @@ $(function() {
 		
 		function resetData() {
 			
-			plotDataLength = 0;
+			plotBufferCount = 0;
 			plotData = [[],[],[],[],[],[]];
 			
 		}
@@ -263,12 +280,19 @@ $(function() {
 			
 			// extract information
 			var tempTScale = tempState[12];
+			if (tempTScale != tScale) {
+				resetData();
+				tScale = tempTScale;
+			}
 			var tempTime = parseInt(tempState[13]);
-			if (tempTime >= currentTime + TIME_DIV) {
+			
+			// TODO remove?
+			if (tempTime >= currentTime + maxBufferCount) {
 				// new data
 				//resetData();
 			}
 			currentTime = tempTime;
+			
 			var bufferCount = parseInt(tempState[14]);
 			var bufferSize = parseInt(tempState[15]);
 			
@@ -284,25 +308,25 @@ $(function() {
 			// process data
 			if (bufferCount > 0) {
 				
-				plotDataLength += bufferCount;
+				plotBufferCount += bufferCount;
 				
-				if(plotDataLength > TIME_DIV) {
+				if(plotBufferCount > maxBufferCount) {
 					// client buffer already full
 					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-						plotData[i] = plotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
+						plotData[i] = plotData[i].slice((plotBufferCount-maxBufferCount) * bufferSize);
 					}
-					plotDataLength = TIME_DIV;
+					plotBufferCount = maxBufferCount;
 				}
 				
-				for (var i = 0; i < bufferCount * BUFFER_SIZE; i++) {
+				for (var i = 0; i < bufferCount * bufferSize; i++) {
 					var tempData = JSON.parse(tempState[16 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
 							if(isCurrent[j]) {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 10*i, tempData[k]/1000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							} else {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 10*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000000]);
 							}
 							k++;
 						}
@@ -366,13 +390,13 @@ $(function() {
 		resetData();
 		
 		function updatePlot () {
-			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - TIME_DIV + 1);
+			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			vPlot.setupGrid();
 			vPlot.setData(getVData());
 			vPlot.draw();
 			
-			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - TIME_DIV + 1);
+			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			iPlot.setupGrid();
 			iPlot.setData(getIData());
