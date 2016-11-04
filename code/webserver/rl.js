@@ -42,7 +42,7 @@ $(function() {
 		var timeOut;
 		var reqId = 0; // TODO: something usefull (random?)
 		var plotEnabled = 1;
-		var tScale = 0; // TODO: dropdown menu
+		var tScale = 0//1; // TODO: dropdown menu
 		var currentTime = 0;
 		var filename = "data.rld";
 		
@@ -58,7 +58,17 @@ $(function() {
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
-		isCurrent = [true, false, false, true, false, false];	
+		isCurrent = [true, false, false, true, false, false];
+		
+		var isActive = true;
+
+		window.onfocus = function () { 
+		  isActive = true; 
+		}; 
+
+		window.onblur = function () { 
+		  isActive = false; 
+		}; 
 		
 		
 		
@@ -67,7 +77,9 @@ $(function() {
 		function update() {
 
 			// get status
-			getStatus();
+			if(isActive) {
+				getStatus();
+			}
 			
 			timeOut = setTimeout(update, STATUS_TIMEOUT_TIME);			
 			
@@ -103,8 +115,6 @@ $(function() {
 							document.getElementById("status").innerHTML = 'Status: RUNNING';
 							parseStatus(tempState);
 							
-							// re-update
-							update();
 						} else {
 							if(state == RL_ERROR) {
 								// TODO: check
@@ -119,6 +129,7 @@ $(function() {
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
+							resetData();
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
@@ -221,9 +232,15 @@ $(function() {
 				if (plotEnabled == 1 && newData == "1") {
 					// handle data
 					dataReceived(tempState);
+					
+					// re-update
+					update();
+				} else {
+					setTimeout(update, UPDATE_INTERVAL);
 				}
 			} else {
 				document.getElementById("dataAvailable").innerHTML = "No data available!";
+				setTimeout(update, UPDATE_INTERVAL);
 			}
 		}
 		
@@ -243,8 +260,9 @@ $(function() {
 			// extract information
 			var tempTScale = tempState[12];
 			var tempTime = parseInt(tempState[13]);
-			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
-				resetData();
+			if (tempTime >= currentTime + TIME_DIV) {
+				// new data
+				//resetData();
 			}
 			currentTime = tempTime;
 			var dataLength = parseInt(tempState[14]);
