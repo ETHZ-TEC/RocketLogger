@@ -42,7 +42,7 @@ $(function() {
 		var timeOut;
 		var reqId = 0; // TODO: something usefull (random?)
 		var plotEnabled = 1;
-		var tScale = 0//1; // TODO: dropdown menu
+		var tScale = 0; // TODO: dropdown menu
 		var currentTime = 0;
 		var filename = "data.rld";
 		
@@ -133,7 +133,11 @@ $(function() {
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
-					}					
+					} else {
+						document.getElementById("status").innerHTML = 'Status: ERROR';
+						// set timer
+						setTimeout(update, UPDATE_INTERVAL);
+					}				
 				}
 			});
 		}
@@ -265,7 +269,8 @@ $(function() {
 				//resetData();
 			}
 			currentTime = tempTime;
-			var dataLength = parseInt(tempState[14]);
+			var bufferCount = parseInt(tempState[14]);
+			var bufferSize = parseInt(tempState[15]);
 			
 			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
 			
@@ -277,9 +282,9 @@ $(function() {
 			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
 			
 			// process data
-			if (dataLength > 0) {
+			if (bufferCount > 0) {
 				
-				plotDataLength += dataLength;
+				plotDataLength += bufferCount;
 				
 				if(plotDataLength > TIME_DIV) {
 					// client buffer already full
@@ -289,15 +294,15 @@ $(function() {
 					plotDataLength = TIME_DIV;
 				}
 				
-				for (var i = 0; i < dataLength * BUFFER_SIZE; i++) {
-					var tempData = JSON.parse(tempState[15 + i]);
+				for (var i = 0; i < bufferCount * BUFFER_SIZE; i++) {
+					var tempData = JSON.parse(tempState[16 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
 							if(isCurrent[j]) {
-								plotData[j].push([1000*(currentTime-dataLength+1) + 10*i, tempData[k]/1000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 10*i, tempData[k]/1000]);
 							} else {
-								plotData[j].push([1000*(currentTime-dataLength+1) + 10*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 10*i, tempData[k]/1000000]);
 							}
 							k++;
 						}
