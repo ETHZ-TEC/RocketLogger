@@ -47,9 +47,9 @@ D55   RECTANGULAR       161.417      39.370       0.000 FLASH     270.000
 D56   RECTANGULAR       161.417      39.370       0.000 FLASH     180.000
 D57   RECTANGULAR       149.606      39.370       0.000 FLASH      90.000
 D58   RECTANGULAR       149.606      39.370       0.000 FLASH       0.000
-D59   ROUNDED            13.780      13.780       0.000  LINE       0.000
-D60   ROUNDED             4.921       4.921       0.000  LINE       0.000
-D61   ROUNDED             7.874       7.874       0.000  LINE       0.000
+D59   ROUNDED             7.874       7.874       0.000  LINE       0.000
+D60   ROUNDED            13.780      13.780       0.000  LINE       0.000
+D61   ROUNDED             4.921       4.921       0.000  LINE       0.000
 D62   ROUNDED            29.528      29.528       0.000  LINE       0.000
 D63   ROUNDED             5.905       5.905       0.000  LINE       0.000
 D64   ROUNDED            19.685      19.685       0.000  LINE       0.000
