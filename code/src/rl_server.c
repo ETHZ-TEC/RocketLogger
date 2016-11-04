@@ -85,7 +85,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	// print data
 	int32_t data[WEB_BUFFER_SIZE][num_channels];
 	int i;
-	for(i=0; i<data_length; i++) {
+	for(i=data_length-1; i>=0; i--) {
 		// read data
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
