@@ -383,7 +383,7 @@ classdef rld
         % get channel data
         function values = get_data(obj, channel)
             
-            if ~exist('channel', 'var') || strcmp(channel, 'all') == 1
+            if ~exist('channel', 'var') || sum(strcmp(channel, 'all')) == 1
                 channel = obj.get_channels();
             end
             
