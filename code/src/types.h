@@ -83,11 +83,6 @@
 #define DIGIN5_BIT 4
 #define DIGIN6_BIT 8
 
-// WEB
-#define WEB_BUFFER_SIZE 100
-#define NUM_WEB_CHANNELS 6
-
-
 
 // enumerations TODO: typedefs
 
@@ -188,7 +183,8 @@ struct header {
 // SEMAPHORES
 #define SEM_KEY 2222 // TODO: usefull key
 #define NUM_SEMS 2
-#define SEM_TIME_OUT 10
+#define SEM_TIME_OUT 3
+#define SEM_WRITE_TIME_OUT 1
 #define SEM_SET_TIME_OUT 1
 
 #define DATA_SEM 0
@@ -197,7 +193,6 @@ struct header {
 #define NO_FLAG 0
 
 #define TIME_OUT 0
-
 
 // ----- GLOBAL VARIABLES ----- //
 

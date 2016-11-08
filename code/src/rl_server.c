@@ -20,12 +20,15 @@ struct rl_web_resp {
 	uint8_t t_scale;
 	int64_t time;
 	uint32_t buffer_count;
+	uint32_t buffer_size;
 	float* data;
 };
 
 // Global variables
 int sem_id;
 struct web_shm* web_data;
+
+int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 
 // functions
 
@@ -55,7 +58,6 @@ void print_status(struct rl_status* status) {
 		printf("%d\n", status->samples_taken);
 		printf("%d\n", status->conf.enable_web_server);
 		
-		// TODO: print channels for plot
 	}
 		
 }
@@ -73,32 +75,37 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	}*/
 	
 	// get available buffers
-	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);			// TODO: keep semaphore locked
 	int buffer_available = web_data->buffer[t_scale].filled;
 	set_sem(sem_id, DATA_SEM, 1);
 	if(buffer_count > buffer_available) {
 		buffer_count = buffer_available;
 	}
 	
-	// TODO: variable
-	int buffer_size = 100;
+	int buffer_size = buffer_sizes[t_scale];
 	
 	printf("%d\n", buffer_count);
 	printf("%d\n", buffer_size);
 	
 	// print data
-	int32_t data[WEB_BUFFER_SIZE][num_channels];
+	int32_t data[buffer_size][num_channels];
 	int i;
 	for(i=buffer_count-1; i>=0; i--) {
 		// read data
 		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
-		memcpy(&data[0][0], shm_data, web_data->buffer[t_scale].size);
+		if(web_data->buffer[t_scale].element_size > sizeof(data)) {
+			rl_log(ERROR, "In print_data: memcpy is trying to copy to much data.");
+		} else {
+			memcpy(&data[0][0], shm_data, web_data->buffer[t_scale].element_size);
+		}
+		
 		set_sem(sem_id, DATA_SEM, 1);
 		
 		// print data
+		// TODO: move this to separate loop, without semaphore lock
 		int j;
-		for(j=0; j<WEB_BUFFER_SIZE; j++) {
+		for(j=0; j<buffer_size; j++) {
 			print_json_new(data[j], num_channels);
 		}
 	}
@@ -121,9 +128,9 @@ int main(int argc, char* argv[]) {
 	int64_t last_time = atoi(argv[4]);
 	
 	// TODO: expand for multiple time scales
-	if (t_scale != 0) {
-		rl_log(WARNING, "only time scale 0 implemented");
-		t_scale = 0;
+	if(t_scale != S1 && t_scale != S10 && t_scale != S100) {
+		rl_log(WARNING, "unknown time scale");
+		t_scale = S1;
 	}
 	
 	
@@ -159,7 +166,9 @@ int main(int argc, char* argv[]) {
 	while(data_read == 0) {
 		
 		// get current time
-		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+			exit(EXIT_FAILURE);
+		}
 		int64_t time = web_data->time;
 		int8_t num_channels = web_data->num_channels;
 		set_sem(sem_id, DATA_SEM, 1);

@@ -13,7 +13,7 @@ void rl_reset_calibration() {
 // get current data (used for webserver)
 int rl_get_data() { // TODO: use timeout
 	
-	float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
+	/*float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
 	
 	// write ready to control fifo
 	int ready = 1;
@@ -30,7 +30,7 @@ int rl_get_data() { // TODO: use timeout
 	int i;
 	for (i=0; i<WEB_BUFFER_SIZE; i++) {
 		print_json(data[i], NUM_WEB_CHANNELS);
-	}
+	}*/
 	
 	return SUCCESS;
 }

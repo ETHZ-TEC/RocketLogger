@@ -2,7 +2,10 @@
 
 #include "pru.h"
 
-int test_mode = 1;
+#define TEST_MODE 0
+#if TEST_MODE == 1
+	#warning "Test mode activated!"
+#endif
 
 
 
@@ -112,6 +115,10 @@ void pru_set_state(enum pru_states state){
 
 // PRU initiation
 int pru_init() {
+
+	#if TEST_MODE == 1
+		rl_log(WARNING, "PRU test mode activated!");
+	#endif
 	
 	// init PRU
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -255,15 +262,19 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		web_data->num_channels = num_web_channels;
 		
-		// web buffer size
-		int web_buffer_size = WEB_BUFFER_SIZE*num_web_channels*sizeof(int32_t);
+		// web buffer sizes
+		int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 		
-		// init web buffers
 		int i;
 		for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
-			reset_buffer(&web_data->buffer[i], web_buffer_size);
+			int web_buffer_element_size = buffer_sizes[i] * num_web_channels*sizeof(int32_t);
+			int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
+			reset_buffer(&web_data->buffer[i], web_buffer_element_size, web_buffer_length);
 		}
 		
+		/*int web_buffer_element_size = buffer_sizes[1] * num_web_channels*sizeof(int32_t);
+		int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[1];
+		reset_buffer(&web_data->buffer[0], web_buffer_element_size, web_buffer_length);*/
 	}
 	
 	
@@ -382,7 +393,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// Wait for event completion from PRU
-		if (test_mode == 0) {
+		if (TEST_MODE == 0) {
 			// only check for timout on first buffer (else it does not work!) -> TODO: check
 			if (i == 0) {
 				if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
@@ -402,7 +413,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 
 		
 		// check for overrun (compare buffer numbers)
-		if (test_mode == 0) {
+		if (TEST_MODE == 0) {
 			int buffer = *((uint32_t*) buffer_addr);
 			if (buffer != i) {
 				buffer_lost += (buffer - i);

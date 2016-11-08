@@ -9,8 +9,8 @@ if ~exist('filename', 'var')
 end
 
 file = fopen(num2str(filename),'r');
-offsets = fread(file,10,'int');
-scales = fread(file,10,'double');
+offsets = fread(file,8,'int');
+scales = fread(file,8,'double');
 fclose(file);
 
 end

@@ -6,6 +6,7 @@ $(function() {
 		// display disk space available
 		// default conf
 		// remove -b (in c code)
+		// auto range
 		
 		
 		// CONSTANTS
@@ -290,21 +291,18 @@ $(function() {
 			
 			// extract information
 			var tempTScale = tempState[12];
-			if (tempTScale != tScale) {
-				resetData();
-				tScale = tempTScale;
-			}
-			var tempTime = parseInt(tempState[13]);
-			
-			// TODO remove?
-			if (tempTime >= currentTime + maxBufferCount) {
-				// new data
-				//resetData();
-			}
-			currentTime = tempTime;
-			
+			currentTime = parseInt(tempState[13]);
 			var bufferCount = parseInt(tempState[14]);
 			var bufferSize = parseInt(tempState[15]);
+			
+			
+			if (tempTScale != tScale) {
+				resetData();
+				currentTime = 0;
+				tScale = tempTScale;
+				maxBufferCount = TIME_DIV * tScales[tScale];
+			}
+			document.getElementById("test").innerHTML = tempTScale;
 			
 			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
 			
