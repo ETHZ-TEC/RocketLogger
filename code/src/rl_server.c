@@ -132,11 +132,6 @@ int main(int argc, char* argv[]) {
 		rl_log(WARNING, "unknown time scale");
 		t_scale = S1;
 	}
-	// TODO: remove
-	if (t_scale != S1 && t_scale != S10) {
-		rl_log(WARNING, "only time scale 0,1 implemented");
-		t_scale = S1;
-	}
 	
 	
 	// get status

@@ -246,7 +246,6 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	}
 }
 
-int test = 0;
 int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
 	int i;
@@ -434,17 +433,6 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	
 	if (conf->enable_web_server == 1) {
 		
-		int l;
-		for(l=0; l<BUFFER1_SIZE; l++) {
-			temp_web_data[l][0] = test;
-			temp_web_data[l][1] = test+1;
-			temp_web_data[l][2] = test+2;
-			temp_web_data[l][3] = test+3;
-			temp_web_data[l][4] = test+4;
-			temp_web_data[l][5] = test+5;
-		}
-		test++;
-		
 		// get shared memory access
 		if(wait_sem(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
 			// TODO: do we have to clean up the semaphore?
@@ -455,8 +443,8 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 			
 			// write data to ring buffer
 			buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
-			//buffer_add(&web_data->buffer[1], &temp_web_data10[0][0]);
-			//buffer_add(&web_data->buffer[2], &temp_web_data100[0][0]);
+			buffer_add(&web_data->buffer[1], &temp_web_data10[0][0]);
+			buffer_add(&web_data->buffer[2], &temp_web_data100[0][0]);
 			
 			// release shared memory
 			set_sem(sem_id, DATA_SEM, 1);
