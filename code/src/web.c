@@ -35,24 +35,26 @@ struct web_shm* open_web_shm() {
 }
 
 
-void reset_buffer(struct ringbuffer* buffer, int size) {
-	int i;
-	for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
-		buffer->size = size;
+void reset_buffer(struct ringbuffer* buffer, int element_size, int length) {
+	//int i;
+	//for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
+		buffer->element_size = element_size;
+		buffer->length = length;
 		buffer->filled = 0;
 		buffer->head = 0;
-	}
+	//}
 }
 
 void buffer_add(struct ringbuffer* buffer, int32_t* data) {
-	memcpy((buffer->data) + buffer->head*buffer->size, data, buffer->size);
-	if(buffer->filled < WEB_BUFFER_ELEMENTS) {
+	memcpy((buffer->data) + buffer->head*buffer->element_size, data, buffer->element_size);
+	if(buffer->filled < buffer->length) {
 		buffer->filled++;
 	}
-	buffer->head = (buffer->head + 1) % WEB_BUFFER_ELEMENTS;
+	buffer->head = (buffer->head + 1) % buffer->length;
+	
 }
 
 int32_t* buffer_get(struct ringbuffer* buffer, int num) {
-	int pos = (buffer->head + WEB_BUFFER_ELEMENTS - 1 - num) % WEB_BUFFER_ELEMENTS;
-	return buffer->data + pos*buffer->size;
+	int pos = ((int)buffer->head + (int)buffer->length - 1 - num) % (int)buffer->length;
+	return buffer->data + pos*buffer->element_size;
 }

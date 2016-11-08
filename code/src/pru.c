@@ -262,15 +262,19 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		web_data->num_channels = num_web_channels;
 		
-		// web buffer size
-		int web_buffer_size = WEB_BUFFER_SIZE*num_web_channels*sizeof(int32_t);
+		// web buffer sizes
+		int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 		
-		// init web buffers
 		int i;
 		for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
-			reset_buffer(&web_data->buffer[i], web_buffer_size);
+			int web_buffer_element_size = buffer_sizes[i] * num_web_channels*sizeof(int32_t);
+			int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
+			reset_buffer(&web_data->buffer[i], web_buffer_element_size, web_buffer_length);
 		}
 		
+		/*int web_buffer_element_size = buffer_sizes[1] * num_web_channels*sizeof(int32_t);
+		int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[1];
+		reset_buffer(&web_data->buffer[0], web_buffer_element_size, web_buffer_length);*/
 	}
 	
 	
