@@ -75,7 +75,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	}*/
 	
 	// get available buffers
-	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);			// TODO: keep semaphore locked
 	int buffer_available = web_data->buffer[t_scale].filled;
 	set_sem(sem_id, DATA_SEM, 1);
 	if(buffer_count > buffer_available) {
@@ -99,6 +99,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 		set_sem(sem_id, DATA_SEM, 1);
 		
 		// print data
+		// TODO: move this to separate loop, without semaphore lock
 		int j;
 		for(j=0; j<buffer_size; j++) {
 			print_json_new(data[j], num_channels);
