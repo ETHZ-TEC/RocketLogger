@@ -286,13 +286,28 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int value = 0;
 	
 	// data for web interface
-	int avg_number = samples_buffer / WEB_BUFFER_SIZE;
+	int avg_number = samples_buffer / BUFFER1_SIZE; // TODO: for all buffers (1-100)
+	int avg_number10 = samples_buffer / BUFFER10_SIZE;
+	int avg_number100 = samples_buffer / BUFFER100_SIZE;
+	
 	int64_t avg_data[num_channels];
+	int64_t avg_data10[num_channels];
+	int64_t avg_data100[num_channels];
+	
 	memset(avg_data, 0, sizeof(int64_t) * num_channels);
+	memset(avg_data10, 0, sizeof(int64_t) * num_channels);
+	memset(avg_data100, 0, sizeof(int64_t) * num_channels);
+	
 	uint8_t web_valid1 = 1;
 	uint8_t web_valid2 = 1;
+	uint8_t web_valid1_10 = 1;
+	uint8_t web_valid2_10 = 1;
+	uint8_t web_valid1_100 = 1;
+	uint8_t web_valid2_100 = 1;
 	
-	int32_t temp_web_data[WEB_BUFFER_SIZE][num_web_channels];
+	int32_t temp_web_data[BUFFER1_SIZE][num_web_channels];
+	int32_t temp_web_data10[BUFFER10_SIZE][num_web_channels];
+	int32_t temp_web_data100[BUFFER100_SIZE][num_web_channels];
 
 	
 	// store buffer
@@ -324,6 +339,10 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		// web
 		web_valid1 = web_valid1 & valid1;
 		web_valid2 = web_valid2 & valid2;
+		web_valid1_10 = web_valid1_10 & valid1;
+		web_valid2_10 = web_valid2_10 & valid2;
+		web_valid1_100 = web_valid1_100 & valid1;
+		web_valid2_100 = web_valid2_100 & valid2;
 		
 		if(conf->channels[I1L_INDEX] > 0) {
 			bin_data = bin_data | (valid1 << num_bin_channels);
@@ -365,6 +384,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				int j;
 				for(j=0; j<num_channels; j++) {
 					avg_data[j] /= avg_number;
+					avg_data10[j] += avg_data[j];
 				}
 				
 				// merge_currents
@@ -377,25 +397,63 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				web_valid1 = 1;
 				web_valid2 = 1;
 			}
+			
+			if((i+1)%avg_number10 == 0) {
+				
+				// average
+				int j;
+				for(j=0; j<num_channels; j++) {
+					avg_data10[j] /= (avg_number10/avg_number);
+					avg_data100[j] += avg_data10[j];
+				}
+				
+				// merge_currents
+				merge_currents(web_valid1_10, web_valid2_10, temp_web_data10[i/avg_number10], avg_data10, conf);
+				
+				// reset values
+				memset(avg_data10, 0, sizeof(int64_t) * num_channels);
+				web_valid1_10 = 1;
+				web_valid2_10 = 1;
+			}
+			
+			if((i+1)%avg_number100 == 0) {
+				
+				// average
+				int j;
+				for(j=0; j<num_channels; j++) {
+					avg_data100[j] /= (avg_number100*avg_number10);
+					avg_data100[j] += avg_data10[j];
+				}
+				
+				// merge_currents
+				merge_currents(web_valid1_100, web_valid2_100, temp_web_data100[i/avg_number100], avg_data100, conf);
+			}
 		}
     }
 	
 	if (conf->enable_web_server == 1) {
 		
 		// get shared memory access
-		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		if(wait_sem(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
+			// TODO: do we have to clean up the semaphore?
+		} else {
 		
-		// write time
-		web_data->time = time_real.sec;
+			// write time
+			web_data->time = time_real.sec;
+			
+			// write data to ring buffer
+			buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
+			buffer_add(&web_data->buffer[1], &temp_web_data10[0][0]);
+			buffer_add(&web_data->buffer[2], &temp_web_data100[0][0]);
+			
+			// release shared memory
+			set_sem(sem_id, DATA_SEM, 1);
 		
-		// write data to ring buffer
-		buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
-		// TODO: for buffer10-1000
-		
-		// release shared memory
-		set_sem(sem_id, DATA_SEM, 1);
+		}
 		
 		// notify web clients
+		// Note: There is a possible race condition here, which might result
+		//   in one web client not getting notified once, do we care?
 		int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
 		set_sem(sem_id, WAIT_SEM, num_web_clients);
 	}

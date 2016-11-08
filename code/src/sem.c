@@ -35,7 +35,7 @@ int wait_sem(int sem_id, int sem_num, int time_out) {
 	
 	if(semtimedop(sem_id, &sem_ops, num_ops, &t_out) < 0) {
 		if(errno == EAGAIN) {
-			rl_log(ERROR, "time-out waiting on semaphore");
+			rl_log(WARNING, "time-out waiting on semaphore");
 			return TIME_OUT;
 		} else if(errno == EIDRM) {
 			rl_log(INFO, "waiting on semaphore failed: semaphore removed");

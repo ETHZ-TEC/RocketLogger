@@ -4,9 +4,9 @@ $(function() {
 		// digital inputs
 		// display sampling time
 		// display disk space available
-		// remove update rate
 		// default conf
 		// remove -b (in c code)
+		// auto range
 		
 		
 		// CONSTANTS
@@ -29,34 +29,55 @@ $(function() {
 		UPDATE_INTERVAL = 500;
 		STATUS_TIMEOUT_TIME = 3000;
 		STOP_TIMEOUT_TIME = 3000;
+		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		
+		tScales = [1,10,100];
 		
 		
 		
 		
 		// GLOBAL VARIABLES
+		
 		var state = RL_OFF;
 		var stopping = 0;
 		var starting = 0;
-		var timeOut;
 		var reqId = 0; // TODO: something usefull (random?)
 		var plotEnabled = 1;
 		var tScale = 0; // TODO: dropdown menu
+		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
+		var loadDefault = false;
+		
+		var timeOut;
+		var idMismatch;
+		
 		// data
-		var plotDataLength = 0;
-		var newPlotData = [[],[],[],[],[],[]]; // TODO: rename
+		var plotBufferCount = 0;
+		var plotData = [[],[],[],[],[],[]];
 		
 		// ajax post object
+		var statusObj;
 		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
 		
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
-		isCurrent = [true, false, false, true, false, false];	
+		isCurrent = [true, false, false, true, false, false];
+		
+		var isActive = true;
+
+		window.onfocus = function () { 
+		  isActive = true; 
+		}; 
+
+		window.onblur = function () { 
+		  isActive = false; 
+		}; 
+		
 		
 		
 		// UPDATE
@@ -64,7 +85,9 @@ $(function() {
 		function update() {
 
 			// get status
-			getStatus();
+			if(isActive || $("#active:checked").length > 0) {
+				getStatus();
+			}
 			
 			timeOut = setTimeout(update, STATUS_TIMEOUT_TIME);			
 			
@@ -73,11 +96,16 @@ $(function() {
 		// STATUS CHECK
 		function getStatus() {
 			
+			var e = document.getElementById("time_scale");
+			var tempTScale = parseInt(e.options[e.selectedIndex].value);
+			
+			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tempTScale.toString(), time: currentTime.toString()};
+			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tScale.toString(), time: currentTime.toString()},
+				data: statusObj,
 				
 				complete: function (response) {
 					$('#output').html(response.responseText);
@@ -85,6 +113,7 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
+					clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -98,8 +127,6 @@ $(function() {
 							document.getElementById("status").innerHTML = 'Status: RUNNING';
 							parseStatus(tempState);
 							
-							// re-update
-							update();
 						} else {
 							if(state == RL_ERROR) {
 								// TODO: check
@@ -111,15 +138,32 @@ $(function() {
 								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
 							}
 							
+							// load default
+							if(loadDefault) {
+								parseStatus(tempState);
+								loadDefault = false;
+							}
+							
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
+							resetData();
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
-					}					
+					} else {
+						
+						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
+					}		
 				}
 			});
+		}
+		
+		function mismatch() {
+			// ID mismatch -> error
+			document.getElementById("status").innerHTML = 'Status: ERROR';
+			// set timer
+			setTimeout(update, UPDATE_INTERVAL);
 		}
 		
 		function parseStatus(tempState) {
@@ -208,7 +252,11 @@ $(function() {
 			updateFhrs();
 			
 			// samples taken
-			document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+			if(state == RL_RUNNING) {
+				document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+			} else {
+				document.getElementById("webserver").innerHTML = '';
+			}
 			
 			// data
 			if (dataAvailable == "1") {
@@ -216,19 +264,25 @@ $(function() {
 				if (plotEnabled == 1 && newData == "1") {
 					// handle data
 					dataReceived(tempState);
+					
+					// re-update
+					update();
+				} else {
+					setTimeout(update, UPDATE_INTERVAL);
 				}
 			} else {
 				document.getElementById("dataAvailable").innerHTML = "No data available!";
+				setTimeout(update, UPDATE_INTERVAL);
 			}
 		}
 		
 		
 		// DATA HANDLING
 		
-		function newResetData() {
+		function resetData() {
 			
-			plotDataLength = 0;
-			newPlotData = [[],[],[],[],[],[]];
+			plotBufferCount = 0;
+			plotData = [[],[],[],[],[],[]];
 			
 		}
 		
@@ -237,13 +291,18 @@ $(function() {
 			
 			// extract information
 			var tempTScale = tempState[12];
-			var tempTime = parseInt(tempState[13]);
-			if (tempTime >= currentTime + STATUS_TIMEOUT_TIME/1000) {
-				//newRun = 1;
-				newResetData();
+			currentTime = parseInt(tempState[13]);
+			var bufferCount = parseInt(tempState[14]);
+			var bufferSize = parseInt(tempState[15]);
+			
+			
+			if (tempTScale != tScale) {
+				resetData();
+				currentTime = 0;
+				tScale = tempTScale;
+				maxBufferCount = TIME_DIV * tScales[tScale];
 			}
-			currentTime = tempTime;
-			var dataLength = parseInt(tempState[14]);
+			document.getElementById("test").innerHTML = tempTScale;
 			
 			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
 			
@@ -255,28 +314,27 @@ $(function() {
 			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
 			
 			// process data
-			if (dataLength > 0) {
+			if (bufferCount > 0) {
 				
-				plotDataLength += dataLength;
+				plotBufferCount += bufferCount;
 				
-				if(plotDataLength >= TIME_DIV) {
+				if(plotBufferCount > maxBufferCount) {
 					// client buffer already full
 					for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-						newPlotData[i] = newPlotData[i].slice((plotDataLength-TIME_DIV) * BUFFER_SIZE);
+						plotData[i] = plotData[i].slice((plotBufferCount-maxBufferCount) * bufferSize);
 					}
-					plotDataLength = TIME_DIV;
+					plotBufferCount = maxBufferCount;
 				}
 				
-				for (var i = 0; i < dataLength * BUFFER_SIZE; i++) {
-					var tempData = JSON.parse(tempState[15 + i]);
+				for (var i = 0; i < bufferCount * bufferSize; i++) {
+					var tempData = JSON.parse(tempState[16 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
 							if(isCurrent[j]) {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000]);
-							//newPlotData[j].push([i, tempData[k]]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							} else {
-								newPlotData[j].push([1000*(currentTime-dataLength) + 10*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000000]);
 							}
 							k++;
 						}
@@ -284,9 +342,6 @@ $(function() {
 				}
 				updatePlot();
 			}
-			
-			document.getElementById("test").innerHTML = reqId;
-			
 		}
 
 		
@@ -294,17 +349,18 @@ $(function() {
 		function getVData() {
 			
 			// generate for plot
-			var plotData = [];
+			var vData = [];
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( !isCurrent[i] ) {
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
-					plotData.push(plotChannel);
+					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					vData.push(plotChannel);
 				}
 			}
 			
-			return plotData;
+			return vData;
+			
 			
 		}
 		
@@ -312,17 +368,17 @@ $(function() {
 		function getIData() {
 			
 			// generate for plot
-			var plotData = [];
+			var iData = [];
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( isCurrent[i] ) {
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: newPlotData[i]};
-					plotData.push(plotChannel);
+					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					iData.push(plotChannel);
 				}
 			}
 			
-			return plotData;
+			return iData;
 			
 		}
 		
@@ -339,12 +395,17 @@ $(function() {
 		});
 		
 		// reset plot
-		newResetData();
+		resetData();
 		
 		function updatePlot () {
+			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
+            vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			vPlot.setupGrid();
 			vPlot.setData(getVData());
 			vPlot.draw();
+			
+			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
+            iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			iPlot.setupGrid();
 			iPlot.setData(getIData());
 			iPlot.draw();
@@ -379,6 +440,11 @@ $(function() {
 		
 		// BUTTONS
 		
+		// load conf button
+		$("#load_default").click(function () {
+			loadDefault = true;
+		});
+		
 		// start button
 		$("#start").click(function () {
 			start();
@@ -399,8 +465,8 @@ $(function() {
 				return false;
 			}
 			
-			//resetData();
-			newResetData();
+			// reset data
+			resetData();
 			starting = 1;
 			
 			$.ajax({
@@ -645,6 +711,11 @@ $(function() {
 				cmd_obj.digital_inputs = " -d";
 			} else {
 				cmd_obj.digital_inputs = " -d 0";
+			}
+			
+			// set as default
+			if ($("#set_default:checked").length > 0) {
+				cmd_obj.digital_inputs += " -s";
 			}
 			
 			return true;
