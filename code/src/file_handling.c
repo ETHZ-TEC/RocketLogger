@@ -435,13 +435,13 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	if (conf->enable_web_server == 1) {
 		
 		int l;
-		for(l=0; l<BUFFER10_SIZE; l++) {
-			temp_web_data10[l][0] = test;
-			temp_web_data10[l][1] = test+1;
-			temp_web_data10[l][2] = test+2;
-			temp_web_data10[l][3] = test+3;
-			temp_web_data10[l][4] = test+4;
-			temp_web_data10[l][5] = test+5;
+		for(l=0; l<BUFFER1_SIZE; l++) {
+			temp_web_data[l][0] = test;
+			temp_web_data[l][1] = test+1;
+			temp_web_data[l][2] = test+2;
+			temp_web_data[l][3] = test+3;
+			temp_web_data[l][4] = test+4;
+			temp_web_data[l][5] = test+5;
 		}
 		test++;
 		
