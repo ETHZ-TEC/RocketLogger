@@ -12,6 +12,14 @@ The RocketLogger is a data logger that...
 
 Project Organization
 --------------------
+
+The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*.
+
+Mailing list link: <https://lists.ee.ethz.ch/wws/info/rocketlogger>
+
+
+Project Organization
+--------------------
 The project consists of two parts
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
 * The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
