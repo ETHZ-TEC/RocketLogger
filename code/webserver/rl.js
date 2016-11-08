@@ -4,7 +4,6 @@ $(function() {
 		// digital inputs
 		// display sampling time
 		// display disk space available
-		// remove update rate
 		// default conf
 		// remove -b (in c code)
 		
@@ -49,6 +48,7 @@ $(function() {
 		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
+		var loadDefault = false;
 		
 		var timeOut;
 		var idMismatch;
@@ -135,6 +135,12 @@ $(function() {
 								stopping = 0;
 							} else {
 								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
+							}
+							
+							// load default
+							if(loadDefault) {
+								parseStatus(tempState);
+								loadDefault = false;
 							}
 							
 							// reset displays
@@ -245,7 +251,11 @@ $(function() {
 			updateFhrs();
 			
 			// samples taken
-			document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+			if(state == RL_RUNNING) {
+				document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+			} else {
+				document.getElementById("webserver").innerHTML = '';
+			}
 			
 			// data
 			if (dataAvailable == "1") {
@@ -431,6 +441,11 @@ $(function() {
 		
 		
 		// BUTTONS
+		
+		// load conf button
+		$("#load_default").click(function () {
+			loadDefault = true;
+		});
 		
 		// start button
 		$("#start").click(function () {
@@ -698,6 +713,11 @@ $(function() {
 				cmd_obj.digital_inputs = " -d";
 			} else {
 				cmd_obj.digital_inputs = " -d 0";
+			}
+			
+			// set as default
+			if ($("#set_default:checked").length > 0) {
+				cmd_obj.digital_inputs += " -s";
 			}
 			
 			return true;
