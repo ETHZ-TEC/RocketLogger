@@ -2,11 +2,13 @@ $(function() {
 	
 		// TODO
 		// digital inputs
+		// auto range
+		// fix jumps
+		
+		
 		// display sampling time
 		// display disk space available
-		// default conf
 		// remove -b (in c code)
-		// auto range
 		
 		
 		// CONSTANTS
@@ -54,6 +56,10 @@ $(function() {
 		var timeOut;
 		var idMismatch;
 		
+		// plots
+		var vPlot;
+		var iPlot;
+		
 		// data
 		var plotBufferCount = 0;
 		var plotData = [[],[],[],[],[],[]];
@@ -98,6 +104,9 @@ $(function() {
 			
 			var e = document.getElementById("time_scale");
 			var tempTScale = parseInt(e.options[e.selectedIndex].value);
+			if(tempTScale != tScale) {
+				currentTime = 0;
+			}
 			
 			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tempTScale.toString(), time: currentTime.toString()};
 			
@@ -147,7 +156,7 @@ $(function() {
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
-							resetData();
+							//resetData();
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
@@ -282,6 +291,7 @@ $(function() {
 		function resetData() {
 			
 			plotBufferCount = 0;
+			plotData = [];
 			plotData = [[],[],[],[],[],[]];
 			
 		}
@@ -295,22 +305,11 @@ $(function() {
 			var bufferCount = parseInt(tempState[14]);
 			var bufferSize = parseInt(tempState[15]);
 			
-			
 			if (tempTScale != tScale) {
 				resetData();
-				currentTime = 0;
 				tScale = tempTScale;
 				maxBufferCount = TIME_DIV * tScales[tScale];
 			}
-			
-			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
-			
-			
-			// TODO:
-			/*var hours = date.getHours();
-			var minutes = "0" + date.getMinutes();
-			var seconds = "0" + date.getSeconds();
-			dateString = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);*/
 			
 			// process data
 			if (bufferCount > 0) {
@@ -399,6 +398,14 @@ $(function() {
 			} else {
 				plotEnabled = 0;
 			}
+		});
+		
+		//  update plot when range changed
+		$("#voltage_range").change(function () {
+			updatePlot();
+		});
+		$("#current_range").change(function () {
+			updatePlot();
 		});
 		
 		// reset plot
@@ -490,32 +497,6 @@ $(function() {
 				}
 			});
 		}
-
-		var vPlot;/* = $.plot("#vPlaceholder", getVData(), {
-			series: {
-				shadowSize: 0
-			},
-			xaxis: {
-				mode: "time",
-				show: true
-			},
-			yaxis: {
-				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Voltage [V]";}
-			}
-		});*/
-		
-		var iPlot;/* = $.plot("#iPlaceholder", getIData(), {
-			series: {
-				shadowSize: 0
-			},
-			xaxis: {
-				mode: "time",
-				show: true
-			},
-			yaxis: {
-				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Current [µA]";}
-			}
-		});*/
 		
 		
 		// BUTTONS
