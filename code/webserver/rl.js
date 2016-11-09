@@ -349,11 +349,12 @@ $(function() {
 			// generate for plot
 			var vData = [];
 			
-			//var max = maxVValue(plotData);
-			//document.getElementById("test").innerHTML = max;
+			var max = maxVValue(plotData);
+			document.getElementById("test").innerHTML = max;
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( !isCurrent[i] ) {
+					var tempData;
 					/*if(max < 1) {
 						for(var j=0; j< plotData.length; j++) {
 							plotData[j][1] *= 1000;
@@ -411,7 +412,7 @@ $(function() {
 		// reset plot
 		resetData();
 		
-		/*function maxVValue(data) {
+		function maxVValue(data) {
 			
 			var max = 0;
 			
@@ -420,10 +421,9 @@ $(function() {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {
-						// TODO
-							if(Math.abs(tempData[j][1]) > tempMax){
-								tempMax = Math.abs(tempData[j][1]);
-							}
+						if(Math.abs(tempData[j][1]) > tempMax){
+							tempMax = Math.abs(tempData[j][1]);
+						}
 					}
 					if(tempMax>max) {
 						max = tempMax;
@@ -433,7 +433,7 @@ $(function() {
 			
 			return max;
 			//document.getElementById("test").innerHTML = max;
-		}*/
+		}
 		
 		function updatePlot () {
 			
