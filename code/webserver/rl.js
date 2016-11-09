@@ -3,8 +3,6 @@ $(function() {
 		// TODO
 		// digital inputs
 		// fix jumps
-		// not all channels selected
-		// tooltip not -> check
 		
 		// csv - files
 		// currents: less average!
@@ -489,20 +487,7 @@ $(function() {
 					}
 					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};
 					digData.push(plotChannel);
-					
-					/*var plotChannel = {color: CHANNEL_COLORS[index], label: CHANNEL_NAMES[index], data: plotData[index]};
-					digData.push(plotChannel);*/
 				}
-				
-				/*// TODO
-				if(index == 0) {
-					var tempData = [];
-					for(var j=0; j< plotData[1].length; j++) {
-						tempData.push([plotData[1][j][0], plotData[1][j][1] + 2]);
-					}
-					var plotChannel = {color: CHANNEL_COLORS[1], label: CHANNEL_NAMES[1], data: tempData};
-					digData.push(plotChannel);
-				}*/
 			}
 			
 			return digData;
@@ -607,13 +592,9 @@ $(function() {
 			iPlot.setupGrid();
 			iPlot.draw();
 			
-			//for(var i=0; i<NUM_DIG_CHANNELS ; i++) {
-				digPlot.setData(getDigData());
-				digPlot.setupGrid();
-				digPlot.draw();
-			//}
-			
-			
+			digPlot.setData(getDigData());
+			digPlot.setupGrid();
+			digPlot.draw();
 			
 		}
 		
@@ -649,23 +630,20 @@ $(function() {
 		
 		function resetDigPlot() {
 			
-			//for(var i=0; i<NUM_DIG_CHANNELS ; i++) {
-				//var name = "#dig" + (i+1).toString() + "Placeholder";//"#dig1Placeholder";//
-				digPlot = $.plot("#digPlaceholder", getDigData(), {
-					series: {
-						shadowSize: 0
-					},
-					xaxis: {
-						mode: "time",
-						show: false
-					},
-					yaxis: {
-						min: -0.1,
-						max: NUM_DIG_CHANNELS*DIG_DIST_FACTOR+0.1,
-						ticks: [[0,'Low'],[1,'High'],[1.5,'Low'],[2.5,'High'],[3,'Low'],[4,'High'],[4.5,'Low'],[5.5,'High'],[6,'Low'],[7,'High'],[7.5,'Low'],[8.5,'High']]
-					}
-				});
-			//}
+			digPlot = $.plot("#digPlaceholder", getDigData(), {
+				series: {
+					shadowSize: 0
+				},
+				xaxis: {
+					mode: "time",
+					show: true
+				},
+				yaxis: {
+					min: -0.1,
+					max: NUM_DIG_CHANNELS*DIG_DIST_FACTOR+0.1,
+					ticks: [[0,'Low'],[1,'High'],[1.5,'Low'],[2.5,'High'],[3,'Low'],[4,'High'],[4.5,'Low'],[5.5,'High'],[6,'Low'],[7,'High'],[7.5,'Low'],[8.5,'High']]
+				}
+			});
 		}
 		
 		
