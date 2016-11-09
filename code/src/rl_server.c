@@ -3,6 +3,7 @@
 #include "rl_lib.h"
 #include "web.h"
 #include "util.h"
+#include "rl_util.h"
 
 #define ARG_COUNT 4
 
@@ -47,18 +48,18 @@ void print_json_new(int32_t data[], int length) {
 
 void print_status(struct rl_status* status) {
 	printf("%d\n", status->state);
-	if(status->state == RL_RUNNING) {
-		printf("%d\n", status->conf.sample_rate);
-		printf("%d\n", status->conf.update_rate);
-		printf("%d\n", status->conf.digital_inputs);
-		printf("%d\n", status->conf.file_format);
-		printf("%s\n", status->conf.file_name);
-		print_json_new(status->conf.channels, NUM_CHANNELS);
-		print_json_new(status->conf.force_high_channels, NUM_I_CHANNELS);
-		printf("%d\n", status->samples_taken);
-		printf("%d\n", status->conf.enable_web_server);
-		
+	if(status->state != RL_RUNNING) {
+		read_default_config(&status->conf);
 	}
+	printf("%d\n", status->conf.sample_rate);
+	printf("%d\n", status->conf.update_rate);
+	printf("%d\n", status->conf.digital_inputs);
+	printf("%d\n", status->conf.file_format);
+	printf("%s\n", status->conf.file_name);
+	print_json_new(status->conf.channels, NUM_CHANNELS);
+	print_json_new(status->conf.force_high_channels, NUM_I_CHANNELS);
+	printf("%d\n", status->samples_taken);
+	printf("%d\n", status->conf.enable_web_server);
 		
 }
 
