@@ -286,7 +286,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int value = 0;
 	
 	// data for web interface
-	int avg_number = samples_buffer / BUFFER1_SIZE; // TODO: for all buffers (1-100)
+	int avg_number = samples_buffer / BUFFER1_SIZE;
 	int avg_number10 = samples_buffer / BUFFER10_SIZE;
 	int avg_number100 = samples_buffer / BUFFER100_SIZE;
 	

@@ -5,6 +5,9 @@ $(function() {
 		// fix jumps
 		// not all channels selected
 		
+		// csv - files
+		// currents: less average!
+		
 		
 		// display sampling time
 		// display disk space available
