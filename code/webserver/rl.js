@@ -831,10 +831,10 @@ $(function() {
 		});
 		
 		// log download
-		/*$("#download_log").click(function () {
+		$("#download_log").click(function () {
 			file = 'log/log.txt';
 			window.open(file);
-		});*/
+		});
 		
 		// delete button
 		$("#delete").click(function () {
