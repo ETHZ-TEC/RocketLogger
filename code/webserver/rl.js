@@ -28,6 +28,7 @@ $(function() {
 		TIME_DIV = 10;
 		
 		NUM_PLOT_CHANNELS = 12;
+		NUM_DIG_CHANNELS = 6;
 		
 		NUM_CHANNELS = 8;
 		NUM_I_CHANNELS = 2;
@@ -38,7 +39,9 @@ $(function() {
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6", "I1", "V1", "V2", "I2", "V3", "V4"];
-		CHANNEL_COLORS = [0,0,0,0,0,0,0,0,1,1,2,3];
+		CHANNEL_COLORS = [0,1,2,3,4,5,0,0,1,1,2,3];
+		
+		DIG_DIST_FACTOR = 1.5;
 		
 		tScales = [1,10,100];
 		
@@ -67,6 +70,8 @@ $(function() {
 		// plots
 		var vPlot;
 		var iPlot;
+		
+		var digPlot = [];
 		
 		// data
 		var plotBufferCount = 0;
@@ -262,7 +267,7 @@ $(function() {
 			updateChannels();
 			
 			plotChannels = [digInps, digInps, digInps, digInps, digInps, digInps, channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
-			displayChannels = [false, false, false, false, false, false, $("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
+			displayChannels = [true, true, true, true, true, true, $("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
 			
 			// fhrs
 			for (var i=0; i<NUM_I_CHANNELS; i++) {
@@ -349,6 +354,8 @@ $(function() {
 								} else {
 									plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 								}
+							} else {
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, parseInt(tempData[k])]);
 							}
 							k++;
 						}
@@ -468,6 +475,39 @@ $(function() {
 			
 		}
 		
+		function getDigData() {
+			// generate for plot
+			var digData = [];
+			
+			
+			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
+				if(plotChannels[i] && displayChannels[i] && isDigital[i]) {
+					
+					var tempData = [];
+					for(var j=0; j< plotData[i].length; j++) {
+						tempData.push([plotData[i][j][0], plotData[i][j][1] + DIG_DIST_FACTOR*(NUM_DIG_CHANNELS-i-1)]);
+					}
+					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};
+					digData.push(plotChannel);
+					
+					/*var plotChannel = {color: CHANNEL_COLORS[index], label: CHANNEL_NAMES[index], data: plotData[index]};
+					digData.push(plotChannel);*/
+				}
+				
+				/*// TODO
+				if(index == 0) {
+					var tempData = [];
+					for(var j=0; j< plotData[1].length; j++) {
+						tempData.push([plotData[1][j][0], plotData[1][j][1] + 2]);
+					}
+					var plotChannel = {color: CHANNEL_COLORS[1], label: CHANNEL_NAMES[1], data: tempData};
+					digData.push(plotChannel);
+				}*/
+			}
+			
+			return digData;
+		}
+		
 		
 		// PLOTTING
 		
@@ -539,7 +579,7 @@ $(function() {
 		
 		function updatePlot () {
 			
-			
+			vPlot.setData(getVData());
 			var e = document.getElementById("voltage_range");
 			vRange = e.options[e.selectedIndex].value;
 			if(vRange > 0) {
@@ -551,10 +591,9 @@ $(function() {
 			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			vPlot.setupGrid();
-			vPlot.setData(getVData());
 			vPlot.draw();
 			
-			
+			iPlot.setData(getIData());
 			var e = document.getElementById("current_range");
 			iRange = e.options[e.selectedIndex].value;
 			if(iRange > 0) {
@@ -566,8 +605,16 @@ $(function() {
 			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			iPlot.setupGrid();
-			iPlot.setData(getIData());
 			iPlot.draw();
+			
+			//for(var i=0; i<NUM_DIG_CHANNELS ; i++) {
+				digPlot.setData(getDigData());
+				digPlot.setupGrid();
+				digPlot.draw();
+			//}
+			
+			
+			
 		}
 		
 		function resetVPlot() {
@@ -598,6 +645,27 @@ $(function() {
 					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : iAxisLabel;}
 				}
 			});
+		}
+		
+		function resetDigPlot() {
+			
+			//for(var i=0; i<NUM_DIG_CHANNELS ; i++) {
+				//var name = "#dig" + (i+1).toString() + "Placeholder";//"#dig1Placeholder";//
+				digPlot = $.plot("#digPlaceholder", getDigData(), {
+					series: {
+						shadowSize: 0
+					},
+					xaxis: {
+						mode: "time",
+						show: false
+					},
+					yaxis: {
+						min: -0.1,
+						max: NUM_DIG_CHANNELS*DIG_DIST_FACTOR+0.1,
+						ticks: [[0,'Low'],[1,'High'],[1.5,'Low'],[2.5,'High'],[3,'Low'],[4,'High'],[4.5,'Low'],[5.5,'High'],[6,'Low'],[7,'High'],[7.5,'Low'],[8.5,'High']]
+					}
+				});
+			//}
 		}
 		
 		
@@ -943,6 +1011,8 @@ $(function() {
 		// never ending update function
 		resetVPlot();
 		resetIPlot();
+		// TODO:
+		resetDigPlot();
 		update();
 
 });

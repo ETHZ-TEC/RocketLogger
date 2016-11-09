@@ -316,6 +316,9 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	memset(avg_data, 0, sizeof(int64_t) * num_channels);
 	memset(avg_data10, 0, sizeof(int64_t) * num_channels);
 	memset(avg_data100, 0, sizeof(int64_t) * num_channels);
+		
+	int32_t bin_web_data[num_bin_channels];
+	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels);
 	
 	uint8_t web_valid1 = 1;
 	uint8_t web_valid2 = 1;
@@ -348,6 +351,19 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
 			bin_channel_pos = NUM_DIGITAL_INPUTS;
+			
+			// average for web
+			if(conf->enable_web_server == 1) {
+				int j;
+				int32_t MASK = 1;
+				for(j=0; j<num_bin_channels; j++) {
+					if((bin_data & MASK) > 0) {
+						bin_web_data[j] += 1;
+					}
+					MASK = MASK << 1;
+				}
+			}
+			
 		} else {
 			bin_channel_pos = 0;
 		}
@@ -357,12 +373,14 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
 		// web
-		web_valid1 = web_valid1 & valid1;
-		web_valid2 = web_valid2 & valid2;
-		web_valid1_10 = web_valid1_10 & valid1;
-		web_valid2_10 = web_valid2_10 & valid2;
-		web_valid1_100 = web_valid1_100 & valid1;
-		web_valid2_100 = web_valid2_100 & valid2;
+		if(conf->enable_web_server == 1) {
+			web_valid1 = web_valid1 & valid1;
+			web_valid2 = web_valid2 & valid2;
+			web_valid1_10 = web_valid1_10 & valid1;
+			web_valid2_10 = web_valid2_10 & valid2;
+			web_valid1_100 = web_valid1_100 & valid1;
+			web_valid2_100 = web_valid2_100 & valid2;
+		}
 		
 		if(conf->channels[I1L_INDEX] > 0) {
 			bin_data = bin_data | (valid1 << bin_channel_pos);
@@ -411,6 +429,14 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				merge_currents(web_valid1, web_valid2, &temp_web_data[i/avg_number][num_bin_channels], avg_data, conf);
 				
 				// TODO: bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					if(bin_web_data[j] >= (avg_number/2)) {
+						temp_web_data[i/avg_number][j] = 1;
+					} else {
+						temp_web_data[i/avg_number][j] = 0;
+					}
+					bin_web_data[j] = 0;
+				}
 				
 				// reset values
 				memset(avg_data, 0, sizeof(int64_t) * num_channels);
