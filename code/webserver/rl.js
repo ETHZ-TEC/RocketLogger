@@ -341,7 +341,7 @@ $(function() {
 							if(isCurrent[j]) {
 								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							} else {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							}
 							k++;
 						}
@@ -367,10 +367,13 @@ $(function() {
 					var tempData = [];
 					if(max < 1) {
 						vScale = 1000;
-						vAxisLabel = "Voltage [mV]";
+						vAxisLabel = "Voltage [uV]";
+					} else if(max > 1000) {
+						vScale = 0.001;
+						vAxisLabel = "Voltage [V]";
 					} else {
 						vScale = 1;
-						vAxisLabel = "Voltage [V]";
+						vAxisLabel = "Voltage [mV]";
 					}
 					for(var j=0; j< plotData[i].length; j++) {
 						tempData.push([plotData[i][j][0], plotData[i][j][1] * vScale]);
