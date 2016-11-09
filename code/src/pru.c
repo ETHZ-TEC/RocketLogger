@@ -260,6 +260,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
 			num_web_channels--;
 		}
+		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+			num_web_channels += NUM_DIGITAL_INPUTS;
+		}
 		web_data->num_channels = num_web_channels;
 		
 		// web buffer sizes

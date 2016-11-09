@@ -27,7 +27,7 @@ $(function() {
 		BUFFER_SIZE  = 100;
 		TIME_DIV = 10;
 		
-		NUM_PLOT_CHANNELS = 6;
+		NUM_PLOT_CHANNELS = 12;
 		
 		NUM_CHANNELS = 8;
 		NUM_I_CHANNELS = 2;
@@ -37,8 +37,8 @@ $(function() {
 		STOP_TIMEOUT_TIME = 3000;
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
-		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
-		CHANNEL_COLORS = [0,0,1,1,2,3];
+		CHANNEL_NAMES = ["DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6", "I1", "V1", "V2", "I2", "V3", "V4"];
+		CHANNEL_COLORS = [0,0,0,0,0,0,0,0,1,1,2,3];
 		
 		tScales = [1,10,100];
 		
@@ -79,9 +79,10 @@ $(function() {
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
-		var plotChannels = [false, false, false, false, false, false];
-		var displayChannels = [false, false, false, false, false, false];
-		isCurrent = [true, false, false, true, false, false];
+		var plotChannels = [false, false, false, false, false, false, false, false, false, false, false, false];
+		var displayChannels = [true, true, true, true, true, true, false, false, false, false, false, false];
+		isCurrent = [false, false, false, false, false, false, true, false, false, true, false, false];
+		isDigital = [true, true, true, true, true, true, false, false, false, false, false, false];
 		
 		var vAxisLabel = "Voltage [V]";
 		var iAxisLabel = "Current [µA]"
@@ -228,6 +229,7 @@ $(function() {
 			
 			// digital inputs
 			document.getElementById("digital_inputs").checked = (digitalInputs == "1");
+			var digInps = (digitalInputs == "1");
 			
 			
 			
@@ -259,8 +261,8 @@ $(function() {
 			}
 			updateChannels();
 			
-			plotChannels = [channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
-			displayChannels = [$("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
+			plotChannels = [digInps, digInps, digInps, digInps, digInps, digInps, channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
+			displayChannels = [false, false, false, false, false, false, $("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
 			
 			// fhrs
 			for (var i=0; i<NUM_I_CHANNELS; i++) {
@@ -304,7 +306,7 @@ $(function() {
 			
 			plotBufferCount = 0;
 			plotData = [];
-			plotData = [[],[],[],[],[],[]];
+			plotData = [[],[],[],[],[],[],[],[],[],[],[],[]];
 			
 		}
 		
@@ -341,10 +343,12 @@ $(function() {
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
-							if(isCurrent[j]) {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
-							} else {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
+							if(!isDigital[j]) {
+								if(isCurrent[j]) {
+									plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
+								} else {
+									plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
+								}
 							}
 							k++;
 						}
@@ -364,7 +368,7 @@ $(function() {
 			var max = maxVValue(plotData);
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if(plotChannels[i] && displayChannels[i] && !isCurrent[i] ) {
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i] && !isDigital[i]) {
 					
 					// adapt values
 					var tempData = [];
@@ -419,7 +423,7 @@ $(function() {
 			//document.getElementById("test").innerHTML = max;
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if(plotChannels[i] && displayChannels[i] && isCurrent[i] ) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i] && !isDigital[i]) {
 					
 					// adapt values
 					var tempData = [];
@@ -492,7 +496,7 @@ $(function() {
 			var max = 0;
 			
 			for(var i=0; i<data.length; i++) {
-				if(plotChannels[i] && displayChannels[i] && !isCurrent[i]) {
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i] && !isDigital[i]) {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {
@@ -514,7 +518,7 @@ $(function() {
 			var max = 0;
 			
 			for(var i=0; i<data.length; i++) {
-				if(plotChannels[i] && displayChannels[i] && isCurrent[i]) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i] && !isDigital[i]) {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {

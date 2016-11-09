@@ -205,6 +205,15 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	int ch_in = 0;
 	int ch_out = 0;
 	
+	/*if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+		int i;
+		for(i=0; i<NUM_DIGITAL_INPUTS; i++) {
+			dest[i] = (int32_t) src[i];
+		}
+		ch_in += 6;
+		ch_out += 6;
+	}*/
+	
 		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		if(valid1 == 1) {
@@ -253,8 +262,18 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int k;
 	
 	int num_bin_channels;
+	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+		num_bin_channels = NUM_DIGITAL_INPUTS;
+	} else {
+		num_bin_channels = 0;
+	}
+	
 	int num_channels = count_channels(conf->channels);
-	int num_web_channels = num_channels;
+	
+	// TODO: TEST
+	// int num_web_channels = web_data->num_channels;
+	
+	int num_web_channels = num_channels + num_bin_channels;
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		num_web_channels--;
 	}
@@ -325,11 +344,12 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		buffer_addr += STATUS_SIZE; // TODO: rename to digital_size ...
 		
 		// mask and combine digital inputs, if requestet
+		int bin_channel_pos;
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
-			num_bin_channels = NUM_DIGITAL_INPUTS;
+			bin_channel_pos = NUM_DIGITAL_INPUTS;
 		} else {
-			num_bin_channels = 0;
+			bin_channel_pos = 0;
 		}
 		
 		// Mask valid info
@@ -345,15 +365,15 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		web_valid2_100 = web_valid2_100 & valid2;
 		
 		if(conf->channels[I1L_INDEX] > 0) {
-			bin_data = bin_data | (valid1 << num_bin_channels);
-			num_bin_channels++;
+			bin_data = bin_data | (valid1 << bin_channel_pos);
+			bin_channel_pos++;
 		}
 		if(conf->channels[I2L_INDEX] > 0) {
-			bin_data = bin_data | (valid2 << num_bin_channels);
+			bin_data = bin_data | (valid2 << bin_channel_pos);
 		}
 		
 		// write binary channels
-		if (conf->file_format != NO_FILE && num_bin_channels > 0) {
+		if (conf->file_format != NO_FILE && bin_channel_pos > 0) {
 			fwrite(&bin_data, sizeof(uint32_t), 1, data);
 		}
 		
@@ -388,9 +408,9 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1, web_valid2, temp_web_data[i/avg_number], avg_data, conf);
+				merge_currents(web_valid1, web_valid2, &temp_web_data[i/avg_number][num_bin_channels], avg_data, conf);
 				
-				// TODO: avg for buffer10 - 1000
+				// TODO: bin channels
 				
 				// reset values
 				memset(avg_data, 0, sizeof(int64_t) * num_channels);
@@ -408,7 +428,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_10, web_valid2_10, temp_web_data10[i/avg_number10], avg_data10, conf);
+				merge_currents(web_valid1_10, web_valid2_10, &temp_web_data10[i/avg_number10][num_bin_channels], avg_data10, conf);
 				
 				// reset values
 				memset(avg_data10, 0, sizeof(int64_t) * num_channels);
@@ -425,7 +445,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_100, web_valid2_100, temp_web_data100[i/avg_number100], avg_data100, conf);
+				merge_currents(web_valid1_100, web_valid2_100, &temp_web_data100[i/avg_number100][num_bin_channels], avg_data100, conf);
 			}
 		}
     }

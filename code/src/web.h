@@ -19,7 +19,7 @@ enum time_scale {
 // TODO: adapt
 //#define WEB_BUFFER_SIZE 100
 
-#define NUM_WEB_CHANNELS 6
+#define NUM_WEB_CHANNELS 12 // 6 analog + 6 digital
 #define NUM_WEB_POINTS 1000
 #define NUM_WEB_DIVS 10
 
