@@ -205,15 +205,6 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	int ch_in = 0;
 	int ch_out = 0;
 	
-	/*if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-		int i;
-		for(i=0; i<NUM_DIGITAL_INPUTS; i++) {
-			dest[i] = (int32_t) src[i];
-		}
-		ch_in += 6;
-		ch_out += 6;
-	}*/
-	
 		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		if(valid1 == 1) {
@@ -318,7 +309,12 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	memset(avg_data100, 0, sizeof(int64_t) * num_channels);
 		
 	int32_t bin_web_data[num_bin_channels];
+	int32_t bin_web_data10[num_bin_channels];
+	int32_t bin_web_data100[num_bin_channels];
+	
 	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels);
+	memset(bin_web_data10, 0, sizeof(int32_t) * num_bin_channels);
+	memset(bin_web_data100, 0, sizeof(int32_t) * num_bin_channels);
 	
 	uint8_t web_valid1 = 1;
 	uint8_t web_valid2 = 1;
@@ -421,15 +417,18 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data[j] /= avg_number;
+					avg_data[j] /= avg_number; // TODO: exchange?
 					avg_data10[j] += avg_data[j];
 				}
 				
 				// merge_currents
 				merge_currents(web_valid1, web_valid2, &temp_web_data[i/avg_number][num_bin_channels], avg_data, conf);
 				
-				// TODO: bin channels
+				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
+					
+					bin_web_data10[j] += bin_web_data[j];
+					
 					if(bin_web_data[j] >= (avg_number/2)) {
 						temp_web_data[i/avg_number][j] = 1;
 					} else {
@@ -456,6 +455,19 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				// merge_currents
 				merge_currents(web_valid1_10, web_valid2_10, &temp_web_data10[i/avg_number10][num_bin_channels], avg_data10, conf);
 				
+				// bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					
+					bin_web_data100[j] += bin_web_data10[j];
+					
+					if(bin_web_data10[j] >= (avg_number10/2)) {
+						temp_web_data10[i/avg_number10][j] = 1;
+					} else {
+						temp_web_data10[i/avg_number10][j] = 0;
+					}
+					bin_web_data10[j] = 0;
+				}
+				
 				// reset values
 				memset(avg_data10, 0, sizeof(int64_t) * num_channels);
 				web_valid1_10 = 1;
@@ -472,6 +484,16 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				
 				// merge_currents
 				merge_currents(web_valid1_100, web_valid2_100, &temp_web_data100[i/avg_number100][num_bin_channels], avg_data100, conf);
+				
+				// bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					
+					if(bin_web_data10[j] >= (avg_number100/2)) {
+						temp_web_data100[i/avg_number100][j] = 1;
+					} else {
+						temp_web_data100[i/avg_number100][j] = 0;
+					}
+				}
 			}
 		}
     }

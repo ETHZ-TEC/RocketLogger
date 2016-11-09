@@ -1,7 +1,6 @@
 $(function() {
 	
 		// TODO
-		// digital inputs
 		// fix jumps
 		
 		// csv - files
@@ -593,6 +592,8 @@ $(function() {
 			iPlot.draw();
 			
 			digPlot.setData(getDigData());
+			digPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
+            digPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			digPlot.setupGrid();
 			digPlot.draw();
 			
