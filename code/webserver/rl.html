@@ -8,10 +8,11 @@
 	<link href="flot/examples/examples.css" rel="stylesheet" type="text/css">
 	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
 
-	<script
+	<!--<script
 		src="http://code.jquery.com/jquery-2.2.4.js"
 		integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
-		crossorigin="anonymous"></script>
+		crossorigin="anonymous"></script>-->
+	<script language="javascript" type="text/javascript" src="jquery.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
 	<script language="javascript" type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
@@ -353,12 +354,13 @@
 					<div class="col-md-2">
 						<select class="form-control" id="voltage_range">
 							<option value=0>Auto</option>
-							<option value=0.001>1mV</option>
-							<option value=0.01>10mV</option>
-							<option value=0.1>100mV</option>
-							<option value=1>1V</option>
-							<option value=5>5V</option>
-							<option value=10>10V</option>
+							<option value=0.1>100µV</option>
+							<option value=1>1mV</option>
+							<option value=10>10mV</option>
+							<option value=100>100mV</option>
+							<option value=1000>1V</option>
+							<option value=6000>6V</option>
+							<option value=10000>10V</option>
 						</select>
 					</div>
 				</div>
@@ -397,7 +399,7 @@
 							<option value=1000>1mA</option>
 							<option value=10000>10mA</option>
 							<option value=100000>100mA</option>
-							<option value=500000>500mA</option>
+							<option value=1000000>1A</option>
 						</select>
 					</div>
 				</div>

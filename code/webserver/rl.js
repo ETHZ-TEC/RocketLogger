@@ -368,15 +368,32 @@ $(function() {
 					
 					// adapt values
 					var tempData = [];
-					if(max < 1) {
-						vScale = 1000;
-						vAxisLabel = "Voltage [uV]";
-					} else if(max > 1000) {
-						vScale = 0.001;
-						vAxisLabel = "Voltage [V]";
+					
+					var e = document.getElementById("voltage_range");
+					vRange = e.options[e.selectedIndex].value;
+					if(vRange == 0) {
+						// auto ranging
+						if(max < 1) {
+							vScale = 1000;
+							vAxisLabel = "Voltage [uV]";
+						} else if(max > 1000) {
+							vScale = 0.001;
+							vAxisLabel = "Voltage [V]";
+						} else {
+							vScale = 1;
+							vAxisLabel = "Voltage [mV]";
+						}
 					} else {
-						vScale = 1;
-						vAxisLabel = "Voltage [mV]";
+						if(vRange == 0.1 || vRange ==1) {
+							vScale = 1000;
+							vAxisLabel = "Voltage [uV]";
+						} else if (vRange == 10 || vRange == 100 || vRange == 1000) {
+							vScale = 1;
+							vAxisLabel = "Voltage [mV]";
+						} else {
+							vScale = 0.001;
+							vAxisLabel = "Voltage [V]";
+						}
 					}
 					for(var j=0; j< plotData[i].length; j++) {
 						tempData.push([plotData[i][j][0], plotData[i][j][1] * vScale]);
@@ -406,16 +423,34 @@ $(function() {
 					
 					// adapt values
 					var tempData = [];
-					if(max < 1) {
-						iScale = 1000;
-						iAxisLabel = "Current [nA]";
-					} else if (max > 1000){
-						iScale = 0.001;
-						iAxisLabel = "Current [mA]";
+					
+					var e = document.getElementById("current_range");
+					iRange = e.options[e.selectedIndex].value;
+					if(iRange == 0) {
+							// auto ranging
+						if(max < 1) {
+							iScale = 1000;
+							iAxisLabel = "Current [nA]";
+						} else if (max > 1000){
+							iScale = 0.001;
+							iAxisLabel = "Current [mA]";
+						} else {
+							iScale = 1;
+							iAxisLabel = "Current [µA]";
+						}
 					} else {
-						iScale = 1;
-						iAxisLabel = "Current [µA]";
+						if(iRange == 0.01 || iRange == 0.1 || iRange == 1) {
+							iScale = 1000;
+							iAxisLabel = "Current [nA]";
+						} else if (iRange == 10 || iRange == 100 || iRange == 1000) {
+							iScale = 1;
+							iAxisLabel = "Current [µA]";
+						} else {
+							iScale = 0.001;
+							iAxisLabel = "Current [mA]";
+						}
 					}
+					
 					for(var j=0; j< plotData[i].length; j++) {
 						tempData.push([plotData[i][j][0], plotData[i][j][1] * iScale]);
 					}
@@ -457,7 +492,7 @@ $(function() {
 			var max = 0;
 			
 			for(var i=0; i<data.length; i++) {
-				if(plotChannels[i] && !isCurrent[i]) {
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i]) {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {
@@ -479,7 +514,7 @@ $(function() {
 			var max = 0;
 			
 			for(var i=0; i<data.length; i++) {
-				if(plotChannels[i] && isCurrent[i]) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i]) {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {
