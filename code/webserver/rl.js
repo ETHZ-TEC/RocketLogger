@@ -103,7 +103,7 @@ $(function() {
 		function getStatus() {
 			
 			var e = document.getElementById("time_scale");
-			var tempTScale = parseInt(e.options[e.selectedIndex].value);
+			var tempTScale = e.options[e.selectedIndex].value;
 			if(tempTScale != tScale) {
 				currentTime = 0;
 			}
