@@ -421,8 +421,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data100[j] /= (avg_number100*avg_number10);
-					avg_data100[j] += avg_data10[j];
+					avg_data100[j] /= (avg_number100/avg_number10);
 				}
 				
 				// merge_currents
