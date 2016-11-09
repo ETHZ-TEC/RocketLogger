@@ -58,7 +58,8 @@ end
 %     line([intervals(2,i) intervals(2,i)],[y0 y1],'LineWidth',1, 'Color', 'Green');
 % end
 
-assert(j == num_points + 1, 'Could not find enough valid regions in the provided data.');
+assert(j == num_points + 1, ['Could not find enough valid regions in the provided data. (' ...
+    ,num2str(j-1),' / ', num2str(num_points),')']);
 
 end
 
