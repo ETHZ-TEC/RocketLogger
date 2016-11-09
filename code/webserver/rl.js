@@ -2,8 +2,12 @@ $(function() {
 	
 		// TODO
 		// digital inputs
-		// auto range
 		// fix jumps
+		// not all channels selected
+		// tooltip not -> check
+		
+		// csv - files
+		// currents: less average!
 		
 		
 		// display sampling time
@@ -34,6 +38,7 @@ $(function() {
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		CHANNEL_COLORS = [0,0,1,1,2,3];
 		
 		tScales = [1,10,100];
 		
@@ -45,13 +50,16 @@ $(function() {
 		var state = RL_OFF;
 		var stopping = 0;
 		var starting = 0;
-		var reqId = 0; // TODO: something usefull (random?)
+		var reqId = 0;
 		var plotEnabled = 1;
-		var tScale = 0; // TODO: dropdown menu
+		var tScale = 0;
 		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
 		var loadDefault = false;
+		
+		var vScale = 1;
+		var iScale = 1;
 		
 		var timeOut;
 		var idMismatch;
@@ -72,7 +80,11 @@ $(function() {
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
+		var displayChannels = [false, false, false, false, false, false];
 		isCurrent = [true, false, false, true, false, false];
+		
+		var vAxisLabel = "Voltage [V]";
+		var iAxisLabel = "Current [µA]"
 		
 		var isActive = true;
 
@@ -103,7 +115,7 @@ $(function() {
 		function getStatus() {
 			
 			var e = document.getElementById("time_scale");
-			var tempTScale = parseInt(e.options[e.selectedIndex].value);
+			var tempTScale = e.options[e.selectedIndex].value;
 			if(tempTScale != tScale) {
 				currentTime = 0;
 			}
@@ -138,7 +150,6 @@ $(function() {
 							
 						} else {
 							if(state == RL_ERROR) {
-								// TODO: check
 								document.getElementById("status").innerHTML = 'Status: ERROR';
 							} else if(state == RL_OFF) {
 								document.getElementById("status").innerHTML = 'Status: IDLE';
@@ -156,7 +167,7 @@ $(function() {
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
-							//resetData();
+							
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
@@ -239,7 +250,7 @@ $(function() {
 			$("#filename").val(filename);
 			
 			// channels
-			for (var i=0; i<NUM_CHANNELS; i++) { // voltages
+			for (var i=0; i<NUM_CHANNELS; i++) {
 				if (tempChannels[i] == 1) {
 					channels[i] = true;
 				} else {
@@ -249,9 +260,10 @@ $(function() {
 			updateChannels();
 			
 			plotChannels = [channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
+			displayChannels = [$("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
 			
 			// fhrs
-			for (var i=0; i<NUM_I_CHANNELS; i++) { // voltages
+			for (var i=0; i<NUM_I_CHANNELS; i++) {
 				if (tempForceHighChannels[i] == 1) {
 					forceHighChannels[i] = true;
 				} else {
@@ -332,7 +344,7 @@ $(function() {
 							if(isCurrent[j]) {
 								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							} else {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000000]);
+								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
 							}
 							k++;
 						}
@@ -349,18 +361,45 @@ $(function() {
 			// generate for plot
 			var vData = [];
 			
-			//var max = maxVValue(plotData);
-			//document.getElementById("test").innerHTML = max;
+			var max = maxVValue(plotData);
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if( !isCurrent[i] ) {
-					/*if(max < 1) {
-						for(var j=0; j< plotData.length; j++) {
-							plotData[j][1] *= 1000;
-							// TODO: adapt axis
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i] ) {
+					
+					// adapt values
+					var tempData = [];
+					
+					var e = document.getElementById("voltage_range");
+					vRange = e.options[e.selectedIndex].value;
+					if(vRange == 0) {
+						// auto ranging
+						if(max < 1) {
+							vScale = 1000;
+							vAxisLabel = "Voltage [uV]";
+						} else if(max > 1000) {
+							vScale = 0.001;
+							vAxisLabel = "Voltage [V]";
+						} else {
+							vScale = 1;
+							vAxisLabel = "Voltage [mV]";
 						}
-					}*/
-					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					} else {
+						if(vRange == 0.1 || vRange ==1) {
+							vScale = 1000;
+							vAxisLabel = "Voltage [uV]";
+						} else if (vRange == 10 || vRange == 100 || vRange == 1000) {
+							vScale = 1;
+							vAxisLabel = "Voltage [mV]";
+						} else {
+							vScale = 0.001;
+							vAxisLabel = "Voltage [V]";
+						}
+					}
+					for(var j=0; j< plotData[i].length; j++) {
+						tempData.push([plotData[i][j][0], plotData[i][j][1] * vScale]);
+					}
+					
+					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};//plotData[i]};//
 					vData.push(plotChannel);
 				}
 			}
@@ -376,10 +415,47 @@ $(function() {
 			// generate for plot
 			var iData = [];
 			
+			var max = maxIValue(plotData);
+			//document.getElementById("test").innerHTML = max;
+			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if( isCurrent[i] ) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i] ) {
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
+					// adapt values
+					var tempData = [];
+					
+					var e = document.getElementById("current_range");
+					iRange = e.options[e.selectedIndex].value;
+					if(iRange == 0) {
+							// auto ranging
+						if(max < 1) {
+							iScale = 1000;
+							iAxisLabel = "Current [nA]";
+						} else if (max > 1000){
+							iScale = 0.001;
+							iAxisLabel = "Current [mA]";
+						} else {
+							iScale = 1;
+							iAxisLabel = "Current [µA]";
+						}
+					} else {
+						if(iRange == 0.01 || iRange == 0.1 || iRange == 1) {
+							iScale = 1000;
+							iAxisLabel = "Current [nA]";
+						} else if (iRange == 10 || iRange == 100 || iRange == 1000) {
+							iScale = 1;
+							iAxisLabel = "Current [µA]";
+						} else {
+							iScale = 0.001;
+							iAxisLabel = "Current [mA]";
+						}
+					}
+					
+					for(var j=0; j< plotData[i].length; j++) {
+						tempData.push([plotData[i][j][0], plotData[i][j][1] * iScale]);
+					}
+					
+					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};
 					iData.push(plotChannel);
 				}
 			}
@@ -411,19 +487,18 @@ $(function() {
 		// reset plot
 		resetData();
 		
-		/*function maxVValue(data) {
+		function maxVValue(data) {
 			
 			var max = 0;
 			
 			for(var i=0; i<data.length; i++) {
-				if(!isCurrent[i]) {
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i]) {
 					var tempData = data[i];
 					var tempMax = 0;
 					for(var j=1; j<tempData.length; j++) {
-						// TODO
-							if(Math.abs(tempData[j][1]) > tempMax){
-								tempMax = Math.abs(tempData[j][1]);
-							}
+						if(Math.abs(tempData[j][1]) > tempMax){
+							tempMax = Math.abs(tempData[j][1]);
+						}
 					}
 					if(tempMax>max) {
 						max = tempMax;
@@ -432,8 +507,31 @@ $(function() {
 			}
 			
 			return max;
-			//document.getElementById("test").innerHTML = max;
-		}*/
+		}
+		
+		function maxIValue(data) {
+			
+			var max = 0;
+			
+			for(var i=0; i<data.length; i++) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i]) {
+					var tempData = data[i];
+					var tempMax = 0;
+					for(var j=1; j<tempData.length; j++) {
+						if(Math.abs(tempData[j][1]) > tempMax){
+							tempMax = Math.abs(tempData[j][1]);
+						}
+					}
+					if(tempMax>max) {
+						max = tempMax;
+					}
+				}
+			}
+			
+			return max;
+		}
+		
+		
 		
 		function updatePlot () {
 			
@@ -441,8 +539,8 @@ $(function() {
 			var e = document.getElementById("voltage_range");
 			vRange = e.options[e.selectedIndex].value;
 			if(vRange > 0) {
-				vPlot.getOptions().yaxes[0].min = -vRange;
-				vPlot.getOptions().yaxes[0].max = vRange;
+				vPlot.getOptions().yaxes[0].min = -vRange*vScale;
+				vPlot.getOptions().yaxes[0].max = vRange*vScale;
 			} else {
 				resetVPlot();
 			}
@@ -456,8 +554,8 @@ $(function() {
 			var e = document.getElementById("current_range");
 			iRange = e.options[e.selectedIndex].value;
 			if(iRange > 0) {
-				iPlot.getOptions().yaxes[0].min = -iRange;
-				iPlot.getOptions().yaxes[0].max = iRange;
+				iPlot.getOptions().yaxes[0].min = -iRange*iScale;
+				iPlot.getOptions().yaxes[0].max = iRange*iScale;
 			} else {
 				resetIPlot();
 			}
@@ -478,7 +576,7 @@ $(function() {
 					show: true
 				},
 				yaxis: {
-					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Voltage [V]";}
+					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : vAxisLabel;}
 				}
 			});
 		}
@@ -493,7 +591,7 @@ $(function() {
 					show: true
 				},
 				yaxis: {
-					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Current [µA]";}
+					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : iAxisLabel;}
 				}
 			});
 		}

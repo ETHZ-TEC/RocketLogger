@@ -286,7 +286,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int value = 0;
 	
 	// data for web interface
-	int avg_number = samples_buffer / BUFFER1_SIZE; // TODO: for all buffers (1-100)
+	int avg_number = samples_buffer / BUFFER1_SIZE;
 	int avg_number10 = samples_buffer / BUFFER10_SIZE;
 	int avg_number100 = samples_buffer / BUFFER100_SIZE;
 	
@@ -421,8 +421,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data100[j] /= (avg_number100*avg_number10);
-					avg_data100[j] += avg_data10[j];
+					avg_data100[j] /= (avg_number100/avg_number10);
 				}
 				
 				// merge_currents
