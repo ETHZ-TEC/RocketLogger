@@ -318,9 +318,9 @@
 				</div>
 				<div class="col-md-2">
 					<select class="form-control" id="time_scale">
-						<option value="0">1s</option>
-						<option value="1">10s</option>
-						<option value="2">100s</option>
+						<option value="0">1s/div</option>
+						<option value="1">10s/div</option>
+						<option value="2">100s/div</option>
 					</select>
 				</div>
 				<div class="col-md-2">
@@ -331,12 +331,50 @@
 					<h3 class="text-center">Voltages:</h3>
 				</div>
 				<div class="row">
+					<div class="col-md-6">
+					</div>
+					<div class="col-md-2">
+						Voltage Range:
+					</div>
+					<div class="col-md-2">
+						<select class="form-control" id="voltage_range">
+							<option value=0>Auto</option>
+							<option value=0.001>1mV</option>
+							<option value=0.01>10mV</option>
+							<option value=0.1>100mV</option>
+							<option value=1>1V</option>
+							<option value=5>5V</option>
+						</select>
+					</div>
+				</div>
+				<div class="row">
 					<div class="analog-container">
 						<div id="vPlaceholder" class="demo-placeholder"></div>
 					</div>
 				</div>
 				<div class="row">
 					<h3 class="text-center">Currents:</h3>
+				</div>
+				<div class="row">
+					<div class="col-md-6">
+					</div>
+					<div class="col-md-2">
+						Current Range:
+					</div>
+					<div class="col-md-2">
+						<select class="form-control" id="current_range">
+							<option value=0>Auto</option>
+							<option value=0.01>10nA</option>
+							<option value=0.1>100nA</option>
+							<option value=1>1µA</option>
+							<option value=10>10µA</option>
+							<option value=100>100µA</option>
+							<option value=1000>1mA</option>
+							<option value=10000>10mA</option>
+							<option value=100000>100mA</option>
+							<option value=500000>500mA</option>
+						</select>
+					</div>
 				</div>
 				<div class="row">
 					<div class="analog-container">
