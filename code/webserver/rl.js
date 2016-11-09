@@ -4,6 +4,7 @@ $(function() {
 		// digital inputs
 		// fix jumps
 		// not all channels selected
+		// tooltip not -> check
 		
 		// csv - files
 		// currents: less average!
@@ -37,6 +38,7 @@ $(function() {
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["I1", "V1", "V2", "I2", "V3", "V4"];
+		CHANNEL_COLORS = [0,0,1,1,2,3];
 		
 		tScales = [1,10,100];
 		
@@ -48,9 +50,9 @@ $(function() {
 		var state = RL_OFF;
 		var stopping = 0;
 		var starting = 0;
-		var reqId = 0; // TODO: something usefull (random?)
+		var reqId = 0;
 		var plotEnabled = 1;
-		var tScale = 0; // TODO: dropdown menu
+		var tScale = 0;
 		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
@@ -78,6 +80,7 @@ $(function() {
 		var channels = [true, true, true, true, true, true, true, true];
 		var forceHighChannels = [false, false];
 		var plotChannels = [false, false, false, false, false, false];
+		var displayChannels = [false, false, false, false, false, false];
 		isCurrent = [true, false, false, true, false, false];
 		
 		var vAxisLabel = "Voltage [V]";
@@ -147,7 +150,6 @@ $(function() {
 							
 						} else {
 							if(state == RL_ERROR) {
-								// TODO: check
 								document.getElementById("status").innerHTML = 'Status: ERROR';
 							} else if(state == RL_OFF) {
 								document.getElementById("status").innerHTML = 'Status: IDLE';
@@ -165,7 +167,7 @@ $(function() {
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
-							//resetData();
+							
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
@@ -248,7 +250,7 @@ $(function() {
 			$("#filename").val(filename);
 			
 			// channels
-			for (var i=0; i<NUM_CHANNELS; i++) { // voltages
+			for (var i=0; i<NUM_CHANNELS; i++) {
 				if (tempChannels[i] == 1) {
 					channels[i] = true;
 				} else {
@@ -258,9 +260,10 @@ $(function() {
 			updateChannels();
 			
 			plotChannels = [channels[0] || channels[1], channels[2], channels[3], channels[4] || channels[5], channels[6], channels[7]];
+			displayChannels = [$("#plot_i1:checked").length > 0, $("#plot_v1:checked").length > 0, $("#plot_v2:checked").length > 0, $("#plot_i2:checked").length > 0, $("#plot_v3:checked").length > 0, $("#plot_v4:checked").length > 0];
 			
 			// fhrs
-			for (var i=0; i<NUM_I_CHANNELS; i++) { // voltages
+			for (var i=0; i<NUM_I_CHANNELS; i++) {
 				if (tempForceHighChannels[i] == 1) {
 					forceHighChannels[i] = true;
 				} else {
@@ -361,7 +364,7 @@ $(function() {
 			var max = maxVValue(plotData);
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if(plotChannels[i] && !isCurrent[i] ) {
+				if(plotChannels[i] && displayChannels[i] && !isCurrent[i] ) {
 					
 					// adapt values
 					var tempData = [];
@@ -379,7 +382,7 @@ $(function() {
 						tempData.push([plotData[i][j][0], plotData[i][j][1] * vScale]);
 					}
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: tempData};//plotData[i]};//
+					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};//plotData[i]};//
 					vData.push(plotChannel);
 				}
 			}
@@ -399,7 +402,7 @@ $(function() {
 			//document.getElementById("test").innerHTML = max;
 			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
-				if(plotChannels[i] && isCurrent[i] ) {
+				if(plotChannels[i] && displayChannels[i] && isCurrent[i] ) {
 					
 					// adapt values
 					var tempData = [];
@@ -417,7 +420,7 @@ $(function() {
 						tempData.push([plotData[i][j][0], plotData[i][j][1] * iScale]);
 					}
 					
-					var plotChannel = {label: CHANNEL_NAMES[i], data: tempData};
+					var plotChannel = {color: CHANNEL_COLORS[i], label: CHANNEL_NAMES[i], data: tempData};
 					iData.push(plotChannel);
 				}
 			}
