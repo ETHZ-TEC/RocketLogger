@@ -302,7 +302,6 @@ $(function() {
 				tScale = tempTScale;
 				maxBufferCount = TIME_DIV * tScales[tScale];
 			}
-			document.getElementById("test").innerHTML = tempTScale;
 			
 			var date  = new Date(1000 * (currentTime+1)); // adjust with buffer latency
 			
@@ -351,9 +350,17 @@ $(function() {
 			// generate for plot
 			var vData = [];
 			
+			//var max = maxVValue(plotData);
+			//document.getElementById("test").innerHTML = max;
+			
 			for (var i = 0; i < NUM_PLOT_CHANNELS; i++) {
 				if( !isCurrent[i] ) {
-					
+					/*if(max < 1) {
+						for(var j=0; j< plotData.length; j++) {
+							plotData[j][1] *= 1000;
+							// TODO: adapt axis
+						}
+					}*/
 					var plotChannel = {label: CHANNEL_NAMES[i], data: plotData[i]};
 					vData.push(plotChannel);
 				}
@@ -397,21 +404,94 @@ $(function() {
 		// reset plot
 		resetData();
 		
+		/*function maxVValue(data) {
+			
+			var max = 0;
+			
+			for(var i=0; i<data.length; i++) {
+				if(!isCurrent[i]) {
+					var tempData = data[i];
+					var tempMax = 0;
+					for(var j=1; j<tempData.length; j++) {
+						// TODO
+							if(Math.abs(tempData[j][1]) > tempMax){
+								tempMax = Math.abs(tempData[j][1]);
+							}
+					}
+					if(tempMax>max) {
+						max = tempMax;
+					}
+				}
+			}
+			
+			return max;
+			//document.getElementById("test").innerHTML = max;
+		}*/
+		
 		function updatePlot () {
+			
+			
+			var e = document.getElementById("voltage_range");
+			vRange = e.options[e.selectedIndex].value;
+			if(vRange > 0) {
+				vPlot.getOptions().yaxes[0].min = -vRange;
+				vPlot.getOptions().yaxes[0].max = vRange;
+			} else {
+				resetVPlot();
+			}
 			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			vPlot.setupGrid();
 			vPlot.setData(getVData());
 			vPlot.draw();
 			
+			
+			var e = document.getElementById("current_range");
+			iRange = e.options[e.selectedIndex].value;
+			if(iRange > 0) {
+				iPlot.getOptions().yaxes[0].min = -iRange;
+				iPlot.getOptions().yaxes[0].max = iRange;
+			} else {
+				resetIPlot();
+			}
 			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
             iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
 			iPlot.setupGrid();
 			iPlot.setData(getIData());
 			iPlot.draw();
 		}
+		
+		function resetVPlot() {
+			vPlot = $.plot("#vPlaceholder", getVData(), {
+				series: {
+					shadowSize: 0
+				},
+				xaxis: {
+					mode: "time",
+					show: true
+				},
+				yaxis: {
+					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Voltage [V]";}
+				}
+			});
+		}
+		
+		function resetIPlot() {
+			iPlot = $.plot("#iPlaceholder", getIData(), {
+				series: {
+					shadowSize: 0
+				},
+				xaxis: {
+					mode: "time",
+					show: true
+				},
+				yaxis: {
+					tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Current [µA]";}
+				}
+			});
+		}
 
-		var vPlot = $.plot("#vPlaceholder", getVData(), {
+		var vPlot;/* = $.plot("#vPlaceholder", getVData(), {
 			series: {
 				shadowSize: 0
 			},
@@ -422,9 +502,9 @@ $(function() {
 			yaxis: {
 				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Voltage [V]";}
 			}
-		});
+		});*/
 		
-		var iPlot = $.plot("#iPlaceholder", getIData(), {
+		var iPlot;/* = $.plot("#iPlaceholder", getIData(), {
 			series: {
 				shadowSize: 0
 			},
@@ -435,7 +515,7 @@ $(function() {
 			yaxis: {
 				tickFormatter: function(val, axis) { return val < axis.max ? val.toFixed(2) : "Current [µA]";}
 			}
-		});
+		});*/
 		
 		
 		// BUTTONS
@@ -778,6 +858,8 @@ $(function() {
 		});
 		
 		// never ending update function
+		resetVPlot();
+		resetIPlot();
 		update();
 
 });
