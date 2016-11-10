@@ -6,7 +6,6 @@ $(function() {
 		// csv - files
 		// currents: less average!
 		// avg-values in array (for 3 buffers)
-		// remove -b (in c code)
 		// debug delays
 		
 		// display sampling time
@@ -108,6 +107,7 @@ $(function() {
 
 			// get status
 			if(isActive || $("#active:checked").length > 0) {
+				reqId++;
 				getStatus();
 			}
 			
@@ -143,7 +143,6 @@ $(function() {
 					// extract state
 					respId = tempState[0];
 					if (respId == reqId) {
-						reqId++;
 						state = tempState[1];
 						// display status on page
 						if (state == RL_RUNNING) {
