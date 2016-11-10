@@ -63,14 +63,6 @@ int main(int argc, char* argv[]) {
 			rl_stop();
 			exit(EXIT_SUCCESS);
 		
-		/*case DATA:
-			if(rl_get_status(0) != RL_RUNNING) {
-				rl_log(ERROR, "RocketLogger not running");
-				exit(EXIT_FAILURE);
-			}
-			rl_get_data();
-			exit(EXIT_SUCCESS);*/
-		
 		case CALIBRATE:
 			if(rl_get_status(0) == RL_RUNNING) {
 				printf("\n");

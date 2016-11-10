@@ -8,8 +8,6 @@
 
 void rl_reset_calibration();
 
-//int rl_get_data();
-
 void rl_print_config(struct rl_conf* conf);
 
 void rl_print_status(struct rl_status* status);
