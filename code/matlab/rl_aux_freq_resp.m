@@ -1,6 +1,10 @@
-function [ fDec, dataDB ] = freq_resp( data, dcValue, fig )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+function [ fDec, dataDB ] = rl_aux_freq_resp( data, dcValue, fig )
+%UNTITLED Plot the frequncy response for the measurement of a logarithmic
+%frequency sweep from 10 Hz to 100 kHz
+%   Parameters:
+%      - data:      Samples for a single sweep
+%      - dcValue:   The expected value at DC for the sweep
+%      - fig:       (optional) Figure to plot in
 
 decades = 4;
 startF = 10;
@@ -15,7 +19,10 @@ dataDB = 20*log10(dataDec/dcValue);
 
 if ~exist('fig', 'var')
     fig = figure;
+else
+    figure(fig);
 end
+
 semilogx(fDec, dataDB);
 axis([100 30e3 -21 3])
 ax = gca;
