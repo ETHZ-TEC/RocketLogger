@@ -5,11 +5,12 @@ $(function() {
 		
 		// csv - files
 		// currents: less average!
-		
+		// avg-values in array (for 3 buffers)
+		// remove -b (in c code)
+		// debug delays
 		
 		// display sampling time
 		// display disk space available
-		// remove -b (in c code)
 		
 		
 		// CONSTANTS
