@@ -11,9 +11,9 @@ void rl_reset_calibration() {
 }
 
 // get current data (used for webserver)
-int rl_get_data() { // TODO: use timeout
+/*int rl_get_data() { // TODO: use timeout
 	
-	/*float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
+	float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
 	
 	// write ready to control fifo
 	int ready = 1;
@@ -30,16 +30,16 @@ int rl_get_data() { // TODO: use timeout
 	int i;
 	for (i=0; i<WEB_BUFFER_SIZE; i++) {
 		print_json(data[i], NUM_WEB_CHANNELS);
-	}*/
+	}
 	
 	return SUCCESS;
-}
+}*/
 
-void rl_print_config(struct rl_conf* conf, int web) {
+void rl_print_config(struct rl_conf* conf) {
 	
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
 	
-	if (web == 1) {
+	/*if (web == 1) {
 
 		printf("%d\n", conf->enable_web_server);
 		printf("%d\n", conf->sample_rate);
@@ -52,7 +52,7 @@ void rl_print_config(struct rl_conf* conf, int web) {
 		// TODO: add #samples
 		// TODO: add dig inps
 		
-	} else {
+	} else {*/
 
 											printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
 											printf("  Update rate:     %dHz\n", conf->update_rate);
@@ -81,38 +81,38 @@ void rl_print_config(struct rl_conf* conf, int web) {
 		}
 		if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
 		} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
-	}
+	//}
 }
 
-void rl_print_status(struct rl_status* status, int web) { // TODO: remove web
+void rl_print_status(struct rl_status* status) {
 	
 	if(status->state == RL_OFF) {
-		if (web == 1) {
+		/*if (web == 1) {
 			printf("OFF\n");
-		} else {
+		} else {*/
 			printf("\nRocketLogger IDLE\n\n");
-		}
+		//}
 	} else {
-		if (web == 1) {
+		/*if (web == 1) {
 			printf("RUNNING\n");
 			
-		} else {
+		} else {*/
 			printf("\nRocketLogger Status: RUNNING\n");
-		}
-		rl_print_config(&(status->conf), web);
-		if (web == 1) {
+		//}
+		rl_print_config(&(status->conf));
+		/*if (web == 1) {
 			// TODO:
 			//printf("%d\n", status->samples_taken);
 			
-		} else {
+		} else {*/
 			printf("  Samples taken:   %d\n\n", status->samples_taken);
-		}
+		//}
 		
 	}
 }
 
 // get status of RL (returns 1 when running)
-enum rl_state rl_get_status(int print, int web) { // TODO: remove web
+enum rl_state rl_get_status(int print) {
 	
 	struct rl_status status;
 	
@@ -129,7 +129,7 @@ enum rl_state rl_get_status(int print, int web) { // TODO: remove web
 	
 	// print config if requested
 	if(print == 1) {
-		rl_print_status(&status, web);
+		rl_print_status(&status);
 	}
 	
 	return status.state;
@@ -238,7 +238,7 @@ int rl_sample(struct rl_conf* conf) {
 int rl_stop() {
 	
 	// check if running
-	if(rl_get_status(0,0) != RL_RUNNING) {
+	if(rl_get_status(0) != RL_RUNNING) {
 		rl_log(ERROR, "RocketLogger not running");
 		return FAILURE;
 	}

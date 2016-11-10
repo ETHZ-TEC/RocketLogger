@@ -26,7 +26,7 @@ int check_update_rate(int update_rate) {
 	return FAILURE;
 }
 
-// print data in json format for easy reading in javascript
+/*// print data in json format for easy reading in javascript
 void print_json(float data[], int length) {
 	char str[150]; // TODO: adjustable length
 	char val[20];
@@ -86,7 +86,7 @@ void print_channels_new(int channels[NUM_CHANNELS]) {
 	print_json(vChannels, 4);
 	print_json(iChannels, 6);
 	
-}
+}*/
 
 pid_t get_pid() {
 	

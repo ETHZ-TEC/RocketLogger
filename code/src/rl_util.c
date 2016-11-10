@@ -13,8 +13,8 @@ enum rl_mode get_mode(char* mode) {
 		return STATUS;
 	} else if(strcmp(mode, "calibrate") == 0) {
 		return CALIBRATE;
-	} else if(strcmp(mode, "data") == 0) {
-		return DATA;
+	/*} else if(strcmp(mode, "data") == 0) {
+		return DATA;*/
 	} else if(strcmp(mode, "stop") == 0) {
 		return STOPPED;
 	} else if(strcmp(mode, "set") == 0) {
@@ -41,8 +41,8 @@ enum rl_option get_option(char* option) {
 		return FHR;
 	} else if(strcmp(option, "w") == 0) {
 		return WEB;
-	} else if(strcmp(option, "b") == 0) {
-		return BINARY_FILE;
+	/*} else if(strcmp(option, "b") == 0) {
+		return BINARY_FILE;*/
 	} else if(strcmp(option, "d") == 0) {
 		return DIGITAL_INPUTS;
 	} else if(strcmp(option, "s") == 0) {
@@ -129,7 +129,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 	}
 	
 	// stop parsing for some modes
-	if (conf->mode == STOPPED || conf->mode == DATA || conf->mode == PRINT_DEFAULT || conf->mode == HELP) {
+	if (conf->mode == STOPPED || conf->mode == PRINT_DEFAULT || conf->mode == HELP) {
 		return SUCCESS;
 	}
 	
@@ -239,9 +239,9 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 						}
 					break;
 				
-				case BINARY_FILE:
+				/*case BINARY_FILE:
 					conf->file_format = BIN;	
-					break;
+					break;*/
 				
 				case DIGITAL_INPUTS:
 					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
@@ -305,7 +305,7 @@ void print_usage() {
 	printf("    meter              Starts RocketLogger Meter.\n");
 	printf("    status             Get status of RocketLogger.\n");
 	printf("    calibrate          Reset RocketLogger calibration.\n");
-	printf("    data               Get current data.\n");
+	//printf("    data               Get current data.\n");
 	printf("    stop               Stops RocketLogger.\n");
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
 	printf("                         Use 'set 0' to reset the default configuration.\n");
@@ -327,7 +327,7 @@ void print_usage() {
 	printf("                         0: no channel, 1: I1, 2: I2\n");
 	printf("    -f [file]          Stores data to specified file.\n");
 	printf("                         '-f 0' will disable file storing.\n");
-	printf("    -b                 Set output file to binary.\n"); // TODO: adapt webserver and remove
+	//printf("    -b                 Set output file to binary.\n");
 	printf("    -d                 Log digital inputs.\n");
 	printf("                         Use '-d 0' to disable digital input logging.\n");
 	printf("    -format [format]   Select file format: csv, bin.\n");
@@ -343,7 +343,7 @@ void print_usage() {
 
 void print_config(struct rl_conf* conf) {
 	printf("\nRocketLogger Configuration:\n");
-	rl_print_config(conf, 0);
+	rl_print_config(conf);
 	printf("\n");
 	
 }

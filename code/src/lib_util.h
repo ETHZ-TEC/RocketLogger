@@ -10,8 +10,8 @@
 int check_sample_rate(int sample_rate);
 int check_update_rate(int update_rate);
 
-void print_json(float data[], int length);
-void print_channels_new(int channels[NUM_CHANNELS]);
+/*void print_json(float data[], int length);
+void print_channels_new(int channels[NUM_CHANNELS]);*/
 
 pid_t get_pid();
 int set_pid(pid_t pid);
