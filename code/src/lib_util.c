@@ -37,7 +37,7 @@ void print_json(float data[], int length) {
 		strcat(str, val);
 	}
 	strcat(str, "]\n");
-	printf(str);
+	printf("%s",str);
 }
 
 void print_channels_new(int channels[NUM_CHANNELS]) {

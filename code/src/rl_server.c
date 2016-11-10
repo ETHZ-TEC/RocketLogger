@@ -43,7 +43,7 @@ void print_json_new(int32_t data[], int length) {
 		strcat(str, val);
 	}
 	strcat(str, "]\n");
-	printf(str);
+	printf("%s",str);
 }
 
 void print_status(struct rl_status* status) {
