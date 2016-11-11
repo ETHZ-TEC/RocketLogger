@@ -6,36 +6,20 @@
 #include "rl_util.h"
 
 #define ARG_COUNT 4
-
-/// RL struct for web request (unused)
-struct rl_web_req {
-	uint32_t id;
-	uint8_t get_data;
-	uint8_t t_scale;
-	int64_t last_time;
-};
-
-/// RL struct for web response
-struct rl_web_resp {
-	uint32_t id;
-	uint8_t t_scale;
-	int64_t time;
-	uint32_t buffer_count;
-	uint32_t buffer_size;
-	float* data;
-};
+#define MAX_STRING_LENGTH 150
+#define MAX_STRING_VALUE 20
 
 // Global variables
 int sem_id;
 struct web_shm* web_data;
 
+// buffer sizes
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 
 // functions
-
 void print_json_new(int32_t data[], int length) {
-	char str[150]; // TODO: adjustable length
-	char val[20];
+	char str[MAX_STRING_LENGTH];
+	char val[MAX_STRING_VALUE];
 	int i;
 	sprintf(str, "[\"%d\"", data[0]);
 	for (i=1; i < length; i++) {
@@ -73,9 +57,12 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	int buffer_count = time - last_time;
 	
 	// get available buffers
-	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);			// TODO: keep semaphore locked
+	if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+		return;
+	}
 	int buffer_available = web_data->buffer[t_scale].filled;
 	set_sem(sem_id, DATA_SEM, 1);
+		
 	if(buffer_count > buffer_available) {
 		buffer_count = buffer_available;
 	}
@@ -89,15 +76,17 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	int32_t data[buffer_size][num_channels];
 	int i;
 	for(i=buffer_count-1; i>=0; i--) {
+		
 		// read data
-		wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);
+		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+			return;
+		}
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
 		if(web_data->buffer[t_scale].element_size > sizeof(data)) {
 			rl_log(ERROR, "In print_data: memcpy is trying to copy to much data.");
 		} else {
 			memcpy(&data[0][0], shm_data, web_data->buffer[t_scale].element_size);
 		}
-		
 		set_sem(sem_id, DATA_SEM, 1);
 		
 		// print data
@@ -113,29 +102,26 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 int main(int argc, char* argv[]) {
 	
 	// parse arguments
-	
 	if(argc != ARG_COUNT + 1) {
 		rl_log(ERROR, "in rl_server: not enough arguments");
 		exit(FAILURE);
 	}
-	
-	// TODO: check if numbers
 	uint32_t id = atoi(argv[1]);
 	uint8_t get_data = atoi(argv[2]);
 	uint32_t t_scale = atoi(argv[3]);
 	int64_t last_time = atoi(argv[4]);
 	
-	// TODO: expand for multiple time scales
+	// check time scale
 	if(t_scale != S1 && t_scale != S10 && t_scale != S100) {
 		rl_log(WARNING, "unknown time scale");
 		t_scale = S1;
 	}
 	
-	
 	// get status
 	struct rl_status status;
 	int state = rl_read_status(&status);
 	
+	// print request id and status
 	printf("%d\n", id);
 	print_status(&status);
 	
@@ -159,18 +145,17 @@ int main(int argc, char* argv[]) {
 	// open shared memory
 	web_data = open_web_shm();
 	
+	// fetch data
 	uint8_t data_read = 0;
-	
 	while(data_read == 0) {
 		
 		// get current time
-		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {	
 			exit(EXIT_FAILURE);
 		}
 		int64_t time = web_data->time;
 		int8_t num_channels = web_data->num_channels;
 		set_sem(sem_id, DATA_SEM, 1);
-		
 		
 		
 		if(time > last_time) {
@@ -189,8 +174,7 @@ int main(int argc, char* argv[]) {
 			// wait on new data
 			if(data_read == 0) {
 				if(wait_sem(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
-					// time-out or error
-					// TODO: exit failure?
+					// time-out or error -> stop
 					break;
 				}
 			}
