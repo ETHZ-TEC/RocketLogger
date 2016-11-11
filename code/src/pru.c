@@ -260,6 +260,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
 			num_web_channels--;
 		}
+		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+			num_web_channels += NUM_DIGITAL_INPUTS;
+		}
 		web_data->num_channels = num_web_channels;
 		
 		// web buffer sizes
@@ -371,7 +374,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// clear event
 	prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
-	int i;
+	unsigned int i;
 	uint32_t buffer_lost = 0;
 	void* buffer_addr;
 	unsigned int samples_buffer; // number of samples per buffer
@@ -414,7 +417,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// check for overrun (compare buffer numbers)
 		if (TEST_MODE == 0) {
-			int buffer = *((uint32_t*) buffer_addr);
+			uint32_t buffer = *((uint32_t*) buffer_addr);
 			if (buffer != i) {
 				buffer_lost += (buffer - i);
 				rl_log(WARNING, "overrun: %d samples (%d buffer) lost (%d in total)", (buffer - i) * pru.buffer_size, buffer - i, buffer_lost);

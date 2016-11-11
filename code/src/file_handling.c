@@ -253,8 +253,18 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	int k;
 	
 	int num_bin_channels;
+	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+		num_bin_channels = NUM_DIGITAL_INPUTS;
+	} else {
+		num_bin_channels = 0;
+	}
+	
 	int num_channels = count_channels(conf->channels);
-	int num_web_channels = num_channels;
+	
+	// TODO: TEST
+	// int num_web_channels = web_data->num_channels;
+	
+	int num_web_channels = num_channels + num_bin_channels;
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		num_web_channels--;
 	}
@@ -297,6 +307,14 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	memset(avg_data, 0, sizeof(int64_t) * num_channels);
 	memset(avg_data10, 0, sizeof(int64_t) * num_channels);
 	memset(avg_data100, 0, sizeof(int64_t) * num_channels);
+		
+	int32_t bin_web_data[num_bin_channels];
+	int32_t bin_web_data10[num_bin_channels];
+	int32_t bin_web_data100[num_bin_channels];
+	
+	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels);
+	memset(bin_web_data10, 0, sizeof(int32_t) * num_bin_channels);
+	memset(bin_web_data100, 0, sizeof(int32_t) * num_bin_channels);
 	
 	uint8_t web_valid1 = 1;
 	uint8_t web_valid2 = 1;
@@ -325,11 +343,25 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		buffer_addr += STATUS_SIZE; // TODO: rename to digital_size ...
 		
 		// mask and combine digital inputs, if requestet
+		int bin_channel_pos;
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
-			num_bin_channels = NUM_DIGITAL_INPUTS;
+			bin_channel_pos = NUM_DIGITAL_INPUTS;
+			
+			// average for web
+			if(conf->enable_web_server == 1) {
+				int j;
+				int32_t MASK = 1;
+				for(j=0; j<num_bin_channels; j++) {
+					if((bin_data & MASK) > 0) {
+						bin_web_data[j] += 1;
+					}
+					MASK = MASK << 1;
+				}
+			}
+			
 		} else {
-			num_bin_channels = 0;
+			bin_channel_pos = 0;
 		}
 		
 		// Mask valid info
@@ -337,23 +369,25 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
 		// web
-		web_valid1 = web_valid1 & valid1;
-		web_valid2 = web_valid2 & valid2;
-		web_valid1_10 = web_valid1_10 & valid1;
-		web_valid2_10 = web_valid2_10 & valid2;
-		web_valid1_100 = web_valid1_100 & valid1;
-		web_valid2_100 = web_valid2_100 & valid2;
+		if(conf->enable_web_server == 1) {
+			web_valid1 = web_valid1 & valid1;
+			web_valid2 = web_valid2 & valid2;
+			web_valid1_10 = web_valid1_10 & valid1;
+			web_valid2_10 = web_valid2_10 & valid2;
+			web_valid1_100 = web_valid1_100 & valid1;
+			web_valid2_100 = web_valid2_100 & valid2;
+		}
 		
 		if(conf->channels[I1L_INDEX] > 0) {
-			bin_data = bin_data | (valid1 << num_bin_channels);
-			num_bin_channels++;
+			bin_data = bin_data | (valid1 << bin_channel_pos);
+			bin_channel_pos++;
 		}
 		if(conf->channels[I2L_INDEX] > 0) {
-			bin_data = bin_data | (valid2 << num_bin_channels);
+			bin_data = bin_data | (valid2 << bin_channel_pos);
 		}
 		
 		// write binary channels
-		if (conf->file_format != NO_FILE && num_bin_channels > 0) {
+		if (conf->file_format != NO_FILE && bin_channel_pos > 0) {
 			fwrite(&bin_data, sizeof(uint32_t), 1, data);
 		}
 		
@@ -383,14 +417,25 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data[j] /= avg_number;
+					avg_data[j] /= avg_number; // TODO: exchange?
 					avg_data10[j] += avg_data[j];
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1, web_valid2, temp_web_data[i/avg_number], avg_data, conf);
+				merge_currents(web_valid1, web_valid2, &temp_web_data[i/avg_number][num_bin_channels], avg_data, conf);
 				
-				// TODO: avg for buffer10 - 1000
+				// bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					
+					bin_web_data10[j] += bin_web_data[j];
+					
+					if(bin_web_data[j] >= (avg_number/2)) {
+						temp_web_data[i/avg_number][j] = 1;
+					} else {
+						temp_web_data[i/avg_number][j] = 0;
+					}
+					bin_web_data[j] = 0;
+				}
 				
 				// reset values
 				memset(avg_data, 0, sizeof(int64_t) * num_channels);
@@ -408,7 +453,20 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_10, web_valid2_10, temp_web_data10[i/avg_number10], avg_data10, conf);
+				merge_currents(web_valid1_10, web_valid2_10, &temp_web_data10[i/avg_number10][num_bin_channels], avg_data10, conf);
+				
+				// bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					
+					bin_web_data100[j] += bin_web_data10[j];
+					
+					if(bin_web_data10[j] >= (avg_number10/2)) {
+						temp_web_data10[i/avg_number10][j] = 1;
+					} else {
+						temp_web_data10[i/avg_number10][j] = 0;
+					}
+					bin_web_data10[j] = 0;
+				}
 				
 				// reset values
 				memset(avg_data10, 0, sizeof(int64_t) * num_channels);
@@ -425,7 +483,17 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_100, web_valid2_100, temp_web_data100[i/avg_number100], avg_data100, conf);
+				merge_currents(web_valid1_100, web_valid2_100, &temp_web_data100[i/avg_number100][num_bin_channels], avg_data100, conf);
+				
+				// bin channels
+				for(j=0; j<num_bin_channels; j++) {
+					
+					if(bin_web_data10[j] >= (avg_number100/2)) {
+						temp_web_data100[i/avg_number100][j] = 1;
+					} else {
+						temp_web_data100[i/avg_number100][j] = 0;
+					}
+				}
 			}
 		}
     }
@@ -584,130 +652,4 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	}
 	
 	return SUCCESS;
-}*/
-
-
-
-// WEBSERVER STORING
-
-
-// store webserver data to fifo
-/*int store_web_data(int fifo_fd, int control_fifo, float* buffer) {
-	
-	// check control fifo
-	int tmp;
-	int check = read(control_fifo, &tmp, sizeof(int));
-	
-	// only write to data fifo, if webserver online
-	if(check > 0) {
-		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
-	}
-	
-	// count number of tokens in control fifo (count will be the number of listeners) ---> not working very nice
-	int tmp;
-	int count = 0;
-	int check = read(control_fifo, &tmp, sizeof(int));
-	while(check > 3) {
-		count++;
-		check = read(control_fifo, &tmp, sizeof(int));
-	}
-	
-	printf("Listener count: %d\n", count);
-	
-	// write data for every user once
-	int i;
-	for(i=0; i<count; i++) {
-		check = write(fifo_fd, buffer, sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
-	}
-	
-	return SUCCESS;
-}
-
-// collapse current channels for webserver plotting (always take highest selected I-channel)
-void collapse_data(float* data_out, int* data_in, int channels, struct rl_conf* conf) {
-	
-	int j = 2; // first two elements are status
-	// specific number of channels
-	int num_i1 = count_bits(channels & I1A);
-	int num_i2 = count_bits(channels & I2A);
-	
-	// i1
-	if(num_i1 != 0) {
-		if ( (channels & I1L) > 0 && num_i1 == 1) {
-			data_out[0] = (float)data_in[j]/100000; // conversion to uA
-		} else {
-			data_out[0] = (float)data_in[j]/1000;
-		}
-		j += num_i1;
-	} else {
-		data_out[0] = 0;
-	}
-	
-	// v1,2
-	if((channels & V1) > 0) {
-		data_out[1] = (float)data_in[j]/1000; // conversion to mV
-		j++;
-	} else {
-		data_out[1] = 0;
-	}
-	if((channels & V2) > 0) {
-		data_out[2] = (float)data_in[j]/1000;
-		j++;
-	} else {
-		data_out[2] = 0;
-	}
-	
-	// i2
-	if(num_i2 != 0) {
-		if ( (channels & I2L) > 0  && num_i2 == 1) {
-			data_out[3] = (float)data_in[j]/100000;
-		} else {
-			data_out[3] = (float)data_in[j]/1000;
-		}
-		j += num_i2;
-	} else {
-		data_out[3] = 0;
-	}
-	
-	// v3,4
-	if((channels & V3) > 0) {
-		data_out[4] = (float)data_in[j]/1000;
-		j++;
-	} else {
-		data_out[4] = 0;
-	}
-	if((channels & V4) > 0) {
-		data_out[5] = (float)data_in[j]/1000;
-	} else {
-		data_out[5] = 0;
-	}
-
-}
-
-// ToDo: use, remove?
-/*void average_data(double* data_out, int* data_in, int length, int num_channels) {
-	int i;
-	int j;
-	long temp_data[num_channels];
-	
-	// reset data
-	for (i=0; i < num_channels; i++) {
-		temp_data[i] = 0;
-	}
-	
-	// add data
-	for( i=0; i<length; i++ ) {
-		for ( j=0; j<num_channels; j++) {
-			temp_data[j] += (long) data_in[i*num_channels + j];
-		}
-	}
-	for (i=0; i< num_channels; i++) {
-		printf("%-10lu", temp_data[i]);
-	}
-	printf("\n");
-	
-	// divide data
-	for ( j=0; j<num_channels; j++) {
-		data_out[j] = (temp_data[j] / length);
-	}
 }*/

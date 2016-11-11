@@ -8,13 +8,11 @@
 
 void rl_reset_calibration();
 
-int rl_get_data();
+void rl_print_config(struct rl_conf* conf);
 
-void rl_print_config(struct rl_conf* conf, int web);
+void rl_print_status(struct rl_status* status);
 
-void rl_print_status(struct rl_status* status, int web);
-
-enum rl_state rl_get_status(int print, int web);
+enum rl_state rl_get_status(int print);
 
 int rl_read_status(struct rl_status* status);
 

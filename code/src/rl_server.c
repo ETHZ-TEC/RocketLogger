@@ -43,7 +43,7 @@ void print_json_new(int32_t data[], int length) {
 		strcat(str, val);
 	}
 	strcat(str, "]\n");
-	printf(str);
+	printf("%s",str);
 }
 
 void print_status(struct rl_status* status) {
@@ -71,9 +71,6 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	
 	// print data length
 	int buffer_count = time - last_time;
-	/*if(buffer_count > WEB_BUFFER_ELEMENTS) {
-		buffer_count = WEB_BUFFER_ELEMENTS;
-	}*/
 	
 	// get available buffers
 	wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT);			// TODO: keep semaphore locked

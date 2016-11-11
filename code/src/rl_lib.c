@@ -10,109 +10,52 @@ void rl_reset_calibration() {
 	
 }
 
-// get current data (used for webserver)
-int rl_get_data() { // TODO: use timeout
-	
-	/*float data[WEB_BUFFER_SIZE][NUM_WEB_CHANNELS];
-	
-	// write ready to control fifo
-	int ready = 1;
-	int control_fifo = open(CONTROL_FIFO, O_NONBLOCK | O_RDWR);
-	write(control_fifo, &ready,  sizeof(int));
-	close(control_fifo);
-	
-	// read data fifo (in blocking mode)
-	int fifo_fd = open(FIFO_FILE, O_RDONLY);
-	read(fifo_fd, &data[0][0],  sizeof(float) * WEB_BUFFER_SIZE * NUM_WEB_CHANNELS);
-	close(fifo_fd);
-	
-	// print buffer
-	int i;
-	for (i=0; i<WEB_BUFFER_SIZE; i++) {
-		print_json(data[i], NUM_WEB_CHANNELS);
-	}*/
-	
-	return SUCCESS;
-}
-
-void rl_print_config(struct rl_conf* conf, int web) {
+void rl_print_config(struct rl_conf* conf) {
 	
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
-	
-	if (web == 1) {
 
-		printf("%d\n", conf->enable_web_server);
-		printf("%d\n", conf->sample_rate);
-		printf("%d\n", conf->update_rate);
-		printf("%d\n", conf->sample_limit);
-		print_channels_new(conf->channels);
-		printf("%s\n", conf->file_name);
-		printf("%d\n",conf->file_format == BIN); // TODO: add no-file field
-		// TODO: add fhr
-		// TODO: add #samples
-		// TODO: add dig inps
-		
-	} else {
-
-											printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
-											printf("  Update rate:     %dHz\n", conf->update_rate);
-		if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
-		else								printf("  Webserver:       disabled\n");
-		if(conf->digital_inputs == 1)		printf("  Digital inputs:  enabled\n");
-		else								printf("  Digital inputs:  disabled\n");
-											printf("  File format:     %s\n", file_format_names[conf->file_format]);
-		if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
-											printf("  Channels:        ");
-		int i;
-		for(i=0; i<NUM_CHANNELS; i++) {
-			if (conf->channels[i] > 0) {
-				printf("%d,", i);
+										printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
+										printf("  Update rate:     %dHz\n", conf->update_rate);
+	if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
+	else								printf("  Webserver:       disabled\n");
+	if(conf->digital_inputs == 1)		printf("  Digital inputs:  enabled\n");
+	else								printf("  Digital inputs:  disabled\n");
+										printf("  File format:     %s\n", file_format_names[conf->file_format]);
+	if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
+										printf("  Channels:        ");
+	int i;
+	for(i=0; i<NUM_CHANNELS; i++) {
+		if (conf->channels[i] > 0) {
+			printf("%d,", i);
+		}
+	}
+	printf("\n");
+	if (conf->force_high_channels[0] > 0 || conf->force_high_channels[1] > 0) {
+										printf("  Forced channels: ");
+		for(i=0; i<NUM_I_CHANNELS; i++) {
+			if (conf->force_high_channels[i] > 0) {
+				printf("%d,", i+1);
 			}
 		}
 		printf("\n");
-		if (conf->force_high_channels[0] > 0 || conf->force_high_channels[1] > 0) {
-											printf("  Forced channels: ");
-			for(i=0; i<NUM_I_CHANNELS; i++) {
-				if (conf->force_high_channels[i] > 0) {
-					printf("%d,", i+1);
-				}
-			}
-			printf("\n");
-		}
-		if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
-		} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
 	}
+	if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
+	} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
 }
 
-void rl_print_status(struct rl_status* status, int web) { // TODO: remove web
+void rl_print_status(struct rl_status* status) {
 	
 	if(status->state == RL_OFF) {
-		if (web == 1) {
-			printf("OFF\n");
-		} else {
-			printf("\nRocketLogger IDLE\n\n");
-		}
+		printf("\nRocketLogger IDLE\n\n");
 	} else {
-		if (web == 1) {
-			printf("RUNNING\n");
-			
-		} else {
-			printf("\nRocketLogger Status: RUNNING\n");
-		}
-		rl_print_config(&(status->conf), web);
-		if (web == 1) {
-			// TODO:
-			//printf("%d\n", status->samples_taken);
-			
-		} else {
-			printf("  Samples taken:   %d\n\n", status->samples_taken);
-		}
-		
+		printf("\nRocketLogger Status: RUNNING\n");
+		rl_print_config(&(status->conf));
+		printf("  Samples taken:   %d\n\n", status->samples_taken);
 	}
 }
 
 // get status of RL (returns 1 when running)
-enum rl_state rl_get_status(int print, int web) { // TODO: remove web
+enum rl_state rl_get_status(int print) {
 	
 	struct rl_status status;
 	
@@ -129,7 +72,7 @@ enum rl_state rl_get_status(int print, int web) { // TODO: remove web
 	
 	// print config if requested
 	if(print == 1) {
-		rl_print_status(&status, web);
+		rl_print_status(&status);
 	}
 	
 	return status.state;
@@ -238,7 +181,7 @@ int rl_sample(struct rl_conf* conf) {
 int rl_stop() {
 	
 	// check if running
-	if(rl_get_status(0,0) != RL_RUNNING) {
+	if(rl_get_status(0) != RL_RUNNING) {
 		rl_log(ERROR, "RocketLogger not running");
 		return FAILURE;
 	}

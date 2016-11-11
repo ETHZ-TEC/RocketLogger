@@ -26,68 +26,6 @@ int check_update_rate(int update_rate) {
 	return FAILURE;
 }
 
-// print data in json format for easy reading in javascript
-void print_json(float data[], int length) {
-	char str[150]; // TODO: adjustable length
-	char val[20];
-	int i;
-	sprintf(str, "[\"%f\"", data[0]);
-	for (i=1; i < length; i++) {
-		sprintf(val, ",\"%f\"", data[i]);
-		strcat(str, val);
-	}
-	strcat(str, "]\n");
-	printf(str);
-}
-
-void print_channels_new(int channels[NUM_CHANNELS]) {
-	
-	// floats needed for print_json function
-	float iChannels[6] = {0,0,0,0,0,0};
-	float vChannels[4] = {0,0,0,0};
-	
-	// TODO: use new util-functions
-	
-	// currents
-	if((channels[0]) > 0 ) {
-		iChannels[0] = 1;
-	}
-	if((channels[1]) > 0) {
-		iChannels[1] = 1;
-	}
-	if((channels[2]) > 0 ) {
-		iChannels[2] = 1;
-	}
-	if((channels[5]) > 0) {
-		iChannels[3] = 1;
-	}
-	if((channels[6]) > 0 ) {
-		iChannels[4] = 1;
-	}
-	if((channels[7]) > 0) {
-		iChannels[5] = 1;
-	}
-	
-	// voltages
-	if((channels[3]) > 0) {
-		vChannels[0] = 1;
-	}
-	if((channels[4]) > 0) {
-		vChannels[1] = 1;
-	}
-	if((channels[8]) > 0) {
-		vChannels[2] = 1;
-	}
-	if((channels[9]) > 0) {
-		vChannels[3] = 1;
-	}
-	
-	// print
-	print_json(vChannels, 4);
-	print_json(iChannels, 6);
-	
-}
-
 pid_t get_pid() {
 	
 	// open file
