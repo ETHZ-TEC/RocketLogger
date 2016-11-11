@@ -346,12 +346,12 @@ $(function() {
 						if(plotChannels[j]) {
 							if(!isDigital[j]) {
 								if(isCurrent[j]) {
-									plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
+									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000]);
 								} else {
-									plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, tempData[k]/1000]);
+									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000]);
 								}
 							} else {
-								plotData[j].push([1000*(currentTime-bufferCount+1) + 1000/bufferSize*i, parseInt(tempData[k])]);
+								plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, parseInt(tempData[k])]);
 							}
 							k++;
 						}
@@ -579,8 +579,8 @@ $(function() {
 			} else {
 				resetVPlot();
 			}
-			vPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
-            vPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
+			vPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
+            vPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
 			vPlot.setupGrid();
 			vPlot.draw();
 			
@@ -594,8 +594,8 @@ $(function() {
 			} else {
 				resetIPlot();
 			}
-			iPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
-            iPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
+			iPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
+            iPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
 			iPlot.setupGrid();
 			iPlot.draw();
 			
@@ -611,8 +611,8 @@ $(function() {
 			resetDigPlot();
 			digPlot.getOptions().yaxes[0].max = numDigDisplayed*DIG_DIST_FACTOR-0.4,
 			digPlot.setData(getDigData());
-			digPlot.getOptions().xaxes[0].min = 1000 * (currentTime - maxBufferCount + 1);
-            digPlot.getOptions().xaxes[0].max = 1000 * (currentTime + 1);
+			digPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
+            digPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
 			digPlot.setupGrid();
 			digPlot.draw();
 			

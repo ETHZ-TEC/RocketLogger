@@ -511,7 +511,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		} else {
 		
 			// write time
-			web_data->time = time_real.sec;
+			web_data->time = time_real.sec*1000 + time_real.nsec/1000000;
 			
 			// write data to ring buffer
 			buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);

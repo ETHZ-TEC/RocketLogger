@@ -8,6 +8,7 @@
 #define ARG_COUNT 4
 #define MAX_STRING_LENGTH 150
 #define MAX_STRING_VALUE 20
+#define TIME_MARGIN 10 // in ms
 
 // Global variables
 int sem_id;
@@ -54,7 +55,7 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	printf("%lld\n", time);
 	
 	// print data length
-	int buffer_count = time - last_time;
+	int buffer_count = (time - last_time + TIME_MARGIN)/1000;
 	
 	// get available buffers
 	if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
@@ -72,28 +73,31 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	printf("%d\n", buffer_count);
 	printf("%d\n", buffer_size);
 	
-	// print data
-	int32_t data[buffer_size][num_channels];
+	// read data
+	int32_t data[buffer_count][buffer_size][num_channels];
 	int i;
-	for(i=buffer_count-1; i>=0; i--) {
+	
+	if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+		return;
+	}
+	for(i=0; i<buffer_count; i++) {
 		
-		// read data
-		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
-			return;
-		}
+		// read data buffer
 		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
 		if(web_data->buffer[t_scale].element_size > sizeof(data)) {
 			rl_log(ERROR, "In print_data: memcpy is trying to copy to much data.");
+			break;
 		} else {
-			memcpy(&data[0][0], shm_data, web_data->buffer[t_scale].element_size);
-		}
-		set_sem(sem_id, DATA_SEM, 1);
-		
-		// print data
-		// TODO: move this to separate loop, without semaphore lock
+			memcpy(&data[i][0][0], shm_data, web_data->buffer[t_scale].element_size);
+		}	
+	}
+	set_sem(sem_id, DATA_SEM, 1);
+	
+	// print data
+	for(i=buffer_count-1; i>=0; i--) { 
 		int j;
 		for(j=0; j<buffer_size; j++) {
-			print_json_new(data[j], num_channels);
+			print_json_new(data[i][j], num_channels);
 		}
 	}
 }
@@ -109,7 +113,7 @@ int main(int argc, char* argv[]) {
 	uint32_t id = atoi(argv[1]);
 	uint8_t get_data = atoi(argv[2]);
 	uint32_t t_scale = atoi(argv[3]);
-	int64_t last_time = atoi(argv[4]);
+	int64_t last_time = atoll(argv[4]);
 	
 	// check time scale
 	if(t_scale != S1 && t_scale != S10 && t_scale != S100) {
