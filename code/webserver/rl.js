@@ -580,7 +580,7 @@ $(function() {
 				resetVPlot();
 			}
 			vPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            vPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
+            vPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
 			vPlot.setupGrid();
 			vPlot.draw();
 			
@@ -595,7 +595,7 @@ $(function() {
 				resetIPlot();
 			}
 			iPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            iPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
+            iPlot.getOptions().xaxes[0].max = currentTime + 1000;
 			iPlot.setupGrid();
 			iPlot.draw();
 			
@@ -612,7 +612,7 @@ $(function() {
 			digPlot.getOptions().yaxes[0].max = numDigDisplayed*DIG_DIST_FACTOR-0.4,
 			digPlot.setData(getDigData());
 			digPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            digPlot.getOptions().xaxes[0].max = currentTime + 1000 * (1);
+            digPlot.getOptions().xaxes[0].max = currentTime + 1000;
 			digPlot.setupGrid();
 			digPlot.draw();
 			
