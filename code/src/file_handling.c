@@ -246,6 +246,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	}
 }
 
+int test = 0;
 int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
 	int i;
@@ -295,7 +296,7 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	
 	int value = 0;
 	
-	// data for web interface
+	// data for web interface, TODO: as arrays
 	int avg_number = samples_buffer / BUFFER1_SIZE;
 	int avg_number10 = samples_buffer / BUFFER10_SIZE;
 	int avg_number100 = samples_buffer / BUFFER100_SIZE;
@@ -395,7 +396,11 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		for(j=0; j<NUM_CHANNELS; j++) {
 			if(conf->channels[j] > 0) {
 				if(sample_size == 4) {
-					value = *( (int32_t *) (buffer_addr + sample_size*j) );
+					if (TEST_MODE == 1) {
+						value = 1000*j + test++;
+					} else {
+						value = *( (int32_t *) (buffer_addr + sample_size*j) );
+					}
 				} else {
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
