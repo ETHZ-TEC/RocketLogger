@@ -150,7 +150,7 @@ classdef rld
             
             
             %% READ DATA
-            num_bin_vals = 1;%ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
+            num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
 
             % values
             temp_time = nan(data_block_count, TIME_STAMP_SIZE);
