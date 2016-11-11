@@ -36,7 +36,7 @@ $(function() {
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
 		CHANNEL_NAMES = ["DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6", "I1", "V1", "V2", "I2", "V3", "V4"];
-		CHANNEL_COLORS = [0,1,2,3,4,5,0,0,1,1,2,3];
+		CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
 		
 		DIG_DIST_FACTOR = 1.5;
 		
