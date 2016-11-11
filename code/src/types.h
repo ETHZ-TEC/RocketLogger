@@ -1,6 +1,7 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+#define TEST_MODE 0
 
 // INCLUDES
 

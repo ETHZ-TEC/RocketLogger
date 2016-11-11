@@ -2,12 +2,9 @@
 
 #include "pru.h"
 
-#define TEST_MODE 0
 #if TEST_MODE == 1
 	#warning "Test mode activated!"
 #endif
-
-
 
 // PRU TIMEOUT WRAPPER
 
