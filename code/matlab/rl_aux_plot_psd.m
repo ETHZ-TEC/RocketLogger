@@ -1,8 +1,9 @@
 function [ psd ] = rl_aux_plot_psd( samples, f_samp )
-%PLOTPSD Plot the spectrum of a measured signal (voltage/current)
+%RL_AUX_PLOT_PSD Plot the spectrum of a measured signal (voltage/current)
+%   rl_aux_plot_psd(samples, f_samp)
 %   Parameters:
 %      - samples:    Samples
-%      - fsamp:      Sampling Frequency [Hz]
+%      - f_samp:     Sampling Frequency [Hz]
 sample_count = length(samples);
 df = f_samp/sample_count;
 f_orig = df * (0:1:sample_count-1);
