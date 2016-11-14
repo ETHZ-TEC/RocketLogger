@@ -1,3 +1,7 @@
+#include <sys/statvfs.h>
+#include <stdio.h>
+#include <stdint.h>
+
 #include "sem.h"
 #include "types.h"
 #include "rl_lib.h"
@@ -27,7 +31,18 @@ struct rl_status status;
 // buffer sizes
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 
+
 // functions
+
+int64_t get_free_space(char* path) {
+	
+	struct statvfs stat;
+	statvfs(path, &stat);
+		
+	return (uint64_t) stat.f_bavail * (uint64_t) stat.f_bsize;
+
+}
+
 void print_json_new(int32_t data[], int length) {
 	char str[MAX_STRING_LENGTH];
 	char val[MAX_STRING_VALUE];
@@ -41,20 +56,21 @@ void print_json_new(int32_t data[], int length) {
 	printf("%s",str);
 }
 
-void print_status(struct rl_status* status) {
-	printf("%d\n", status->state);
-	if(status->state != RL_RUNNING) {
-		read_default_config(&status->conf);
+void print_status() {
+	printf("%d\n", status.state);
+	if(status.state != RL_RUNNING) {
+		read_default_config(&status.conf);
 	}
-	printf("%d\n", status->conf.sample_rate);
-	printf("%d\n", status->conf.update_rate);
-	printf("%d\n", status->conf.digital_inputs);
-	printf("%d\n", status->conf.file_format);
-	printf("%s\n", status->conf.file_name);
-	print_json_new(status->conf.channels, NUM_CHANNELS);
-	print_json_new(status->conf.force_high_channels, NUM_I_CHANNELS);
-	printf("%d\n", status->samples_taken);
-	printf("%d\n", status->conf.enable_web_server);
+	printf("%llu\n", get_free_space(status.conf.file_name));
+	printf("%d\n", status.conf.sample_rate);
+	printf("%d\n", status.conf.update_rate);
+	printf("%d\n", status.conf.digital_inputs);
+	printf("%d\n", status.conf.file_format);
+	printf("%s\n", status.conf.file_name);
+	print_json_new(status.conf.channels, NUM_CHANNELS);
+	print_json_new(status.conf.force_high_channels, NUM_I_CHANNELS);
+	printf("%d\n", status.samples_taken);
+	printf("%d\n", status.conf.enable_web_server);
 		
 }
 
@@ -81,7 +97,7 @@ void print_data() {
 	
 	// print request id and status
 	printf("%d\n", id);
-	print_status(&status);
+	print_status();
 	
 	// data available
 	printf("1\n");
@@ -152,7 +168,7 @@ int main(int argc, char* argv[]) {
 	if(state != RL_RUNNING || status.sampling == SAMPLING_OFF || status.conf.enable_web_server == 0 || get_data == 0) {
 		// print request id and status
 		printf("%d\n", id);
-		print_status(&status);
+		print_status();
 		printf("0\n"); // no data available
 		exit(EXIT_SUCCESS);
 	}

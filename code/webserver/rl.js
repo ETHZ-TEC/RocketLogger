@@ -1,12 +1,10 @@
 $(function() {
 	
 		// TODO
-		// fix jumps
 		
 		// csv - files
 		// currents: less average!
 		// avg-values in array (for 3 buffers)
-		// debug delays
 		
 		// display sampling time
 		// display disk space available
@@ -57,6 +55,7 @@ $(function() {
 		var currentTime = 0;
 		var filename = "data.rld";
 		var loadDefault = false;
+		var freeSpace;
 		
 		var vScale = 1;
 		var iScale = 1;
@@ -143,6 +142,18 @@ $(function() {
 					respId = tempState[0];
 					if (respId == reqId) {
 						state = tempState[1];
+						
+						// free disk space
+						freeSpace = tempState[2];
+						document.getElementById("free_space").innerHTML = 'Free Disk Space: ' + (parseInt(freeSpace)/1070599167).toFixed(3) + 'GB';
+						
+						// left sampling time 
+						if($("#enable_storing:checked").length > 0) {
+							showSamplingTime();
+						} else {
+							document.getElementById("time_left").innerHTML = "Sampling Time Left: ∞";
+						}
+						
 						// display status on page
 						if (state == RL_RUNNING) {
 							// parse status and data
@@ -185,6 +196,34 @@ $(function() {
 			});
 		}
 		
+		function showSamplingTime() {
+			
+			parseChannels();
+			
+			var numChannelsActivated = 0;
+			for(var i=0; i<NUM_CHANNELS; i++) {
+				if(channels[i]) {
+					numChannelsActivated++;
+				}
+			}
+			var e = document.getElementById("sample_rate");
+			var tempSampleRate = e.options[e.selectedIndex].value;
+			var rate = (numChannelsActivated+1) * 4 * tempSampleRate * 1000;
+			var timeLeft = freeSpace/rate;
+			var date = new Date(timeLeft * 1000);
+			var d = date.getDate()-1;
+			var h = date.getUTCHours();
+			var m = date.getUTCMinutes();
+			var t = m+"min";
+			if(h>0) {
+				t = h + "h " + t;
+			}
+			if(d>0) {
+				t = d + "d " + t;
+			}
+			document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+		}
+		
 		function mismatch() {
 			// ID mismatch -> error
 			document.getElementById("status").innerHTML = 'Status: ERROR';
@@ -195,15 +234,15 @@ $(function() {
 		function parseStatus(tempState) {
 			
 			// EXTRACT STATUS INFO
-			var sampleRate = tempState[2];
-			var digitalInputs = tempState[4];
-			var fileFormat = tempState[5];
-			var tempFilename = tempState[6];
-			var tempChannels = JSON.parse(tempState[7]);
-			var tempForceHighChannels = JSON.parse(tempState[8]);
-			var samplesTaken = tempState[9];
-			var dataAvailable = tempState[10];
-			var newData = tempState[11];
+			var sampleRate = tempState[3];
+			var digitalInputs = tempState[5];
+			var fileFormat = tempState[6];
+			var tempFilename = tempState[7];
+			var tempChannels = JSON.parse(tempState[8]);
+			var tempForceHighChannels = JSON.parse(tempState[9]);
+			var samplesTaken = tempState[10];
+			var dataAvailable = tempState[11];
+			var newData = tempState[12];
 			
 			// PARSE STATUS INFO
 			
@@ -319,10 +358,10 @@ $(function() {
 		function dataReceived (tempState) {
 			
 			// extract information
-			var tempTScale = tempState[12];
-			currentTime = parseInt(tempState[13]);
-			var bufferCount = parseInt(tempState[14]);
-			var bufferSize = parseInt(tempState[15]);
+			var tempTScale = tempState[13];
+			currentTime = parseInt(tempState[14]);
+			var bufferCount = parseInt(tempState[15]);
+			var bufferSize = parseInt(tempState[16]);
 			
 			if (tempTScale != tScale) {
 				resetData();
@@ -344,7 +383,7 @@ $(function() {
 				}
 				
 				for (var i = 0; i < bufferCount * bufferSize; i++) {
-					var tempData = JSON.parse(tempState[16 + i]);
+					var tempData = JSON.parse(tempState[17 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
@@ -599,7 +638,7 @@ $(function() {
 				resetIPlot();
 			}
 			iPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            iPlot.getOptions().xaxes[0].max = currentTime + 1000;
+            iPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
 			iPlot.setupGrid();
 			iPlot.draw();
 			
@@ -616,7 +655,7 @@ $(function() {
 			digPlot.getOptions().yaxes[0].max = numDigDisplayed*DIG_DIST_FACTOR-0.4,
 			digPlot.setData(getDigData());
 			digPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            digPlot.getOptions().xaxes[0].max = currentTime + 1000;
+            digPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
 			digPlot.setupGrid();
 			digPlot.draw();
 			
@@ -694,7 +733,7 @@ $(function() {
 				return false;
 			}
 		
-			if(!parse_conf()){
+			if(!parseConf()){
 				return false;
 			}
 			
@@ -805,35 +844,8 @@ $(function() {
 		
 		// CONFIGURATION PARSING
 		
-		function parse_conf() {
-			
-			// rate
-			var e = document.getElementById("sample_rate");
-			cmd_obj.rate = " -r " + e.options[e.selectedIndex].value;
-			
-			
-			// file
-			if ($("#enable_storing:checked").length > 0) {
-				cmd_obj.file = " -f /var/www/data/" +  filename;
-			} else {
-				cmd_obj.file = " -f 0"; // no storing
-			}
-			
-			// file format
-			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "bin") {
-				cmd_obj.file_format = " -format bin";
-			} else {
-				cmd_obj.file_format = " -format csv";
-				var r = document.getElementById("sample_rate");
-				if (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32") {
-					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
-						return false;
-					}
-				}
-			}
-			
-			// channels
+		
+		function parseChannels() {
 			var numChannels = 0;
 			channels.fill(false);
 			
@@ -911,7 +923,40 @@ $(function() {
 				channels[7] = true;
 				numChannels++;
 			}
-			if(numChannels == 0) {
+			
+			return numChannels;
+		}
+		
+		function parseConf() {
+			
+			// rate
+			var e = document.getElementById("sample_rate");
+			cmd_obj.rate = " -r " + e.options[e.selectedIndex].value;
+			
+			
+			// file
+			if ($("#enable_storing:checked").length > 0) {
+				cmd_obj.file = " -f /var/www/data/" +  filename;
+			} else {
+				cmd_obj.file = " -f 0"; // no storing
+			}
+			
+			// file format
+			var e = document.getElementById("file_format");
+			if (e.options[e.selectedIndex].value == "bin") {
+				cmd_obj.file_format = " -format bin";
+			} else {
+				cmd_obj.file_format = " -format csv";
+				var r = document.getElementById("sample_rate");
+				if (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32") {
+					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
+						return false;
+					}
+				}
+			}
+			
+			// channels
+			if(parseChannels() == 0) {
 				alert("No channel selected!");
 				return false;
 			}
