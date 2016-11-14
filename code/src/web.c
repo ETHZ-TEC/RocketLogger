@@ -36,13 +36,10 @@ struct web_shm* open_web_shm() {
 
 
 void reset_buffer(struct ringbuffer* buffer, int element_size, int length) {
-	//int i;
-	//for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
-		buffer->element_size = element_size;
-		buffer->length = length;
-		buffer->filled = 0;
-		buffer->head = 0;
-	//}
+	buffer->element_size = element_size;
+	buffer->length = length;
+	buffer->filled = 0;
+	buffer->head = 0;
 }
 
 void buffer_add(struct ringbuffer* buffer, int32_t* data) {
