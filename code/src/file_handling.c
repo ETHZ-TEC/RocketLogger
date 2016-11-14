@@ -11,15 +11,7 @@ int i1l_valid_channel = 0;
 int i2l_valid_channel = 0;
 
 
-time_t create_timestamp(struct rl_conf* conf) {
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	time.tv_sec -= 1 / conf->update_rate; // adjust with buffer latency
-	return time.tv_sec;
-}
-
-// TODO: rename, adjust with buffer latency, if needed
-void create_time_stamp_new(struct time_stamp* time_real, struct time_stamp* time_monotonic) {
+void create_time_stamp(struct time_stamp* time_real, struct time_stamp* time_monotonic) {
 	
 	struct timespec spec_real;
 	struct timespec spec_monotonic;
@@ -76,7 +68,7 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	// timestamps
 	struct time_stamp time_real;
 	struct time_stamp time_monotonic;
-	create_time_stamp_new(&time_real, &time_monotonic);
+	create_time_stamp(&time_real, &time_monotonic);
 	
 	
 	// lead_in setup
@@ -168,7 +160,7 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 }
 
 
-void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf) {
+void setup_header(struct rl_file_header* file_header, struct rl_conf* conf) {
 	
 	// comment
 	char* comment = RL_FILE_COMMENT;
@@ -179,7 +171,7 @@ void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf) 
 	
 }
 
-void store_header_new(FILE* data, struct rl_file_header* file_header) {
+void store_header(FILE* data, struct rl_file_header* file_header) {
 	
 	int total_channel_count = file_header->lead_in.channel_bin_count + file_header->lead_in.channel_count;
 	
@@ -247,7 +239,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 }
 
 int test = 0;
-int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
+int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
 	int i;
 	int j;
@@ -261,23 +253,12 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 	}
 	
 	int num_channels = count_channels(conf->channels);
-	
-	// TODO: TEST
-	// int num_web_channels = web_data->num_channels;
-	
-	int num_web_channels = num_channels + num_bin_channels;
-	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
-		num_web_channels--;
-	}
-	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
-		num_web_channels--;
-	}
-	
+	int num_web_channels = web_data->num_channels;
 	
 	// create timestamp
 	struct time_stamp time_real;
 	struct time_stamp time_monotonic;
-	create_time_stamp_new(&time_real, &time_monotonic);
+	create_time_stamp(&time_real, &time_monotonic);
 	
 	// adjust time with buffer latency
 	time_real.sec -= 1 / conf->update_rate;

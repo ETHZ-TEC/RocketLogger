@@ -47,14 +47,7 @@
 // FUNCTIONS
 
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
-void setup_header_new(struct rl_file_header* file_header, struct rl_conf* conf);
-void store_header_new(FILE* data, struct rl_file_header* file_header);
+void setup_header(struct rl_file_header* file_header, struct rl_conf* conf);
+void store_header(FILE* data, struct rl_file_header* file_header);
 void update_header(FILE* data, struct rl_file_header* file_header);
-int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data);
-
-//int store_buffer(FILE* data, int fifo_fd, int control_fifo, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf);
-//int store_web_data(int fifo_fd, int control_fifo, float* buffer);
-//void collapse_data(float* data_out, int* data_in, int channels, struct rl_conf* conf);
-
-// ToDo: use, remove?
-/*void average_data(double* data_out, int* data_in, int length, int num_channels); */
+int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data);

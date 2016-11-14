@@ -129,7 +129,9 @@ int pru_init() {
 	return SUCCESS;
 }
 
-int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* pru_sample_rate) { // TODO: remove pru_sample_rate
+int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
+	
+	unsigned int pru_sample_rate;
 
 	// set state
 	if(conf->mode == LIMIT) {
@@ -141,37 +143,37 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	// set sampling rate configuration
 	switch (conf->sample_rate) {
 		case 1:
-			*pru_sample_rate = K1;
+			pru_sample_rate = K1;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
 		case 2:
-			*pru_sample_rate = K2;
+			pru_sample_rate = K2;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
 		case 4:
-			*pru_sample_rate = K4;
+			pru_sample_rate = K4;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
 		case 8:
-			*pru_sample_rate = K8;
+			pru_sample_rate = K8;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
 		case 16:
-			*pru_sample_rate = K16;
+			pru_sample_rate = K16;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
 		case 32:
-			*pru_sample_rate = K32;
+			pru_sample_rate = K32;
 			pru->precision = PRECISION_LOW;
 			pru->sample_size = SIZE_LOW;
 			break;
 		case 64:
-			*pru_sample_rate = K64;
+			pru_sample_rate = K64;
 			pru->precision = PRECISION_LOW;
 			pru->sample_size = SIZE_LOW;
 			break;
@@ -195,7 +197,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 	pru->commands[0] = RESET;
 	pru->commands[1] = SDATAC;
 	pru->commands[2] = WREG|CONFIG3|CONFIG3DEFAULT;						// write configuration
-	pru->commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | *pru_sample_rate;
+	pru->commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | pru_sample_rate;
 
 	// set channel gains
 	// TODO: set all channels
@@ -236,8 +238,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// WEBSERVER
-	
-	// NEW
 	int sem_id = -1;
 	struct web_shm* web_data = (struct web_shm*) -1;
 	
@@ -271,30 +271,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
 			reset_buffer(&web_data->buffer[i], web_buffer_element_size, web_buffer_length);
 		}
-		
-		/*int web_buffer_element_size = buffer_sizes[1] * num_web_channels*sizeof(int32_t);
-		int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[1];
-		reset_buffer(&web_data->buffer[0], web_buffer_element_size, web_buffer_length);*/
-	}
-	
-	
-	// OLD -> TODO: remove
-	int fifo_fd = -1;
-	int control_fifo = -1;
-	
-	if (conf->enable_web_server == 1) {
-		
-		// data fifo
-		fifo_fd = open(FIFO_FILE, O_NONBLOCK | O_RDWR);
-		if (fifo_fd < 0) {
-			rl_log(ERROR, "could not open FIFO");
-		}
-		
-		// control fifo
-		control_fifo = open(CONTROL_FIFO, O_NONBLOCK | O_RDWR);
-		if (control_fifo < 0) {
-			rl_log(ERROR, "could not open control FIFO");
-		}
 	}
 	
 	
@@ -308,8 +284,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// setup PRU
 	struct pru_data_struct pru;
-	unsigned int pru_sample_rate; // TODO: remove (with new header)
-	pru_setup(&pru, conf, &pru_sample_rate);
+	pru_setup(&pru, conf);
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
 	
@@ -330,20 +305,20 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// FILE STORING
 	
 	// file header lead-in
-	struct rl_file_header file_header_new;
-	setup_lead_in(&(file_header_new.lead_in), conf);
+	struct rl_file_header file_header;
+	setup_lead_in(&(file_header.lead_in), conf);
 
 	// channel array
-	int total_channel_count = file_header_new.lead_in.channel_bin_count + file_header_new.lead_in.channel_count;
+	int total_channel_count = file_header.lead_in.channel_bin_count + file_header.lead_in.channel_count;
 	struct rl_file_channel file_channel[total_channel_count];
-	file_header_new.channel = file_channel;
+	file_header.channel = file_channel;
 
 	// complete file header
-	setup_header_new(&file_header_new, conf);
+	setup_header(&file_header, conf);
 	
 	// store header
 	if(conf->file_format != NO_FILE) {
-		store_header_new(data, &file_header_new);
+		store_header(data, &file_header);
 	}
 	
 	
@@ -394,7 +369,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// Wait for event completion from PRU
 		if (TEST_MODE == 0) {
-			// only check for timout on first buffer (else it does not work!) -> TODO: check
+			// only check for timout on first buffer (else it does not work!)
 			if (i == 0) {
 				if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
 					// timeout occured
@@ -423,17 +398,14 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// store the buffer
-		//store_buffer(data, fifo_fd, control_fifo, buffer_addr+4, pru.sample_size, samples_buffer, conf);
-		//if(conf->file_format != NO_FILE) {
-			store_buffer_new(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
-		//}
+		store_buffer(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
-			file_header_new.lead_in.data_block_count = i+1 - buffer_lost;
-			file_header_new.lead_in.sample_count += samples_buffer;
-			update_header(data, &file_header_new);
+			file_header.lead_in.data_block_count = i+1 - buffer_lost;
+			file_header.lead_in.sample_count += samples_buffer;
+			update_header(data, &file_header);
 			
 		}
 		
@@ -471,21 +443,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
 	// WEBSERVER FINISH
-	
-	// NEW
 	// unmap shared memory
 	if (conf->enable_web_server == 1) {
 		remove_sem(sem_id);
 		shmdt(web_data);
 	}
-	
-	// OLD
-	// close FIFOs
-	if (conf->enable_web_server == 1) {
-		close(fifo_fd);
-		close(control_fifo);
-	}
-	
 	
 	
 	// METER FINISH
