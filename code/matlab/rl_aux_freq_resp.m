@@ -31,7 +31,7 @@ grid on;
 
 xlabel('Frequency [Hz]');
 ylabel('Attenuation [dB]');
-prettyPlot(fig);
+rl_aux_pretty_plot(fig);
 
 end
 

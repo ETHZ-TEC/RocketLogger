@@ -1,9 +1,9 @@
-function [ fig ] = prettyPlot( n )
+function [ fig ] = rl_aux_pretty_plot( figure_in )
 %PRETTYPLOT Summary of this function goes here
 %   Detailed explanation goes here
 
 if exist('n', 'var')
-    fig = figure(n);
+    fig = figure(figure_in);
 else
     fig = figure;
 end

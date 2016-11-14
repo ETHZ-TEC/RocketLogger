@@ -338,18 +338,18 @@ classdef rld
                 axis_left = gca();
                 axis_left.YColor = 'black';
                 if pretty_plot 
-                    prettyPlot(fig) 
+                    rl_aux_pretty_plot(fig) 
                 end
 
                 yyaxis right;
                 axis_right = gca();
                 axis_right.YColor = 'black';
                 if pretty_plot 
-                    prettyPlot(fig) 
+                    rl_aux_pretty_plot(fig) 
                 end
 
             elseif pretty_plot
-                prettyPlot(fig)       
+                rl_aux_pretty_plot(fig)       
             end
             
             % legend
