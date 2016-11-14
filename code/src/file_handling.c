@@ -255,11 +255,6 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	
 	int num_channels = count_channels(conf->channels);
 	
-	// TODO: improve
-	int num_web_channels = 0;
-	if(conf->enable_web_server == 1) {
-		num_web_channels = web_data->num_channels;
-	}
 	
 	// create timestamp
 	struct time_stamp time_real;
@@ -280,19 +275,26 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	// binary data (for status and samples)
 	uint32_t bin_data;
 	int32_t channel_data[num_channels];
-	
 	int value = 0;
 	
+	// csv data TODO: defines
+	char line_char[200] = "";
+	char value_char[50];
+	
+	
 	// data for webserver
+	int num_web_channels = 0;
+	
 	int avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
-	
 	int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
-	memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
-	
 	int32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
-	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
-	
 	uint8_t web_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
+	
+	if(conf->enable_web_server == 1) {
+		num_web_channels = web_data->num_channels;
+		memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
+		memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
+	}
 	
 	int32_t temp_web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
 
@@ -385,7 +387,9 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 			fwrite(channel_data, sizeof(int32_t), num_channels, data);
 		}
 		
+		// handle web data
 		if(conf->enable_web_server == 1) {
+			// buffer 1
 			if((i+1)%avg_number[BUF1_INDEX] == 0) {
 				
 				// average
@@ -417,6 +421,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 				web_valid[BUF1_INDEX][1] = 1;
 			}
 			
+			// buffer 10
 			if((i+1)%avg_number[BUF10_INDEX] == 0) {
 				
 				// average
@@ -448,6 +453,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 				web_valid[BUF10_INDEX][1] = 1;
 			}
 			
+			// buffer 100
 			if((i+1)%avg_number[BUF100_INDEX] == 0) {
 				
 				// average
