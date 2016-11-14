@@ -260,7 +260,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 								return FAILURE;
 							}
 						} else {
-							rl_log(WARNING, "file format ignored");
+							rl_log(INFO, "file format ignored");
 						}
 					} else {
 						rl_log(ERROR, "no file format");
