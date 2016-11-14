@@ -5,7 +5,6 @@
 #include "util.h"
 
 #define WEB_RING_BUFFER_COUNT 3
-//#define WEB_BUFFER_ELEMENTS 10
 
 enum time_scale {
 	S1 = 0,
@@ -15,9 +14,6 @@ enum time_scale {
 #define BUFFER1_SIZE 100
 #define BUFFER10_SIZE 10
 #define BUFFER100_SIZE 1
-
-// TODO: adapt
-//#define WEB_BUFFER_SIZE 100
 
 #define NUM_WEB_CHANNELS 12 // 6 analog + 6 digital
 #define NUM_WEB_POINTS 1000
@@ -30,7 +26,7 @@ struct ringbuffer {
 	uint32_t length;
 	uint32_t filled;
 	uint32_t head;
-	int32_t data[NUM_WEB_CHANNELS * NUM_WEB_POINTS]; //WEB_BUFFER_SIZE * WEB_BUFFER_ELEMENTS];
+	int32_t data[NUM_WEB_CHANNELS * NUM_WEB_POINTS];
 };
 
 struct web_shm {
