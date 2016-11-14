@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 	
 	
 	// quit, if data not requested or not running or web disabled
-	if(state != RL_RUNNING || status.conf.enable_web_server == 0 || get_data == 0) {
+	if(state != RL_RUNNING || status.sampling == SAMPLING_OFF || status.conf.enable_web_server == 0 || get_data == 0) {
 		// print request id and status
 		printf("%d\n", id);
 		print_status(&status);

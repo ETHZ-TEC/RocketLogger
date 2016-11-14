@@ -117,6 +117,11 @@ enum rl_state {
 	RL_RUNNING = 1,
 	RL_ERROR = -1
 };
+enum rl_sampling {
+	SAMPLING_OFF = 0,
+	SAMPLING_ON = 1
+};
+
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE}; //DATA, 
 enum rl_file_format {
 	NO_FILE = 0,
@@ -162,6 +167,7 @@ struct rl_conf {
 // status struct
 struct rl_status {
 	enum rl_state state;
+	enum rl_sampling sampling;
 	int samples_taken;
 	int buffer_number;
 	struct rl_conf conf;
