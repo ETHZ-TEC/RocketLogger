@@ -47,6 +47,11 @@ void hw_close(struct rl_conf* conf) {
 		pru_stop();
 	}
 	pru_close();
+	
+	// RESET SHARED MEM
+	status.samples_taken = 0;
+	status.buffer_number = 0;
+	write_status(&status);
 }
 
 int hw_sample(struct rl_conf* conf) {
