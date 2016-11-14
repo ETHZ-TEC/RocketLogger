@@ -1,4 +1,4 @@
-function [ scale, offset, res ] = lin_fit( points, points_ideal )
+function [ scale, offset, res ] = rl_aux_lin_fit( points, points_ideal )
 
 [p, s] = polyfit(points, points_ideal,1);
 

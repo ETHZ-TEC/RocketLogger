@@ -52,7 +52,7 @@ avg_points = zeros(4,num_points);
 for i=1:4
     disp(['Voltage Channel: ', int2str(i)]);
     avg_points(i,:) = rl_aux_average_points(v(:,i+2), num_points, v_step, min_stable_samples);
-    [scales(v_indices(i)), offsets(v_indices(i)), ~ ] = lin_fit(avg_points(i,:),v_ideal);
+    [scales(v_indices(i)), offsets(v_indices(i)), ~ ] = rl_aux_lin_fit(avg_points(i,:),v_ideal);
     residual(i,:) = (scales(v_indices(i))*avg_points(i,:)+offsets(v_indices(i))-v_ideal)*1e-6;
 end
 
@@ -78,11 +78,11 @@ avg_points = zeros(2,num_points);
 % average and fitting
 disp('Current Channel 1, LOW');
 avg_points(1,:) = rl_aux_average_points(i1l(:,3), num_points, il_step, min_stable_samples);
-[scales(il_indices(1)), offsets(il_indices(1)), ~ ] = lin_fit(avg_points(1,:),il_ideal);
+[scales(il_indices(1)), offsets(il_indices(1)), ~ ] = rl_aux_lin_fit(avg_points(1,:),il_ideal);
 
 disp('Current Channel 2, LOW');
 avg_points(2,:) = rl_aux_average_points(i2l(:,3), num_points, il_step, min_stable_samples);
-[scales(il_indices(2)), offsets(il_indices(2)), ~ ] = lin_fit(avg_points(2,:),il_ideal);
+[scales(il_indices(2)), offsets(il_indices(2)), ~ ] = rl_aux_lin_fit(avg_points(2,:),il_ideal);
 
 residual = [];
 residual(1,:) = (scales(il_indices(1))*avg_points(1,:)+offsets(il_indices(1))-il_ideal)*1e-11;
@@ -109,11 +109,11 @@ avg_points = zeros(2,num_points);
 % average and fitting
 disp('Current Channel 1, HIGH');
 avg_points(1,:) = rl_aux_average_points(i1h(:,3), num_points, ih_step, min_stable_samples);
-[scales(ih_indices(1)), offsets(ih_indices(1)), ~ ] = lin_fit(avg_points(1,:),ih_ideal);
+[scales(ih_indices(1)), offsets(ih_indices(1)), ~ ] = rl_aux_lin_fit(avg_points(1,:),ih_ideal);
 
 disp('Current Channel 2, HIGH');
 avg_points(2,:) = rl_aux_average_points(i2h(:,3), num_points, ih_step, min_stable_samples);
-[scales(ih_indices(2)), offsets(ih_indices(2)), ~ ] = lin_fit(avg_points(2,:),ih_ideal);
+[scales(ih_indices(2)), offsets(ih_indices(2)), ~ ] = rl_aux_lin_fit(avg_points(2,:),ih_ideal);
 
 residual = [];
 residual(1,:) = (scales(ih_indices(1))*avg_points(1,:)+offsets(ih_indices(1))-ih_ideal)*1e-9;
