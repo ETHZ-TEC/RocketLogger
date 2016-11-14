@@ -1,4 +1,4 @@
-function [ intervals ] = get_intervals( points , num_points, expected_step_size, min_stable_points)
+function [ intervals ] = rl_aux_get_intervals( points , num_points, expected_step_size, min_stable_points)
 
 % magic constants
 margin = 20;
