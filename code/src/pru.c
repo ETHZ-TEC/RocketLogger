@@ -442,6 +442,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		status.buffer_number = i+1 - buffer_lost;
 		write_status(&status);
 		
+		// notify web clients
+		// Note: There is a possible race condition here, which might result in one web client not getting notified once, do we care?
+		int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
+		set_sem(sem_id, WAIT_SEM, num_web_clients);
+		
 		// print meter output
 		if(conf->mode == METER) {
 			print_meter(conf, buffer_addr+4, pru.sample_size);

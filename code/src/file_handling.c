@@ -507,7 +507,10 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 		
 		// get shared memory access
 		if(wait_sem(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
-			// TODO: do we have to clean up the semaphore?
+			// disable webserver and continue running
+			conf->enable_web_server = 0;
+			status.state = RL_RUNNING;
+			rl_log(WARNING, "semaphore failure. Webserver disabled");
 		} else {
 		
 			// write time
@@ -522,12 +525,6 @@ int store_buffer_new(FILE* data, void* buffer_addr, unsigned int sample_size, in
 			set_sem(sem_id, DATA_SEM, 1);
 		
 		}
-		
-		// notify web clients
-		// Note: There is a possible race condition here, which might result
-		//   in one web client not getting notified once, do we care?
-		int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
-		set_sem(sem_id, WAIT_SEM, num_web_clients);
 	}
 	
 	return SUCCESS;

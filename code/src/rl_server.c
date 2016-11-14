@@ -14,6 +14,16 @@
 int sem_id;
 struct web_shm* web_data;
 
+uint32_t id;
+uint8_t get_data;
+uint32_t t_scale;
+int64_t last_time;
+
+int64_t curr_time;
+int8_t num_channels;
+
+struct rl_status status;
+
 // buffer sizes
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 
@@ -49,13 +59,12 @@ void print_status(struct rl_status* status) {
 }
 
 
-void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_channels) {
+void print_data() {
 	
-	// print time
-	printf("%lld\n", time);
+	
 	
 	// print data length
-	int buffer_count = (time - last_time + TIME_MARGIN)/1000;
+	int buffer_count = (curr_time - last_time + TIME_MARGIN)/1000;
 	
 	// get available buffers
 	if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
@@ -70,6 +79,20 @@ void print_data(uint32_t t_scale, int64_t time, int64_t last_time, int8_t num_ch
 	
 	int buffer_size = buffer_sizes[t_scale];
 	
+	// print request id and status
+	printf("%d\n", id);
+	print_status(&status);
+	
+	// data available
+	printf("1\n");
+	
+	// print time scale
+	printf("%d\n", t_scale);
+	
+	// print time
+	printf("%lld\n", curr_time);
+	
+	// print buffer information
 	printf("%d\n", buffer_count);
 	printf("%d\n", buffer_size);
 	
@@ -110,10 +133,10 @@ int main(int argc, char* argv[]) {
 		rl_log(ERROR, "in rl_server: not enough arguments");
 		exit(FAILURE);
 	}
-	uint32_t id = atoi(argv[1]);
-	uint8_t get_data = atoi(argv[2]);
-	uint32_t t_scale = atoi(argv[3]);
-	int64_t last_time = atoll(argv[4]);
+	id = atoi(argv[1]);
+	get_data = atoi(argv[2]);
+	t_scale = atoi(argv[3]);
+	last_time = atoll(argv[4]);
 	
 	// check time scale
 	if(t_scale != S1 && t_scale != S10 && t_scale != S100) {
@@ -122,22 +145,17 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// get status
-	struct rl_status status;
 	int state = rl_read_status(&status);
 	
-	// print request id and status
-	printf("%d\n", id);
-	print_status(&status);
 	
-	// only get data, if requested and running and web enabled
+	// quit, if data not requested or not running or web disabled
 	if(state != RL_RUNNING || status.conf.enable_web_server == 0 || get_data == 0) {
+		// print request id and status
+		printf("%d\n", id);
+		print_status(&status);
+		printf("0\n"); // no data available
 		exit(EXIT_SUCCESS);
-		printf("0\n");
 	}
-	printf("1\n");
-	
-	// print time scale
-	printf("%d\n", t_scale);
 	
 	// open semaphore
 	sem_id = open_sem();
@@ -157,20 +175,23 @@ int main(int argc, char* argv[]) {
 		if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {	
 			exit(EXIT_FAILURE);
 		}
-		int64_t time = web_data->time;
-		int8_t num_channels = web_data->num_channels;
+		curr_time = web_data->time;
+		num_channels = web_data->num_channels;
 		set_sem(sem_id, DATA_SEM, 1);
 		
 		
-		if(time > last_time) {
+		if(curr_time > last_time) {
+			
+			// re-read status
+			rl_read_status(&status);
 			
 			// read and print data
-			print_data(t_scale, time, last_time, num_channels);
+			print_data();
 			
 			data_read = 1;
 		} else {
 			
-			if(last_time > time) {
+			if(last_time > curr_time) {
 				// assume outdated time stamp
 				last_time = 0;
 			}
