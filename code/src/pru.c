@@ -317,8 +317,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	setup_header(&file_header, conf);
 	
 	// store header
-	if(conf->file_format != NO_FILE) {
+	if(conf->file_format == BIN) {
 		store_header(data, &file_header);
+	} else if (conf->file_format == CSV) {
+		store_header_csv(data, &file_header);
+		// TODO
 	}
 	
 	
@@ -405,7 +408,12 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			// update the number of samples stored
 			file_header.lead_in.data_block_count = i+1 - buffer_lost;
 			file_header.lead_in.sample_count += samples_buffer;
-			update_header(data, &file_header);
+			
+			if(conf->file_format == BIN) {
+				update_header(data, &file_header);
+			} else if(conf->file_format == CSV) {
+				// TODO
+			}
 			
 		}
 		

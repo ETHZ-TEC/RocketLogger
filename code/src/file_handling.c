@@ -184,6 +184,56 @@ void store_header(FILE* data, struct rl_file_header* file_header) {
 	
 }
 
+void store_header_csv(FILE* data, struct rl_file_header* file_header) {
+	fprintf(data, "RocketLogger CSV File\n");
+	fprintf(data, "File Version, %d\n", (int) file_header->lead_in.file_version);
+	fprintf(data, "Block Size, %d\n", (int) file_header->lead_in.data_block_size);
+	fprintf(data, "Block Count, %d\n", (int) file_header->lead_in.data_block_count);
+	fprintf(data, "Sample Count, %d\n", (int) file_header->lead_in.sample_count);
+	fprintf(data, "Sample Rate, %d\n", (int) file_header->lead_in.sample_rate);
+	//fprintf(data, ", %d\n", (int) file_header->lead_in.);
+	
+}
+
+/*struct rl_file_lead_in {
+	/// file magic constant
+	uint32_t magic; // = RL_FILE_MAGIC;
+
+	/// file version number
+	uint16_t file_version; // = RL_FILE_VERSION;
+
+	/// total size of the header in bytes
+	uint16_t header_length; // = 0;
+
+	/// size of the data blocks in the file in rows
+	uint32_t data_block_size; // = 0;
+
+	/// number of data blocks stored in the file
+	uint32_t data_block_count; // = 0;
+
+	/// total sample count
+	uint64_t sample_count; // = 0;
+
+	/// the sample rate of the measurement
+	uint16_t sample_rate; // = 0;
+	
+	/// instrument id (mac address)
+	uint8_t mac_address[MAC_ADDRESS_LENGTH];
+
+	/// start time of the measurement in UNIT time, UTC
+	struct time_stamp start_time; // = 0;
+
+	/// comment length
+	uint32_t comment_length; // = 0;
+
+	/// binary channel count
+	uint16_t channel_bin_count; // = 0;
+
+	/// number of channels in the file
+	uint16_t channel_count; // = 0;
+	
+};*/
+
 void update_header(FILE* data, struct rl_file_header* file_header) {
 	
 	// seek to beginning and rewrite lead_in
@@ -255,6 +305,15 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	
 	int num_channels = count_channels(conf->channels);
 	
+	// binary data (for status and samples)
+	uint32_t bin_data;
+	int32_t channel_data[num_channels];
+	int value = 0;
+	
+	// csv data
+	char line_char[CSV_LINE_LENGTH] = "";
+	char value_char[CSV_VALUE_LENGTH];
+	
 	
 	// create timestamp
 	struct time_stamp time_real;
@@ -266,20 +325,17 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	time_monotonic.sec -= 1 / conf->update_rate;
 	
 	// store timestamp
-	if (conf->file_format != NO_FILE) {
+	if (conf->file_format == BIN) {
 			fwrite(&time_real, sizeof(struct time_stamp), 1, data);
 			fwrite(&time_monotonic, sizeof(struct time_stamp), 1, data);
+			
+	} else if(conf->file_format == CSV) {
+		time_t t = (time_t) time_real.sec;
+		strcpy(value_char, ctime(&t));
+		value_char[strlen(value_char)-1] = '\0'; // remove \n
+		fprintf(data, "%s", value_char);
 	}
-	
-	
-	// binary data (for status and samples)
-	uint32_t bin_data;
-	int32_t channel_data[num_channels];
-	int value = 0;
-	
-	// csv data TODO: defines
-	char line_char[200] = "";
-	char value_char[50];
+
 	
 	
 	// data for webserver
@@ -305,6 +361,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		// reset values
 		k = 0;
 		bin_data = 0;
+		strcpy(line_char,"\0");
 		
 		
 		// read binary channels
@@ -356,11 +413,22 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		}
 		if(conf->channels[I2L_INDEX] > 0) {
 			bin_data = bin_data | (valid2 << bin_channel_pos);
+			bin_channel_pos++;
 		}
 		
 		// write binary channels
-		if (conf->file_format != NO_FILE && bin_channel_pos > 0) {
-			fwrite(&bin_data, sizeof(uint32_t), 1, data);
+		if (bin_channel_pos > 0) {
+			if (conf->file_format == BIN) {
+				fwrite(&bin_data, sizeof(uint32_t), 1, data);
+				
+			} else if (conf->file_format == CSV) {
+				int32_t MASK = 1;
+				for(j=0; j<bin_channel_pos; j++) {
+					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
+					strcat(line_char,value_char);
+					MASK = MASK << 1;
+				}
+			}
 		}
 		
 		// read and scale values (if channel selected)
@@ -383,8 +451,16 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		buffer_addr+=NUM_CHANNELS*sample_size;
 		
 		// store values to file
-		if (conf->file_format != NO_FILE) {
+		if (conf->file_format == BIN) {
 			fwrite(channel_data, sizeof(int32_t), num_channels, data);
+			
+		} else if (conf->file_format == CSV) {
+			for(j=0; j < num_channels; j++) {
+				sprintf(value_char,",%d",channel_data[j]);
+				strcat(line_char, value_char);
+			}
+			strcat(line_char,"\n");
+			fprintf(data, "%s", line_char);
 		}
 		
 		// handle web data
