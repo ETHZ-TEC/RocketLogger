@@ -1,6 +1,8 @@
 function [ fig ] = rl_aux_pretty_plot( figure_in )
-%PRETTYPLOT Summary of this function goes here
-%   Detailed explanation goes here
+%RL_AUX_PRETTY_PLOT Makes a figure better suited for use in a document
+%   Parameters:
+%      - figure_in:    Number / handle to the figure, a new figure is
+%                        create if the parameter is omitted
 
 if exist('n', 'var')
     fig = figure(figure_in);
