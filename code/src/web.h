@@ -5,6 +5,9 @@
 #include "util.h"
 
 #define WEB_RING_BUFFER_COUNT 3
+#define BUF1_INDEX 0
+#define BUF10_INDEX 1
+#define BUF100_INDEX 2
 
 enum time_scale {
 	S1 = 0,

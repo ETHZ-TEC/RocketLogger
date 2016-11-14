@@ -192,6 +192,7 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
+// TODO: valid as array
 void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, struct rl_conf* conf) {
 	
 	int ch_in = 0;
@@ -282,37 +283,18 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	
 	int value = 0;
 	
-	// data for web interface, TODO: as arrays
-	int avg_number = samples_buffer / BUFFER1_SIZE;
-	int avg_number10 = samples_buffer / BUFFER10_SIZE;
-	int avg_number100 = samples_buffer / BUFFER100_SIZE;
+	// data for webserver
+	int avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
 	
-	int64_t avg_data[num_channels];
-	int64_t avg_data10[num_channels];
-	int64_t avg_data100[num_channels];
+	int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
+	memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
 	
-	memset(avg_data, 0, sizeof(int64_t) * num_channels);
-	memset(avg_data10, 0, sizeof(int64_t) * num_channels);
-	memset(avg_data100, 0, sizeof(int64_t) * num_channels);
-		
-	int32_t bin_web_data[num_bin_channels];
-	int32_t bin_web_data10[num_bin_channels];
-	int32_t bin_web_data100[num_bin_channels];
+	int32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
+	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
 	
-	memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels);
-	memset(bin_web_data10, 0, sizeof(int32_t) * num_bin_channels);
-	memset(bin_web_data100, 0, sizeof(int32_t) * num_bin_channels);
+	uint8_t web_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
 	
-	uint8_t web_valid1 = 1;
-	uint8_t web_valid2 = 1;
-	uint8_t web_valid1_10 = 1;
-	uint8_t web_valid2_10 = 1;
-	uint8_t web_valid1_100 = 1;
-	uint8_t web_valid2_100 = 1;
-	
-	int32_t temp_web_data[BUFFER1_SIZE][num_web_channels];
-	int32_t temp_web_data10[BUFFER10_SIZE][num_web_channels];
-	int32_t temp_web_data100[BUFFER100_SIZE][num_web_channels];
+	int32_t temp_web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
 
 	
 	// store buffer
@@ -341,7 +323,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 				int32_t MASK = 1;
 				for(j=0; j<num_bin_channels; j++) {
 					if((bin_data & MASK) > 0) {
-						bin_web_data[j] += 1;
+						bin_web_data[BUF1_INDEX][j] += 1;
 					}
 					MASK = MASK << 1;
 				}
@@ -357,12 +339,13 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		
 		// web
 		if(conf->enable_web_server == 1) {
-			web_valid1 = web_valid1 & valid1;
-			web_valid2 = web_valid2 & valid2;
-			web_valid1_10 = web_valid1_10 & valid1;
-			web_valid2_10 = web_valid2_10 & valid2;
-			web_valid1_100 = web_valid1_100 & valid1;
-			web_valid2_100 = web_valid2_100 & valid2;
+			// TODO: for loop
+			web_valid[BUF1_INDEX][0] = web_valid[BUF1_INDEX][0] & valid1;
+			web_valid[BUF1_INDEX][1] = web_valid[BUF1_INDEX][1] & valid2;
+			web_valid[BUF10_INDEX][0] = web_valid[BUF10_INDEX][0] & valid1;
+			web_valid[BUF10_INDEX][1] = web_valid[BUF10_INDEX][1] & valid2;
+			web_valid[BUF100_INDEX][0] = web_valid[BUF100_INDEX][0] & valid1;
+			web_valid[BUF100_INDEX][1] = web_valid[BUF100_INDEX][1] & valid2;
 		}
 		
 		if(conf->channels[I1L_INDEX] > 0) {
@@ -391,7 +374,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
 				channel_data[k] = (int) (( value + offsets[j] ) * scales[j]);
-				avg_data[k] += channel_data[k];
+				avg_data[BUF1_INDEX][k] += channel_data[k];
 				k++;
 			}
 		}
@@ -403,86 +386,86 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		}
 		
 		if(conf->enable_web_server == 1) {
-			if((i+1)%avg_number == 0) {
+			if((i+1)%avg_number[BUF1_INDEX] == 0) {
 				
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data[j] /= avg_number; // TODO: exchange?
-					avg_data10[j] += avg_data[j];
+					avg_data[BUF1_INDEX][j] /= avg_number[BUF1_INDEX]; // TODO: exchange?
+					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1, web_valid2, &temp_web_data[i/avg_number][num_bin_channels], avg_data, conf);
+				merge_currents(web_valid[BUF1_INDEX][0], web_valid[BUF1_INDEX][1], &temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][num_bin_channels], avg_data[BUF1_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					bin_web_data10[j] += bin_web_data[j];
+					bin_web_data[BUF10_INDEX][j] += bin_web_data[BUF1_INDEX][j];
 					
-					if(bin_web_data[j] >= (avg_number/2)) {
-						temp_web_data[i/avg_number][j] = 1;
+					if(bin_web_data[BUF1_INDEX][j] >= (avg_number[BUF1_INDEX]/2)) {
+						temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][j] = 1;
 					} else {
-						temp_web_data[i/avg_number][j] = 0;
+						temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][j] = 0;
 					}
-					bin_web_data[j] = 0;
+					bin_web_data[BUF1_INDEX][j] = 0;
 				}
 				
 				// reset values
-				memset(avg_data, 0, sizeof(int64_t) * num_channels);
-				web_valid1 = 1;
-				web_valid2 = 1;
+				memset(avg_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
+				web_valid[BUF1_INDEX][0] = 1;
+				web_valid[BUF1_INDEX][1] = 1;
 			}
 			
-			if((i+1)%avg_number10 == 0) {
+			if((i+1)%avg_number[BUF10_INDEX] == 0) {
 				
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data10[j] /= (avg_number10/avg_number);
-					avg_data100[j] += avg_data10[j];
+					avg_data[BUF10_INDEX][j] /= (avg_number[BUF10_INDEX]/avg_number[BUF1_INDEX]);
+					avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_10, web_valid2_10, &temp_web_data10[i/avg_number10][num_bin_channels], avg_data10, conf);
+				merge_currents(web_valid[BUF10_INDEX][0], web_valid[BUF10_INDEX][1], &temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][num_bin_channels], avg_data[BUF10_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					bin_web_data100[j] += bin_web_data10[j];
+					bin_web_data[BUF100_INDEX][j] += bin_web_data[BUF10_INDEX][j];
 					
-					if(bin_web_data10[j] >= (avg_number10/2)) {
-						temp_web_data10[i/avg_number10][j] = 1;
+					if(bin_web_data[BUF10_INDEX][j] >= (avg_number[BUF10_INDEX]/2)) {
+						temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][j] = 1;
 					} else {
-						temp_web_data10[i/avg_number10][j] = 0;
+						temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][j] = 0;
 					}
-					bin_web_data10[j] = 0;
+					bin_web_data[BUF10_INDEX][j] = 0;
 				}
 				
 				// reset values
-				memset(avg_data10, 0, sizeof(int64_t) * num_channels);
-				web_valid1_10 = 1;
-				web_valid2_10 = 1;
+				memset(avg_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
+				web_valid[BUF10_INDEX][0] = 1;
+				web_valid[BUF10_INDEX][1] = 1;
 			}
 			
-			if((i+1)%avg_number100 == 0) {
+			if((i+1)%avg_number[BUF100_INDEX] == 0) {
 				
 				// average
 				int j;
 				for(j=0; j<num_channels; j++) {
-					avg_data100[j] /= (avg_number100/avg_number10);
+					avg_data[BUF100_INDEX][j] /= (avg_number[BUF100_INDEX]/avg_number[BUF10_INDEX]);
 				}
 				
 				// merge_currents
-				merge_currents(web_valid1_100, web_valid2_100, &temp_web_data100[i/avg_number100][num_bin_channels], avg_data100, conf);
+				merge_currents(web_valid[BUF100_INDEX][0], web_valid[BUF100_INDEX][1], &temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][num_bin_channels], avg_data[BUF100_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					if(bin_web_data10[j] >= (avg_number100/2)) {
-						temp_web_data100[i/avg_number100][j] = 1;
+					if(bin_web_data[BUF100_INDEX][j] >= (avg_number[BUF100_INDEX]/2)) {
+						temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][j] = 1;
 					} else {
-						temp_web_data100[i/avg_number100][j] = 0;
+						temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][j] = 0;
 					}
 				}
 			}
@@ -503,9 +486,9 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 			web_data->time = time_real.sec*1000 + time_real.nsec/1000000;
 			
 			// write data to ring buffer
-			buffer_add(&web_data->buffer[0], &temp_web_data[0][0]);
-			buffer_add(&web_data->buffer[1], &temp_web_data10[0][0]);
-			buffer_add(&web_data->buffer[2], &temp_web_data100[0][0]);
+			buffer_add(&web_data->buffer[BUF1_INDEX], &temp_web_data[BUF1_INDEX][0][0]);
+			buffer_add(&web_data->buffer[BUF10_INDEX], &temp_web_data[BUF10_INDEX][0][0]);
+			buffer_add(&web_data->buffer[BUF100_INDEX], &temp_web_data[BUF100_INDEX][0][0]);
 			
 			// release shared memory
 			set_sem(sem_id, DATA_SEM, 1);
