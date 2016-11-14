@@ -44,6 +44,9 @@ classdef rl_cal
         end
         
         function fix_signs(obj)
+            %FIX_SIGNS Fix the signs of the scales if two current channels
+            %were calibrated simulateously
+            
             % low range, high range are positive
             for i = obj.POSITIVE_SCALE_CHANNELS;
                 if obj.scales(i) < 0
@@ -106,12 +109,12 @@ classdef rl_cal
             min_stable_samples = 200;
 
             % init
-            scales = zeros(1,10);
-            offsets = zeros(1,10);
+            scales = zeros(1,8);
+            offsets = zeros(1,8);
 
             %% Voltages
             % indices channels vector
-            v_indices = [4,5,9,10];
+            v_indices = [3,4,7,8];
 
             % ideal values
             tmp1 = -5000000:v_step_ideal:(5000000+-v_step_ideal);
@@ -139,7 +142,7 @@ classdef rl_cal
 
             %% Low Currents
             % indices in all channels
-            il_indices = [3,8];
+            il_indices = [2,6];
 
             % ideal values
             tmp1 = -100000000:il_step_ideal:(100000000-il_step_ideal);
@@ -170,7 +173,7 @@ classdef rl_cal
             %% High Currents
 
             % indices in all channels
-            ih_indices = [1,6];
+            ih_indices = [1,5];
 
             % ideal values
             tmp1 = -ih_max:ih_step_ideal:(ih_max-ih_step_ideal);
