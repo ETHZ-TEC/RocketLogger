@@ -147,7 +147,11 @@ $(function() {
 						if (state == RL_RUNNING) {
 							// parse status and data
 							starting = 0;
-							document.getElementById("status").innerHTML = 'Status: RUNNING';
+							if(stopping == 1) {
+								document.getElementById("status").innerHTML = 'Status: STOPPING';
+							} else {
+								document.getElementById("status").innerHTML = 'Status: RUNNING';
+							}
 							parseStatus(tempState);
 							
 						} else {

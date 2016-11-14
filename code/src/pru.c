@@ -218,9 +218,10 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* p
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	
+	// TODO: move after initiation
 	// STATE
 	status.state = RL_RUNNING;
+	status.sampling = SAMPLING_ON;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	status.conf = *conf;
@@ -232,7 +233,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(conf->mode == METER) {
 		meter_init();
 	}
-	
 	
 	
 	// WEBSERVER
@@ -278,7 +278,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	}
 	
 	
-	// OLD
+	// OLD -> TODO: remove
 	int fifo_fd = -1;
 	int control_fifo = -1;
 	
@@ -377,7 +377,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	unsigned int samples_buffer; // number of samples per buffer
 	
 	// continuous sampling loop
-	for(i=0; status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
+	for(i=0; status.sampling == SAMPLING_ON && status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
 		
 		// select current buffer
 		if(i%2 == 0) {
