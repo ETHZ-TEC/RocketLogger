@@ -1,4 +1,5 @@
-function [ intervals ] = rl_aux_get_intervals( points , num_points, expected_step_size, min_stable_points)
+function [ intervals ] = rl_aux_get_intervals( points , num_points, ...
+    expected_step_size, min_stable_samples)
 
 % magic constants
 margin = 20;
@@ -23,16 +24,16 @@ i = i + margin;
 while (i <= length(points) && j <= num_points)
     
     % find stable region
-    while( i+min_stable_points <= length(points) && max(points(i:i+min_stable_points)) - ...
-            min(points(i:i+min_stable_points)) > stable_pp_max)
+    while( i+min_stable_samples <= length(points) && max(points(i:i+min_stable_samples)) - ...
+            min(points(i:i+min_stable_samples)) > stable_pp_max)
         i = i + 1;
     end
     i = i + margin;
-    if i+min_stable_points > length(points)
+    if i+min_stable_samples > length(points)
         break;
     end
     intervals(1, j) = i;
-    stable_value = mean(points(i:i+min_stable_points));
+    stable_value = mean(points(i:i+min_stable_samples));
     
     % find end of stable region
     while(i <= length(points) && abs(points(i) - stable_value) < stable_pp_max/2)
