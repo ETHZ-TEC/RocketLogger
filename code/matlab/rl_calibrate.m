@@ -1,4 +1,4 @@
-function [ scales, offsets ] = rl_calibrate( v, i1l, i1m, i1h, i2l, i2m, i2h, plotPareto )
+function [ scales, offsets ] = rl_calibrate( v, i1l, i1h, i2l, i2h, plotPareto )
 
 global failCount
 failCount = 0;
@@ -15,10 +15,8 @@ scale      = [1e-9;  1e-9;1e-11; 1e-6;   1e-6; 1e-9; 1e-9;  1e-11; 1e-6; 1e-6];
 
 v   = v   / scale(4);
 i1h = i1h / scale(1);
-i1m = i1m / scale(2);
 i1l = i1l / scale(3);
 i2h = i2h / scale(6);
-i2m = i2m / scale(7);
 i2l = i2l / scale(8);
 
 v_step = 80e3;                    % actual steps are about 80k
@@ -53,7 +51,7 @@ avg_points = zeros(4,num_points);
 % average and fitting
 for i=1:4
     disp(['Voltage Channel: ', int2str(i)]);
-    avg_points(i,:) = average_points(v(:,i+2), num_points, v_step, min_stable_samples);
+    avg_points(i,:) = rl_aux_average_points(v(:,i+2), num_points, v_step, min_stable_samples);
     [scales(v_indices(i)), offsets(v_indices(i)), ~ ] = lin_fit(avg_points(i,:),v_ideal);
     residual(i,:) = (scales(v_indices(i))*avg_points(i,:)+offsets(v_indices(i))-v_ideal)*1e-6;
 end
@@ -79,11 +77,11 @@ avg_points = zeros(2,num_points);
 
 % average and fitting
 disp('Current Channel 1, LOW');
-avg_points(1,:) = average_points(i1l(:,3), num_points, il_step, min_stable_samples);
+avg_points(1,:) = rl_aux_average_points(i1l(:,3), num_points, il_step, min_stable_samples);
 [scales(il_indices(1)), offsets(il_indices(1)), ~ ] = lin_fit(avg_points(1,:),il_ideal);
 
 disp('Current Channel 2, LOW');
-avg_points(2,:) = average_points(i2l(:,3), num_points, il_step, min_stable_samples);
+avg_points(2,:) = rl_aux_average_points(i2l(:,3), num_points, il_step, min_stable_samples);
 [scales(il_indices(2)), offsets(il_indices(2)), ~ ] = lin_fit(avg_points(2,:),il_ideal);
 
 residual = [];
@@ -110,11 +108,11 @@ avg_points = zeros(2,num_points);
 
 % average and fitting
 disp('Current Channel 1, HIGH');
-avg_points(1,:) = average_points(i1h(:,3), num_points, ih_step, min_stable_samples);
+avg_points(1,:) = rl_aux_average_points(i1h(:,3), num_points, ih_step, min_stable_samples);
 [scales(ih_indices(1)), offsets(ih_indices(1)), ~ ] = lin_fit(avg_points(1,:),ih_ideal);
 
 disp('Current Channel 2, HIGH');
-avg_points(2,:) = average_points(i2h(:,3), num_points, ih_step, min_stable_samples);
+avg_points(2,:) = rl_aux_average_points(i2h(:,3), num_points, ih_step, min_stable_samples);
 [scales(ih_indices(2)), offsets(ih_indices(2)), ~ ] = lin_fit(avg_points(2,:),ih_ideal);
 
 residual = [];
