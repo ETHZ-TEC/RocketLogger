@@ -17,12 +17,12 @@ void create_time_stamp(struct time_stamp* time_real, struct time_stamp* time_mon
 	struct timespec spec_monotonic;
 	
 	// get time stamp of real-time and monotonic clock
-	clock_gettime(CLOCK_REALTIME, &spec_real);
-	clock_gettime(CLOCK_MONOTONIC_RAW, &spec_monotonic);
+	int ret1 = clock_gettime(CLOCK_REALTIME, &spec_real);
+	int ret2 = clock_gettime(CLOCK_MONOTONIC_RAW, &spec_monotonic);
 	
-	/*if( TODO ) {
+	if( ret1 < 0 || ret2 < 0 ) {
 		rl_log(ERROR, "failed to get time");
-	}*/
+	}
 	
 	// convert to own time stamp
 	time_real->sec = (int64_t) spec_real.tv_sec;
