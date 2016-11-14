@@ -253,7 +253,12 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	}
 	
 	int num_channels = count_channels(conf->channels);
-	int num_web_channels = web_data->num_channels;
+	
+	// TODO: improve
+	int num_web_channels = 0;
+	if(conf->enable_web_server == 1) {
+		num_web_channels = web_data->num_channels;
+	}
 	
 	// create timestamp
 	struct time_stamp time_real;

@@ -6,9 +6,6 @@ $(function() {
 		// currents: less average!
 		// avg-values in array (for 3 buffers)
 		
-		// display sampling time
-		// display disk space available
-		
 		
 		// CONSTANTS
 		RL_RUNNING = "1";

@@ -130,6 +130,10 @@ int rl_sample(struct rl_conf* conf) {
 		rl_log(ERROR, "wrong update rate");
 		return FAILURE;
 	}
+	if(conf->update_rate != 1 && conf->enable_web_server == 1) {
+		rl_log(WARNING, "webserver plot does not work with update rates >1. Disabling webserver ...");
+		conf->enable_web_server = 0;
+	}
 	
 	// create FIFOs if not existing
 	if(open(FIFO_FILE, O_RDWR) <= 0) {
