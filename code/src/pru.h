@@ -118,7 +118,7 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
 void pru_set_state(enum pru_states state);
 int pru_init();
-int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, unsigned int* pru_sample_rate);
+int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf);
 
 int pru_sample(FILE* data, struct rl_conf* conf);
 
