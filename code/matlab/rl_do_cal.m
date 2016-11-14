@@ -1,9 +1,10 @@
-function [scale, offset] = rl_do_cal (createPlots)
+function [cal] = rl_do_cal (createPlots)
 
 if ~exist('createPlots', 'var')
     createPlots = 0;
 end
 
+%% read files
 rld_il1 = rld('20161102_cal_i1l_auto.rld');
 rld_il2 = rld('20161102_cal_i2l_auto.rld');
 rld_ih = rld('20161103_cal_ih_2x_auto.rld');
@@ -18,28 +19,19 @@ values_i2h = rld_ih.get_data({'I2H','I2H','I2H'});
 
 values_v = rld_v.convert();
 
-
-
-[scale, offset] = rl_calibrate(...
+%% perform fitting
+cal = rl_cal.calibrate( ...
     values_v, ...
     values_i1l, ...
-    rl_read_bin('T:\old_measurements\cal_ch1_i_mid.dat',1), ...
     values_i1h, ...
     values_i2l, ...
-    rl_read_bin('T:\old_measurements\cal_i2_mid_new2.dat',0), ...
     values_i2h, ...
     createPlots);
 
 %% choose the correct sign if both channels are connected in series
+cal.fix_signs();
 
-% low range, high range are positive
-for i = [1,3,6,8]
-    if scale(i) < 0
-        scale(i) = scale(i) * -1;
-        disp(['Info: Scale ', num2str(i), ' was inverted.']);
-    end
-end
-
-rl_cal_write(offset, scale);
+%% write output file
+cal.write_file();
 
 end
