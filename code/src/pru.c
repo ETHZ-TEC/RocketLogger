@@ -186,7 +186,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 	pru->sample_limit = conf->sample_limit;
 	pru->buffer_size = (conf->sample_rate * RATE_SCALING) / conf->update_rate;
 	
-	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
+	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
 	pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
 	pru->add_currents = ADD_CURRENTS;
@@ -286,7 +286,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	struct pru_data_struct pru;
 	pru_setup(&pru, conf);
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
-	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
+	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");

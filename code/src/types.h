@@ -1,6 +1,7 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+/// test mode: for usage withouth RL cape
 #define TEST_MODE 0
 
 // INCLUDES
@@ -54,9 +55,10 @@
 #define PID_FILE		"/var/run/rocketlogger.pid"
 #define LOG_FILE		"/var/www/log/log.txt"
 
-#define MAX_LOG_FILE_SIZE 1000000 // log file size in bytes
+/// log file size in bytes
+#define MAX_LOG_FILE_SIZE 1000000
 
-#define SHMEM_STATUS_KEY 1111 // TODO: usefull key
+#define SHMEM_STATUS_KEY 1111
 #define SHMEM_DATA_KEY 4443
 
 
@@ -70,7 +72,8 @@
 
 #define METER_UPDATE_RATE 5
 
-#define STATUS_SIZE 2 // status size in bytes
+#define PRU_DIG_SIZE 2 // status size in bytes
+#define PRU_BUFFER_STATUS_SIZE 4 //buffer status size in bytes
 
 #define RATE_SCALING 1000 // rates are in ksps
 
@@ -174,7 +177,7 @@ struct rl_status {
 
 
 // SEMAPHORES
-#define SEM_KEY 2222 // TODO: usefull key
+#define SEM_KEY 2222
 #define NUM_SEMS 2
 #define SEM_TIME_OUT 3
 #define SEM_WRITE_TIME_OUT 1

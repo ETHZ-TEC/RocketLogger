@@ -379,7 +379,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		uint8_t bin_adc1 = (*((int8_t *) (buffer_addr)));
 		uint8_t bin_adc2 = (*((int8_t *) (buffer_addr + 1)));
 		
-		buffer_addr += STATUS_SIZE; // TODO: rename to digital_size ...
+		buffer_addr += PRU_DIG_SIZE;
 		
 		// mask and combine digital inputs, if requestet
 		int bin_channel_pos;

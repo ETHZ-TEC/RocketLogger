@@ -42,7 +42,7 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 	// read status
 	line[0] = (int) (*((int8_t *) (buffer_addr)));
 	line[1] = (int) (*((int8_t *) (buffer_addr + 1)));
-	buffer_addr += STATUS_SIZE;
+	buffer_addr += PRU_DIG_SIZE;
 	
 	
 	// read, average and scale values (if channel selected)
@@ -51,13 +51,13 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 			value = 0;
 			if(sample_size == 4) {
 				for(l=0; l<avg_number; l++) { // TODO: combine (with sample_size)
-					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
+					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
 				value = value / (long)avg_number;
 				line[k] = (int) (( (int) value + offsets[j] ) * scales[j]);
 			} else {
 				for(l=0; l<avg_number; l++) {
-					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
+					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
 				value = value / (long)avg_number;
 				line[k] = (int) (( value + offsets[j] ) * scales[j]);

@@ -14,8 +14,6 @@
 
 // DEFINES
 
-#define BUFFERSTATUSSIZE 4 //buffer status size in bytes
-
 /// Mask to mask binary inputs read from PRU
 #define VALID_MASK 0x1
 #define BINARY_MASK 0xE
@@ -24,8 +22,8 @@
 
 #define CSV_LINE_LENGTH 200
 #define CSV_VALUE_LENGTH 50
-// FUNCTIONS
 
+// FUNCTIONS
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
 void setup_header(struct rl_file_header* file_header, struct rl_conf* conf);
 void store_header(FILE* data, struct rl_file_header* file_header);
