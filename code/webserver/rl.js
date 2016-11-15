@@ -2,9 +2,7 @@ $(function() {
 	
 		// TODO
 		
-		// csv - files
 		// currents: less average!
-		// avg-values in array (for 3 buffers)
 		
 		
 		// CONSTANTS
@@ -58,7 +56,7 @@ $(function() {
 		var iScale = 1;
 		
 		var timeOut;
-		var idMismatch;
+		//var idMismatch;
 		
 		// plots
 		var vPlot;
@@ -133,7 +131,7 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
-					clearTimeout(idMismatch);
+					//clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -185,10 +183,10 @@ $(function() {
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
-					} else {
+					} /*else {
 						
 						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
-					}		
+					}	*/	
 				}
 			});
 		}
@@ -221,12 +219,12 @@ $(function() {
 			document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
 		}
 		
-		function mismatch() {
+		/*function mismatch() {
 			// ID mismatch -> error
 			document.getElementById("status").innerHTML = 'Status: ERROR';
 			// set timer
 			setTimeout(update, UPDATE_INTERVAL);
-		}
+		}*/
 		
 		function parseStatus(tempState) {
 			
