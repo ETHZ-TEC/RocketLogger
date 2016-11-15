@@ -89,28 +89,7 @@
 
 // enumerations TODO: typedefs
 
-// PRU 
 
-// PRU states
-enum pru_states {
-	PRU_OFF = 0,
-	PRU_LIMIT = 1,
-	PRU_CONTINUOUS = 3
-};
-
-#define NUMBER_PRU_COMMANDS 10
-struct pru_data_struct {
-	enum pru_states state;
-	unsigned int precision;
-	unsigned int sample_size;
-	unsigned int buffer0_location;
-	unsigned int buffer1_location;
-	unsigned int buffer_size;
-	unsigned int sample_limit;
-	unsigned int add_currents;
-	unsigned int number_commands;
-	unsigned int commands[NUMBER_PRU_COMMANDS];
-};
 
 // ROCKETLOGGER
 

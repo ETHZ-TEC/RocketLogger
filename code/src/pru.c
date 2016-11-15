@@ -193,22 +193,21 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 	
 	
 	// set commands
-	pru->number_commands = NUMBER_PRU_COMMANDS;
+	pru->number_commands = NUMBER_ADC_COMMANDS;
 	pru->commands[0] = RESET;
 	pru->commands[1] = SDATAC;
 	pru->commands[2] = WREG|CONFIG3|CONFIG3DEFAULT;						// write configuration
 	pru->commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | pru_sample_rate;
 
 	// set channel gains
-	// TODO: set all channels
 	pru->commands[4] = WREG|CH1SET|GAIN2;								// High Range A
-	//pru->commands[4] = WREG|CH2SET|GAIN2;								// High Range B
-	pru->commands[5] = WREG|CH3SET|GAIN1;								// Medium Range							
-	pru->commands[6] = WREG|CH4SET|GAIN1;								// Low Range A
-	pru->commands[7] = WREG|CH5SET|GAIN1;								// Low Range B
-	pru->commands[8] = WREG|CH6SET|GAIN1;								// Voltage 1
-	//pru->commands[8] = WREG|CH7SET|GAIN1;								// Voltage 2
-	pru->commands[9] = RDATAC;											// continuous reading
+	pru->commands[5] = WREG|CH2SET|GAIN2;								// High Range B
+	pru->commands[6] = WREG|CH3SET|GAIN1;								// Medium Range							
+	pru->commands[7] = WREG|CH4SET|GAIN1;								// Low Range A
+	pru->commands[8] = WREG|CH5SET|GAIN1;								// Low Range B
+	pru->commands[9] = WREG|CH6SET|GAIN1;								// Voltage 1
+	pru->commands[10] = WREG|CH7SET|GAIN1;								// Voltage 2
+	pru->commands[11] = RDATAC;											// continuous reading
 	
 	return SUCCESS;
 }

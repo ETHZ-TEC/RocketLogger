@@ -95,9 +95,6 @@
 
 // memory map
 #define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
-#define FIFO_FILE			"/etc/rocketlogger/fifo"
-#define CONTROL_FIFO		"/etc/rocketlogger/control"
-#define WEB_DATA_FILE		"/etc/rocketlogger/data"
 #define PRU_CODE			"/lib/firmware/rocketlogger_spi.bin"
 
 // ---------------------------------------------- PRU DEFINES ---------------------------------------------------//
@@ -108,8 +105,31 @@
 #define SIZE_HIGH 4
 #define SIZE_LOW 2
 
-#define PRU_TIMEOUT 3 // 3s PRU timeout
+#define PRU_TIMEOUT 3 // 3s PRU timeout 
 
+// PRU states
+enum pru_states {
+	PRU_OFF = 0,
+	PRU_LIMIT = 1,
+	PRU_CONTINUOUS = 3
+};
+
+/// number of ADC commands
+#define NUMBER_ADC_COMMANDS 12
+
+/// PRU data struct
+struct pru_data_struct {
+	enum pru_states state;
+	unsigned int precision;
+	unsigned int sample_size;
+	unsigned int buffer0_location;
+	unsigned int buffer1_location;
+	unsigned int buffer_size;
+	unsigned int sample_limit;
+	unsigned int add_currents;
+	unsigned int number_commands;
+	unsigned int commands[NUMBER_ADC_COMMANDS];
+};
 
 // ----------------------------------------------  FUNCTIONS ------------------------------------------------//
 
