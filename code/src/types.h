@@ -125,11 +125,14 @@ enum rl_sampling {
 };
 
 enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
+
 enum rl_file_format {
 	NO_FILE = 0,
 	CSV = 1,
 	BIN = 2
 };
+
+typedef enum use_cal {CAL_USE, CAL_IGNORE} use_calibration;
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
@@ -162,6 +165,7 @@ struct rl_conf {
 	int force_high_channels[NUM_I_CHANNELS];
 	int digital_inputs;
 	int enable_web_server;
+	use_calibration calibration;
 	enum rl_file_format file_format;
 	char file_name[MAX_PATH_LENGTH];
 };
