@@ -321,7 +321,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		store_header(data, &file_header);
 	} else if (conf->file_format == CSV) {
 		store_header_csv(data, &file_header);
-		// TODO
 	}
 	
 	
@@ -412,7 +411,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			if(conf->file_format == BIN) {
 				update_header(data, &file_header);
 			} else if(conf->file_format == CSV) {
-				// TODO
+				update_header_csv(data, &file_header);
 			}
 			
 		}
