@@ -783,33 +783,6 @@ $(function() {
 			stopping = 0;
 		}
 		
-		// calibrate button
-		$("#calibrate").click(function () {
-			calibrate();
-		});
-		
-		function calibrate() {
-			if(state == RL_RUNNING) {
-				alert("Rocketlogger already running.\nPress Stop!");
-				return false;
-			}
-			
-			if(!confirm("Warning: This will delete existing calibration data!")) {
-				return false;
-			}
-			
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'calibrate'},
-				
-				complete: function (response) {
-					// do nothing
-				}
-			});
-		}
-		
 		// deselect button
 		$("#deselect").click(function () {
 			channels.fill(false);
@@ -991,6 +964,13 @@ $(function() {
 			// set as default
 			if ($("#set_default:checked").length > 0) {
 				cmd_obj.digital_inputs += " -s";
+			}
+			
+			// ignore calibration
+			if ($("#calibration:checked").length > 0) {
+				cmd_obj.digital_inputs += " -c 0";
+			} else {
+				cmd_obj.digital_inputs += " -c";
 			}
 			
 			return true;
