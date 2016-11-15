@@ -185,54 +185,24 @@ void store_header(FILE* data, struct rl_file_header* file_header) {
 }
 
 void store_header_csv(FILE* data, struct rl_file_header* file_header) {
+	// lead in
 	fprintf(data, "RocketLogger CSV File\n");
 	fprintf(data, "File Version, %d\n", (int) file_header->lead_in.file_version);
 	fprintf(data, "Block Size, %d\n", (int) file_header->lead_in.data_block_size);
-	fprintf(data, "Block Count, %d\n", (int) file_header->lead_in.data_block_count);
-	fprintf(data, "Sample Count, %d\n", (int) file_header->lead_in.sample_count);
+	fprintf(data, "Block Count, %d\n", (int) file_header->lead_in.data_block_count); // TODO: adjustable
+	fprintf(data, "Sample Count, %d\n", (int) file_header->lead_in.sample_count); // TODO: adjustable
 	fprintf(data, "Sample Rate, %d\n", (int) file_header->lead_in.sample_rate);
-	//fprintf(data, ", %d\n", (int) file_header->lead_in.);
+	fprintf(data, "MAC Address, %02x", (int) file_header->lead_in.mac_address[0]);
+	int i;
+	for(i=1; i<MAC_ADDRESS_LENGTH; i++) {
+		fprintf(data, ":%02x", (int) file_header->lead_in.mac_address[i]);
+	}
+	fprintf(data, "\n");
+	time_t time = (time_t) file_header->lead_in.start_time.sec;
+	fprintf(data, "Start Time, %s", ctime(&time));
+	fprintf(data, "Comment, %s\n", file_header->comment);
 	
 }
-
-/*struct rl_file_lead_in {
-	/// file magic constant
-	uint32_t magic; // = RL_FILE_MAGIC;
-
-	/// file version number
-	uint16_t file_version; // = RL_FILE_VERSION;
-
-	/// total size of the header in bytes
-	uint16_t header_length; // = 0;
-
-	/// size of the data blocks in the file in rows
-	uint32_t data_block_size; // = 0;
-
-	/// number of data blocks stored in the file
-	uint32_t data_block_count; // = 0;
-
-	/// total sample count
-	uint64_t sample_count; // = 0;
-
-	/// the sample rate of the measurement
-	uint16_t sample_rate; // = 0;
-	
-	/// instrument id (mac address)
-	uint8_t mac_address[MAC_ADDRESS_LENGTH];
-
-	/// start time of the measurement in UNIT time, UTC
-	struct time_stamp start_time; // = 0;
-
-	/// comment length
-	uint32_t comment_length; // = 0;
-
-	/// binary channel count
-	uint16_t channel_bin_count; // = 0;
-
-	/// number of channels in the file
-	uint16_t channel_count; // = 0;
-	
-};*/
 
 void update_header(FILE* data, struct rl_file_header* file_header) {
 	
