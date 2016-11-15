@@ -65,7 +65,6 @@
 #define NUM_CHANNELS 8
 #define NUM_PRU_CHANNELS 10 // medium range! -> TODO: remove
 #define NUM_I_CHANNELS 2
-#define NUM_TOT_I_CHANNELS 4 // unused!
 #define NUM_V_CHANNELS 4
 #define NUM_DIGITAL_INPUTS 6
 
@@ -75,7 +74,7 @@
 
 #define RATE_SCALING 1000 // rates are in ksps
 
-#define I1L_VALID_BIT 1 // TODO: unused?
+#define I1L_VALID_BIT 1
 #define I2L_VALID_BIT 1
 #define DIGIN1_BIT 2
 #define DIGIN2_BIT 4
@@ -122,7 +121,7 @@ enum rl_sampling {
 	SAMPLING_ON = 1
 };
 
-enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE}; //DATA, 
+enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
 enum rl_file_format {
 	NO_FILE = 0,
 	CSV = 1,
@@ -174,17 +173,6 @@ struct rl_status {
 };
 
 
-// FILE STUFF (TODO: move to rl_file.h)
-#define HEADERLENGTH 6
-struct header {
-	int header_length;
-	int number_samples;
-	int buffer_size;
-	int rate;
-	int channels;
-	int precision;
-};
-
 // SEMAPHORES
 #define SEM_KEY 2222 // TODO: usefull key
 #define NUM_SEMS 2
@@ -206,5 +194,8 @@ struct rl_status status;
 int offsets[NUM_CHANNELS];
 double scales[NUM_CHANNELS];
 
+extern const char* channel_names[NUM_CHANNELS];
+extern const char* digital_input_names[NUM_DIGITAL_INPUTS];
+extern const char* valid_info_names[NUM_I_CHANNELS];
 
 #endif
