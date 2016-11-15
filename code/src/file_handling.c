@@ -187,21 +187,53 @@ void store_header(FILE* data, struct rl_file_header* file_header) {
 void store_header_csv(FILE* data, struct rl_file_header* file_header) {
 	// lead in
 	fprintf(data, "RocketLogger CSV File\n");
-	fprintf(data, "File Version, %d\n", (int) file_header->lead_in.file_version);
-	fprintf(data, "Block Size, %d\n", (int) file_header->lead_in.data_block_size);
-	fprintf(data, "Block Count, %d\n", (int) file_header->lead_in.data_block_count); // TODO: adjustable
-	fprintf(data, "Sample Count, %d\n", (int) file_header->lead_in.sample_count); // TODO: adjustable
-	fprintf(data, "Sample Rate, %d\n", (int) file_header->lead_in.sample_rate);
-	fprintf(data, "MAC Address, %02x", (int) file_header->lead_in.mac_address[0]);
+	fprintf(data, "File Version,%d\n", (int) file_header->lead_in.file_version);
+	fprintf(data, "Block Size,%d\n", (int) file_header->lead_in.data_block_size);
+	fprintf(data, "Block Count,%d\n", (int) file_header->lead_in.data_block_count); // TODO: adjustable
+	fprintf(data, "Sample Count,%d\n", (int) file_header->lead_in.sample_count); // TODO: adjustable
+	fprintf(data, "Sample Rate,%d\n", (int) file_header->lead_in.sample_rate);
+	fprintf(data, "MAC Address,%02x", (int) file_header->lead_in.mac_address[0]);
 	int i;
 	for(i=1; i<MAC_ADDRESS_LENGTH; i++) {
 		fprintf(data, ":%02x", (int) file_header->lead_in.mac_address[i]);
 	}
 	fprintf(data, "\n");
 	time_t time = (time_t) file_header->lead_in.start_time.sec;
-	fprintf(data, "Start Time, %s", ctime(&time));
-	fprintf(data, "Comment, %s\n", file_header->comment);
+	fprintf(data, "Start Time,%s", ctime(&time));
+	fprintf(data, "Comment,%s\n", file_header->comment);
+	fprintf(data, "\n");
 	
+	// channels
+	for(i=0; i<(file_header->lead_in.channel_count + file_header->lead_in.channel_bin_count); i++) {
+		fprintf(data, ",%s", file_header->channel[i].name);
+		switch(file_header->channel[i].channel_scale) {
+			case RL_SCALE_MILLI:
+				fprintf(data, " [m");
+				break;
+			case RL_SCALE_MICRO:
+				fprintf(data, " [u");
+				break;
+			case RL_SCALE_NANO:
+				fprintf(data, " [n");
+				break;
+			case RL_SCALE_TEN_PICO:
+				fprintf(data, " [10p");
+				break;
+			default:
+				break;
+		}
+		switch(file_header->channel[i].unit) {
+			case RL_UNIT_VOLT:
+				fprintf(data, "V]");
+				break;
+			case RL_UNIT_AMPERE:
+				fprintf(data, "A]");
+				break;
+			default:
+				break;
+		}
+	}
+	fprintf(data, "\n");
 }
 
 void update_header(FILE* data, struct rl_file_header* file_header) {
