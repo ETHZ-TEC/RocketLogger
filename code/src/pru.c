@@ -219,10 +219,10 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	// TODO: move after initiation
-	// STATE
+	
+	// STATE (TODO: move to upper layers?)
 	status.state = RL_RUNNING;
-	status.sampling = SAMPLING_ON;
+	status.sampling = SAMPLING_OFF;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	status.conf = *conf;
@@ -292,7 +292,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if(2*buffer_size_bytes > max_size) {
 		rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x", 2*buffer_size_bytes);
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 		
 	// map PRU memory into userspace
@@ -333,7 +332,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if (prussdrv_exec_program (0, PRU_CODE) < 0) {
 		rl_log(ERROR, "PRU code not found");
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 	
 	// wait for first PRU event
@@ -341,7 +339,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// timeout occured
 		rl_log(ERROR, "PRU not responding");
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 	
 	// clear event
@@ -351,6 +348,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	uint32_t buffer_lost = 0;
 	void* buffer_addr;
 	unsigned int samples_buffer; // number of samples per buffer
+	
+	// sampling started
+	status.sampling = SAMPLING_ON;
+	write_status(&status);
 	
 	// continuous sampling loop
 	for(i=0; status.sampling == SAMPLING_ON && status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
