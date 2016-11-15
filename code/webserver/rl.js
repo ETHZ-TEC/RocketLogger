@@ -1032,6 +1032,12 @@ $(function() {
 			});
 		});
 		
+		$("#calibration").change(function () {
+			if(state == RL_RUNNING) {
+				alert("This will not affect the current measurement!");
+			}
+		});
+		
 		// never ending update function
 		resetVPlot();
 		resetIPlot();
