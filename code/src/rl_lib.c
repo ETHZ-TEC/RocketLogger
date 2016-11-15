@@ -1,14 +1,5 @@
 #include "rl_lib.h"
 
-void rl_reset_calibration() {
-	
-	// set zero offset/scale (raw data)
-	remove(CALIBRATION_FILE);
-	reset_offsets();
-	reset_scales();
-	write_calibration();
-	
-}
 
 void rl_print_config(struct rl_conf* conf) {
 	
