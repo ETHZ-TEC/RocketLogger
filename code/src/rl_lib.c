@@ -46,7 +46,7 @@ void rl_print_status(struct rl_status* status) {
 }
 
 // get status of RL (returns 1 when running)
-enum rl_state rl_get_status(int print) {
+rl_state rl_get_status(int print) {
 	
 	struct rl_status status;
 	
