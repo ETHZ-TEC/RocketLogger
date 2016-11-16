@@ -1,5 +1,5 @@
-/*#include <stdint.h>
-#include <ncurses.h>*/
+#include <stdint.h>
+#include <ncurses.h>
 
 #include "types.h"
 #include "log.h"

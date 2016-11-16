@@ -1,10 +1,10 @@
-/*#include <sys/time.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/mman.h>*/
+#include <sys/mman.h>
 #include <stdint.h>
 
 #include "types.h"

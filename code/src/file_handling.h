@@ -1,7 +1,7 @@
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>*/
+#include <time.h>
 
 #include "types.h"
 #include "rl_file.h"

@@ -321,7 +321,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	int32_t value = 0;
 	
 	// csv data
-	char line_char[CSV_LINE_LENGTH] = "";
+	char channel_data_char[CSV_LINE_LENGTH] = "";
 	char value_char[CSV_VALUE_LENGTH];
 	
 	
@@ -371,7 +371,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		// reset values
 		k = 0;
 		bin_data = 0;
-		strcpy(line_char,"\0");
+		strcpy(channel_data_char,"\0");
 		
 		
 		// read binary channels
@@ -434,7 +434,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				int32_t MASK = 1;
 				for(j=0; j<bin_channel_pos; j++) {
 					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
-					strcat(line_char,value_char);
+					strcat(channel_data_char,value_char);
 					MASK = MASK << 1;
 				}
 			}
@@ -466,10 +466,10 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		} else if (conf->file_format == CSV) {
 			for(j=0; j < num_channels; j++) {
 				sprintf(value_char,",%d",channel_data[j]);
-				strcat(line_char, value_char);
+				strcat(channel_data_char, value_char);
 			}
-			strcat(line_char,"\n");
-			fprintf(data, "%s", line_char);
+			strcat(channel_data_char,"\n");
+			fprintf(data, "%s", channel_data_char);
 		}
 		
 		// handle web data

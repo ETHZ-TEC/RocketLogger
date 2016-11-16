@@ -1,9 +1,9 @@
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <poll.h>*/
+#include <poll.h>
 
 #include "types.h"
 #include "log.h"

@@ -4,7 +4,7 @@
 
 // ---------------------------------------------- Includes ----------------------------------------------------------//
 
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -24,8 +24,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <prussdrv.h>
-#include <pruss_intc_mapping.h>*/
-//#include <ncurses.h>
+#include <pruss_intc_mapping.h>
 
 #include "log.h"
 #include "util.h"

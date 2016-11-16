@@ -1,11 +1,11 @@
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h> 
 #include <unistd.h>
 #include <errno.h>
-#include <stdint.h>*/
+#include <stdint.h>
 
 #include "types.h"
 #include "log.h"
