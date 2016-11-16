@@ -252,15 +252,15 @@ void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
-// TODO: valid as array
-void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, struct rl_conf* conf) {
+
+void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf* conf) {
 	
 	int ch_in = 0;
 	int ch_out = 0;
 	
 		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
-		if(valid1 == 1) {
+		if(valid[0] == 1) {
 			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
 			dest[ch_out++] = (int32_t) src[ch_in++];
@@ -279,7 +279,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	}
 	
 	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
-		if(valid2 == 1) {
+		if(valid[1] == 1) {
 			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
 			dest[ch_out++] = (int32_t) src[ch_in++];
@@ -408,6 +408,10 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		// web
 		if(conf->enable_web_server == 1) {
 			// TODO: for loop
+			/*for(j=0; j<BUF100_INDEX; j++) {
+				web_valid[j][0] = web_valid[j][0] & valid1;
+				web_valid[j][1] = web_valid[j][1] & valid2;
+			}*/
 			web_valid[BUF1_INDEX][0] = web_valid[BUF1_INDEX][0] & valid1;
 			web_valid[BUF1_INDEX][1] = web_valid[BUF1_INDEX][1] & valid2;
 			web_valid[BUF10_INDEX][0] = web_valid[BUF10_INDEX][0] & valid1;
@@ -484,7 +488,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF1_INDEX][0], web_valid[BUF1_INDEX][1], &temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][num_bin_channels], avg_data[BUF1_INDEX], conf);
+				merge_currents(web_valid[BUF1_INDEX], &temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][num_bin_channels], avg_data[BUF1_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
@@ -515,7 +519,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF10_INDEX][0], web_valid[BUF10_INDEX][1], &temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][num_bin_channels], avg_data[BUF10_INDEX], conf);
+				merge_currents(web_valid[BUF10_INDEX], &temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][num_bin_channels], avg_data[BUF10_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
@@ -545,7 +549,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF100_INDEX][0], web_valid[BUF100_INDEX][1], &temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][num_bin_channels], avg_data[BUF100_INDEX], conf);
+				merge_currents(web_valid[BUF100_INDEX], &temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][num_bin_channels], avg_data[BUF100_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
