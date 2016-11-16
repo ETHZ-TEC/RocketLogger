@@ -300,6 +300,7 @@ void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf*
 }
 
 int test = 0;
+int low_rate = 1;
 int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data_ptr) {
 	
 	uint32_t i;
@@ -451,7 +452,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		}
 		
 		// handle web data
-		if(conf->enable_web_server == 1) {
+		if(conf->enable_web_server == 1 || low_rate == 1) { // TODO: check on sample_rate
 			// buffer 1
 			if((i+1)%web_avg_number[BUF1_INDEX] == 0) {
 				
@@ -462,19 +463,42 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF1_INDEX], &temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][num_bin_channels], web_data[BUF1_INDEX], conf);
-				
+				if(conf->enable_web_server == 1) {
+					merge_currents(web_valid[BUF1_INDEX], &temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][num_bin_channels], web_data[BUF1_INDEX], conf);
+				}
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
 					bin_web_data[BUF10_INDEX][j] += bin_web_data[BUF1_INDEX][j];
 					
-					if(bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)) {
-						temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 1;
-					} else {
-						temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 0;
+					if(conf->enable_web_server == 1) {
+						if(bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)) {
+							temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 1;
+						} else {
+							temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 0;
+						}
 					}
+					
 					bin_web_data[BUF1_INDEX][j] = 0;
+				}
+				
+				if(low_rate == 1) {
+					// binary data
+					if (bin_channel_pos > 0) {
+						if (conf->file_format == BIN) {
+							// TODO
+							fwrite(&bin_data, sizeof(uint32_t), 1, data);
+							
+						} else if (conf->file_format == CSV) {
+							// TODO
+						}
+					}
+					
+					// channel data
+					for(j=0; j<num_channels; j++) {
+						int32_t tmp = (int32_t) web_data[BUF1_INDEX][j];
+						fwrite(&tmp, sizeof(int32_t), 1, data);
+					}
 				}
 				
 				// reset values
@@ -484,7 +508,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			}
 			
 			// buffer 10
-			if((i+1)%web_avg_number[BUF10_INDEX] == 0) {
+			/*if((i+1)%web_avg_number[BUF10_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
@@ -534,35 +558,37 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 						temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][j] = 0;
 					}
 				}
-			}
+			}*/
 		}
 		
 		// write binary channels
-		if (bin_channel_pos > 0) {
-			if (conf->file_format == BIN) {
-				fwrite(&bin_data, sizeof(uint32_t), 1, data);
-				
-			} else if (conf->file_format == CSV) {
-				int32_t MASK = 1;
-				for(j=0; j<bin_channel_pos; j++) {
-					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
-					strcat(channel_data_char,value_char);
-					MASK = MASK << 1;
+		if(low_rate == 0) {
+			if (bin_channel_pos > 0) {
+				if (conf->file_format == BIN) {
+					fwrite(&bin_data, sizeof(uint32_t), 1, data);
+					
+				} else if (conf->file_format == CSV) {
+					int32_t MASK = 1;
+					for(j=0; j<bin_channel_pos; j++) {
+						sprintf(value_char, ", %d", (bin_data & MASK) > 1);
+						strcat(channel_data_char,value_char);
+						MASK = MASK << 1;
+					}
 				}
 			}
-		}
-		
-		// store values to file
-		if (conf->file_format == BIN) {
-			fwrite(channel_data, sizeof(int32_t), num_channels, data);
 			
-		} else if (conf->file_format == CSV) {
-			for(j=0; j < num_channels; j++) {
-				sprintf(value_char,",%d",channel_data[j]);
-				strcat(channel_data_char, value_char);
+			// store values to file
+			if (conf->file_format == BIN) {
+				fwrite(channel_data, sizeof(int32_t), num_channels, data);
+				
+			} else if (conf->file_format == CSV) {
+				for(j=0; j < num_channels; j++) {
+					sprintf(value_char,",%d",channel_data[j]);
+					strcat(channel_data_char, value_char);
+				}
+				strcat(channel_data_char,"\n");
+				fprintf(data, "%s", channel_data_char);
 			}
-			strcat(channel_data_char,"\n");
-			fprintf(data, "%s", channel_data_char);
 		}
 		
     }
