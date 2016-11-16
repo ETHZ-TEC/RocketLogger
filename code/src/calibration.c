@@ -42,7 +42,7 @@ int read_calibration(struct rl_conf* conf) {
 		return FAILURE;
 	}
 	// read values
-	fread(offsets, sizeof(int), NUM_CHANNELS, file);
+	fread(offsets, sizeof(int32_t), NUM_CHANNELS, file);
 	fread(scales, sizeof(double), NUM_CHANNELS, file);
 	
 	// calculate values for high rates
@@ -71,7 +71,7 @@ int write_calibration() {
 		return FAILURE;
 	}
 	// write values
-	fwrite(offsets, sizeof(int), NUM_CHANNELS, file);
+	fwrite(offsets, sizeof(int32_t), NUM_CHANNELS, file);
 	fwrite(scales, sizeof(double), NUM_CHANNELS, file);
 	
 	//close file

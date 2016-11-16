@@ -1,8 +1,8 @@
 #include "meter.h"
 
 char* channel_units[NUM_CHANNELS] = {"mA","uA","V","V","mA","uA","V","V"};
-int channel_scales[NUM_CHANNELS] = {1000000, 100000, 1000000, 1000000,1000000, 100000, 1000000, 1000000};
-const int digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
+uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 1000000, 1000000,1000000, 100000, 1000000, 1000000};
+const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
 
 void meter_init() {
@@ -19,29 +19,29 @@ void meter_stop() {
 	endwin();
 }
 
-void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_size) {
+void print_meter(struct rl_conf* conf, void* buffer_addr, uint32_t sample_size) {
 
 	// clear screen
 	erase();
 	
 	// counter variables
-	int j = 0;
-	int k = 2;
-	int l = 0;
-	int i = 0; // currents
-	int v = 0; // voltages
+	uint32_t j = 0;
+	uint32_t k = 2;
+	uint32_t l = 0;
+	uint32_t i = 0; // currents
+	uint32_t v = 0; // voltages
 	
 	// data
-	long value = 0;
-	int line[12];
+	int64_t value = 0;
+	int32_t line[12];
 	
 	// number of samples to average
-	int avg_number = conf->sample_rate*RATE_SCALING / conf->update_rate;
+	uint32_t avg_number = conf->sample_rate*RATE_SCALING / conf->update_rate;
 	
 	
-	// read status
-	line[0] = (int) (*((int8_t *) (buffer_addr)));
-	line[1] = (int) (*((int8_t *) (buffer_addr + 1)));
+	// read digital channels
+	line[0] = (int32_t) (*((int8_t *) (buffer_addr)));
+	line[1] = (int32_t) (*((int8_t *) (buffer_addr + 1)));
 	buffer_addr += PRU_DIG_SIZE;
 	
 	
@@ -53,14 +53,14 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 				for(l=0; l<avg_number; l++) { // TODO: combine (with sample_size)
 					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
-				value = value / (long)avg_number;
-				line[k] = (int) (( (int) value + offsets[j] ) * scales[j]);
+				value = value / (int64_t)avg_number;
+				line[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
 			} else {
 				for(l=0; l<avg_number; l++) {
 					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
-				value = value / (long)avg_number;
-				line[k] = (int) (( value + offsets[j] ) * scales[j]);
+				value = value / (int64_t)avg_number;
+				line[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
 			}
 			k++;
 		}

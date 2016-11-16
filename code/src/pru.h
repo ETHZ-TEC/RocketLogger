@@ -121,15 +121,15 @@ enum pru_states {
 /// PRU data struct
 struct pru_data_struct {
 	enum pru_states state;
-	unsigned int precision;
-	unsigned int sample_size;
-	unsigned int buffer0_location;
-	unsigned int buffer1_location;
-	unsigned int buffer_size;
-	unsigned int sample_limit;
-	unsigned int add_currents;
-	unsigned int number_commands;
-	unsigned int commands[NUMBER_ADC_COMMANDS];
+	uint32_t precision;
+	uint32_t sample_size;
+	uint32_t buffer0_location;
+	uint32_t buffer1_location;
+	uint32_t buffer_size;
+	uint32_t sample_limit;
+	uint32_t add_currents;
+	uint32_t number_commands;
+	uint32_t commands[NUMBER_ADC_COMMANDS];
 };
 
 // ----------------------------------------------  FUNCTIONS ------------------------------------------------//

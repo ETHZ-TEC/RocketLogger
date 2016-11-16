@@ -29,7 +29,6 @@ void create_time_stamp(struct time_stamp* time_real, struct time_stamp* time_mon
 	time_monotonic->sec = (int64_t) spec_monotonic.tv_sec;
 	time_monotonic->nsec = (int64_t) spec_monotonic.tv_nsec;
 	
-	
 }
 
 
@@ -50,9 +49,9 @@ void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	
 	// number channels
-	int channel_count = count_channels(conf->channels);
+	uint16_t channel_count = count_channels(conf->channels);
 	// number binary channels
-	int channel_bin_count = 0;
+	uint16_t channel_bin_count = 0;
 	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 		channel_bin_count = NUM_DIGITAL_INPUTS;
 	}
@@ -63,7 +62,7 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 		i2l_valid_channel = ++channel_bin_count;
 	}
 	// comment length
-	int comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
+	uint32_t comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
 	// timestamps
 	struct time_stamp time_real;
 	struct time_stamp time_monotonic;
@@ -186,15 +185,15 @@ void store_header(FILE* data, struct rl_file_header* file_header) {
 void store_header_csv(FILE* data, struct rl_file_header* file_header) {
 	// lead in
 	fprintf(data, "RocketLogger CSV File\n");
-	fprintf(data, "File Version,%d\n", (int) file_header->lead_in.file_version);
-	fprintf(data, "Block Size,%d\n", (int) file_header->lead_in.data_block_size);
+	fprintf(data, "File Version,%u\n", (uint32_t) file_header->lead_in.file_version);
+	fprintf(data, "Block Size,%u\n", (uint32_t) file_header->lead_in.data_block_size);
 	fprintf(data, "Block Count,%-20u\n", (uint32_t) file_header->lead_in.data_block_count);
 	fprintf(data, "Sample Count,%-20llu\n", (uint64_t) file_header->lead_in.sample_count);
-	fprintf(data, "Sample Rate,%d\n", (int) file_header->lead_in.sample_rate);
-	fprintf(data, "MAC Address,%02x", (int) file_header->lead_in.mac_address[0]);
+	fprintf(data, "Sample Rate,%u\n", (uint32_t) file_header->lead_in.sample_rate);
+	fprintf(data, "MAC Address,%02x", (uint32_t) file_header->lead_in.mac_address[0]);
 	int i;
 	for(i=1; i<MAC_ADDRESS_LENGTH; i++) {
-		fprintf(data, ":%02x", (int) file_header->lead_in.mac_address[i]);
+		fprintf(data, ":%02x", (uint32_t) file_header->lead_in.mac_address[i]);
 	}
 	fprintf(data, "\n");
 	time_t time = (time_t) file_header->lead_in.start_time.sec;
@@ -246,8 +245,8 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 	rewind(data);
 	fprintf(data, "RocketLogger CSV File\n");
-	fprintf(data, "File Version,%d\n", (int) file_header->lead_in.file_version);
-	fprintf(data, "Block Size,%d\n", (int) file_header->lead_in.data_block_size);
+	fprintf(data, "File Version,%u\n", (uint32_t) file_header->lead_in.file_version);
+	fprintf(data, "Block Size,%u\n", (uint32_t) file_header->lead_in.data_block_size);
 	fprintf(data, "Block Count,%-20u\n", (uint32_t) file_header->lead_in.data_block_count);
 	fprintf(data, "Sample Count,%-20llu\n", (uint64_t) file_header->lead_in.sample_count);
 	fseek(data, 0, SEEK_END);
@@ -301,25 +300,25 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 }
 
 int test = 0;
-int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
+int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
 	
-	int i;
-	int j;
-	int k;
+	uint32_t i;
+	uint32_t j;
+	uint32_t k;
 	
-	int num_bin_channels;
+	uint32_t num_bin_channels;
 	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 		num_bin_channels = NUM_DIGITAL_INPUTS;
 	} else {
 		num_bin_channels = 0;
 	}
 	
-	int num_channels = count_channels(conf->channels);
+	uint32_t num_channels = count_channels(conf->channels);
 	
-	// binary data (for status and samples)
+	// binary data (for samples)
 	uint32_t bin_data;
 	int32_t channel_data[num_channels];
-	int value = 0;
+	int32_t value = 0;
 	
 	// csv data
 	char line_char[CSV_LINE_LENGTH] = "";
@@ -350,17 +349,17 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 	
 	
 	// data for webserver
-	int num_web_channels = 0;
+	uint32_t num_web_channels = 0;
 	
-	int avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
+	uint32_t avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
 	int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
-	int32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
+	uint32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
 	uint8_t web_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
 	
 	if(conf->enable_web_server == 1) {
 		num_web_channels = web_data->num_channels;
 		memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
-		memset(bin_web_data, 0, sizeof(int32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
+		memset(bin_web_data, 0, sizeof(uint32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
 	}
 	
 	int32_t temp_web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
@@ -382,14 +381,13 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 		buffer_addr += PRU_DIG_SIZE;
 		
 		// mask and combine digital inputs, if requestet
-		int bin_channel_pos;
+		uint32_t bin_channel_pos;
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
 			bin_channel_pos = NUM_DIGITAL_INPUTS;
 			
 			// average for web
 			if(conf->enable_web_server == 1) {
-				int j;
 				int32_t MASK = 1;
 				for(j=0; j<num_bin_channels; j++) {
 					if((bin_data & MASK) > 0) {
@@ -454,7 +452,7 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 				} else {
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
-				channel_data[k] = (int) (( value + offsets[j] ) * scales[j]);
+				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
 				avg_data[BUF1_INDEX][k] += channel_data[k];
 				k++;
 			}
@@ -480,7 +478,6 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 			if((i+1)%avg_number[BUF1_INDEX] == 0) {
 				
 				// average
-				int j;
 				for(j=0; j<num_channels; j++) {
 					avg_data[BUF1_INDEX][j] /= avg_number[BUF1_INDEX];
 					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
@@ -512,7 +509,6 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 			if((i+1)%avg_number[BUF10_INDEX] == 0) {
 				
 				// average
-				int j;
 				for(j=0; j<num_channels; j++) {
 					avg_data[BUF10_INDEX][j] /= (avg_number[BUF10_INDEX]/avg_number[BUF1_INDEX]);
 					avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
@@ -544,7 +540,6 @@ int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int sa
 			if((i+1)%avg_number[BUF100_INDEX] == 0) {
 				
 				// average
-				int j;
 				for(j=0; j<num_channels; j++) {
 					avg_data[BUF100_INDEX][j] /= (avg_number[BUF100_INDEX]/avg_number[BUF10_INDEX]);
 				}

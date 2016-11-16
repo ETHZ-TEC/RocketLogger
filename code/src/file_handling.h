@@ -31,4 +31,4 @@ void store_header(FILE* data, struct rl_file_header* file_header);
 void store_header_csv(FILE* data, struct rl_file_header* file_header);
 void update_header(FILE* data, struct rl_file_header* file_header);
 void update_header_csv(FILE* data, struct rl_file_header* file_header);
-int store_buffer(FILE* data, void* buffer_addr, unsigned int sample_size, int samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data);
+int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data);
