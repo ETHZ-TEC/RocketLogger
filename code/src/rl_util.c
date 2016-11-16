@@ -2,7 +2,7 @@
 
 // argument parsing
 
-enum rl_mode get_mode(char* mode) {
+rl_mode get_mode(char* mode) {
 	if (strcmp(mode, "sample") == 0) {
 		return LIMIT;
 	} else if(strcmp(mode, "cont") == 0) {
@@ -26,7 +26,7 @@ enum rl_mode get_mode(char* mode) {
 	return NO_MODE;
 }
 
-enum rl_option get_option(char* option) {
+rl_option get_option(char* option) {
 	if (strcmp(option, "f") == 0) {
 		return FILE_NAME;
 	} else if(strcmp(option, "r") == 0) {

@@ -4,7 +4,7 @@
 
 // ---------------------------------------------- Includes ----------------------------------------------------------//
 
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -24,8 +24,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <prussdrv.h>
-#include <pruss_intc_mapping.h>*/
-//#include <ncurses.h>
+#include <pruss_intc_mapping.h>
 
 #include "log.h"
 #include "util.h"
@@ -109,18 +108,18 @@
 #define PRU_TIMEOUT 3 // 3s PRU timeout 
 
 // PRU states
-enum pru_states {
+typedef enum pru_state {
 	PRU_OFF = 0,
 	PRU_LIMIT = 1,
 	PRU_CONTINUOUS = 3
-};
+} rl_pru_state;
 
 /// number of ADC commands
 #define NUMBER_ADC_COMMANDS 12
 
 /// PRU data struct
 struct pru_data_struct {
-	enum pru_states state;
+	rl_pru_state state;
 	uint32_t precision;
 	uint32_t sample_size;
 	uint32_t buffer0_location;
@@ -137,7 +136,7 @@ struct pru_data_struct {
 void *pru_wait_event(void* voidEvent);
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
-void pru_set_state(enum pru_states state);
+void pru_set_state(rl_pru_state state);
 int pru_init();
 int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf);
 

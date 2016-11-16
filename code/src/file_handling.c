@@ -252,15 +252,15 @@ void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
-// TODO: valid as array
-void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, struct rl_conf* conf) {
+
+void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf* conf) {
 	
 	int ch_in = 0;
 	int ch_out = 0;
 	
 		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
-		if(valid1 == 1) {
+		if(valid[0] == 1) {
 			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
 			dest[ch_out++] = (int32_t) src[ch_in++];
@@ -279,7 +279,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 	}
 	
 	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
-		if(valid2 == 1) {
+		if(valid[1] == 1) {
 			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
 		} else {
 			dest[ch_out++] = (int32_t) src[ch_in++];
@@ -300,7 +300,7 @@ void merge_currents(int8_t valid1, int8_t valid2, int32_t* dest, int64_t* src, s
 }
 
 int test = 0;
-int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data) {
+int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data_ptr) {
 	
 	uint32_t i;
 	uint32_t j;
@@ -321,7 +321,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	int32_t value = 0;
 	
 	// csv data
-	char line_char[CSV_LINE_LENGTH] = "";
+	char channel_data_char[CSV_LINE_LENGTH] = "";
 	char value_char[CSV_VALUE_LENGTH];
 	
 	
@@ -351,17 +351,18 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	// data for webserver
 	uint32_t num_web_channels = 0;
 	
-	uint32_t avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
-	int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
+	uint32_t web_avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
+	int64_t web_data[WEB_RING_BUFFER_COUNT][num_channels];
 	uint32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
 	uint8_t web_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
 	
 	if(conf->enable_web_server == 1) {
-		num_web_channels = web_data->num_channels;
-		memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
+		num_web_channels = web_data_ptr->num_channels;
+		memset(web_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
 		memset(bin_web_data, 0, sizeof(uint32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
 	}
 	
+	// merged web data
 	int32_t temp_web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
 
 	
@@ -371,7 +372,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		// reset values
 		k = 0;
 		bin_data = 0;
-		strcpy(line_char,"\0");
+		strcpy(channel_data_char,"\0");
 		
 		
 		// read binary channels
@@ -408,6 +409,10 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		// web
 		if(conf->enable_web_server == 1) {
 			// TODO: for loop
+			/*for(j=0; j<BUF100_INDEX; j++) {
+				web_valid[j][0] = web_valid[j][0] & valid1;
+				web_valid[j][1] = web_valid[j][1] & valid2;
+			}*/
 			web_valid[BUF1_INDEX][0] = web_valid[BUF1_INDEX][0] & valid1;
 			web_valid[BUF1_INDEX][1] = web_valid[BUF1_INDEX][1] & valid2;
 			web_valid[BUF10_INDEX][0] = web_valid[BUF10_INDEX][0] & valid1;
@@ -434,7 +439,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				int32_t MASK = 1;
 				for(j=0; j<bin_channel_pos; j++) {
 					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
-					strcat(line_char,value_char);
+					strcat(channel_data_char,value_char);
 					MASK = MASK << 1;
 				}
 			}
@@ -453,7 +458,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
 				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
-				avg_data[BUF1_INDEX][k] += channel_data[k];
+				web_data[BUF1_INDEX][k] += channel_data[k];
 				k++;
 			}
 		}
@@ -466,94 +471,94 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		} else if (conf->file_format == CSV) {
 			for(j=0; j < num_channels; j++) {
 				sprintf(value_char,",%d",channel_data[j]);
-				strcat(line_char, value_char);
+				strcat(channel_data_char, value_char);
 			}
-			strcat(line_char,"\n");
-			fprintf(data, "%s", line_char);
+			strcat(channel_data_char,"\n");
+			fprintf(data, "%s", channel_data_char);
 		}
 		
 		// handle web data
 		if(conf->enable_web_server == 1) {
 			// buffer 1
-			if((i+1)%avg_number[BUF1_INDEX] == 0) {
+			if((i+1)%web_avg_number[BUF1_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					avg_data[BUF1_INDEX][j] /= avg_number[BUF1_INDEX];
-					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
+					web_data[BUF1_INDEX][j] /= web_avg_number[BUF1_INDEX];
+					web_data[BUF10_INDEX][j] += web_data[BUF1_INDEX][j];
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF1_INDEX][0], web_valid[BUF1_INDEX][1], &temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][num_bin_channels], avg_data[BUF1_INDEX], conf);
+				merge_currents(web_valid[BUF1_INDEX], &temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][num_bin_channels], web_data[BUF1_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
 					bin_web_data[BUF10_INDEX][j] += bin_web_data[BUF1_INDEX][j];
 					
-					if(bin_web_data[BUF1_INDEX][j] >= (avg_number[BUF1_INDEX]/2)) {
-						temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][j] = 1;
+					if(bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)) {
+						temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 1;
 					} else {
-						temp_web_data[BUF1_INDEX][i/avg_number[BUF1_INDEX]][j] = 0;
+						temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 0;
 					}
 					bin_web_data[BUF1_INDEX][j] = 0;
 				}
 				
 				// reset values
-				memset(avg_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
+				memset(web_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
 				web_valid[BUF1_INDEX][0] = 1;
 				web_valid[BUF1_INDEX][1] = 1;
 			}
 			
 			// buffer 10
-			if((i+1)%avg_number[BUF10_INDEX] == 0) {
+			if((i+1)%web_avg_number[BUF10_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					avg_data[BUF10_INDEX][j] /= (avg_number[BUF10_INDEX]/avg_number[BUF1_INDEX]);
-					avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
+					web_data[BUF10_INDEX][j] /= (web_avg_number[BUF10_INDEX]/web_avg_number[BUF1_INDEX]);
+					web_data[BUF100_INDEX][j] += web_data[BUF10_INDEX][j];
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF10_INDEX][0], web_valid[BUF10_INDEX][1], &temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][num_bin_channels], avg_data[BUF10_INDEX], conf);
+				merge_currents(web_valid[BUF10_INDEX], &temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][num_bin_channels], web_data[BUF10_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
 					bin_web_data[BUF100_INDEX][j] += bin_web_data[BUF10_INDEX][j];
 					
-					if(bin_web_data[BUF10_INDEX][j] >= (avg_number[BUF10_INDEX]/2)) {
-						temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][j] = 1;
+					if(bin_web_data[BUF10_INDEX][j] >= (web_avg_number[BUF10_INDEX]/2)) {
+						temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][j] = 1;
 					} else {
-						temp_web_data[BUF10_INDEX][i/avg_number[BUF10_INDEX]][j] = 0;
+						temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][j] = 0;
 					}
 					bin_web_data[BUF10_INDEX][j] = 0;
 				}
 				
 				// reset values
-				memset(avg_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
+				memset(web_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
 				web_valid[BUF10_INDEX][0] = 1;
 				web_valid[BUF10_INDEX][1] = 1;
 			}
 			
 			// buffer 100
-			if((i+1)%avg_number[BUF100_INDEX] == 0) {
+			if((i+1)%web_avg_number[BUF100_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					avg_data[BUF100_INDEX][j] /= (avg_number[BUF100_INDEX]/avg_number[BUF10_INDEX]);
+					web_data[BUF100_INDEX][j] /= (web_avg_number[BUF100_INDEX]/web_avg_number[BUF10_INDEX]);
 				}
 				
 				// merge_currents
-				merge_currents(web_valid[BUF100_INDEX][0], web_valid[BUF100_INDEX][1], &temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][num_bin_channels], avg_data[BUF100_INDEX], conf);
+				merge_currents(web_valid[BUF100_INDEX], &temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][num_bin_channels], web_data[BUF100_INDEX], conf);
 				
 				// bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					if(bin_web_data[BUF100_INDEX][j] >= (avg_number[BUF100_INDEX]/2)) {
-						temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][j] = 1;
+					if(bin_web_data[BUF100_INDEX][j] >= (web_avg_number[BUF100_INDEX]/2)) {
+						temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][j] = 1;
 					} else {
-						temp_web_data[BUF100_INDEX][i/avg_number[BUF100_INDEX]][j] = 0;
+						temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][j] = 0;
 					}
 				}
 			}
@@ -571,12 +576,12 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		} else {
 		
 			// write time
-			web_data->time = time_real.sec*1000 + time_real.nsec/1000000;
+			web_data_ptr->time = time_real.sec*1000 + time_real.nsec/1000000;
 			
 			// write data to ring buffer
-			buffer_add(&web_data->buffer[BUF1_INDEX], &temp_web_data[BUF1_INDEX][0][0]);
-			buffer_add(&web_data->buffer[BUF10_INDEX], &temp_web_data[BUF10_INDEX][0][0]);
-			buffer_add(&web_data->buffer[BUF100_INDEX], &temp_web_data[BUF100_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF1_INDEX], &temp_web_data[BUF1_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF10_INDEX], &temp_web_data[BUF10_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF100_INDEX], &temp_web_data[BUF100_INDEX][0][0]);
 			
 			// release shared memory
 			set_sem(sem_id, DATA_SEM, 1);

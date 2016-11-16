@@ -15,6 +15,7 @@ enum time_scale {
 	S10 = 1,
 	S100 = 2
 };
+
 #define BUFFER1_SIZE 100
 #define BUFFER10_SIZE 10
 #define BUFFER100_SIZE 1

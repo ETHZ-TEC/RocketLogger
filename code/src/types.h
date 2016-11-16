@@ -87,31 +87,40 @@
 #define DIGIN6_BIT 8
 
 
-// enumerations TODO: typedefs
-
-
 
 // ROCKETLOGGER
 
-enum rl_state {
+typedef enum state {
 	RL_OFF = 0,
 	RL_RUNNING = 1,
 	RL_ERROR = -1
-};
-enum rl_sampling {
+} rl_state;
+
+typedef enum sampling {
 	SAMPLING_OFF = 0,
 	SAMPLING_ON = 1
-};
+} rl_sampling;
 
-enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
+typedef enum mode {
+	LIMIT,
+	CONTINUOUS,
+	METER,
+	STATUS,
+	STOPPED,
+	CALIBRATE,
+	SET_DEFAULT,
+	PRINT_DEFAULT,
+	HELP,
+	NO_MODE
+} rl_mode;
 
-enum rl_file_format {
+typedef enum file_format {
 	NO_FILE = 0,
 	CSV = 1,
 	BIN = 2
-};
+} rl_file_format;
 
-typedef enum use_cal {CAL_USE, CAL_IGNORE} use_calibration;
+typedef enum use_cal {CAL_USE, CAL_IGNORE} rl_use_cal;
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
@@ -136,7 +145,7 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 #define DIGITAL_INPUTS_ENABLED 1
 
 struct rl_conf {
-	enum rl_mode mode;
+	rl_mode mode;
 	int sample_rate;
 	int update_rate;
 	int sample_limit;
@@ -144,15 +153,15 @@ struct rl_conf {
 	int force_high_channels[NUM_I_CHANNELS];
 	int digital_inputs;
 	int enable_web_server;
-	use_calibration calibration;
-	enum rl_file_format file_format;
+	rl_use_cal calibration;
+	rl_file_format file_format;
 	char file_name[MAX_PATH_LENGTH];
 };
 
 // status struct
 struct rl_status {
-	enum rl_state state;
-	enum rl_sampling sampling;
+	rl_state state;
+	rl_sampling sampling;
 	int samples_taken;
 	int buffer_number;
 	struct rl_conf conf;
