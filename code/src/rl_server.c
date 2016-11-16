@@ -1,6 +1,7 @@
 #include <sys/statvfs.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <libgen.h>
 
 #include "sem.h"
 #include "types.h"
@@ -61,7 +62,12 @@ void print_status() {
 	if(status.state != RL_RUNNING) {
 		read_default_config(&status.conf);
 	}
-	printf("%llu\n", get_free_space(status.conf.file_name));
+	struct stat st;
+	if(stat(dirname(status.conf.file_name),&st) == 0) {
+		printf("%llu\n", get_free_space(dirname(status.conf.file_name)));
+	} else {
+		printf("0");
+	}
 	printf("%d\n", status.conf.sample_rate);
 	printf("%d\n", status.conf.update_rate);
 	printf("%d\n", status.conf.digital_inputs);
