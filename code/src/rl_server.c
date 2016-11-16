@@ -62,12 +62,11 @@ void print_status() {
 	if(status.state != RL_RUNNING) {
 		read_default_config(&status.conf);
 	}
-	struct stat st;
-	if(stat(dirname(status.conf.file_name),&st) == 0) {
-		printf("%llu\n", get_free_space(dirname(status.conf.file_name)));
-	} else {
-		printf("0");
-	}
+	// copy of filename (for dirname)
+	char file_name_copy[MAX_PATH_LENGTH];
+	strcpy(file_name_copy, status.conf.file_name);
+	
+	printf("%llu\n", get_free_space(dirname(file_name_copy)));
 	printf("%d\n", status.conf.sample_rate);
 	printf("%d\n", status.conf.update_rate);
 	printf("%d\n", status.conf.digital_inputs);
