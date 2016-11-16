@@ -2,9 +2,6 @@ classdef rld
     %RL_MEASUREMENT Summary of this class goes here
     %   Detailed explanation goes here
     
-    % TODO: loop performance (preallocation)
-    % TODO: unfull buffer size
-    
     properties (Constant)
         % TODO: rl_types here?
     end
