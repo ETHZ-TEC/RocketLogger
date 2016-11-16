@@ -381,6 +381,26 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		
 		buffer_addr += PRU_DIG_SIZE;
 		
+		// read and scale values (if channel selected)
+		for(j=0; j<NUM_CHANNELS; j++) {
+			if(conf->channels[j] > 0) {
+				if(sample_size == 4) {
+					if (TEST_MODE == 1) {
+						value = 1000*j + test++;
+					} else {
+						value = *( (int32_t *) (buffer_addr + sample_size*j) );
+					}
+				} else {
+					value = *( (int16_t *) (buffer_addr + sample_size*j) );
+				}
+				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
+				web_data[BUF1_INDEX][k] += channel_data[k];
+				k++;
+			}
+		}
+		buffer_addr+=NUM_CHANNELS*sample_size;
+		
+		
 		// mask and combine digital inputs, if requestet
 		uint32_t bin_channel_pos;
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
@@ -406,7 +426,16 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		uint8_t valid1 = (~bin_adc1) & VALID_MASK;
 		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
-		// web
+		if(conf->channels[I1L_INDEX] > 0) {
+			bin_data = bin_data | (valid1 << bin_channel_pos);
+			bin_channel_pos++;
+		}
+		if(conf->channels[I2L_INDEX] > 0) {
+			bin_data = bin_data | (valid2 << bin_channel_pos);
+			bin_channel_pos++;
+		}
+		
+		// web valid
 		if(conf->enable_web_server == 1) {
 			// TODO: for loop
 			/*for(j=0; j<BUF100_INDEX; j++) {
@@ -419,62 +448,6 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			web_valid[BUF10_INDEX][1] = web_valid[BUF10_INDEX][1] & valid2;
 			web_valid[BUF100_INDEX][0] = web_valid[BUF100_INDEX][0] & valid1;
 			web_valid[BUF100_INDEX][1] = web_valid[BUF100_INDEX][1] & valid2;
-		}
-		
-		if(conf->channels[I1L_INDEX] > 0) {
-			bin_data = bin_data | (valid1 << bin_channel_pos);
-			bin_channel_pos++;
-		}
-		if(conf->channels[I2L_INDEX] > 0) {
-			bin_data = bin_data | (valid2 << bin_channel_pos);
-			bin_channel_pos++;
-		}
-		
-		// write binary channels
-		if (bin_channel_pos > 0) {
-			if (conf->file_format == BIN) {
-				fwrite(&bin_data, sizeof(uint32_t), 1, data);
-				
-			} else if (conf->file_format == CSV) {
-				int32_t MASK = 1;
-				for(j=0; j<bin_channel_pos; j++) {
-					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
-					strcat(channel_data_char,value_char);
-					MASK = MASK << 1;
-				}
-			}
-		}
-		
-		// read and scale values (if channel selected)
-		for(j=0; j<NUM_CHANNELS; j++) {
-			if(conf->channels[j] > 0) {
-				if(sample_size == 4) {
-					if (TEST_MODE == 1) {
-						value = 1000*j + test++;
-					} else {
-						value = *( (int32_t *) (buffer_addr + sample_size*j) );
-					}
-				} else {
-					value = *( (int16_t *) (buffer_addr + sample_size*j) );
-				}
-				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
-				web_data[BUF1_INDEX][k] += channel_data[k];
-				k++;
-			}
-		}
-		buffer_addr+=NUM_CHANNELS*sample_size;
-		
-		// store values to file
-		if (conf->file_format == BIN) {
-			fwrite(channel_data, sizeof(int32_t), num_channels, data);
-			
-		} else if (conf->file_format == CSV) {
-			for(j=0; j < num_channels; j++) {
-				sprintf(value_char,",%d",channel_data[j]);
-				strcat(channel_data_char, value_char);
-			}
-			strcat(channel_data_char,"\n");
-			fprintf(data, "%s", channel_data_char);
 		}
 		
 		// handle web data
@@ -563,6 +536,35 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 			}
 		}
+		
+		// write binary channels
+		if (bin_channel_pos > 0) {
+			if (conf->file_format == BIN) {
+				fwrite(&bin_data, sizeof(uint32_t), 1, data);
+				
+			} else if (conf->file_format == CSV) {
+				int32_t MASK = 1;
+				for(j=0; j<bin_channel_pos; j++) {
+					sprintf(value_char, ", %d", (bin_data & MASK) > 1);
+					strcat(channel_data_char,value_char);
+					MASK = MASK << 1;
+				}
+			}
+		}
+		
+		// store values to file
+		if (conf->file_format == BIN) {
+			fwrite(channel_data, sizeof(int32_t), num_channels, data);
+			
+		} else if (conf->file_format == CSV) {
+			for(j=0; j < num_channels; j++) {
+				sprintf(value_char,",%d",channel_data[j]);
+				strcat(channel_data_char, value_char);
+			}
+			strcat(channel_data_char,"\n");
+			fprintf(data, "%s", channel_data_char);
+		}
+		
     }
 	
 	if (conf->enable_web_server == 1) {
