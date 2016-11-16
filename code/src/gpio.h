@@ -6,7 +6,7 @@
 #include <poll.h>*/
 
 #include "types.h"
-#include "util.h"
+#include "log.h"
 
 #define GPIO_PATH "/sys/class/gpio/"
 #define MIN_BUTTON_TIME 100000 // minimal time a button needs to be pressed (in us)

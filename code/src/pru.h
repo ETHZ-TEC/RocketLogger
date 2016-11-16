@@ -27,6 +27,7 @@
 #include <pruss_intc_mapping.h>*/
 //#include <ncurses.h>
 
+#include "log.h"
 #include "util.h"
 #include "types.h"
 #include "calibration.h"

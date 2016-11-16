@@ -5,6 +5,7 @@
 
 #include "types.h"
 #include "rl_file.h"
+#include "log.h"
 #include "util.h"
 #include "sem.h"
 #include "web.h"

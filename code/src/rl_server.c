@@ -6,7 +6,7 @@
 #include "types.h"
 #include "rl_lib.h"
 #include "web.h"
-#include "util.h"
+#include "log.h"
 #include "rl_util.h"
 
 #define ARG_COUNT 4

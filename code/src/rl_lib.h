@@ -4,6 +4,7 @@
 #include "lib_util.h"
 #include "types.h"
 #include "rl_hw.h"
+#include "util.h"
 
 
 void rl_print_config(struct rl_conf* conf);

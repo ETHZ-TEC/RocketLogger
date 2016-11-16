@@ -9,7 +9,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#include "util.h"
+#include "log.h"
 #include "types.h"
 
 

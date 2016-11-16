@@ -2,6 +2,7 @@
 #define IPC_H
 
 #include "types.h"
+#include "log.h"
 #include "util.h"
 
 #define WEB_RING_BUFFER_COUNT 3

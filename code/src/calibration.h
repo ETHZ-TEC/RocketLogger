@@ -7,7 +7,7 @@
 #include <sys/mman.h>*/
 
 #include "types.h"
-#include "util.h"
+#include "log.h"
 
 #define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
 

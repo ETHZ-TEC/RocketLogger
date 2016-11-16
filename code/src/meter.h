@@ -2,6 +2,7 @@
 #include <ncurses.h>*/
 
 #include "types.h"
+#include "log.h"
 #include "util.h"
 
 void meter_init();
