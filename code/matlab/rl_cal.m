@@ -156,7 +156,7 @@ classdef rl_cal < handle
             end
 
             if plotPareto ~= 0
-                rl_pareto_error(v_ideal*rl_cal.FILE_SCALE_V, residual_v);
+                rl_aux_pareto_error(v_ideal*rl_cal.FILE_SCALE_V, residual_v);
                 title('Voltage Pareto Optimal Error Numbers');
             end
 
@@ -185,7 +185,7 @@ classdef rl_cal < handle
             end
             
             if plotPareto ~= 0
-                rl_pareto_error(il_ideal*rl_cal.FILE_SCALE_IL, residual_il);
+                rl_aux_pareto_error(il_ideal*rl_cal.FILE_SCALE_IL, residual_il);
                 title('Current Low Pareto Optimal Error Numbers');
             end
 
@@ -211,7 +211,7 @@ classdef rl_cal < handle
             end
 
             if plotPareto ~= 0
-                rl_pareto_error(ih_ideal*rl_cal.FILE_SCALE_IH, residual_ih);
+                rl_aux_pareto_error(ih_ideal*rl_cal.FILE_SCALE_IH, residual_ih);
                 title('Current High Pareto Optimal Error Numbers');
             end
 
