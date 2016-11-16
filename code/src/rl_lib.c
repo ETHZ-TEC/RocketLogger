@@ -1,14 +1,5 @@
 #include "rl_lib.h"
 
-void rl_reset_calibration() {
-	
-	// set zero offset/scale (raw data)
-	remove(CALIBRATION_FILE);
-	reset_offsets();
-	reset_scales();
-	write_calibration();
-	
-}
 
 void rl_print_config(struct rl_conf* conf) {
 	
@@ -135,20 +126,6 @@ int rl_sample(struct rl_conf* conf) {
 		conf->enable_web_server = 0;
 	}
 	
-	// create FIFOs if not existing
-	if(open(FIFO_FILE, O_RDWR) <= 0) {
-		if(mkfifo(FIFO_FILE,O_NONBLOCK) < 0) {
-			rl_log(ERROR, "could not create FIFO");
-			return FAILURE;
-		}
-	}
-	if(open(CONTROL_FIFO, O_RDWR) <= 0) {
-		if(mkfifo(CONTROL_FIFO,O_NONBLOCK) < 0) {
-			rl_log(ERROR, "could not create control FIFO");
-			return FAILURE;
-		}
-	}
-	
 	// store PID to file
 	pid_t pid = getpid();
 	set_pid(pid);
@@ -171,10 +148,6 @@ int rl_sample(struct rl_conf* conf) {
 	
 	// FINISH
 	hw_close(conf);
-	
-	// remove fifos
-	remove(FIFO_FILE);
-	remove(CONTROL_FIFO);
 	 
 	return SUCCESS;
 	

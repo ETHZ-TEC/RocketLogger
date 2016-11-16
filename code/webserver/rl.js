@@ -2,9 +2,7 @@ $(function() {
 	
 		// TODO
 		
-		// csv - files
 		// currents: less average!
-		// avg-values in array (for 3 buffers)
 		
 		
 		// CONSTANTS
@@ -58,7 +56,7 @@ $(function() {
 		var iScale = 1;
 		
 		var timeOut;
-		var idMismatch;
+		//var idMismatch;
 		
 		// plots
 		var vPlot;
@@ -133,7 +131,7 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
-					clearTimeout(idMismatch);
+					//clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -185,10 +183,10 @@ $(function() {
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
-					} else {
+					} /*else {
 						
 						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
-					}		
+					}	*/	
 				}
 			});
 		}
@@ -221,12 +219,12 @@ $(function() {
 			document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
 		}
 		
-		function mismatch() {
+		/*function mismatch() {
 			// ID mismatch -> error
 			document.getElementById("status").innerHTML = 'Status: ERROR';
 			// set timer
 			setTimeout(update, UPDATE_INTERVAL);
-		}
+		}*/
 		
 		function parseStatus(tempState) {
 			
@@ -783,33 +781,6 @@ $(function() {
 			stopping = 0;
 		}
 		
-		// calibrate button
-		$("#calibrate").click(function () {
-			calibrate();
-		});
-		
-		function calibrate() {
-			if(state == RL_RUNNING) {
-				alert("Rocketlogger already running.\nPress Stop!");
-				return false;
-			}
-			
-			if(!confirm("Warning: This will delete existing calibration data!")) {
-				return false;
-			}
-			
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'calibrate'},
-				
-				complete: function (response) {
-					// do nothing
-				}
-			});
-		}
-		
 		// deselect button
 		$("#deselect").click(function () {
 			channels.fill(false);
@@ -993,6 +964,13 @@ $(function() {
 				cmd_obj.digital_inputs += " -s";
 			}
 			
+			// ignore calibration
+			if ($("#calibration:checked").length > 0) {
+				cmd_obj.digital_inputs += " -c 0";
+			} else {
+				cmd_obj.digital_inputs += " -c";
+			}
+			
 			return true;
 		}
 		
@@ -1050,6 +1028,12 @@ $(function() {
 					document.getElementById("webserver").innerHTML = 'File Deleted!';
 				}
 			});
+		});
+		
+		$("#calibration").change(function () {
+			if(state == RL_RUNNING) {
+				alert("This will not affect the current measurement!");
+			}
 		});
 		
 		// never ending update function

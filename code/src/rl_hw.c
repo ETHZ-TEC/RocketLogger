@@ -67,8 +67,11 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	if(read_calibration(conf) == SUCCESS) {
-		// TODO
+	if(conf->calibration == CAL_USE) {
+		read_calibration(conf);
+	} else {
+		reset_offsets();
+		reset_scales();
 	}
 	
 	// SAMPLE

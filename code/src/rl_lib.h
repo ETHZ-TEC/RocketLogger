@@ -6,8 +6,6 @@
 #include "rl_hw.h"
 
 
-void rl_reset_calibration();
-
 void rl_print_config(struct rl_conf* conf);
 
 void rl_print_status(struct rl_status* status);

@@ -43,6 +43,8 @@ enum rl_option get_option(char* option) {
 		return DIGITAL_INPUTS;
 	} else if(strcmp(option, "s") == 0) {
 		return DEF_CONF;
+	} else if(strcmp(option, "c") == 0) {
+		return CALIBRATION;
 	} else if(strcmp(option, "format") == 0) {
 		return FILE_FORMAT;
 	}
@@ -232,7 +234,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 						conf->enable_web_server = 0;
 					} else {
 						conf->enable_web_server = 1;
-						}
+					}
 					break;
 				
 				case DIGITAL_INPUTS:
@@ -246,6 +248,15 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case DEF_CONF:
 					*set_as_default = 1;
+					break;
+				
+				case CALIBRATION:
+					if(argc > i+1 && isdigit(argv[i+1][0]) && atoi(argv[i+1]) == 0) {
+						i++;
+						conf->calibration = CAL_IGNORE;
+					} else {
+						conf->calibration = CAL_USE;
+					}
 					break;
 				
 				case FILE_FORMAT:
@@ -315,6 +326,8 @@ void print_usage() {
 	printf("                         3: V2 \t\t7: V4\n");
 	printf("    -fhr [0,1,2]       Force high-range.\n");
 	printf("                         0: no channel, 1: I1, 2: I2\n");
+	printf("    -c                 Use calibration, if existing.\n");
+	printf("                         '-c 0' to ignore calibration.\n");
 	printf("    -f [file]          Stores data to specified file.\n");
 	printf("                         '-f 0' will disable file storing.\n");
 	printf("    -d                 Log digital inputs.\n");
@@ -345,6 +358,7 @@ void reset_config(struct rl_conf* conf) {
 	conf->sample_limit = 0;
 	conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
 	conf->enable_web_server = 1;
+	conf->calibration = CAL_USE;
 	conf->file_format = BIN;
 	
 	strcpy(conf->file_name, "/var/www/data/data.rld");
@@ -375,11 +389,7 @@ int read_default_config(struct rl_conf* conf) {
 	fread(conf, sizeof(struct rl_conf), 1, file);
 	
 	// reset mode
-	//if(conf->sample_limit == 0) { // TODO: check
-		conf->mode = CONTINUOUS;
-	/*} else {
-		conf->mode = LIMIT;
-	}*/
+	conf->mode = CONTINUOUS;
 	
 	//close file
 	fclose(file);
@@ -407,7 +417,7 @@ int write_default_config(struct rl_conf* conf) {
 
 
 
-// conf file read helpers
+/*// conf file read helpers
 
 // TODO: add digital inputs
 
@@ -503,4 +513,4 @@ int read_default_config_new(struct rl_conf* conf) {
 	fclose(fp);
 	
 	return SUCCESS;
-}
+}*/

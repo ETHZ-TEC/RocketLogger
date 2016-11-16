@@ -1,6 +1,7 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
+/// test mode: for usage withouth RL cape
 #define TEST_MODE 0
 
 // INCLUDES
@@ -54,9 +55,10 @@
 #define PID_FILE		"/var/run/rocketlogger.pid"
 #define LOG_FILE		"/var/www/log/log.txt"
 
-#define MAX_LOG_FILE_SIZE 1000000 // log file size in bytes
+/// log file size in bytes
+#define MAX_LOG_FILE_SIZE 1000000
 
-#define SHMEM_STATUS_KEY 1111 // TODO: usefull key
+#define SHMEM_STATUS_KEY 1111
 #define SHMEM_DATA_KEY 4443
 
 
@@ -65,17 +67,17 @@
 #define NUM_CHANNELS 8
 #define NUM_PRU_CHANNELS 10 // medium range! -> TODO: remove
 #define NUM_I_CHANNELS 2
-#define NUM_TOT_I_CHANNELS 4 // unused!
 #define NUM_V_CHANNELS 4
 #define NUM_DIGITAL_INPUTS 6
 
 #define METER_UPDATE_RATE 5
 
-#define STATUS_SIZE 2 // status size in bytes
+#define PRU_DIG_SIZE 2 // status size in bytes
+#define PRU_BUFFER_STATUS_SIZE 4 //buffer status size in bytes
 
 #define RATE_SCALING 1000 // rates are in ksps
 
-#define I1L_VALID_BIT 1 // TODO: unused?
+#define I1L_VALID_BIT 1
 #define I2L_VALID_BIT 1
 #define DIGIN1_BIT 2
 #define DIGIN2_BIT 4
@@ -87,28 +89,7 @@
 
 // enumerations TODO: typedefs
 
-// PRU 
 
-// PRU states
-enum pru_states {
-	PRU_OFF = 0,
-	PRU_LIMIT = 1,
-	PRU_CONTINUOUS = 3
-};
-
-#define NUMBER_PRU_COMMANDS 10
-struct pru_data_struct {
-	enum pru_states state;
-	unsigned int precision;
-	unsigned int sample_size;
-	unsigned int buffer0_location;
-	unsigned int buffer1_location;
-	unsigned int buffer_size;
-	unsigned int sample_limit;
-	unsigned int add_currents;
-	unsigned int number_commands;
-	unsigned int commands[NUMBER_PRU_COMMANDS];
-};
 
 // ROCKETLOGGER
 
@@ -122,12 +103,15 @@ enum rl_sampling {
 	SAMPLING_ON = 1
 };
 
-enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE}; //DATA, 
+enum rl_mode {LIMIT, CONTINUOUS, METER, STATUS, STOPPED, CALIBRATE, SET_DEFAULT, PRINT_DEFAULT, HELP, NO_MODE};
+
 enum rl_file_format {
 	NO_FILE = 0,
 	CSV = 1,
 	BIN = 2
 };
+
+typedef enum use_cal {CAL_USE, CAL_IGNORE} use_calibration;
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
@@ -160,6 +144,7 @@ struct rl_conf {
 	int force_high_channels[NUM_I_CHANNELS];
 	int digital_inputs;
 	int enable_web_server;
+	use_calibration calibration;
 	enum rl_file_format file_format;
 	char file_name[MAX_PATH_LENGTH];
 };
@@ -174,19 +159,8 @@ struct rl_status {
 };
 
 
-// FILE STUFF (TODO: move to rl_file.h)
-#define HEADERLENGTH 6
-struct header {
-	int header_length;
-	int number_samples;
-	int buffer_size;
-	int rate;
-	int channels;
-	int precision;
-};
-
 // SEMAPHORES
-#define SEM_KEY 2222 // TODO: usefull key
+#define SEM_KEY 2222
 #define NUM_SEMS 2
 #define SEM_TIME_OUT 3
 #define SEM_WRITE_TIME_OUT 1
@@ -206,5 +180,8 @@ struct rl_status status;
 int offsets[NUM_CHANNELS];
 double scales[NUM_CHANNELS];
 
+extern const char* channel_names[NUM_CHANNELS];
+extern const char* digital_input_names[NUM_DIGITAL_INPUTS];
+extern const char* valid_info_names[NUM_I_CHANNELS];
 
 #endif

@@ -1,12 +1,9 @@
 #include "meter.h"
 
-// TODO: use defines
-char meter_names[NUM_CHANNELS][15] = {"I1H","I1L","V1","V2","I2H","I2L","V3","V4"};
-char channel_units[NUM_CHANNELS][15] = {"mA","uA","V","V","mA","uA","V","V"};
+char* channel_units[NUM_CHANNELS] = {"mA","uA","V","V","mA","uA","V","V"};
 int channel_scales[NUM_CHANNELS] = {1000000, 100000, 1000000, 1000000,1000000, 100000, 1000000, 1000000};
+const int digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
-char meter_digital_input_names[NUM_DIGITAL_INPUTS][15] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
-int meter_digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
 void meter_init() {
 	// init ncurses mode
@@ -45,7 +42,7 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 	// read status
 	line[0] = (int) (*((int8_t *) (buffer_addr)));
 	line[1] = (int) (*((int8_t *) (buffer_addr + 1)));
-	buffer_addr += STATUS_SIZE;
+	buffer_addr += PRU_DIG_SIZE;
 	
 	
 	// read, average and scale values (if channel selected)
@@ -54,13 +51,13 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 			value = 0;
 			if(sample_size == 4) {
 				for(l=0; l<avg_number; l++) { // TODO: combine (with sample_size)
-					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
+					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
 				value = value / (long)avg_number;
 				line[k] = (int) (( (int) value + offsets[j] ) * scales[j]);
 			} else {
 				for(l=0; l<avg_number; l++) {
-					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + STATUS_SIZE)) );
+					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
 				value = value / (long)avg_number;
 				line[k] = (int) (( value + offsets[j] ) * scales[j]);
@@ -76,12 +73,12 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 		if(conf->channels[j] > 0) {
 			if(is_current(j)) {
 				// current
-				mvprintw(i*2 + 5, 10, "%s:", meter_names[j]);
+				mvprintw(i*2 + 5, 10, "%s:", channel_names[j]);
 				mvprintw(i*2 + 5, 15, "%12.6f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
 				i++;
 			} else {
 				// voltage
-				mvprintw(v*2 + 5, 55, "%s:", meter_names[j]);
+				mvprintw(v*2 + 5, 55, "%s:", channel_names[j]);
 				mvprintw(v*2 + 5, 60, "%9.6f%s", ((float) line[v+i+2]) / channel_scales[j], channel_units[j]);
 				v++;
 			}
@@ -117,12 +114,12 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, unsigned int sample_si
 		
 		j=0;
 		for( ; j<3; j++) {
-			mvprintw(20 + 2*j, 30, "%s:", meter_digital_input_names[j]);
-			mvprintw(20 + 2*j, 38, "%d", (line[0] & meter_digital_input_bits[j]) > 0);
+			mvprintw(20 + 2*j, 30, "%s:", digital_input_names[j]);
+			mvprintw(20 + 2*j, 38, "%d", (line[0] & digital_input_bits[j]) > 0);
 		}
 		for( ; j<6; j++) {
-			mvprintw(20 + 2*(j-3), 50, "%s:", meter_digital_input_names[j]);
-			mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & meter_digital_input_bits[j]) > 0);
+			mvprintw(20 + 2*(j-3), 50, "%s:", digital_input_names[j]);
+			mvprintw(20 + 2*(j-3), 58, "%d", (line[1] & digital_input_bits[j]) > 0);
 		}
 	}
 	

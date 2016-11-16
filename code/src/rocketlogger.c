@@ -64,12 +64,8 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_SUCCESS);
 		
 		case CALIBRATE:
-			if(rl_get_status(0) == RL_RUNNING) {
-				printf("\n");
-				rl_log(WARNING, "reset will not affect current measurement");
-			}
-			rl_reset_calibration();
-			exit(EXIT_SUCCESS);
+			rl_log(ERROR, "no calibration implemented");
+			exit(EXIT_FAILURE);
 		
 		case SET_DEFAULT:
 			write_default_config(&conf);

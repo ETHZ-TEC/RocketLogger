@@ -20,9 +20,6 @@
 				exec('rocketlogger data', $output);
 				echo json_encode($output);
 				break;
-			case 'calibrate':
-				exec('rocketlogger calibrate');
-				break;
 			case 'delete':
 				$command = 'rm ' . $_POST['filename'];
 				exec($command);

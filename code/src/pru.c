@@ -186,29 +186,28 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 	pru->sample_limit = conf->sample_limit;
 	pru->buffer_size = (conf->sample_rate * RATE_SCALING) / conf->update_rate;
 	
-	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
+	unsigned int buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
 	pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
 	pru->add_currents = ADD_CURRENTS;
 	
 	
 	// set commands
-	pru->number_commands = NUMBER_PRU_COMMANDS;
+	pru->number_commands = NUMBER_ADC_COMMANDS;
 	pru->commands[0] = RESET;
 	pru->commands[1] = SDATAC;
 	pru->commands[2] = WREG|CONFIG3|CONFIG3DEFAULT;						// write configuration
 	pru->commands[3] = WREG|CONFIG1|CONFIG1DEFAULT | pru_sample_rate;
 
 	// set channel gains
-	// TODO: set all channels
 	pru->commands[4] = WREG|CH1SET|GAIN2;								// High Range A
-	//pru->commands[4] = WREG|CH2SET|GAIN2;								// High Range B
-	pru->commands[5] = WREG|CH3SET|GAIN1;								// Medium Range							
-	pru->commands[6] = WREG|CH4SET|GAIN1;								// Low Range A
-	pru->commands[7] = WREG|CH5SET|GAIN1;								// Low Range B
-	pru->commands[8] = WREG|CH6SET|GAIN1;								// Voltage 1
-	//pru->commands[8] = WREG|CH7SET|GAIN1;								// Voltage 2
-	pru->commands[9] = RDATAC;											// continuous reading
+	pru->commands[5] = WREG|CH2SET|GAIN2;								// High Range B
+	pru->commands[6] = WREG|CH3SET|GAIN1;								// Medium Range							
+	pru->commands[7] = WREG|CH4SET|GAIN1;								// Low Range A
+	pru->commands[8] = WREG|CH5SET|GAIN1;								// Low Range B
+	pru->commands[9] = WREG|CH6SET|GAIN1;								// Voltage 1
+	pru->commands[10] = WREG|CH7SET|GAIN1;								// Voltage 2
+	pru->commands[11] = RDATAC;											// continuous reading
 	
 	return SUCCESS;
 }
@@ -220,10 +219,10 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	// TODO: move after initiation
-	// STATE
+	
+	// STATE (TODO: move to upper layers?)
 	status.state = RL_RUNNING;
-	status.sampling = SAMPLING_ON;
+	status.sampling = SAMPLING_OFF;
 	status.samples_taken = 0;
 	status.buffer_number = 0;
 	status.conf = *conf;
@@ -286,14 +285,13 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	struct pru_data_struct pru;
 	pru_setup(&pru, conf);
 	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
-	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + STATUS_SIZE) + BUFFERSTATUSSIZE;
+	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	
 	// check memory size
 	unsigned int max_size = read_file_value(MMAP_FILE "size");
 	if(2*buffer_size_bytes > max_size) {
 		rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  modprobe uio_pruss extram_pool_sz=0x%06x", 2*buffer_size_bytes);
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 		
 	// map PRU memory into userspace
@@ -317,8 +315,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	setup_header(&file_header, conf);
 	
 	// store header
-	if(conf->file_format != NO_FILE) {
+	if(conf->file_format == BIN) {
 		store_header(data, &file_header);
+	} else if (conf->file_format == CSV) {
+		store_header_csv(data, &file_header);
 	}
 	
 	
@@ -332,7 +332,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	if (prussdrv_exec_program (0, PRU_CODE) < 0) {
 		rl_log(ERROR, "PRU code not found");
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 	
 	// wait for first PRU event
@@ -340,7 +339,6 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// timeout occured
 		rl_log(ERROR, "PRU not responding");
 		pru.state = PRU_OFF;
-		status.state = RL_OFF;
 	}
 	
 	// clear event
@@ -350,6 +348,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	uint32_t buffer_lost = 0;
 	void* buffer_addr;
 	unsigned int samples_buffer; // number of samples per buffer
+	
+	// sampling started
+	status.sampling = SAMPLING_ON;
+	write_status(&status);
 	
 	// continuous sampling loop
 	for(i=0; status.sampling == SAMPLING_ON && status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
@@ -405,7 +407,12 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			// update the number of samples stored
 			file_header.lead_in.data_block_count = i+1 - buffer_lost;
 			file_header.lead_in.sample_count += samples_buffer;
-			update_header(data, &file_header);
+			
+			if(conf->file_format == BIN) {
+				update_header(data, &file_header);
+			} else if(conf->file_format == CSV) {
+				update_header_csv(data, &file_header);
+			}
 			
 		}
 		
