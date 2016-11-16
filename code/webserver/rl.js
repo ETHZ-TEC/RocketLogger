@@ -1009,7 +1009,7 @@ $(function() {
 			window.open(file);
 		});
 		
-		// delete button
+		/*// delete button
 		$("#delete").click(function () {
 			
 			if(state == RL_RUNNING) {
@@ -1028,7 +1028,7 @@ $(function() {
 					document.getElementById("webserver").innerHTML = 'File Deleted!';
 				}
 			});
-		});
+		});*/
 		
 		$("#calibration").change(function () {
 			if(state == RL_RUNNING) {
