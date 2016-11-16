@@ -1003,6 +1003,32 @@ $(function() {
 			window.open(file);
 		});
 		
+		// date to filename button
+		$("#date_to_filename").click(function () {
+			
+			// check filename for date
+			var patt = /\d{8}_/;
+			if (patt.test(filename)) {
+				filename = filename.slice(9);
+			}
+			
+			// add current date
+			var currentDate = new Date();
+			var d = currentDate.getDate().toString();
+			if(d<10) {
+				d="0" + d;
+			}
+			var m = (currentDate.getMonth()+1).toString();
+			if(m<10) {
+				m = "0" + m;
+			}
+			var y = currentDate.getFullYear().toString();
+			filename = y + m + d + "_" + filename;
+			$("#filename").val(filename);
+		});
+		
+		
+		
 		// log download
 		$("#download_log").click(function () {
 			file = 'log/log.txt';
