@@ -110,8 +110,6 @@ classdef rld
             % sanity checks
             if sample_count ~= data_block_count*data_block_size
                 warning('Inconsistency in number of samples taken');
-                data_block_count = floor(sample_count / data_block_size);
-                obj.header.data_block_count = data_block_count;
             end
             
             % digital inputs
