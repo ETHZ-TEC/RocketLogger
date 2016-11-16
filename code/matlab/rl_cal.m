@@ -2,9 +2,19 @@ classdef rl_cal
     %RL_CAL Class that handles the calibration of the RocketLogger
     %   Detailed explanation goes here
     
-    properties(Constant)
+    properties(Constant, Hidden)
         CHANNEL_COUNT = 8;
         POSITIVE_SCALE_CHANNELS = [1,2,5,6];
+        
+        FILE_SCALE_V = 1e-6;
+        FILE_SCALE_IL = 1e-11;
+        FILE_SCALE_IH = 1e-9;
+        
+        CAL_NUM_POINTS = 201;
+        CAL_STEP_V = 100e-3;
+        CAL_STEP_IL = 20e-6;
+        CAL_STEP_IH = 2e-3;
+        CAL_MIN_STABLE_SAMPLES = 200;
     end
     
     properties
@@ -79,22 +89,25 @@ classdef rl_cal
             obj =  rl_cal(offsets, scales);
         end
         
-        function [obj] = calibrate( v, i1l, i1h, i2l, i2h, plotPareto )
+        function [obj] = calibrate( v_rld, i1l_rld, i1h_rld, i2l_rld, i2h_rld, plotPareto )
             if ~exist('plotPareto', 'var')
                 plotPareto = 0;
             end
+            
+            i1l = i1l_rld.get_data({'I1L'});
+            i1h = i1h_rld.get_data({'I1H'});
+            i2l = i2l_rld.get_data({'I2L'});
+            i2h = i2h_rld.get_data({'I2H'});
+
+            v = v_rld.get_data({'V1','V2','V3','V4'});
 
             % constants
-            num_points = 201;
 
-            % scale values
-            scale      = [1e-9;  1e-9;1e-11; 1e-6;   1e-6; 1e-9; 1e-9;  1e-11; 1e-6; 1e-6];
-
-            v   = v   / scale(4);
-            i1h = i1h / scale(1);
-            i1l = i1l / scale(3);
-            i2h = i2h / scale(6);
-            i2l = i2l / scale(8);
+            v   = v   / rl_cal.FILE_SCALE_V;
+            i1h = i1h / rl_cal.FILE_SCALE_IH;
+            i1l = i1l / rl_cal.FILE_SCALE_IL;
+            i2h = i2h / rl_cal.FILE_SCALE_IH;
+            i2l = i2l / rl_cal.FILE_SCALE_IL;
 
             v_step = 80e3;                    % actual steps are about 80k
             v_step_ideal = 100000;
@@ -105,8 +118,6 @@ classdef rl_cal
             ih_step = 11e3;                   % actual steps are about 11k
             ih_step_ideal = 2000000;
             ih_max = 100e6;
-
-            min_stable_samples = 200;
 
             % init
             scales = zeros(1,8);
@@ -123,12 +134,12 @@ classdef rl_cal
             v_ideal2 = v_ideal*1e-6;
 
             % values
-            avg_points = zeros(4,num_points);
+            avg_points = zeros(4,rl_cal.CAL_NUM_POINTS);
 
             % average and fitting
             for i=1:4
                 disp(['Voltage Channel: ', int2str(i)]);
-                avg_points(i,:) = rl_aux_average_points(v(:,i+2), num_points, v_step, min_stable_samples);
+                avg_points(i,:) = rl_aux_average_points(v(:,i), rl_cal.CAL_NUM_POINTS, v_step, rl_cal.CAL_MIN_STABLE_SAMPLES);
                 [scales(v_indices(i)), offsets(v_indices(i)), ~ ] = rl_aux_lin_fit(avg_points(i,:),v_ideal);
                 residual(i,:) = (scales(v_indices(i))*avg_points(i,:)+offsets(v_indices(i))-v_ideal)*1e-6;
             end
@@ -150,15 +161,15 @@ classdef rl_cal
             il_ideal = horzcat(tmp1, tmp2);
 
             % init
-            avg_points = zeros(2,num_points);
+            avg_points = zeros(2,rl_cal.CAL_NUM_POINTS);
 
             % average and fitting
             disp('Current Channel 1, LOW');
-            avg_points(1,:) = rl_aux_average_points(i1l(:,3), num_points, il_step, min_stable_samples);
+            avg_points(1,:) = rl_aux_average_points(i1l, rl_cal.CAL_NUM_POINTS, il_step, rl_cal.CAL_MIN_STABLE_SAMPLES);
             [scales(il_indices(1)), offsets(il_indices(1)), ~ ] = rl_aux_lin_fit(avg_points(1,:),il_ideal);
 
             disp('Current Channel 2, LOW');
-            avg_points(2,:) = rl_aux_average_points(i2l(:,3), num_points, il_step, min_stable_samples);
+            avg_points(2,:) = rl_aux_average_points(i2l, rl_cal.CAL_NUM_POINTS, il_step, rl_cal.CAL_MIN_STABLE_SAMPLES);
             [scales(il_indices(2)), offsets(il_indices(2)), ~ ] = rl_aux_lin_fit(avg_points(2,:),il_ideal);
 
             residual = [];
@@ -181,15 +192,15 @@ classdef rl_cal
             ih_ideal = horzcat(tmp1, tmp2);
 
             % init
-            avg_points = zeros(2,num_points);
+            avg_points = zeros(2,rl_cal.CAL_NUM_POINTS);
 
             % average and fitting
             disp('Current Channel 1, HIGH');
-            avg_points(1,:) = rl_aux_average_points(i1h(:,3), num_points, ih_step, min_stable_samples);
+            avg_points(1,:) = rl_aux_average_points(i1h, rl_cal.CAL_NUM_POINTS, ih_step, rl_cal.CAL_MIN_STABLE_SAMPLES);
             [scales(ih_indices(1)), offsets(ih_indices(1)), ~ ] = rl_aux_lin_fit(avg_points(1,:),ih_ideal);
 
             disp('Current Channel 2, HIGH');
-            avg_points(2,:) = rl_aux_average_points(i2h(:,3), num_points, ih_step, min_stable_samples);
+            avg_points(2,:) = rl_aux_average_points(i2h, rl_cal.CAL_NUM_POINTS, ih_step, rl_cal.CAL_MIN_STABLE_SAMPLES);
             [scales(ih_indices(2)), offsets(ih_indices(2)), ~ ] = rl_aux_lin_fit(avg_points(2,:),ih_ideal);
 
             residual = [];
