@@ -23,19 +23,21 @@ A = []; % No linear inequality constraints
 b = []; % No linear inequality constraints
 Aeq = []; % No linear equality constraints
 beq = []; % No linear equality constraints
-options = gaoptimset('PlotFcn', @gaplotpareto , ...
+options = gaoptimset('PlotFcn', [], ... %@gaplotpareto , ...
     'InitialPopulation',initialPoint, 'PopulationSize', 200);
 [x,Fval,exitFlag,Output] = gamultiobj(optf, numberOfVariables,A, ...
     b,Aeq,beq,lb,ub,options);
 value = sqrt( (Fval(:,1) ./ median(Fval(:,1))).^2 + (Fval(:,2) ./ median(Fval(:,2))).^2);
 [~, best] = min(value);
-offset = (x(best,1));
-scale = (x(best,2));
+offset = x(best,1);
+scale = x(best,2);
+
+disp(['Chose error points: SE: ', num2str(Fval(best,1)), '%; OE: ', num2str(Fval(best,2))]);
 
 end
 
 function [ret] = get_errors(points, points_ideal, offset, scale, offset_error_target)
-    estimate = (points - offset)*scale;
+    estimate = points*scale+offset;
     error = estimate - points_ideal;
     zero_error = error(abs(points_ideal) < 1e-5);
     if abs(offset_error_target) > max(abs(zero_error))
