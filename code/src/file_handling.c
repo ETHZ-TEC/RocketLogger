@@ -302,10 +302,13 @@ void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf*
 int test = 0;
 int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data_ptr) {
 	
+	// INIT //
+	
 	uint32_t i;
 	uint32_t j;
 	uint32_t k;
 	
+	// bin channels
 	uint32_t num_bin_channels;
 	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 		num_bin_channels = NUM_DIGITAL_INPUTS;
@@ -313,6 +316,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		num_bin_channels = 0;
 	}
 	
+	// channels
 	uint32_t num_channels = count_channels(conf->channels);
 	
 	// binary data (for samples)
@@ -324,6 +328,8 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	char channel_data_char[CSV_LINE_LENGTH] = "";
 	char value_char[CSV_VALUE_LENGTH];
 	
+	
+	// TIMESTAMP //
 	
 	// create timestamp
 	struct time_stamp time_real;
@@ -345,30 +351,35 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		value_char[strlen(value_char)-1] = '\0'; // remove \n
 		fprintf(data, "%s", value_char);
 	}
-
 	
+	
+	// AVERAGE DATA //
+	
+	// averaged data (for web and low rates)
+	uint32_t avg_length[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
+	int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
+	uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
+	uint8_t avg_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
+	
+	memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
+	memset(bin_avg_data, 0, sizeof(uint32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
+	
+	
+	// WEB DATA //
 	
 	// data for webserver
 	uint32_t num_web_channels = 0;
-	
-	uint32_t web_avg_number[WEB_RING_BUFFER_COUNT] = {samples_buffer / BUFFER1_SIZE, samples_buffer / BUFFER10_SIZE, samples_buffer / BUFFER100_SIZE};
-	int64_t web_data[WEB_RING_BUFFER_COUNT][num_channels];
-	uint32_t bin_web_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
-	uint8_t web_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {{1,1},{1,1},{1,1}};
-	
-	memset(web_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
-	memset(bin_web_data, 0, sizeof(uint32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
-	
 	if(conf->enable_web_server == 1) {
 		num_web_channels = web_data_ptr->num_channels;
 	}
-	
-	// merged web data
-	int32_t temp_web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
+	int32_t web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
 
 	
-	// store buffer
+	// HANDLE BUFFER //
+	
     for(i=0; i<samples_buffer; i++){
+		
+		// READ //
 		
 		// reset values
 		k = 0;
@@ -395,12 +406,14 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
 				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
-				web_data[BUF1_INDEX][k] += channel_data[k];
+				avg_data[BUF1_INDEX][k] += channel_data[k];
 				k++;
 			}
 		}
 		buffer_addr+=NUM_CHANNELS*sample_size;
 		
+		
+		// BINARY CHANNELS //
 		
 		// mask and combine digital inputs, if requestet
 		uint32_t bin_channel_pos;
@@ -408,11 +421,11 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			bin_data = ((bin_adc1 & BINARY_MASK) >> 1) | ((bin_adc2 & BINARY_MASK) << 2);
 			bin_channel_pos = NUM_DIGITAL_INPUTS;
 			
-			// average for web
+			// average digital inputs
 			int32_t MASK = 1;
 			for(j=0; j<num_bin_channels; j++) {
 				if((bin_data & MASK) > 0) {
-					bin_web_data[BUF1_INDEX][j] += 1;
+					bin_avg_data[BUF1_INDEX][j] += 1;
 				}
 				MASK = MASK << 1;
 			}
@@ -421,7 +434,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			bin_channel_pos = 0;
 		}
 		
-		// Mask valid info
+		// mask and combine valid info
 		uint8_t valid1 = (~bin_adc1) & VALID_MASK;
 		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
@@ -434,48 +447,51 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			bin_channel_pos++;
 		}
 		
-		// web valid
+		// average valid info
 		for(j=0; j<BUF100_INDEX; j++) {
-			web_valid[j][0] = web_valid[j][0] & valid1;
-			web_valid[j][1] = web_valid[j][1] & valid2;
+			avg_valid[j][0] = avg_valid[j][0] & valid1;
+			avg_valid[j][1] = avg_valid[j][1] & valid2;
 		}
-		/*web_valid[BUF1_INDEX][0] = web_valid[BUF1_INDEX][0] & valid1;
-		web_valid[BUF1_INDEX][1] = web_valid[BUF1_INDEX][1] & valid2;
-		web_valid[BUF10_INDEX][0] = web_valid[BUF10_INDEX][0] & valid1;
-		web_valid[BUF10_INDEX][1] = web_valid[BUF10_INDEX][1] & valid2;
-		web_valid[BUF100_INDEX][0] = web_valid[BUF100_INDEX][0] & valid1;
-		web_valid[BUF100_INDEX][1] = web_valid[BUF100_INDEX][1] & valid2;*/
+		/*avg_valid[BUF1_INDEX][0] = avg_valid[BUF1_INDEX][0] & valid1;
+		avg_valid[BUF1_INDEX][1] = avg_valid[BUF1_INDEX][1] & valid2;
+		avg_valid[BUF10_INDEX][0] = avg_valid[BUF10_INDEX][0] & valid1;
+		avg_valid[BUF10_INDEX][1] = avg_valid[BUF10_INDEX][1] & valid2;
+		avg_valid[BUF100_INDEX][0] = avg_valid[BUF100_INDEX][0] & valid1;
+		avg_valid[BUF100_INDEX][1] = avg_valid[BUF100_INDEX][1] & valid2;*/
 		
 		
-		// handle web data
+		// HANDLE AVERAGE DATA //
+		
 		if(conf->enable_web_server == 1 || conf->sample_rate < 1000) {
+			
 			// buffer 1
-			if((i+1)%web_avg_number[BUF1_INDEX] == 0) {
+			if((i+1)%avg_length[BUF1_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					web_data[BUF1_INDEX][j] /= web_avg_number[BUF1_INDEX];
-					web_data[BUF10_INDEX][j] += web_data[BUF1_INDEX][j];
+					avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
+					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
 				}
 				
-				// merge_currents
+				// merge_currents (for web)
 				if(conf->enable_web_server == 1) {
-					merge_currents(web_valid[BUF1_INDEX], &temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][num_bin_channels], web_data[BUF1_INDEX], conf);
+					merge_currents(avg_valid[BUF1_INDEX], &web_data[BUF1_INDEX][i/avg_length[BUF1_INDEX]][num_bin_channels], avg_data[BUF1_INDEX], conf);
 				}
-				// average and store bin channels for web
+				// average bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					bin_web_data[BUF10_INDEX][j] += bin_web_data[BUF1_INDEX][j];
+					bin_avg_data[BUF10_INDEX][j] += bin_avg_data[BUF1_INDEX][j];
 					
+					// store bin channels for web
 					if(conf->enable_web_server == 1) {
-						if(bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)) {
-							temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 1;
+						if(bin_avg_data[BUF1_INDEX][j] >= (avg_length[BUF1_INDEX]/2)) {
+							web_data[BUF1_INDEX][i/avg_length[BUF1_INDEX]][j] = 1;
 						} else {
-							temp_web_data[BUF1_INDEX][i/web_avg_number[BUF1_INDEX]][j] = 0;
+							web_data[BUF1_INDEX][i/avg_length[BUF1_INDEX]][j] = 0;
 						}
 					}
 					
-					bin_web_data[BUF1_INDEX][j] = 0;
+					bin_avg_data[BUF1_INDEX][j] = 0;
 				}
 				
 				// write data to file
@@ -485,28 +501,28 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 						if (conf->file_format == BIN) {
 							uint32_t temp_bin = 0;
 							for(j=0; j<num_bin_channels; j++) {
-								temp_bin = temp_bin | ((bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)) << j);
+								temp_bin = temp_bin | ((bin_avg_data[BUF1_INDEX][j] >= (avg_length[BUF1_INDEX]/2)) << j);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF1_INDEX][0] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF1_INDEX][0] << j++);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF1_INDEX][1] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF1_INDEX][1] << j++);
 							}
 							
 							fwrite(&temp_bin, sizeof(uint32_t), 1, data);
 							
 						} else if (conf->file_format == CSV) {
 							for(j=0; j<num_bin_channels; j++) {
-								sprintf(value_char, ", %d", (bin_web_data[BUF1_INDEX][j] >= (web_avg_number[BUF1_INDEX]/2)));
+								sprintf(value_char, ", %d", (bin_avg_data[BUF1_INDEX][j] >= (avg_length[BUF1_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF1_INDEX][0]);
+								sprintf(value_char, ", %d", avg_valid[BUF1_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF1_INDEX][1]);
+								sprintf(value_char, ", %d", avg_valid[BUF1_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}
 						}
@@ -515,12 +531,12 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 					// channel data
 					if (conf->file_format == BIN) {
 						for(j=0; j<num_channels; j++) {
-							int32_t tmp = (int32_t) web_data[BUF1_INDEX][j];
+							int32_t tmp = (int32_t) avg_data[BUF1_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
 					} else {
 						for(j=0; j < num_channels; j++) {
-							sprintf(value_char,",%d",(int32_t) web_data[BUF1_INDEX][j]);
+							sprintf(value_char,",%d",(int32_t) avg_data[BUF1_INDEX][j]);
 							strcat(channel_data_char, value_char);
 						}
 						strcat(channel_data_char,"\n");
@@ -529,39 +545,41 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// reset values
-				memset(web_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
-				web_valid[BUF1_INDEX][0] = 1;
-				web_valid[BUF1_INDEX][1] = 1;
+				memset(avg_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
+				avg_valid[BUF1_INDEX][0] = 1;
+				avg_valid[BUF1_INDEX][1] = 1;
 			}
 			
+			
 			// buffer 10
-			if((i+1)%web_avg_number[BUF10_INDEX] == 0) {
+			if((i+1)%avg_length[BUF10_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					web_data[BUF10_INDEX][j] /= (web_avg_number[BUF10_INDEX]/web_avg_number[BUF1_INDEX]);
-					web_data[BUF100_INDEX][j] += web_data[BUF10_INDEX][j];
+					avg_data[BUF10_INDEX][j] /= (avg_length[BUF10_INDEX]/avg_length[BUF1_INDEX]);
+					avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
 				}
 				
-				// merge_currents
+				// merge_currents (for web)
 				if(conf->enable_web_server == 1) {
-					merge_currents(web_valid[BUF10_INDEX], &temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][num_bin_channels], web_data[BUF10_INDEX], conf);
+					merge_currents(avg_valid[BUF10_INDEX], &web_data[BUF10_INDEX][i/avg_length[BUF10_INDEX]][num_bin_channels], avg_data[BUF10_INDEX], conf);
 				}
 				
-				// average and store bin channels for web
+				// average bin channels
 				for(j=0; j<num_bin_channels; j++) {
 					
-					bin_web_data[BUF100_INDEX][j] += bin_web_data[BUF10_INDEX][j];
+					bin_avg_data[BUF100_INDEX][j] += bin_avg_data[BUF10_INDEX][j];
 					
+					// store bin channels for web
 					if(conf->enable_web_server == 1) {
-						if(bin_web_data[BUF10_INDEX][j] >= (web_avg_number[BUF10_INDEX]/2)) {
-							temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][j] = 1;
+						if(bin_avg_data[BUF10_INDEX][j] >= (avg_length[BUF10_INDEX]/2)) {
+							web_data[BUF10_INDEX][i/avg_length[BUF10_INDEX]][j] = 1;
 						} else {
-							temp_web_data[BUF10_INDEX][i/web_avg_number[BUF10_INDEX]][j] = 0;
+							web_data[BUF10_INDEX][i/avg_length[BUF10_INDEX]][j] = 0;
 						}
 					}
 					
-					bin_web_data[BUF10_INDEX][j] = 0;
+					bin_avg_data[BUF10_INDEX][j] = 0;
 				}
 				
 				// write data to file
@@ -571,28 +589,28 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 						if (conf->file_format == BIN) {
 							uint32_t temp_bin = 0;
 							for(j=0; j<num_bin_channels; j++) {
-								temp_bin = temp_bin | ((bin_web_data[BUF10_INDEX][j] >= (web_avg_number[BUF10_INDEX]/2)) << j);
+								temp_bin = temp_bin | ((bin_avg_data[BUF10_INDEX][j] >= (avg_length[BUF10_INDEX]/2)) << j);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF10_INDEX][0] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF10_INDEX][0] << j++);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF10_INDEX][1] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF10_INDEX][1] << j++);
 							}
 							
 							fwrite(&temp_bin, sizeof(uint32_t), 1, data);
 							
 						} else if (conf->file_format == CSV) {
 							for(j=0; j<num_bin_channels; j++) {
-								sprintf(value_char, ", %d", (bin_web_data[BUF10_INDEX][j] >= (web_avg_number[BUF10_INDEX]/2)));
+								sprintf(value_char, ", %d", (bin_avg_data[BUF10_INDEX][j] >= (avg_length[BUF10_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF10_INDEX][0]);
+								sprintf(value_char, ", %d", avg_valid[BUF10_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF10_INDEX][1]);
+								sprintf(value_char, ", %d", avg_valid[BUF10_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}
 						}
@@ -601,12 +619,12 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 					// channel data
 					if (conf->file_format == BIN) {
 						for(j=0; j<num_channels; j++) {
-							int32_t tmp = (int32_t) web_data[BUF10_INDEX][j];
+							int32_t tmp = (int32_t) avg_data[BUF10_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
 					} else {
 						for(j=0; j < num_channels; j++) {
-							sprintf(value_char,",%d",(int32_t) web_data[BUF10_INDEX][j]);
+							sprintf(value_char,",%d",(int32_t) avg_data[BUF10_INDEX][j]);
 							strcat(channel_data_char, value_char);
 						}
 						strcat(channel_data_char,"\n");
@@ -615,32 +633,33 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 				
 				// reset values
-				memset(web_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
-				web_valid[BUF10_INDEX][0] = 1;
-				web_valid[BUF10_INDEX][1] = 1;
+				memset(avg_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
+				avg_valid[BUF10_INDEX][0] = 1;
+				avg_valid[BUF10_INDEX][1] = 1;
 			}
 			
+			
 			// buffer 100
-			if((i+1)%web_avg_number[BUF100_INDEX] == 0) {
+			if((i+1)%avg_length[BUF100_INDEX] == 0) {
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					web_data[BUF100_INDEX][j] /= (web_avg_number[BUF100_INDEX]/web_avg_number[BUF10_INDEX]);
+					avg_data[BUF100_INDEX][j] /= (avg_length[BUF100_INDEX]/avg_length[BUF10_INDEX]);
 				}
 				
-				// merge_currents
+				// merge_currents (for web)
 				if(conf->enable_web_server == 1) {
-					merge_currents(web_valid[BUF100_INDEX], &temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][num_bin_channels], web_data[BUF100_INDEX], conf);
+					merge_currents(avg_valid[BUF100_INDEX], &web_data[BUF100_INDEX][i/avg_length[BUF100_INDEX]][num_bin_channels], avg_data[BUF100_INDEX], conf);
 				}
 				
-				// average and store bin channels for web
+				// store bin channels for web
 				if(conf->enable_web_server == 1) {
 					for(j=0; j<num_bin_channels; j++) {
 						
-						if(bin_web_data[BUF100_INDEX][j] >= (web_avg_number[BUF100_INDEX]/2)) {
-							temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][j] = 1;
+						if(bin_avg_data[BUF100_INDEX][j] >= (avg_length[BUF100_INDEX]/2)) {
+							web_data[BUF100_INDEX][i/avg_length[BUF100_INDEX]][j] = 1;
 						} else {
-							temp_web_data[BUF100_INDEX][i/web_avg_number[BUF100_INDEX]][j] = 0;
+							web_data[BUF100_INDEX][i/avg_length[BUF100_INDEX]][j] = 0;
 						}
 					}
 				}
@@ -652,28 +671,28 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 						if (conf->file_format == BIN) {
 							uint32_t temp_bin = 0;
 							for(j=0; j<num_bin_channels; j++) {
-								temp_bin = temp_bin | ((bin_web_data[BUF100_INDEX][j] >= (web_avg_number[BUF100_INDEX]/2)) << j);
+								temp_bin = temp_bin | ((bin_avg_data[BUF100_INDEX][j] >= (avg_length[BUF100_INDEX]/2)) << j);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF100_INDEX][0] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF100_INDEX][0] << j++);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								temp_bin = temp_bin | (web_valid[BUF100_INDEX][1] << j++);
+								temp_bin = temp_bin | (avg_valid[BUF100_INDEX][1] << j++);
 							}
 							
 							fwrite(&temp_bin, sizeof(uint32_t), 1, data);
 							
 						} else if (conf->file_format == CSV) {
 							for(j=0; j<num_bin_channels; j++) {
-								sprintf(value_char, ", %d", (bin_web_data[BUF100_INDEX][j] >= (web_avg_number[BUF100_INDEX]/2)));
+								sprintf(value_char, ", %d", (bin_avg_data[BUF100_INDEX][j] >= (avg_length[BUF100_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I1L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF100_INDEX][0]);
+								sprintf(value_char, ", %d", avg_valid[BUF100_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
 							if(conf->channels[I2L_INDEX] > 0) {
-								sprintf(value_char, ", %d", web_valid[BUF100_INDEX][1]);
+								sprintf(value_char, ", %d", avg_valid[BUF100_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}
 						}
@@ -682,12 +701,12 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 					// channel data
 					if (conf->file_format == BIN) {
 						for(j=0; j<num_channels; j++) {
-							int32_t tmp = (int32_t) web_data[BUF100_INDEX][j];
+							int32_t tmp = (int32_t) avg_data[BUF100_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
 					} else {
 						for(j=0; j < num_channels; j++) {
-							sprintf(value_char,",%d",(int32_t) web_data[BUF100_INDEX][j]);
+							sprintf(value_char,",%d",(int32_t) avg_data[BUF100_INDEX][j]);
 							strcat(channel_data_char, value_char);
 						}
 						strcat(channel_data_char,"\n");
@@ -696,6 +715,8 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				}
 			}
 		}
+		
+		// WRITE FILE IF HIGH RATE //
 		
 		// write binary channels
 		if(conf->sample_rate >= 1000) {
@@ -729,6 +750,8 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		
     }
 	
+	
+	// WRITE WEB DATA //
 	if (conf->enable_web_server == 1) {
 		
 		// get shared memory access
@@ -743,9 +766,9 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			web_data_ptr->time = time_real.sec*1000 + time_real.nsec/1000000;
 			
 			// write data to ring buffer
-			buffer_add(&web_data_ptr->buffer[BUF1_INDEX], &temp_web_data[BUF1_INDEX][0][0]);
-			buffer_add(&web_data_ptr->buffer[BUF10_INDEX], &temp_web_data[BUF10_INDEX][0][0]);
-			buffer_add(&web_data_ptr->buffer[BUF100_INDEX], &temp_web_data[BUF100_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF1_INDEX], &web_data[BUF1_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF10_INDEX], &web_data[BUF10_INDEX][0][0]);
+			buffer_add(&web_data_ptr->buffer[BUF100_INDEX], &web_data[BUF100_INDEX][0][0]);
 			
 			// release shared memory
 			set_sem(sem_id, DATA_SEM, 1);
