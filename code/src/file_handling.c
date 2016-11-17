@@ -342,8 +342,8 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	
 	// store timestamp
 	if (conf->file_format == BIN) {
-			fwrite(&time_real, sizeof(struct time_stamp), 1, data);
-			fwrite(&time_monotonic, sizeof(struct time_stamp), 1, data);
+		fwrite(&time_real, sizeof(struct time_stamp), 1, data);
+		fwrite(&time_monotonic, sizeof(struct time_stamp), 1, data);
 			
 	} else if(conf->file_format == CSV) {
 		time_t t = (time_t) time_real.sec;
@@ -534,7 +534,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 							int32_t tmp = (int32_t) avg_data[BUF1_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
-					} else {
+					} else if (conf->file_format == CSV) {
 						for(j=0; j < num_channels; j++) {
 							sprintf(value_char,",%d",(int32_t) avg_data[BUF1_INDEX][j]);
 							strcat(channel_data_char, value_char);
@@ -622,7 +622,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 							int32_t tmp = (int32_t) avg_data[BUF10_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
-					} else {
+					} else if (conf->file_format == CSV) {
 						for(j=0; j < num_channels; j++) {
 							sprintf(value_char,",%d",(int32_t) avg_data[BUF10_INDEX][j]);
 							strcat(channel_data_char, value_char);
@@ -704,7 +704,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 							int32_t tmp = (int32_t) avg_data[BUF100_INDEX][j];
 							fwrite(&tmp, sizeof(int32_t), 1, data);
 						}
-					} else {
+					} else if (conf->file_format == CSV) {
 						for(j=0; j < num_channels; j++) {
 							sprintf(value_char,",%d",(int32_t) avg_data[BUF100_INDEX][j]);
 							strcat(channel_data_char, value_char);
