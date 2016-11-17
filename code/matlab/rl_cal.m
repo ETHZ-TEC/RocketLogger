@@ -132,8 +132,8 @@ classdef rl_cal < handle
             ih_step_uncal = rl_cal.CAL_STEP_IH / abs(rl_cal.UNCAL_STEP_IH);
 
             % init
-            scales = zeros(1,rl_cal.CHANNEL_COUNT);
-            offsets = zeros(1,rl_cal.CHANNEL_COUNT);
+            scales = zeros(rl_cal.CHANNEL_COUNT,1);
+            offsets = zeros(rl_cal.CHANNEL_COUNT,1);
 
             %% Voltages
 
