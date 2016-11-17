@@ -107,6 +107,10 @@ int rl_sample(struct rl_conf* conf) {
 			conf->sample_limit = 0;
 			conf->enable_web_server = 0;
 			conf->file_format = NO_FILE;
+			if(conf->sample_rate < 1000) {
+				rl_log(WARNING, "too low sample rate. Setting rate to 1kSps");
+				conf->sample_rate = 1000;
+			}
 			break;
 		default:
 			rl_log(ERROR, "wrong mode");
