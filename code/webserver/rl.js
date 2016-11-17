@@ -203,20 +203,29 @@ $(function() {
 			}
 			var e = document.getElementById("sample_rate");
 			var tempSampleRate = e.options[e.selectedIndex].value;
-			var rate = (numChannelsActivated+1) * 4 * tempSampleRate * 1000;
+			var rate = (numChannelsActivated+1) * 4 * tempSampleRate;
 			var timeLeft = freeSpace/rate;
+			
 			var date = new Date(timeLeft * 1000);
-			var d = date.getDate()-1;
-			var h = date.getUTCHours();
-			var m = date.getUTCMinutes();
-			var t = m+"min";
-			if(h>0) {
-				t = h + "h " + t;
+			var month = date.getMonth();
+			if(month>0) {
+				document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
+			} else {
+			
+				var day = date.getDate()-1;
+				var h = date.getUTCHours();
+				var m = date.getUTCMinutes();
+				
+				var t = m+"min";
+				if(h>0) {
+					t = h + "h " + t;
+				}
+				if(day>0) {
+					t = day + "d " + t;
+				}
+				document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+				
 			}
-			if(d>0) {
-				t = d + "d " + t;
-			}
-			document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
 		}
 		
 		/*function mismatch() {
@@ -229,7 +238,7 @@ $(function() {
 		function parseStatus(tempState) {
 			
 			// EXTRACT STATUS INFO
-			var sampleRate = tempState[3];
+			var sampleRate = parseInt(tempState[3]);
 			var digitalInputs = tempState[5];
 			var fileFormat = tempState[6];
 			var tempFilename = tempState[7];
@@ -244,26 +253,45 @@ $(function() {
 			// sample rate
 			var e = document.getElementById("sample_rate");
 			// switch statement didn't work ...
+			var i = 0;
 			if (sampleRate == 1) {
-				e.selectedIndex = 0;
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 2) {
-				e.selectedIndex = 1;
+			i++;
+			if (sampleRate == 10) {
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 4) {
-				e.selectedIndex = 2;
+			i++;
+			if (sampleRate == 100) {
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 8) {
-				e.selectedIndex = 3;
+			i++;
+			if (sampleRate == 1000) {
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 16) {
-				e.selectedIndex = 4;
+			i++;
+			if (sampleRate == 2000) {
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 32) {
-				e.selectedIndex = 5;
+			i++;
+			if (sampleRate == 4000) {
+				e.selectedIndex = i;
 			}
-			if (sampleRate == 64) {
-				e.selectedIndex = 6;
+			i++;
+			if (sampleRate == 8000) {
+				e.selectedIndex = i;
+			}
+			i++;
+			if (sampleRate == 16000) {
+				e.selectedIndex = i;
+			}
+			i++;
+			if (sampleRate == 32000) {
+				e.selectedIndex = i;
+			}
+			i++;
+			if (sampleRate == 64000) {
+				e.selectedIndex = i;
 			}
 			
 			// digital inputs
@@ -899,7 +927,11 @@ $(function() {
 			
 			// rate
 			var e = document.getElementById("sample_rate");
-			cmd_obj.rate = " -r " + e.options[e.selectedIndex].value;
+			var tempSampleRate = e.options[e.selectedIndex].value;
+			if(tempSampleRate >= 1000) {
+				tempSampleRate = tempSampleRate/1000 + "k";
+			}
+			cmd_obj.rate = " -r " + tempSampleRate;
 			
 			
 			// file
@@ -916,7 +948,7 @@ $(function() {
 			} else {
 				cmd_obj.file_format = " -format csv";
 				var r = document.getElementById("sample_rate");
-				if (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32") {
+				if (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000) {
 					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
 						return false;
 					}

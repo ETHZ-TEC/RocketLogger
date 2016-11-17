@@ -129,7 +129,7 @@ int pru_init() {
 	return SUCCESS;
 }
 
-int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
+int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor) {
 	
 	uint32_t pru_sample_rate;
 
@@ -147,32 +147,47 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
-		case 2:
+		case 10:
+			pru_sample_rate = K1;
+			pru->precision = PRECISION_HIGH;
+			pru->sample_size = SIZE_HIGH;
+			break;
+		case 100:
+			pru_sample_rate = K1;
+			pru->precision = PRECISION_HIGH;
+			pru->sample_size = SIZE_HIGH;
+			break;
+		case 1000:
+			pru_sample_rate = K1;
+			pru->precision = PRECISION_HIGH;
+			pru->sample_size = SIZE_HIGH;
+			break;
+		case 2000:
 			pru_sample_rate = K2;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
-		case 4:
+		case 4000:
 			pru_sample_rate = K4;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
-		case 8:
+		case 8000:
 			pru_sample_rate = K8;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
-		case 16:
+		case 16000:
 			pru_sample_rate = K16;
 			pru->precision = PRECISION_HIGH;
 			pru->sample_size = SIZE_HIGH;
 			break;
-		case 32:
+		case 32000:
 			pru_sample_rate = K32;
 			pru->precision = PRECISION_LOW;
 			pru->sample_size = SIZE_LOW;
 			break;
-		case 64:
+		case 64000:
 			pru_sample_rate = K64;
 			pru->precision = PRECISION_LOW;
 			pru->sample_size = SIZE_LOW;
@@ -183,8 +198,8 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf) {
 	}
 	
 	// set buffer infos
-	pru->sample_limit = conf->sample_limit;
-	pru->buffer_size = (conf->sample_rate * RATE_SCALING) / conf->update_rate;
+	pru->sample_limit = conf->sample_limit * avg_factor;
+	pru->buffer_size = (conf->sample_rate * RATE_SCALING * avg_factor) / conf->update_rate;
 	
 	uint32_t buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
@@ -228,6 +243,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	status.conf = *conf;
 	write_status(&status);
 	
+	// average (for low rates)
+	uint32_t avg_factor = 1;
+	if(conf->sample_rate < 1000) {
+		avg_factor = 1000 / conf->sample_rate;
+	}
 	
 	
 	// METER
@@ -283,8 +303,8 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// setup PRU
 	struct pru_data_struct pru;
-	pru_setup(&pru, conf);
-	unsigned int number_buffers = ceil_div(conf->sample_limit, pru.buffer_size);
+	pru_setup(&pru, conf, avg_factor);
+	unsigned int number_buffers = ceil_div(conf->sample_limit*avg_factor, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	
 	// check memory size
@@ -296,7 +316,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 	// map PRU memory into userspace
 	void* buffer0 = map_pru_memory();
-	void* buffer1 = buffer0 + buffer_size_bytes; 
+	void* buffer1 = buffer0 + buffer_size_bytes;
 	
 	
 	
@@ -406,7 +426,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
 			file_header.lead_in.data_block_count = i+1 - buffer_lost;
-			file_header.lead_in.sample_count += samples_buffer;
+			file_header.lead_in.sample_count += samples_buffer/avg_factor;
 			
 			if(conf->file_format == BIN) {
 				update_header(data, &file_header);
@@ -417,7 +437,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// update and write state
-		status.samples_taken += samples_buffer;
+		status.samples_taken += samples_buffer/avg_factor;
 		status.buffer_number = i+1 - buffer_lost;
 		write_status(&status);
 		

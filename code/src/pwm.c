@@ -49,7 +49,11 @@ void pwm_close() {
 // setup range clock pwm module
 void range_clock_setup(int sample_rate) {
 	
-	int period = PERIOD_SCALE / sample_rate;	
+	if(sample_rate < 1000) {
+		sample_rate = 1000;
+	}
+
+	int period = 1000*PERIOD_SCALE / sample_rate;
 	
 	// setup ehrpwm
 	pwmss1_regs[TBCTL] = TBCTL_DEFAULT | UP_DOWN_COUNT | PRESCALE2; // set clock mode

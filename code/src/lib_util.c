@@ -1,7 +1,7 @@
 #include "rl_util.h"
 
-#define NUMBER_SAMPLE_RATES 7
-int possible_sample_rates[NUMBER_SAMPLE_RATES] = {1,2,4,8,16,32,64};
+#define NUMBER_SAMPLE_RATES 10
+int possible_sample_rates[NUMBER_SAMPLE_RATES] = {1, 10, 100, 1000, 2000, 4000, 8000, 16000, 32000, 64000};
 
 #define NUMBER_UPDATE_RATES 4
 int possible_update_rates[NUMBER_UPDATE_RATES] = {1,2,5,10};

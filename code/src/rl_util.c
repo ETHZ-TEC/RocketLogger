@@ -160,7 +160,11 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case SAMPLE_RATE:
 					if (argc > ++i && isdigit(argv[i][0])) {
-						conf->sample_rate = atoi(argv[i]);
+						if(argv[i][strlen(argv[i])-1] == 'k') {
+							conf->sample_rate = atoi(argv[i]) * 1000;
+						} else {
+							conf->sample_rate = atoi(argv[i]);
+						}
 						if(check_sample_rate(conf->sample_rate) == FAILURE) { // check if rate allowed
 							rl_log(ERROR, "wrong sampling rate");
 							return FAILURE;
@@ -315,7 +319,7 @@ void print_usage() {
 	
 	printf("\n  Options:\n");
 	printf("    -r [number]        Acquisition rate selection.\n");
-	printf("                         Possible rates: 1, 2, 4, 8, 16, 32, 64 (in kSps)\n");
+	printf("                         Possible rates: 1, 10, 100, 1k, 2k, 4k, 8k, 16k, 32k, 64k\n");
 	printf("    -u [number]        Data update rate selection.\n");
 	printf("                         Possible update rates: 1, 2, 5, 10 (in Hz)\n");
 	printf("    -ch [number1,...]  Channel selection.\n");
@@ -353,7 +357,7 @@ void print_config(struct rl_conf* conf) {
 
 void reset_config(struct rl_conf* conf) {
 	conf->mode = CONTINUOUS;
-	conf->sample_rate = 1;
+	conf->sample_rate = 1000;
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
 	conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
