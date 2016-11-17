@@ -192,38 +192,45 @@ $(function() {
 		
 		function showSamplingTime() {
 			
-			parseChannels();
-			
-			var numChannelsActivated = 0;
-			for(var i=0; i<NUM_CHANNELS; i++) {
-				if(channels[i]) {
-					numChannelsActivated++;
-				}
-			}
-			var e = document.getElementById("sample_rate");
-			var tempSampleRate = e.options[e.selectedIndex].value;
-			var rate = (numChannelsActivated+1) * 4 * tempSampleRate;
-			var timeLeft = freeSpace/rate;
-			
-			var date = new Date(timeLeft * 1000);
-			var month = date.getMonth();
-			if(month>0) {
-				document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
+			var e = document.getElementById("file_format");
+			if(e.options[e.selectedIndex].value == "csv") {
+				document.getElementById("time_left").innerHTML = "Sampling Time Left: unknown";
+				
 			} else {
 			
-				var day = date.getDate()-1;
-				var h = date.getUTCHours();
-				var m = date.getUTCMinutes();
+				parseChannels();
 				
-				var t = m+"min";
-				if(h>0) {
-					t = h + "h " + t;
+				var numChannelsActivated = 0;
+				for(var i=0; i<NUM_CHANNELS; i++) {
+					if(channels[i]) {
+						numChannelsActivated++;
+					}
 				}
-				if(day>0) {
-					t = day + "d " + t;
-				}
-				document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+				var e = document.getElementById("sample_rate");
+				var tempSampleRate = e.options[e.selectedIndex].value;
+				var rate = (numChannelsActivated+1) * 4 * tempSampleRate;
+				var timeLeft = freeSpace/rate;
 				
+				var date = new Date(timeLeft * 1000);
+				var month = date.getMonth();
+				if(month>0) {
+					document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
+				} else {
+				
+					var day = date.getDate()-1;
+					var h = date.getUTCHours();
+					var m = date.getUTCMinutes();
+					
+					var t = m+"min";
+					if(h>0) {
+						t = h + "h " + t;
+					}
+					if(day>0) {
+						t = day + "d " + t;
+					}
+					document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+					
+				}
 			}
 		}
 		
