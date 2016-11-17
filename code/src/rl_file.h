@@ -48,7 +48,7 @@
 /**
  * Data unit definition
  */
-typedef enum rl_unit {
+typedef enum unit {
 	RL_UNIT_UNDEFINED = 0,
 	RL_UNIT_VOLT = 1,
 	RL_UNIT_AMPERE = 2,

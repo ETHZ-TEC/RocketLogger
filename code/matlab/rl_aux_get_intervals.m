@@ -60,9 +60,9 @@ end
 % Debug Plot:
 %
 % figure;
-% plot(points);
-% y0 = min(points);
-% y1 = max(points);
+% plot(data);
+% y0 = min(data);
+% y1 = max(data);
 % for i = 1:size(intervals, 2)
 %     line([intervals(1,i) intervals(1,i)],[y0 y1],'LineWidth',1, 'Color', 'Black');
 %     line([intervals(2,i) intervals(2,i)],[y0 y1],'LineWidth',1, 'Color', 'Green');

@@ -104,7 +104,7 @@ int unmap_pru_memory(void* pru_mmap) {
 // PRU INITIALISATION
 
 // set state to PRU
-void pru_set_state(enum pru_states state){
+void pru_set_state(rl_pru_state state){
 		
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &state, sizeof(int));
 	

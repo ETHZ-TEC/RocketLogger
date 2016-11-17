@@ -30,9 +30,9 @@ for i=1:length(offsetError)
 end
 
 figure;
-scatter(offsetError, minScaleError);
-xlabel('Offset');
-ylabel('Scale');
+scatter(offsetError, minScaleError*100);
+xlabel('Offset Error');
+ylabel('Scale Error [%]');
 
 end
 

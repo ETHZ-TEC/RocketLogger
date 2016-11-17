@@ -41,7 +41,7 @@ int gpio_export(int num) {
 }
 
 // set direction
-int gpio_dir(int num, enum direction dir) {
+int gpio_dir(int num, rl_direction dir) {
 	
 	// open gpio direction file
 	char file_name[MAX_PATH_LENGTH];
@@ -66,7 +66,7 @@ int gpio_dir(int num, enum direction dir) {
 
 
 // set interrupt direction
-int gpio_interrupt(int num, enum edge e) {
+int gpio_interrupt(int num, rl_edge e) {
 	
 	// open gpio edge file
 	char file_name[MAX_PATH_LENGTH];
