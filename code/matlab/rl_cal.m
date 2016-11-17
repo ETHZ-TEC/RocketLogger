@@ -3,20 +3,25 @@ classdef rl_cal < handle
     %   Detailed explanation goes here
     
     properties(Constant)
+        % Number of channels
         CHANNEL_COUNT = 8;
+        % Index definitions
         V_INDEX = [3,4,7,8];
         IH_INDEX = [1,5];
         IL_INDEX = [2,6];
         POSITIVE_SCALE_CHANNELS = [rl_cal.IH_INDEX, rl_cal.IL_INDEX];
         
+        % Scales (per bit) for the values, that are stored in the binary files
         FILE_SCALE_V = 1e-6;
         FILE_SCALE_IL = 1e-11;
         FILE_SCALE_IH = 1e-9;
         
+        % Voltage/Current per ADC bit
         UNCAL_STEP_V = -1.22e-6;
         UNCAL_STEP_IL = 351e-12;
         UNCAL_STEP_IH = 63.6e-9;
         
+        % Calibration sweep settings (dual sweep, 2450 SMU)
         CAL_NUM_POINTS = 201;
         CAL_STEP_V = 100e-3;
         CAL_STEP_IL = 20e-6;
@@ -218,7 +223,6 @@ classdef rl_cal < handle
 
             %% Finishing
             offsets = offsets ./ scales;
-            %scales = - 1 .* scales;
             
             obj = rl_cal(offsets, scales);
         end
