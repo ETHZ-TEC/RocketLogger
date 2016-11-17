@@ -8,6 +8,9 @@ function [ intervals ] = rl_aux_get_intervals( data , num_points, ...
 %       - expected_step_size:      Expected step between the levels
 %       - min_stable_points:       Minimum number of stable samples per
 %                                    level
+%   Return Values:
+%      - intervals:                [2xn] array with start and end points of
+%                                    stable intervals
 %   See also RL_AUX_AVERAGE_POINTS
 
 % magic constants
