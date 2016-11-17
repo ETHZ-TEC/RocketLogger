@@ -1,7 +1,6 @@
 $(function() {
 	
 		// TODO
-		
 		// currents: less average!
 		
 		
@@ -1067,27 +1066,7 @@ $(function() {
 			window.open(file);
 		});
 		
-		/*// delete button
-		$("#delete").click(function () {
-			
-			if(state == RL_RUNNING) {
-				alert("Rocketlogger running.\nPress 'Stop' before deleting files!");
-				return;
-			}
-			
-			var deleteFile = "/var/www/data/" +  filename;
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'delete', filename: deleteFile},
-				
-				complete: function (response) {
-					document.getElementById("webserver").innerHTML = 'File Deleted!';
-				}
-			});
-		});*/
-		
+		// calibration ignore checkbox
 		$("#calibration").change(function () {
 			if(state == RL_RUNNING) {
 				alert("This will not affect the current measurement!");
@@ -1097,7 +1076,6 @@ $(function() {
 		// never ending update function
 		resetVPlot();
 		resetIPlot();
-		// TODO:
 		resetDigPlot();
 		update();
 
