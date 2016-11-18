@@ -1003,6 +1003,11 @@ $(function() {
 			window.open(file);
 		});
 		
+		// list button
+		$("#list").click(function () {
+			window.open('data');
+		});
+		
 		// date to filename button
 		$("#date_to_filename").click(function () {
 			
