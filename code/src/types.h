@@ -54,6 +54,7 @@
 #define CONFIG_FILE		"/var/run/rocketlogger.conf"
 #define PID_FILE		"/var/run/rocketlogger.pid"
 #define LOG_FILE		"/var/www/log/log.txt"
+#define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
 
 /// log file size in bytes
 #define MAX_LOG_FILE_SIZE 1000000
