@@ -382,7 +382,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			file_ending--;
 			
 			// add file number
-			sprintf(new_file_ending, "_%d", num_files++);
+			sprintf(new_file_ending, "_p%d", num_files++);
 			strcat(new_file_ending, file_ending);
 			strcpy(file_ending, new_file_ending);
 			
