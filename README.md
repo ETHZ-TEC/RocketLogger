@@ -49,7 +49,7 @@ apt install linux-headers-$(uname -r)
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
  * For using the remote web interface these additional system components will be needed:
 ```
-lighttpd php5-cgi
+lighttpd php5-cgi unzip
 ```
  * For using the access point these additional system components are needed:
 ```
