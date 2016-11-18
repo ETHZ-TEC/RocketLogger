@@ -8,7 +8,8 @@ function [ avg_points ] = rl_aux_average_points( data, num_points, ...
 %       - expected_step_size:      Expected step between the levels
 %       - min_stable_points:       Minimum number of stable samples per
 %                                    level
-%
+%   Return Values:
+%      - avg_points:               Averaged values of the stable levels
 %   See also RL_AUX_GET_INTERVALS
 
 % find intervals

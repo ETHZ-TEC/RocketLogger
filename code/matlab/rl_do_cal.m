@@ -1,7 +1,13 @@
-function [cal] = rl_do_cal (createPlots)
+function [cal] = rl_do_cal (create_plots)
+%RL_DO_CAL Perform a calibration of the RocketLogger using predefined files
+%   Parameters:
+%      - create_plots:     Plot residuals and pareto optimal error figures
+%                            (default: no)
+%   Return Values:
+%      - cal:              rl_cal object from the calibration
 
 if ~exist('createPlots', 'var')
-    createPlots = 0;
+    create_plots = 0;
 end
 
 %% read files
@@ -17,7 +23,7 @@ cal = rl_cal.calibrate( ...
     rld_ih, ...
     rld_il2, ...
     rld_ih, ...
-    createPlots);
+    create_plots);
 
 %% choose the correct sign if both channels are connected in series
 cal.fix_signs();
