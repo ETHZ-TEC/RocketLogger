@@ -5,21 +5,40 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>RocketLogger</title>
 	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-	<link href="flot/examples/examples.css" rel="stylesheet" type="text/css">
-	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
-
-	<!--<script
-		src="http://code.jquery.com/jquery-2.2.4.js"
-		integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
-		crossorigin="anonymous"></script>-->
 	<script language="javascript" type="text/javascript" src="jquery.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
 	<script language="javascript" type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="rl.js"></script>
 <style>
+
+	body {
+		font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
+	}
+	
+	#footer {
+		margin-top: 25px;
+		margin-bottom: 10px;
+		text-align: center;
+		font-size: 12px;
+		color: #999;
+	}
+	
 	.top-buffer{margin-top:20px}
+	
 	.no-buffer{margin-top:-30px}
+	
+	h2 {
+		margin-top: 15px;
+		font: normal 32px "omnes-pro", Helvetica, Arial, sans-serif;
+	}
+	
+	h3 {
+		margin-left: 30px;
+		font: normal 26px "omnes-pro", Helvetica, Arial, sans-serif;
+		color: #666;
+	}
+	
 	.analog-container {
 		box-sizing: border-box;
 		width: 850px;
@@ -57,6 +76,13 @@
 		-ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 		-moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 		-webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+	}
+	
+	.plot-placeholder {
+		width: 100%;
+		height: 100%;
+		font-size: 14px;
+		line-height: 1.2em;
 	}
 	
 </style>
@@ -381,7 +407,7 @@
 				</div>
 				<div class="row">
 					<div id="v_plot" class="analog-container">
-						<div id="vPlaceholder" class="demo-placeholder"></div>
+						<div id="vPlaceholder" class="plot-placeholder"></div>
 					</div>
 				</div>
 				<div class="row">
@@ -420,7 +446,7 @@
 				</div>
 				<div class="row">
 					<div id="i_plot" class="analog-container">
-						<div id="iPlaceholder" class="demo-placeholder"></div>
+						<div id="iPlaceholder" class="plot-placeholder"></div>
 					</div>
 				</div>
 				<div class="row">
@@ -468,7 +494,7 @@
 				</div>
 				<div class="row">
 					<div id="dig_plot" class="digital-container">
-						<div id="digPlaceholder" class="demo-placeholder"></div>
+						<div id="digPlaceholder" class="plot-placeholder"></div>
 					</div>
 				</div>
 		</div>
