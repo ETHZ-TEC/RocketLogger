@@ -156,6 +156,7 @@ struct rl_conf {
 	int enable_web_server;
 	rl_use_cal calibration;
 	rl_file_format file_format;
+	uint64_t max_file_size;
 	char file_name[MAX_PATH_LENGTH];
 };
 

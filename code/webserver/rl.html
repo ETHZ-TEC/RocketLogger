@@ -26,6 +26,8 @@
 	
 	.top-buffer{margin-top:20px}
 	
+	.small-top-buffer{margin-top:5px}
+	
 	.no-buffer{margin-top:-30px}
 	
 	h2 {
@@ -171,14 +173,14 @@
 								<div class="col-md-3">
 									File Format:
 								</div>
-								<div class="col-md-4">
+								<div class="col-md-3">
 									<select class="form-control"  id="file_format">
 										<option value="bin">binary</option>
 										<option value="csv">csv</option>
 									</select>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row small-top-buffer">
 								<div class="col-md-3">
 									Filename:
 								</div>
@@ -186,11 +188,10 @@
 									<input class="form-control" id="filename" placeholder=filename type="text" value="">
 								</div>
 							</div>
-							<div class="row">
+							<div class="row small-top-buffer">
 								<div class="col-md-3">
-									Options:
 								</div>
-								<div class="col-md-2">
+								<div class="col-md-3">
 									<button id="download" class="btn btn-default">Download</button>
 								</div>
 								<div class="col-md-2">
@@ -199,9 +200,25 @@
 								<div class="col-md-3">
 									<button id="date_to_filename" class="btn btn-default">Date to Filename</button>
 								</div>
-								<!--<div class="col-md-3">
-									<button id="delete" class="btn btn-default">Delete</button>
-								</div>-->
+							</div>
+							<div class="row top-buffer">
+								<div class="col-md-3">
+									Max File Size:
+								</div>
+								<div class="col-md-3">
+									<div class="checkbox">
+										<label><input id="file_size_limited" type="checkbox">Limited</label>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<input type="text" class="form-control" id="file_size" value="1">
+								</div>
+								<div class="col-md-3">
+									<select class="form-control"  id="file_size_unit">
+										<option value="m">MB</option>
+										<option selected="selected" value="g">GB</option>
+									</select>
+								</div>
 							</div>
 							<div class="row top-buffer">
 								<div class="col-md-3">

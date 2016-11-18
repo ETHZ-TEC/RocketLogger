@@ -72,6 +72,7 @@ void print_status() {
 	printf("%d\n", status.conf.digital_inputs);
 	printf("%d\n", status.conf.file_format);
 	printf("%s\n", status.conf.file_name);
+	printf("%llu\n", status.conf.max_file_size);
 	print_json_new(status.conf.channels, NUM_CHANNELS);
 	print_json_new(status.conf.force_high_channels, NUM_I_CHANNELS);
 	printf("%d\n", status.samples_taken);

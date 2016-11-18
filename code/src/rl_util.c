@@ -47,6 +47,8 @@ rl_option get_option(char* option) {
 		return CALIBRATION;
 	} else if(strcmp(option, "format") == 0) {
 		return FILE_FORMAT;
+	} else if(strcmp(option, "size") == 0) {
+		return FILE_SIZE;
 	}
 	
 	return NO_OPTION;
@@ -279,6 +281,36 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 					}
 					break;
 				
+				case FILE_SIZE:
+					if (argc > ++i && isdigit(argv[i][0])) {
+						conf->max_file_size = atoi(argv[i]);
+						switch(argv[i][strlen(argv[i])-1]) {
+							case 'k':
+							case 'K':
+								conf->max_file_size *= 1024;
+								break;
+							case 'm':
+							case 'M':
+								conf->max_file_size *= 1024*1024;
+								break;
+							case 'g':
+							case 'G':
+								conf->max_file_size *= 1024*1024*1024;
+								break;
+							default:
+								break;
+						}
+						// check file size
+						if(conf->max_file_size != 0 && conf->max_file_size < 5*1024*1024) {
+							rl_log(ERROR, "too small file size (min: 5m)");
+							return FAILURE;
+						}
+					} else {
+						rl_log(ERROR, "no file size");
+						return FAILURE;
+					}
+					break;
+				
 				case NO_OPTION:
 					rl_log(ERROR, "wrong option");
 					return FAILURE;
@@ -333,6 +365,7 @@ void print_usage() {
 	printf("    -d                 Log digital inputs.\n");
 	printf("                         Use '-d 0' to disable digital input logging.\n");
 	printf("    -format [format]   Select file format: csv, bin.\n");
+	printf("    -size   [number]   Select max file size (k, m, g can be used).\n");
 	printf("    -w                 Enable webserver plotting.\n");
 	printf("                         Use '-w 0' to disable webserver plotting.\n");
 	printf("    -s                 Set configuration as default.\n");
@@ -360,6 +393,7 @@ void reset_config(struct rl_conf* conf) {
 	conf->enable_web_server = 1;
 	conf->calibration = CAL_USE;
 	conf->file_format = BIN;
+	conf->max_file_size = 0;
 	
 	strcpy(conf->file_name, "/var/www/data/data.rld");
 	

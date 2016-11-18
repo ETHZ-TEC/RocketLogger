@@ -233,11 +233,12 @@ $(function() {
 			var digitalInputs = tempState[5];
 			var fileFormat = tempState[6];
 			var tempFilename = tempState[7];
-			var tempChannels = JSON.parse(tempState[8]);
-			var tempForceHighChannels = JSON.parse(tempState[9]);
-			var samplesTaken = tempState[10];
-			var dataAvailable = tempState[11];
-			var newData = tempState[12];
+			var maxFileSize = parseInt(tempState[8])/1024/1024;
+			var tempChannels = JSON.parse(tempState[9]);
+			var tempForceHighChannels = JSON.parse(tempState[10]);
+			var samplesTaken = tempState[11];
+			var dataAvailable = tempState[12];
+			var newData = tempState[13];
 			
 			// PARSE STATUS INFO
 			
@@ -289,6 +290,21 @@ $(function() {
 			// file name
 			filename = tempFilename.slice(14);
 			$("#filename").val(filename);
+			
+			// max file size
+			if(maxFileSize > 0) {
+				document.getElementById("file_size_limited").checked = true;
+				var e = document.getElementById("file_size_unit");
+				if(maxFileSize >= 1024) {
+					maxFileSize = maxFileSize / 1024;
+					e.selectedIndex = 1;
+				} else {
+					e.selectedIndex = 0;
+				}
+				$("#file_size").val(maxFileSize.toString());
+			} else {
+				document.getElementById("file_size_limited").checked = false;
+			}
 			
 			// channels
 			for (var i=0; i<NUM_CHANNELS; i++) {
@@ -353,10 +369,10 @@ $(function() {
 		function dataReceived (tempState) {
 			
 			// extract information
-			var tempTScale = tempState[13];
-			currentTime = parseInt(tempState[14]);
-			var bufferCount = parseInt(tempState[15]);
-			var bufferSize = parseInt(tempState[16]);
+			var tempTScale = tempState[14];
+			currentTime = parseInt(tempState[15]);
+			var bufferCount = parseInt(tempState[16]);
+			var bufferSize = parseInt(tempState[17]);
 			
 			if (tempTScale != tScale) {
 				resetData();
@@ -378,7 +394,7 @@ $(function() {
 				}
 				
 				for (var i = 0; i < bufferCount * bufferSize; i++) {
-					var tempData = JSON.parse(tempState[17 + i]);
+					var tempData = JSON.parse(tempState[18 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
@@ -923,6 +939,21 @@ $(function() {
 				}
 			}
 			
+			// file size
+			if ($("#file_size_limited:checked").length > 0) {
+				var e = document.getElementById("file_size_unit");
+				
+				// check size
+				if(parseInt($("#file_size").val()) < 5 && e.options[e.selectedIndex].value == "m") {
+					alert("Too small file size! Minimum is 5MB");
+					return false;
+				}
+				var size = ($("#file_size").val()) + e.options[e.selectedIndex].value;
+				cmd_obj.file_format += " -size " + size;
+			} else {
+				cmd_obj.file_format += " -size 0";
+			}
+			
 			// channels
 			if(parseChannels() == 0) {
 				alert("No channel selected!");
@@ -1040,26 +1071,6 @@ $(function() {
 			window.open(file);
 		});
 		
-		/*// delete button
-		$("#delete").click(function () {
-			
-			if(state == RL_RUNNING) {
-				alert("Rocketlogger running.\nPress 'Stop' before deleting files!");
-				return;
-			}
-			
-			var deleteFile = "/var/www/data/" +  filename;
-			$.ajax({
-				type: "post",
-				url:'rl.php',
-				dataType: 'json',
-				data: {command: 'delete', filename: deleteFile},
-				
-				complete: function (response) {
-					document.getElementById("webserver").innerHTML = 'File Deleted!';
-				}
-			});
-		});*/
 		
 		$("#calibration").change(function () {
 			if(state == RL_RUNNING) {
