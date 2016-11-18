@@ -4,7 +4,7 @@ function [ fig ] = rl_aux_pretty_plot( figure_in )
 %      - figure_in:    Number / handle to the figure, a new figure is
 %                        create if the parameter is omitted
 
-if exist('n', 'var')
+if exist('figure_in', 'var')
     fig = figure(figure_in);
 else
     fig = figure;
