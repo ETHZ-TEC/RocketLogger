@@ -41,8 +41,9 @@ $(function() {
 		// GLOBAL VARIABLES
 		
 		var state = RL_OFF;
-		var stopping = 0;
-		var starting = 0;
+		var error = false;
+		var stopping = false;
+		var starting = false;
 		var reqId = 0;
 		var plotEnabled = 1;
 		var tScale = 0;
@@ -56,17 +57,16 @@ $(function() {
 		var iScale = 1;
 		
 		var timeOut;
-		//var idMismatch;
-		
+		var startTimeOut;		
 		// plots
 		var vPlot;
 		var iPlot;
 		
-		var digPlot = [];
+		var digPlot;
 		
 		// data
 		var plotBufferCount = 0;
-		var plotData = [[],[],[],[],[],[]];
+		var plotData;
 		
 		// ajax post object
 		var statusObj;
@@ -131,7 +131,6 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
-					//clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -152,8 +151,11 @@ $(function() {
 						// display status on page
 						if (state == RL_RUNNING) {
 							// parse status and data
-							starting = 0;
-							if(stopping == 1) {
+							clearTimeout(startTimeOut);
+							starting = false;
+							error = false;
+							
+							if(stopping == true) {
 								document.getElementById("status").innerHTML = 'Status: STOPPING';
 							} else {
 								document.getElementById("status").innerHTML = 'Status: RUNNING';
@@ -161,11 +163,13 @@ $(function() {
 							parseStatus(tempState);
 							
 						} else {
-							if(state == RL_ERROR) {
+							if(state == RL_ERROR || error == true) {
 								document.getElementById("status").innerHTML = 'Status: ERROR';
+							} else if (starting == true) {
+								document.getElementById("status").innerHTML = 'Status: STARTING';
 							} else if(state == RL_OFF) {
 								document.getElementById("status").innerHTML = 'Status: IDLE';
-								stopping = 0;
+								stopping = false;
 							} else {
 								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
 							}
@@ -183,12 +187,19 @@ $(function() {
 							// set timer
 							setTimeout(update, UPDATE_INTERVAL);
 						}
-					} /*else {
+					} else {
+						// error occured
+						error = true;
 						
-						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
-					}	*/	
+						// set timer
+						setTimeout(update, UPDATE_INTERVAL);
+					}	
 				}
 			});
+			
+			if (error == true) {
+				document.getElementById("status").innerHTML = 'Status: ERROR';
+			}
 		}
 		
 		function showSamplingTime() {
@@ -218,13 +229,6 @@ $(function() {
 			}
 			document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
 		}
-		
-		/*function mismatch() {
-			// ID mismatch -> error
-			document.getElementById("status").innerHTML = 'Status: ERROR';
-			// set timer
-			setTimeout(update, UPDATE_INTERVAL);
-		}*/
 		
 		function parseStatus(tempState) {
 			
@@ -739,7 +743,7 @@ $(function() {
 				alert("Rocketlogger already running.\nPress Stop!");
 				return false;
 			}
-			if(starting == 1) {
+			if(starting == true) {
 				alert("Rocketlogger already starting!");
 				return false;
 			}
@@ -750,7 +754,9 @@ $(function() {
 			
 			// reset data
 			resetData();
-			starting = 1;
+			starting = true;
+			
+			startTimeOut = setTimeout(startFailed, STATUS_TIMEOUT_TIME);
 			
 			$.ajax({
 				type: "post",
@@ -763,6 +769,11 @@ $(function() {
 				}
 			});
 		}
+		
+		function startFailed() {
+			starting = false;
+			error = true;
+		}
 
 		// stop button
 		$("#stop").click(function () {
@@ -774,11 +785,11 @@ $(function() {
 				alert("RocketLogger not running!");
 				return;
 			} 
-			if (stopping == 1) {
+			if (stopping == true) {
 				alert("You already pressed stop!");
 				return;
 			} else {
-				stopping = 1;
+				stopping = true;
 				$.ajax({
 					type: "post",
 					url:'rl.php',
@@ -794,7 +805,7 @@ $(function() {
 		}
 		
 		function stopFailed() {
-			stopping = 0;
+			stopping = false;
 		}
 		
 		// deselect button
