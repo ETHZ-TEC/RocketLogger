@@ -1,7 +1,10 @@
 #include "log.h"
 
-int log_created = 0;
-
+/**
+ * Log a message.
+ * @param type Type of message.
+ * @param format Message format.
+ */
 void rl_log(rl_log_type type, const char* format, ... ) {
 	
 	// open/init file

@@ -8,10 +8,14 @@
 #include "types.h"
 #include "log.h"
 
+/// Path to linux GPIO device files
 #define GPIO_PATH "/sys/class/gpio/"
-#define MIN_BUTTON_TIME 100000 // minimal time a button needs to be pressed (in us)
+/// Minimal time a button needs to be pressed (in µs)
+#define MIN_BUTTON_TIME 100000
 
+/// GPIO direction
 typedef enum direction {IN, OUT} rl_direction;
+/// GPIO interrupt edge
 typedef enum edge {NONE, RISING, FALLING, BOTH} rl_edge;
 
 // gpio unexport
