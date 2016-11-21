@@ -1,3 +1,6 @@
+#!/bin/bash
+# RocketLogger webserver configuration
+
 # remove apache server
 rm -f /etc/init.d/apache2
 
