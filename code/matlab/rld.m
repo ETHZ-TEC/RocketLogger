@@ -1,5 +1,5 @@
 classdef rld
-    %RL_MEASUREMENT Summary of this class goes here
+    %RLD Class to read in and handle RocketLogger data
     %   Detailed explanation goes here
     
     properties (Constant)
@@ -7,14 +7,23 @@ classdef rld
     end
     
     properties
+        % RLD header (includes measurement information)
         header;
+        % All channels with information and data
         channels;
+        % Absolute buffer times
         time;
     end
     
     methods
         % constructor
         function obj = rld(file_name, decimation_factor)
+            %RLD Creates an RLD object from RocketLogger data file
+            %   Parameters:
+            %      - file_name:          File name
+            %      - decimation_factor:  Decimation factor for values read
+            %                            (buffer size needs to be divisible
+            %                             by the decimation factor)
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
@@ -27,9 +36,13 @@ classdef rld
         
         % file reading
         function obj = read_file(obj, file_name, decimation_factor )
-            %RL_READ_FILE Read in RocketLogger binary file
-            %   Detailed explanation goes here
-
+            %READ_FILE Reads a RocketLogger data file and returns a RLD object
+            %   Parameters:
+            %      - file_name:          File name
+            %      - decimation_factor:  Decimation factor for values read
+            %                            (buffer size needs to be divisible
+            %                             by the decimation factor)
+            
             %% IMPORT CONSTANTS
             rl_types;
             
@@ -322,6 +335,15 @@ classdef rld
         
         % plotting
         function plot(obj, channel, time, pretty_plot )
+            %PLOT Plots different channels of a RLD object
+            %   Parameters:
+            %      - obj:          Existing rld object
+            %      - channel:      Cell with channel names to plot
+            %      - time:         Set to 1, if x-axis should be in
+            %                      absolute time
+            %      - pretty_plot:  Set to 1, if pretty plot should be
+            %                      applied
+            
             % constants
             rl_types;
             
@@ -443,6 +465,8 @@ classdef rld
         
         % get channels
         function names = get_channels(obj)
+            %GET_CHANNELS Returns a cell including all channel names of the RLD object
+            
             for i=1:length(obj.channels(1,:))
                 names{i} = obj.channels(i).name;
             end
@@ -450,6 +474,9 @@ classdef rld
         
         % get channel data
         function values = get_data(obj, channel)
+            %GET_DATA Returns a matrix with channel data
+            %   Parameters:
+            %      - channel:  Cell with channel names of selected channels
             
             if ~exist('channel', 'var') || sum(strcmp(channel, 'all')) == 1
                 channel = obj.get_channels();
@@ -472,6 +499,7 @@ classdef rld
         
         % convert to old format (for backward comptability)
         function [values, header] = convert(obj)
+            %CONVERT Returns data in old format
             
             % old constants
             CHANNEL_NAMES = [cellstr('I1H'),cellstr('I1M'),cellstr('I1L'),cellstr('V1'),cellstr('V2'),cellstr('I2H'),cellstr('I2M'),cellstr('I2L'),cellstr('V3'),cellstr('V4')];
@@ -525,6 +553,11 @@ classdef rld
         
         % returns index of selected channel (0, if off)
         function on = channel_index(obj, channel)
+            %CHANNEL_INDEX Returns channel index (position in channel array)
+            %              (0 if not available)
+            %   Parameters:
+            %      - channel:  Name of selected channel
+            
             for i=1:length(obj.channels(1,:))
                 if strcmp(channel, obj.channels(i).name) == 1
                     on = i;
@@ -536,6 +569,8 @@ classdef rld
         
         % merges two channels to a new one
         function merged = merge_channels(obj)
+            %MERGE_CHANNELS Merges current low/high ranges and returns new RLD object
+            
             rl_types;
             
             num_channels_to_merge = 2;
@@ -627,6 +662,11 @@ classdef rld
         % decimate functions
         % TODO: test unfull buffer size
         function decimated_values = decimate_bin(values, decimation_factor)
+            %DECIMATE_BIN Decimates binary values (with threshold)
+            %   Parameters:
+            %      - values:            Values to decimate
+            %      - decimation_factor: Decimation factor
+            
             new_num = floor(length(values)/decimation_factor);
             old_num = new_num * decimation_factor;
             M = reshape(values(1:old_num), [decimation_factor, new_num]);
@@ -634,6 +674,11 @@ classdef rld
         end
         
         function decimated_values = decimate_min(values, decimation_factor)
+            %DECIMATE_MIN Decimates valid values (only valid if all samples valid)
+            %   Parameters:
+            %      - values:            Values to decimate
+            %      - decimation_factor: Decimation factor
+            
             new_num = floor(length(values)/decimation_factor);
             old_num = new_num * decimation_factor;
             M = reshape(values(1:old_num), [decimation_factor, new_num]);
@@ -641,6 +686,11 @@ classdef rld
         end
 
         function decimated_values = decimate_mean(values, decimation_factor)
+            %DECIMATE_MEAN Decimates analog values (with MEAN)
+            %   Parameters:
+            %      - values:            Values to decimate
+            %      - decimation_factor: Decimation factor
+            
             new_num = floor(length(values)/decimation_factor);
             old_num = new_num * decimation_factor;
             M = reshape(values(1:old_num), [decimation_factor, new_num]);
