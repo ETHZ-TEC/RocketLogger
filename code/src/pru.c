@@ -1,4 +1,4 @@
-//#define _FILE_OFFSET_BITS 64
+#define _FILE_OFFSET_BITS 64
 
 #include "pru.h"
 
@@ -368,6 +368,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	uint32_t buffer_lost = 0;
 	void* buffer_addr;
 	uint32_t samples_buffer; // number of samples per buffer
+	uint32_t num_files = 1; // number of files stored
 	
 	// sampling started
 	status.sampling = SAMPLING_ON;
@@ -375,6 +376,53 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// continuous sampling loop
 	for(i=0; status.sampling == SAMPLING_ON && status.state == RL_RUNNING && !(conf->mode == LIMIT && i>=number_buffers); i++) {
+		
+		
+		// check if max file size reached
+		uint64_t file_size = (uint64_t) ftello(data);
+		uint64_t margin = conf->sample_rate*RATE_SCALING * sizeof(int32_t) * (NUM_CHANNELS+1) + sizeof(struct time_stamp);
+		
+		if(conf->max_file_size !=0 && file_size + margin > conf->max_file_size) {
+			
+			// close old data file
+			fclose(data);
+			
+			// determine new file name
+			char file_name[MAX_PATH_LENGTH];
+			char new_file_ending[MAX_PATH_LENGTH];
+			strcpy(file_name, conf->file_name);
+			
+			// search for last .
+			char target = '.';
+			char* file_ending = file_name;
+			while(strchr(file_ending, target) != NULL) {
+				file_ending = strchr(file_ending, target);
+				file_ending++; // Increment file_ending, otherwise we'll find target at the same location
+			}
+			file_ending--;
+			
+			// add file number
+			sprintf(new_file_ending, "_p%d", num_files++);
+			strcat(new_file_ending, file_ending);
+			strcpy(file_ending, new_file_ending);
+			
+			// open new data file
+			data = fopen(file_name, "w+");
+			
+			// update header for new file
+			file_header.lead_in.data_block_count = 0;
+			file_header.lead_in.sample_count = 0;
+			
+			// store header
+			if(conf->file_format == BIN) {
+				store_header(data, &file_header);
+			} else if (conf->file_format == CSV) {
+				store_header_csv(data, &file_header);
+			}
+			
+			rl_log(INFO, "new datafile: %s", file_name);
+		}
+		
 		
 		// select current buffer
 		if(i%2 == 0) {
@@ -425,7 +473,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		// update and write header
 		if (conf->file_format != NO_FILE) {
 			// update the number of samples stored
-			file_header.lead_in.data_block_count = i+1 - buffer_lost;
+			file_header.lead_in.data_block_count += 1;
 			file_header.lead_in.sample_count += samples_buffer/avg_factor;
 			
 			if(conf->file_format == BIN) {

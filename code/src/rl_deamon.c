@@ -5,11 +5,15 @@
 
 int gpio_setup() {
 	
-	gpio_export(GPIO_BUTTON);
-	gpio_dir(GPIO_BUTTON, IN);
-	gpio_interrupt(GPIO_BUTTON, FALLING);
+	int ret1 = gpio_export(GPIO_BUTTON);
+	int ret2 = gpio_dir(GPIO_BUTTON, IN);
+	int ret3 = gpio_interrupt(GPIO_BUTTON, FALLING);
 	
-	return SUCCESS; // TODO: add possibility to fail
+	if(ret1 == FAILURE || ret2 == FAILURE || ret3 == FAILURE) {
+		return FAILURE;
+	}
+
+	return SUCCESS;
 }
 
 void interrupt_handler(int value) {
@@ -36,7 +40,9 @@ void interrupt_handler(int value) {
 int main() {
 	
 	int timeout = -1; //infinite timeout
-	gpio_setup();
+	if(gpio_setup() == FAILURE) {
+		exit(EXIT_FAILURE);
+	}
 	
 	while(1) {
 		int val = gpio_wait_interrupt(GPIO_BUTTON, timeout);

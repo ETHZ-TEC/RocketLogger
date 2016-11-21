@@ -1,6 +1,10 @@
 #include "gpio.h"
 
-// gpio unexport
+/**
+ * Unexport (deactivate) a GPIO.
+ * @param num Linux GPIO number.
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
 int gpio_unexport(int num) {
 	// open gpio value file
 	int fd = open(GPIO_PATH "unexport", O_WRONLY);
@@ -20,7 +24,12 @@ int gpio_unexport(int num) {
 	return SUCCESS;
 }
 
-// gpio export
+
+/**
+ * Export (activate) a GPIO.
+ * @param num Linux GPIO number.
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
 int gpio_export(int num) {
 	// open gpio value file
 	int fd = open(GPIO_PATH "export", O_WRONLY);
@@ -40,7 +49,12 @@ int gpio_export(int num) {
 	return SUCCESS;
 }
 
-// set direction
+/**
+ * Set direction of GPIO.
+ * @param num Linux GPIO number.
+ * @param dir Direction.
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
 int gpio_dir(int num, rl_direction dir) {
 	
 	// open gpio direction file
@@ -65,8 +79,13 @@ int gpio_dir(int num, rl_direction dir) {
 }
 
 
-// set interrupt direction
-int gpio_interrupt(int num, rl_edge e) {
+/**
+ * Set direction of GPIO interrupt edge.
+ * @param num Linux GPIO number.
+ * @param edge Edge direction.
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
+int gpio_interrupt(int num, rl_edge edge) {
 	
 	// open gpio edge file
 	char file_name[MAX_PATH_LENGTH];
@@ -78,7 +97,7 @@ int gpio_interrupt(int num, rl_edge e) {
 	}
 	
 	// set edge
-	switch (e) {
+	switch (edge) {
 		case NONE:
 			write(fd, "none", 5);
 			break;
@@ -100,7 +119,12 @@ int gpio_interrupt(int num, rl_edge e) {
 	return SUCCESS;
 }
 
-// set gpio value
+/**
+ * Set value of GPIO.
+ * @param num Linux GPIO number.
+ * @param val Value (0 or 1).
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
 int gpio_set_value(int num, int val) {
 	
 	// open gpio value file
@@ -125,7 +149,11 @@ int gpio_set_value(int num, int val) {
 	return SUCCESS;
 }
 
-// get gpio value
+/**
+ * Get GPIO value.
+ * @param num Linux GPIO number.
+ * @return GPIO value, {@link FAILURE} on failure.
+ */
 int gpio_get_value(int num) {
 	
 	// open gpio value file
@@ -147,7 +175,12 @@ int gpio_get_value(int num) {
 	return atoi(buf);
 }
 
-// wait on gpio change (returns new value)
+/**
+ * Wait on GPIO interrupt.
+ * @param num Linux GPIO number.
+ * @param timeout Maximum waiting time (in ms).
+ * @return {@link SUCCESS} in case of interrupt, {@link FAILURE} otherwise.
+ */
 int gpio_wait_interrupt(int num, int timeout) {
 	
 	// open gpio value file

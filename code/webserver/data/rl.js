@@ -40,10 +40,11 @@ $(function() {
 		// GLOBAL VARIABLES
 		
 		var state = RL_OFF;
-		var stopping = 0;
-		var starting = 0;
+		var error = false;
+		var stopping = false;
+		var starting = false;
 		var reqId = 0;
-		var plotEnabled = 1;
+		var plotEnabled = '1';
 		var tScale = 0;
 		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
@@ -55,21 +56,22 @@ $(function() {
 		var iScale = 1;
 		
 		var timeOut;
-		//var idMismatch;
+		var startTimeOut;
+		
 		
 		// plots
 		var vPlot;
 		var iPlot;
 		
-		var digPlot = [];
+		var digPlot;
 		
 		// data
 		var plotBufferCount = 0;
-		var plotData = [[],[],[],[],[],[]];
+		var plotData;
 		
 		// ajax post object
-		var statusObj;
-		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
+		var statusPost;		
+		var startPost = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 		
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
@@ -116,13 +118,13 @@ $(function() {
 				currentTime = 0;
 			}
 			
-			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tempTScale.toString(), time: currentTime.toString()};
+			statusPost = {command: 'status', id: reqId.toString(), fetchData: plotEnabled, timeScale: tempTScale.toString(), time: currentTime.toString()};
 			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: statusObj,
+				data: statusPost,
 				
 				complete: function (response) {
 					$('#output').html(response.responseText);
@@ -130,7 +132,6 @@ $(function() {
 					
 					// clear time-out
 					clearTimeout(timeOut);
-					//clearTimeout(idMismatch);
 					
 					// extract state
 					respId = tempState[0];
@@ -151,8 +152,11 @@ $(function() {
 						// display status on page
 						if (state == RL_RUNNING) {
 							// parse status and data
-							starting = 0;
-							if(stopping == 1) {
+							clearTimeout(startTimeOut);
+							starting = false;
+							error = false;
+							
+							if(stopping == true) {
 								document.getElementById("status").innerHTML = 'Status: STOPPING';
 							} else {
 								document.getElementById("status").innerHTML = 'Status: RUNNING';
@@ -160,34 +164,43 @@ $(function() {
 							parseStatus(tempState);
 							
 						} else {
-							if(state == RL_ERROR) {
+							if(state == RL_ERROR || error == true) {
 								document.getElementById("status").innerHTML = 'Status: ERROR';
+							} else if (starting == true) {
+								document.getElementById("status").innerHTML = 'Status: STARTING';
 							} else if(state == RL_OFF) {
 								document.getElementById("status").innerHTML = 'Status: IDLE';
-								stopping = 0;
+								stopping = false;
 							} else {
 								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
-							}
-							
-							// load default
-							if(loadDefault) {
-								parseStatus(tempState);
-								loadDefault = false;
 							}
 							
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
 							
-							// set timer
-							setTimeout(update, UPDATE_INTERVAL);
+							// load default
+							if(loadDefault) {
+								parseStatus(tempState);
+								loadDefault = false;
+							} else {
+								// set timer
+								timeOut = setTimeout(update, UPDATE_INTERVAL);
+							}
 						}
-					} /*else {
+					} else {
+						// error occured
+						error = true;
 						
-						idMismatch = setTimeout(mismatch, MISMATCH_TIMEOUT_TIME);	
-					}	*/	
+						// set timer
+						timeOut = setTimeout(update, UPDATE_INTERVAL);
+					}	
 				}
 			});
+			
+			if (error == true) {
+				document.getElementById("status").innerHTML = 'Status: ERROR';
+			}
 		}
 		
 		function showSamplingTime() {
@@ -234,13 +247,6 @@ $(function() {
 			}
 		}
 		
-		/*function mismatch() {
-			// ID mismatch -> error
-			document.getElementById("status").innerHTML = 'Status: ERROR';
-			// set timer
-			setTimeout(update, UPDATE_INTERVAL);
-		}*/
-		
 		function parseStatus(tempState) {
 			
 			// EXTRACT STATUS INFO
@@ -248,11 +254,12 @@ $(function() {
 			var digitalInputs = tempState[5];
 			var fileFormat = tempState[6];
 			var tempFilename = tempState[7];
-			var tempChannels = JSON.parse(tempState[8]);
-			var tempForceHighChannels = JSON.parse(tempState[9]);
-			var samplesTaken = tempState[10];
-			var dataAvailable = tempState[11];
-			var newData = tempState[12];
+			var maxFileSize = parseInt(tempState[8])/1024/1024;
+			var tempChannels = JSON.parse(tempState[9]);
+			var tempForceHighChannels = JSON.parse(tempState[10]);
+			var samplesTaken = tempState[11];
+			var dataAvailable = tempState[12];
+			var newData = tempState[13];
 			
 			// PARSE STATUS INFO
 			
@@ -324,6 +331,21 @@ $(function() {
 			filename = tempFilename.slice(14);
 			$("#filename").val(filename);
 			
+			// max file size
+			if(maxFileSize > 0) {
+				document.getElementById("file_size_limited").checked = true;
+				var e = document.getElementById("file_size_unit");
+				if(maxFileSize >= 1024) {
+					maxFileSize = maxFileSize / 1024;
+					e.selectedIndex = 1;
+				} else {
+					e.selectedIndex = 0;
+				}
+				$("#file_size").val(maxFileSize.toString());
+			} else {
+				document.getElementById("file_size_limited").checked = false;
+			}
+			
 			// channels
 			for (var i=0; i<NUM_CHANNELS; i++) {
 				if (tempChannels[i] == 1) {
@@ -357,18 +379,18 @@ $(function() {
 			// data
 			if (dataAvailable == "1") {
 				document.getElementById("dataAvailable").innerHTML = "";
-				if (plotEnabled == 1 && newData == "1") {
+				if (plotEnabled == '1' && newData == "1") {
 					// handle data
 					dataReceived(tempState);
 					
 					// re-update
 					update();
 				} else {
-					setTimeout(update, UPDATE_INTERVAL);
+					timeOut = setTimeout(update, UPDATE_INTERVAL);
 				}
 			} else {
 				document.getElementById("dataAvailable").innerHTML = "No data available!";
-				setTimeout(update, UPDATE_INTERVAL);
+				timeOut = setTimeout(update, UPDATE_INTERVAL);
 			}
 		}
 		
@@ -387,10 +409,10 @@ $(function() {
 		function dataReceived (tempState) {
 			
 			// extract information
-			var tempTScale = tempState[13];
-			currentTime = parseInt(tempState[14]);
-			var bufferCount = parseInt(tempState[15]);
-			var bufferSize = parseInt(tempState[16]);
+			var tempTScale = tempState[14];
+			currentTime = parseInt(tempState[15]);
+			var bufferCount = parseInt(tempState[16]);
+			var bufferSize = parseInt(tempState[17]);
 			
 			if (tempTScale != tScale) {
 				resetData();
@@ -412,7 +434,7 @@ $(function() {
 				}
 				
 				for (var i = 0; i < bufferCount * bufferSize; i++) {
-					var tempData = JSON.parse(tempState[17 + i]);
+					var tempData = JSON.parse(tempState[18 + i]);
 					var k = 0;
 					for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 						if(plotChannels[j]) {
@@ -576,9 +598,9 @@ $(function() {
 		// enable checkbox
 		$("#plotting").change(function () {
 			if ($("#plotting:checked").length > 0) {
-				plotEnabled = 1;
+				plotEnabled = '1';
 			} else {
-				plotEnabled = 0;
+				plotEnabled = '0';
 			}
 		});
 		
@@ -757,7 +779,7 @@ $(function() {
 				alert("Rocketlogger already running.\nPress Stop!");
 				return false;
 			}
-			if(starting == 1) {
+			if(starting == true) {
 				alert("Rocketlogger already starting!");
 				return false;
 			}
@@ -768,18 +790,35 @@ $(function() {
 			
 			// reset data
 			resetData();
-			starting = 1;
+			starting = true;
+			
+			startTimeOut = setTimeout(startFailed, STATUS_TIMEOUT_TIME);
 			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: cmd_obj,
+				data: startPost,
 				
 				complete: function (response) {
-					// do nothing
+					$('#output').html(response.responseText);
+					var startResp = JSON.parse(response.responseText);
+					if(startResp[0] == "ERROR") {
+						// alert error
+						alert("Server error: " + startResp[1]);
+						
+						// reset state to error
+						starting = false;
+						error = true;
+						clearTimeout(startTimeOut);
+					}
 				}
 			});
+		}
+		
+		function startFailed() {
+			starting = false;
+			error = true;
 		}
 
 		// stop button
@@ -792,11 +831,11 @@ $(function() {
 				alert("RocketLogger not running!");
 				return;
 			} 
-			if (stopping == 1) {
+			if (stopping == true) {
 				alert("You already pressed stop!");
 				return;
 			} else {
-				stopping = 1;
+				stopping = true;
 				$.ajax({
 					type: "post",
 					url:'rl.php',
@@ -812,7 +851,7 @@ $(function() {
 		}
 		
 		function stopFailed() {
-			stopping = 0;
+			stopping = false;
 		}
 		
 		// deselect button
@@ -851,39 +890,38 @@ $(function() {
 			var numChannels = 0;
 			channels.fill(false);
 			
-			cmd_obj.channels = " -ch ";
 			if ($("#i1h:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "0";
+					startPost.channels = "0";
 				} else {
-					cmd_obj.channels += ",0";
+					startPost.channels += ",0";
 				}
 				channels[0] = true;
 				numChannels++;
 			}
 			if ($("#i1l:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "1";
+					startPost.channels = "1";
 				} else {
-					cmd_obj.channels += ",1";
+					startPost.channels += ",1";
 				}
 				channels[1] = true;
 				numChannels++;
 			}
 			if ($("#v1:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "2";
+					startPost.channels = "2";
 				} else {
-					cmd_obj.channels += ",2";
+					startPost.channels += ",2";
 				}
 				channels[2] = true;
 				numChannels++;
 			}
 			if ($("#v2:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "3";
+					startPost.channels = "3";
 				} else {
-					cmd_obj.channels += ",3";
+					startPost.channels += ",3";
 				}
 				channels[3] = true;
 				numChannels++;
@@ -891,36 +929,36 @@ $(function() {
 			
 			if ($("#i2h:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "4";
+					startPost.channels = "4";
 				} else {
-					cmd_obj.channels += ",4";
+					startPost.channels += ",4";
 				}
 				channels[4] = true;
 				numChannels++;
 			}
 			if ($("#i2l:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "5";
+					startPost.channels = "5";
 				} else {
-					cmd_obj.channels += ",5";
+					startPost.channels += ",5";
 				}
 				channels[5] = true;
 				numChannels++;
 			}
 			if ($("#v3:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "6";
+					startPost.channels = "6";
 				} else {
-					cmd_obj.channels += ",6";
+					startPost.channels += ",6";
 				}
 				channels[6] = true;
 				numChannels++;
 			}
 			if ($("#v4:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "7";
+					startPost.channels = "7";
 				} else {
-					cmd_obj.channels += ",7";
+					startPost.channels += ",7";
 				}
 				channels[7] = true;
 				numChannels++;
@@ -933,32 +971,39 @@ $(function() {
 			
 			// rate
 			var e = document.getElementById("sample_rate");
-			var tempSampleRate = e.options[e.selectedIndex].value;
-			if(tempSampleRate >= 1000) {
-				tempSampleRate = tempSampleRate/1000 + "k";
-			}
-			cmd_obj.rate = " -r " + tempSampleRate;
-			
+			var tempSampleRate = e.options[e.selectedIndex].value;			if(tempSampleRate >= 1000) {				tempSampleRate = tempSampleRate/1000 + "k";			}			startPost.sampleRate = tempSampleRate;			
 			
 			// file
 			if ($("#enable_storing:checked").length > 0) {
-				cmd_obj.file = " -f /var/www/data/" +  filename;
+				startPost.fileName = filename;
 			} else {
-				cmd_obj.file = " -f 0"; // no storing
+				startPost.fileName = "0"; // no storing
 			}
 			
 			// file format
 			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "bin") {
-				cmd_obj.file_format = " -format bin";
-			} else {
-				cmd_obj.file_format = " -format csv";
-				var r = document.getElementById("sample_rate");
-				if (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000) {
-					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
-						return false;
-					}
+			var r = document.getElementById("sample_rate");
+			startPost.fileFormat = e.options[e.selectedIndex].value;
+			if (e.options[e.selectedIndex].value == "csv" && (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000)) {
+				if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
+					return false;
 				}
+			}
+			
+			// file size
+			if ($("#file_size_limited:checked").length > 0) {
+				var e = document.getElementById("file_size_unit");
+				
+				// check size
+				if(parseInt($("#file_size").val()) < 5 && e.options[e.selectedIndex].value == "m") {
+					alert("Too small file size! Minimum is 5MB");
+					return false;
+				}
+				var size = ($("#file_size").val()) + e.options[e.selectedIndex].value;
+				startPost.fileSize = size;
+				
+			} else {
+				startPost.fileSize = "0";
 			}
 			
 			// channels
@@ -971,42 +1016,44 @@ $(function() {
 			var first = 1;
 			if ($("#fhr1:checked").length > 0) {
 				if (first == 1) {
-					cmd_obj.force = " -fhr 1";
+					startPost.forceHigh = "1";
 					first = 0;
 				} else {
-					cmd_obj.force += ",1";
+					startPost.forceHigh += ",1";
 				}
 			}
 			if ($("#fhr2:checked").length > 0) {
 				if (first == 1) {
-					cmd_obj.force = " -fhr 2";
+					startPost.forceHigh = "2";
 					first = 0;
 				} else {
-					cmd_obj.force += ",2";
+					startPost.forceHigh += ",2";
 				}
 			}
 			if(first == 1) { // no forcing
-				cmd_obj.force = " -fhr 0";
+				startPost.forceHigh = "0";
 			}
 			
 			
 			// digital inputs
 			if ($("#digital_inputs:checked").length > 0) {
-				cmd_obj.digital_inputs = " -d";
+				startPost.digitalInputs = '1';
 			} else {
-				cmd_obj.digital_inputs = " -d 0";
+				startPost.digitalInputs = '0';
 			}
 			
 			// set as default
 			if ($("#set_default:checked").length > 0) {
-				cmd_obj.digital_inputs += " -s";
+				startPost.setDefault = '1';
+			} else {
+				startPost.setDefault = '0';
 			}
 			
 			// ignore calibration
 			if ($("#calibration:checked").length > 0) {
-				cmd_obj.digital_inputs += " -c 0";
+				startPost.ignoreCalibration = "1";
 			} else {
-				cmd_obj.digital_inputs += " -c";
+				startPost.ignoreCalibration = "0";
 			}
 			
 			return true;
@@ -1039,6 +1086,11 @@ $(function() {
 		$("#download").click(function () {
 			file = 'data/' + filename;
 			window.open(file);
+		});
+		
+		// list button
+		$("#list").click(function () {
+			window.open('data');
 		});
 		
 		// date to filename button

@@ -2,7 +2,7 @@
 
 
 int create_sem() {
-	int sem_id = semget(SEM_KEY, NUM_SEMS, IPC_CREAT | S_IRWXU); // TODO: adapt permissions
+	int sem_id = semget(SEM_KEY, NUM_SEMS, IPC_CREAT | S_IRWXU);
 	if(sem_id < 0) {
 		rl_log(ERROR, "failed to create semaphores. Errno = %d", errno);
 	}
@@ -19,7 +19,7 @@ int remove_sem(int sem_id) {
 }
 
 int open_sem() {
-	int sem_id = semget(SEM_KEY, NUM_SEMS, S_IRWXU); // TODO: adapt permissions
+	int sem_id = semget(SEM_KEY, NUM_SEMS, S_IRWXU);
 	if(sem_id < 0) {
 		rl_log(ERROR, "failed to open semaphores. Errno = %d", errno);
 	}

@@ -11,8 +11,6 @@
 #include "web.h"
 
 
-#define MAC_ADDRESS_FILE "/sys/class/net/eth0/address" // TODO: move to types.h?
-
 // DEFINES
 
 /// Mask to mask binary inputs read from PRU

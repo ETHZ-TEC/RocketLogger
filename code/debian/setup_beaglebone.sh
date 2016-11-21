@@ -62,11 +62,14 @@ echo "> Updating network configuration"
 cp -f network/interfaces /etc/network/
 
 # copy wifi ap configuration
-echo "TODO: copy hostapd.conf"
+cp -f network/hostapd.conf /etc/hostapd/hostapd.conf
 
 # copy dhcp server configuration
-echo "TODO: copy isc-dhcp-server"
+cp -f network/isc-dhcp-server /etc/default/isc-dhcp-server
+cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
 
+# create RL folder
+mkdir /etc/rocketlogger
 
 ## done
 echo "Done. Please reboot to apply all changes."

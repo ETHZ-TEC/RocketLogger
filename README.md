@@ -47,9 +47,13 @@ apt install linux-headers-$(uname -r)
    Otherwise the compiler can be downloaded at [PRU Code Generation Tools](http://software-dl.ti.com/codegen/non-esd/downloads/download.htm#PRU)
    or install them as add-on for the [Code Composer Studio](http://processors.wiki.ti.com/index.php/Download_CCS).
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
- * For using the remote web interface these additional systems components will be needed:
+ * For using the remote web interface these additional system components will be needed:
 ```
-lighttpd php5-cgi
+lighttpd php5-cgi unzip
+```
+ * For using the access point these additional system components are needed:
+```
+hostapd isc-dhcp-server
 ```
 
 For further details regarding software installation and system configuration check the [RocketLogger Software Stack](wikis/software) wiki page.

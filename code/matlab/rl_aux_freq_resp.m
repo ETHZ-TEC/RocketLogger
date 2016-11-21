@@ -1,23 +1,26 @@
-function [ fDec, dataDB ] = rl_aux_freq_resp( data, dcValue, fig )
+function [ f_dec, data_db ] = rl_aux_freq_resp( data, dcValue, fig )
 %RL_AUX_FREQ_RESP Plot the frequncy response for the measurement of a 
 %logarithmic frequency sweep from 10 Hz to 100 kHz
 %   Parameters:
 %      - data:      Samples for a single sweep
 %      - dcValue:   The expected value at DC for the sweep
 %      - fig:       (optional) Figure to plot in
+%   Return values:
+%      - f_dec:     Frequency bins
+%      - data_db:   Attenuation for each frequency bin (f_dec)
 
 % Constants
 decades = 4;
-startF = 10;
-decimationFactor = 100;
+start_f = 10;
+decimation_factor = 100;
 
 % Calculate envelope, convert to dB
 t = 1:length(data);
-f = startF*10.^(decades/length(t).*t);
-fDec = decimate(f, decimationFactor);
-dataEnv = envelope(data);
-dataDec = decimate(dataEnv, decimationFactor);
-dataDB = 20*log10(dataDec/dcValue);
+f = start_f*10.^(decades/length(t).*t);
+f_dec = decimate(f, decimation_factor);
+data_env = envelope(data);
+data_dec = decimate(data_env, decimation_factor);
+data_db = 20*log10(data_dec/dcValue);
 
 if ~exist('fig', 'var')
     fig = figure;
@@ -26,7 +29,7 @@ else
 end
 
 % Create plot
-semilogx(fDec, dataDB);
+semilogx(f_dec, data_db);
 axis([100 30e3 -21 3])
 ax = gca;
 ax.YTick = -300:3:30;

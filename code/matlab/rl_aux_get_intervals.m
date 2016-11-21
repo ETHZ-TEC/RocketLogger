@@ -8,6 +8,9 @@ function [ intervals ] = rl_aux_get_intervals( data , num_points, ...
 %       - expected_step_size:      Expected step between the levels
 %       - min_stable_points:       Minimum number of stable samples per
 %                                    level
+%   Return Values:
+%      - intervals:                [2xn] array with start and end points of
+%                                    stable intervals
 %   See also RL_AUX_AVERAGE_POINTS
 
 % magic constants
@@ -60,9 +63,9 @@ end
 % Debug Plot:
 %
 % figure;
-% plot(points);
-% y0 = min(points);
-% y1 = max(points);
+% plot(data);
+% y0 = min(data);
+% y1 = max(data);
 % for i = 1:size(intervals, 2)
 %     line([intervals(1,i) intervals(1,i)],[y0 y1],'LineWidth',1, 'Color', 'Black');
 %     line([intervals(2,i) intervals(2,i)],[y0 y1],'LineWidth',1, 'Color', 'Green');
