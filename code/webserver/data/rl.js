@@ -45,7 +45,7 @@ $(function() {
 		var stopping = false;
 		var starting = false;
 		var reqId = 0;
-		var plotEnabled = 1;
+		var plotEnabled = '1';
 		var tScale = 0;
 		var maxBufferCount = TIME_DIV * tScales[tScale];
 		var currentTime = 0;
@@ -71,7 +71,7 @@ $(function() {
 		var plotData;
 		
 		// ajax post object
-		var statusObj;		
+		var statusPost;		
 		var startPost = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 		
 		// channel information
@@ -119,13 +119,13 @@ $(function() {
 				currentTime = 0;
 			}
 			
-			statusObj = {command: 'status', id: reqId.toString(), fetchData: plotEnabled.toString(), timeScale: tempTScale.toString(), time: currentTime.toString()};
+			statusPost = {command: 'status', id: reqId.toString(), fetchData: plotEnabled, timeScale: tempTScale.toString(), time: currentTime.toString()};
 			
 			$.ajax({
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: statusObj,
+				data: statusPost,
 				
 				complete: function (response) {
 					$('#output').html(response.responseText);
@@ -345,7 +345,7 @@ $(function() {
 			// data
 			if (dataAvailable == "1") {
 				document.getElementById("dataAvailable").innerHTML = "";
-				if (plotEnabled == 1 && newData == "1") {
+				if (plotEnabled == '1' && newData == "1") {
 					// handle data
 					dataReceived(tempState);
 					
@@ -564,9 +564,9 @@ $(function() {
 		// enable checkbox
 		$("#plotting").change(function () {
 			if ($("#plotting:checked").length > 0) {
-				plotEnabled = 1;
+				plotEnabled = '1';
 			} else {
-				plotEnabled = 0;
+				plotEnabled = '0';
 			}
 		});
 		

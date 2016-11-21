@@ -69,7 +69,6 @@
 				
 				// return error if parse error
 				if($parse_error == false) {
-					exec("echo " . $command . " >> log/web-log.txt");
 					exec($command);
 					echo json_encode("SUCCESS");
 				} else {
@@ -78,11 +77,37 @@
 				break;
 			
 			case 'status':
+				$parse_error = false;
+				
 				if (isset($_POST['id'])) { // filter empty posts
+				
+					// check attributes
+					if(preg_match("/^\d+$/", $_POST['id']) != 1) {
+						$parse_error = true;
+					}
+					if(preg_match("/^\d$/", $_POST['fetchData']) != 1) {
+						$parse_error = true;
+					}
+					if(preg_match("/^\d$/", $_POST['timeScale']) != 1) {
+						$parse_error = true;
+					}
+					if(preg_match("/^\d+$/", $_POST['time']) != 1) {
+						$parse_error = true;
+					}
+				} else {
+					$parse_error = true;
+				}
+				
+				if($parse_error == false) {
+					
 					$command = 'rocketloggers ' . $_POST['id'] . ' ' . $_POST['fetchData'] . ' ' . $_POST['timeScale'] . ' ' . $_POST['time'];
 					exec($command, $output);
 					echo json_encode($output);
+					
+				} else {
+					echo json_encode("ERROR");
 				}
+				
 				break;
 			
 			case 'stop':
