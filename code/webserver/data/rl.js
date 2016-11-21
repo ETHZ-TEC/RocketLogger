@@ -57,7 +57,9 @@ $(function() {
 		var iScale = 1;
 		
 		var timeOut;
-		var startTimeOut;		
+		var startTimeOut;
+		
+		
 		// plots
 		var vPlot;
 		var iPlot;
@@ -69,8 +71,8 @@ $(function() {
 		var plotData;
 		
 		// ajax post object
-		var statusObj;
-		var cmd_obj = {command: 'start', file: ' -f data.rld', file_format: ' -format bin', rate: ' -r 1', channels: ' -ch 0,1,2,3,4,5,6,7', force: ' -fhr 1,2', digital_inputs: ' -d'};
+		var statusObj;		
+		var startPost = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 		
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
@@ -174,25 +176,25 @@ $(function() {
 								document.getElementById("status").innerHTML = 'Status: UNKNOWN';
 							}
 							
-							// load default
-							if(loadDefault) {
-								parseStatus(tempState);
-								loadDefault = false;
-							}
-							
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
 							document.getElementById("webserver").innerHTML = "";
 							
-							// set timer
-							setTimeout(update, UPDATE_INTERVAL);
+							// load default
+							if(loadDefault) {
+								parseStatus(tempState);
+								loadDefault = false;
+							} else {
+								// set timer
+								timeOut = setTimeout(update, UPDATE_INTERVAL);
+							}
 						}
 					} else {
 						// error occured
 						error = true;
 						
 						// set timer
-						setTimeout(update, UPDATE_INTERVAL);
+						timeOut = setTimeout(update, UPDATE_INTERVAL);
 					}	
 				}
 			});
@@ -350,11 +352,11 @@ $(function() {
 					// re-update
 					update();
 				} else {
-					setTimeout(update, UPDATE_INTERVAL);
+					timeOut = setTimeout(update, UPDATE_INTERVAL);
 				}
 			} else {
 				document.getElementById("dataAvailable").innerHTML = "No data available!";
-				setTimeout(update, UPDATE_INTERVAL);
+				timeOut = setTimeout(update, UPDATE_INTERVAL);
 			}
 		}
 		
@@ -762,10 +764,20 @@ $(function() {
 				type: "post",
 				url:'rl.php',
 				dataType: 'json',
-				data: cmd_obj,
+				data: startPost,
 				
 				complete: function (response) {
-					// do nothing
+					$('#output').html(response.responseText);
+					var startResp = JSON.parse(response.responseText);
+					if(startResp[0] == "ERROR") {
+						// alert error
+						alert("Server error: " + startResp[1]);
+						
+						// reset state to error
+						starting = false;
+						error = true;
+						clearTimeout(startTimeOut);
+					}
 				}
 			});
 		}
@@ -844,39 +856,38 @@ $(function() {
 			var numChannels = 0;
 			channels.fill(false);
 			
-			cmd_obj.channels = " -ch ";
 			if ($("#i1h:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "0";
+					startPost.channels = "0";
 				} else {
-					cmd_obj.channels += ",0";
+					startPost.channels += ",0";
 				}
 				channels[0] = true;
 				numChannels++;
 			}
 			if ($("#i1l:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "1";
+					startPost.channels = "1";
 				} else {
-					cmd_obj.channels += ",1";
+					startPost.channels += ",1";
 				}
 				channels[1] = true;
 				numChannels++;
 			}
 			if ($("#v1:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "2";
+					startPost.channels = "2";
 				} else {
-					cmd_obj.channels += ",2";
+					startPost.channels += ",2";
 				}
 				channels[2] = true;
 				numChannels++;
 			}
 			if ($("#v2:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "3";
+					startPost.channels = "3";
 				} else {
-					cmd_obj.channels += ",3";
+					startPost.channels += ",3";
 				}
 				channels[3] = true;
 				numChannels++;
@@ -884,36 +895,36 @@ $(function() {
 			
 			if ($("#i2h:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "4";
+					startPost.channels = "4";
 				} else {
-					cmd_obj.channels += ",4";
+					startPost.channels += ",4";
 				}
 				channels[4] = true;
 				numChannels++;
 			}
 			if ($("#i2l:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "5";
+					startPost.channels = "5";
 				} else {
-					cmd_obj.channels += ",5";
+					startPost.channels += ",5";
 				}
 				channels[5] = true;
 				numChannels++;
 			}
 			if ($("#v3:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "6";
+					startPost.channels = "6";
 				} else {
-					cmd_obj.channels += ",6";
+					startPost.channels += ",6";
 				}
 				channels[6] = true;
 				numChannels++;
 			}
 			if ($("#v4:checked").length > 0) {
 				if (numChannels == 0) {
-					cmd_obj.channels += "7";
+					startPost.channels = "7";
 				} else {
-					cmd_obj.channels += ",7";
+					startPost.channels += ",7";
 				}
 				channels[7] = true;
 				numChannels++;
@@ -926,27 +937,23 @@ $(function() {
 			
 			// rate
 			var e = document.getElementById("sample_rate");
-			cmd_obj.rate = " -r " + e.options[e.selectedIndex].value;
+			startPost.sampleRate = e.options[e.selectedIndex].value;
 			
 			
 			// file
 			if ($("#enable_storing:checked").length > 0) {
-				cmd_obj.file = " -f /var/www/data/" +  filename;
+				startPost.fileName = filename;
 			} else {
-				cmd_obj.file = " -f 0"; // no storing
+				startPost.fileName = "0"; // no storing
 			}
 			
 			// file format
 			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "bin") {
-				cmd_obj.file_format = " -format bin";
-			} else {
-				cmd_obj.file_format = " -format csv";
-				var r = document.getElementById("sample_rate");
-				if (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32") {
-					if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
-						return false;
-					}
+			var r = document.getElementById("sample_rate");
+			startPost.fileFormat = e.options[e.selectedIndex].value;
+			if (e.options[e.selectedIndex].value == "csv" && (r.options[r.selectedIndex].value == "64" || r.options[r.selectedIndex].value == "32")) {
+				if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
+					return false;
 				}
 			}
 			
@@ -960,9 +967,10 @@ $(function() {
 					return false;
 				}
 				var size = ($("#file_size").val()) + e.options[e.selectedIndex].value;
-				cmd_obj.file_format += " -size " + size;
+				startPost.fileSize = size;
+				
 			} else {
-				cmd_obj.file_format += " -size 0";
+				startPost.fileSize = "0";
 			}
 			
 			// channels
@@ -975,42 +983,44 @@ $(function() {
 			var first = 1;
 			if ($("#fhr1:checked").length > 0) {
 				if (first == 1) {
-					cmd_obj.force = " -fhr 1";
+					startPost.forceHigh = "1";
 					first = 0;
 				} else {
-					cmd_obj.force += ",1";
+					startPost.forceHigh += ",1";
 				}
 			}
 			if ($("#fhr2:checked").length > 0) {
 				if (first == 1) {
-					cmd_obj.force = " -fhr 2";
+					startPost.forceHigh = "2";
 					first = 0;
 				} else {
-					cmd_obj.force += ",2";
+					startPost.forceHigh += ",2";
 				}
 			}
 			if(first == 1) { // no forcing
-				cmd_obj.force = " -fhr 0";
+				startPost.forceHigh = "0";
 			}
 			
 			
 			// digital inputs
 			if ($("#digital_inputs:checked").length > 0) {
-				cmd_obj.digital_inputs = " -d";
+				startPost.digitalInputs = '1';
 			} else {
-				cmd_obj.digital_inputs = " -d 0";
+				startPost.digitalInputs = '0';
 			}
 			
 			// set as default
 			if ($("#set_default:checked").length > 0) {
-				cmd_obj.digital_inputs += " -s";
+				startPost.setDefault = '1';
+			} else {
+				startPost.setDefault = '0';
 			}
 			
 			// ignore calibration
 			if ($("#calibration:checked").length > 0) {
-				cmd_obj.digital_inputs += " -c 0";
+				startPost.ignoreCalibration = "1";
 			} else {
-				cmd_obj.digital_inputs += " -c";
+				startPost.ignoreCalibration = "0";
 			}
 			
 			return true;
