@@ -2,8 +2,8 @@ function [ ga_scale, ga_offset, res ] = rl_aux_lin_fit( points, points_ideal )
 %RL_AUX_LIN_FIT Calculates a linear fitting function from points to
 %points_ideal, with form: scale * points + offset = points_ideal
 %   The function first creates an LMS fit and then searches for pareto
-%   optimal (offset error & scale error) fits based on this. The final
-%   candidate is selected using a RMS of both (normalized) metrics
+%   optimal (offset error, scale error & MSE) fits based on this. The final
+%   candidate is selected using a RMS of all (normalized) metrics
 %   Parameters:
 %      - points:        Argument of function
 %      - points_ideal:  Desired result of function
@@ -39,11 +39,13 @@ options = gaoptimset('PlotFcn',[], ... % @gaplotpareto , ...
     b,Aeq,beq,lb,ub,options);
 
 %% Select one of the pareto-optimal candidates
-value = sqrt( (Fval(:,1) ./ median(Fval(:,1))).^2 + (Fval(:,2) ./ median(Fval(:,2))).^2);
+value =  (Fval(:,1) ./ median(Fval(:,1))).^2 + ...
+    (Fval(:,2) ./ median(Fval(:,2))).^2 + (Fval(:,3) ./ median(Fval(:,3))).^2;
 [~, best] = min(value);
 ga_offset = x(best,1);
 ga_scale = x(best,2);
 
+mse = Fval(best,3);
 disp(['Chose error points: SE: ', num2str(Fval(best,1)), '%; OE: ', num2str(Fval(best,2))]);
 
 % Calculate the residual error
@@ -79,6 +81,8 @@ function [ret] = get_errors(points, points_ideal, offset, scale, offset_error_ta
     scale_error = abs(new_error./points_ideal);
     max_scale_error = max(scale_error(abs(points_ideal) > 1e-5));
     
+    
     % Create the return vector
-    ret = [max_scale_error*100, offset_error];
+    mse = mean(error.^2);
+    ret = [max_scale_error*100, offset_error, mse];
 end
