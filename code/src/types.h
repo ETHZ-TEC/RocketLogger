@@ -77,7 +77,8 @@
 #define PRU_DIG_SIZE 2 // status size in bytes
 #define PRU_BUFFER_STATUS_SIZE 4 //buffer status size in bytes
 
-#define RATE_SCALING 1 //1000 // rates are in ksps -> TODO: remove
+/// KSPS <-> SPS conversion factor
+#define KSPS 1000
 
 #define I1L_VALID_BIT 1
 #define I2L_VALID_BIT 1

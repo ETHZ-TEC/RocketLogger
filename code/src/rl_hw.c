@@ -7,13 +7,11 @@ void hw_init(struct rl_conf* conf) {
 	
 	// PWM
 	pwm_setup();
-	// TODO: rate in sps
 	if(conf->sample_rate < MIN_ADC_RATE) {
-		range_clock_setup(MIN_ADC_RATE/1000);
+		range_clock_setup(MIN_ADC_RATE);
 	} else {
-		range_clock_setup(conf->sample_rate/1000);
+		range_clock_setup(conf->sample_rate);
 	}
-	range_clock_setup(conf->sample_rate);
 	adc_clock_setup();
 	
 	// GPIO

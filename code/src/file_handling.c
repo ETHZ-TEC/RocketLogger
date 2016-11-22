@@ -73,10 +73,10 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	lead_in->magic = RL_FILE_MAGIC;
 	lead_in->file_version = RL_FILE_VERSION;
 	lead_in->header_length = sizeof(struct rl_file_lead_in) + comment_length + (channel_count + channel_bin_count) * sizeof(struct rl_file_channel);
-	lead_in->data_block_size = conf->sample_rate*RATE_SCALING / conf->update_rate;
+	lead_in->data_block_size = conf->sample_rate / conf->update_rate;
 	lead_in->data_block_count = 0; // needs to be updated
 	lead_in->sample_count = 0; // needs to be updated
-	lead_in->sample_rate = conf->sample_rate * RATE_SCALING;
+	lead_in->sample_rate = conf->sample_rate;
 	get_mac_addr(lead_in->mac_address);
 	lead_in->start_time = time_real;
 	lead_in->comment_length = comment_length;

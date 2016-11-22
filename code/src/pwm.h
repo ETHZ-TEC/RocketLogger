@@ -57,7 +57,7 @@
 /// Latch reset period margin
 #define MARGIN 0.1
 /// Latch reset period scaling factor
-#define PERIOD_SCALE 50000 * (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in 5ns, (/2 clock prescaling))
+#define PWM_PERIOD_SCALE 50000000 * (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in 5ns, (/2 clock prescaling))
 
 
 // ADC clock settings

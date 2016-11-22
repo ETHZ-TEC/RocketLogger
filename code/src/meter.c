@@ -39,7 +39,7 @@ void print_meter(struct rl_conf* conf, void* buffer_addr, uint32_t sample_size) 
 	int32_t channel_data[num_channels];
 	
 	// number of samples to average
-	uint32_t avg_number = conf->sample_rate*RATE_SCALING / conf->update_rate;
+	uint32_t avg_number = conf->sample_rate / conf->update_rate;
 	
 	
 	// read digital channels

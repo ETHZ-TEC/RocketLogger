@@ -55,15 +55,11 @@ void pwm_close() {
 
 /**
  * Setup PWMSS1 for range latch reset clock.
- * @param sample_rate ADC sampling rate in kSps.
+ * @param sample_rate ADC sampling rate in Sps.
  */
 void range_clock_setup(int sample_rate) {
-	
-	if(sample_rate < 1000) {
-		sample_rate = 1000;
-	}
 
-	int period = 1000*PERIOD_SCALE / sample_rate;
+	int period = PWM_PERIOD_SCALE / sample_rate;
 	
 	// setup ehrpwm
 	pwmss1_regs[TBCTL] = TBCTL_DEFAULT | UP_DOWN_COUNT | PRESCALE2; // set clock mode

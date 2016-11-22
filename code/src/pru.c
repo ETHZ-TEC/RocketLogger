@@ -199,7 +199,7 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_fa
 	
 	// set buffer infos
 	pru->sample_limit = conf->sample_limit * avg_factor;
-	pru->buffer_size = (conf->sample_rate * RATE_SCALING * avg_factor) / conf->update_rate;
+	pru->buffer_size = (conf->sample_rate * avg_factor) / conf->update_rate;
 	
 	uint32_t buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
@@ -381,7 +381,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			
 			// check if max file size reached
 			uint64_t file_size = (uint64_t) ftello(data);
-			uint64_t margin = conf->sample_rate*RATE_SCALING * sizeof(int32_t) * (NUM_CHANNELS+1) + sizeof(struct time_stamp);
+			uint64_t margin = conf->sample_rate * sizeof(int32_t) * (NUM_CHANNELS+1) + sizeof(struct time_stamp);
 			
 			if(conf->max_file_size !=0 && file_size + margin > conf->max_file_size) {
 				

@@ -163,7 +163,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				case SAMPLE_RATE:
 					if (argc > ++i && isdigit(argv[i][0])) {
 						if(argv[i][strlen(argv[i])-1] == 'k') {
-							conf->sample_rate = atoi(argv[i]) * 1000;
+							conf->sample_rate = atoi(argv[i]) * KSPS;
 						} else {
 							conf->sample_rate = atoi(argv[i]);
 						}
