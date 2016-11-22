@@ -42,8 +42,8 @@ void reset_buffer(struct ringbuffer* buffer, int element_size, int length) {
 	buffer->head = 0;
 }
 
-void buffer_add(struct ringbuffer* buffer, int32_t* data) {
-	memcpy((buffer->data) + buffer->head*buffer->element_size/sizeof(int32_t), data, buffer->element_size);
+void buffer_add(struct ringbuffer* buffer, int64_t* data) {
+	memcpy((buffer->data) + buffer->head*buffer->element_size/sizeof(int64_t), data, buffer->element_size);
 	if(buffer->filled < buffer->length) {
 		buffer->filled++;
 	}
@@ -51,8 +51,8 @@ void buffer_add(struct ringbuffer* buffer, int32_t* data) {
 	
 }
 
-int32_t* buffer_get(struct ringbuffer* buffer, int num) {
+int64_t* buffer_get(struct ringbuffer* buffer, int num) {
 	int pos = ((int)buffer->head + (int)buffer->length - 1 - num) % (int)buffer->length;
 	
-	return buffer->data + pos*buffer->element_size/sizeof(int32_t);
+	return buffer->data + pos*buffer->element_size/sizeof(int64_t);
 }

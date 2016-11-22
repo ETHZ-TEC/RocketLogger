@@ -31,7 +31,7 @@ struct ringbuffer {
 	uint32_t length;
 	uint32_t filled;
 	uint32_t head;
-	int32_t data[NUM_WEB_CHANNELS * NUM_WEB_POINTS];
+	int64_t data[NUM_WEB_CHANNELS * NUM_WEB_POINTS];
 };
 
 struct web_shm {
@@ -47,9 +47,9 @@ struct web_shm* open_web_shm();
 
 void reset_buffer(struct ringbuffer* buffer, int element_size, int length);
 
-void buffer_add(struct ringbuffer* buffer, int32_t* data);
+void buffer_add(struct ringbuffer* buffer, int64_t* data);
 
-int32_t* buffer_get(struct ringbuffer* buffer, int num);
+int64_t* buffer_get(struct ringbuffer* buffer, int num);
 
 
 #endif

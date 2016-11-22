@@ -44,13 +44,26 @@ int64_t get_free_space(char* path) {
 
 }
 
-void print_json_new(int32_t data[], int length) {
+void print_json_32(int32_t data[], int length) {
 	char str[MAX_STRING_LENGTH];
 	char val[MAX_STRING_VALUE];
 	int i;
 	sprintf(str, "[\"%d\"", data[0]);
 	for (i=1; i < length; i++) {
 		sprintf(val, ",\"%d\"", data[i]);
+		strcat(str, val);
+	}
+	strcat(str, "]\n");
+	printf("%s",str);
+}
+
+void print_json_64(int64_t data[], int length) {
+	char str[MAX_STRING_LENGTH];
+	char val[MAX_STRING_VALUE];
+	int i;
+	sprintf(str, "[\"%lld\"", data[0]);
+	for (i=1; i < length; i++) {
+		sprintf(val, ",\"%lld\"", data[i]);
 		strcat(str, val);
 	}
 	strcat(str, "]\n");
@@ -73,8 +86,8 @@ void print_status() {
 	printf("%d\n", status.conf.file_format);
 	printf("%s\n", status.conf.file_name);
 	printf("%llu\n", status.conf.max_file_size);
-	print_json_new(status.conf.channels, NUM_CHANNELS);
-	print_json_new(status.conf.force_high_channels, NUM_I_CHANNELS);
+	print_json_32(status.conf.channels, NUM_CHANNELS);
+	print_json_32(status.conf.force_high_channels, NUM_I_CHANNELS);
 	printf("%d\n", status.samples_taken);
 	printf("%d\n", status.conf.enable_web_server);
 		
@@ -119,7 +132,7 @@ void print_data() {
 	printf("%d\n", buffer_size);
 	
 	// read data
-	int32_t data[buffer_count][buffer_size][num_channels];
+	int64_t data[buffer_count][buffer_size][num_channels];
 	int i;
 	
 	if(wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
@@ -128,7 +141,7 @@ void print_data() {
 	for(i=0; i<buffer_count; i++) {
 		
 		// read data buffer
-		int32_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
+		int64_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
 		if(web_data->buffer[t_scale].element_size > sizeof(data)) {
 			rl_log(ERROR, "In print_data: memcpy is trying to copy to much data.");
 			break;
@@ -142,7 +155,7 @@ void print_data() {
 	for(i=buffer_count-1; i>=0; i--) { 
 		int j;
 		for(j=0; j<buffer_size; j++) {
-			print_json_new(data[i][j], num_channels);
+			print_json_64(data[i][j], num_channels);
 		}
 	}
 }

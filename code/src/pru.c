@@ -286,7 +286,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		int i;
 		for(i=0; i<WEB_RING_BUFFER_COUNT; i++) {
-			int web_buffer_element_size = buffer_sizes[i] * num_web_channels*sizeof(int32_t);
+			int web_buffer_element_size = buffer_sizes[i] * num_web_channels*sizeof(int64_t);
 			int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
 			reset_buffer(&web_data->buffer[i], web_buffer_element_size, web_buffer_length);
 		}

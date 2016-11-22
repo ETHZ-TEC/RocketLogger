@@ -440,9 +440,9 @@ $(function() {
 						if(plotChannels[j]) {
 							if(!isDigital[j]) {
 								if(isCurrent[j]) {
-									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000]);
+									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000000]);
 								} else {
-									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000]);
+									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/10000]);
 								}
 							} else {
 								plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, parseInt(tempData[k])]);

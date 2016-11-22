@@ -253,7 +253,7 @@ void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 }
 
 
-void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf* conf) {
+void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf* conf) {
 	
 	int ch_in = 0;
 	int ch_out = 0;
@@ -261,41 +261,41 @@ void merge_currents(uint8_t* valid, int32_t* dest, int64_t* src, struct rl_conf*
 		
 	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
 		if(valid[0] == 1) {
-			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
+			dest[ch_out++] = src[++ch_in];
 		} else {
-			dest[ch_out++] = (int32_t) src[ch_in++];
+			dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 		}
 		ch_in++;
 	} else if(conf->channels[I1H_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 	} else if(conf->channels[I1L_INDEX] > 0){
-		dest[ch_out++] = (int32_t) src[ch_in++]/H_L_SCALE;
+		dest[ch_out++] = src[ch_in++];
 	}
 	if(conf->channels[V1_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++];
 	}
 	if(conf->channels[V2_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++];
 	}
 	
 	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
 		if(valid[1] == 1) {
-			dest[ch_out++] = (int32_t) src[++ch_in]/H_L_SCALE;
+			dest[ch_out++] = src[++ch_in];
 		} else {
-			dest[ch_out++] = (int32_t) src[ch_in++];
+			dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 		}
 		ch_in++;
 	} else if(conf->channels[I2H_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 	} else if(conf->channels[I2L_INDEX] > 0){
-		dest[ch_out++] = (int32_t) src[ch_in++]/H_L_SCALE;
+		dest[ch_out++] = src[ch_in++];
 	}
 	
 	if(conf->channels[V3_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++];
 	}
 	if(conf->channels[V4_INDEX] > 0) {
-		dest[ch_out++] = (int32_t) src[ch_in++];
+		dest[ch_out++] = src[ch_in++];
 	}
 }
 
@@ -372,7 +372,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 	if(conf->enable_web_server == 1) {
 		num_web_channels = web_data_ptr->num_channels;
 	}
-	int32_t web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
+	int64_t web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE][num_web_channels];
 
 	
 	// HANDLE BUFFER //
@@ -469,7 +469,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
+					//avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
 					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
 				}
 				
