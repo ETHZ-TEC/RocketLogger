@@ -490,8 +490,6 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 							web_data[BUF1_INDEX][i/avg_length[BUF1_INDEX]][j] = 0;
 						}
 					}
-					
-					bin_avg_data[BUF1_INDEX][j] = 0;
 				}
 				
 				// write data to file
@@ -546,6 +544,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				
 				// reset values
 				memset(avg_data[BUF1_INDEX], 0, sizeof(int64_t) * num_channels);
+				memset(bin_avg_data[BUF1_INDEX], 0, sizeof(uint32_t) * num_bin_channels);
 				avg_valid[BUF1_INDEX][0] = 1;
 				avg_valid[BUF1_INDEX][1] = 1;
 			}
@@ -578,8 +577,6 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 							web_data[BUF10_INDEX][i/avg_length[BUF10_INDEX]][j] = 0;
 						}
 					}
-					
-					bin_avg_data[BUF10_INDEX][j] = 0;
 				}
 				
 				// write data to file
@@ -634,6 +631,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				
 				// reset values
 				memset(avg_data[BUF10_INDEX], 0, sizeof(int64_t) * num_channels);
+				memset(bin_avg_data[BUF10_INDEX], 0, sizeof(uint32_t) * num_bin_channels);
 				avg_valid[BUF10_INDEX][0] = 1;
 				avg_valid[BUF10_INDEX][1] = 1;
 			}
