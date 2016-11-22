@@ -1,11 +1,16 @@
 #include "pwm.h"
 
+/// Physical memory file descriptor
 int mem_fd;
-
+/// Pointer to PWMSS0 (PWM-Sub-System) registers
 volatile uint16_t *pwmss0_regs;
+/// Pointer to PWMSS1 (PWM-Sub-System) registers
 volatile uint16_t *pwmss1_regs;
 
-// map pwm registers into user space
+/**
+ * Map PWM registers into user space (on {@link pwmss0_regs} and {@link pwmss1_regs} pointer).
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
 int pwm_setup() {
 	
 	// open /dev/mem for memory mapping
@@ -33,7 +38,9 @@ int pwm_setup() {
 	return SUCCESS;
 }
 
-// unmap pwm registers
+/**
+ * Unmap PWM registers from user space.
+ */
 void pwm_close() {
 	
 	// unmap memory
@@ -46,7 +53,10 @@ void pwm_close() {
 }
 
 
-// setup range clock pwm module
+/**
+ * Setup PWMSS1 for range latch reset clock.
+ * @param sample_rate ADC sampling rate in kSps.
+ */
 void range_clock_setup(int sample_rate) {
 	
 	int period = PERIOD_SCALE / sample_rate;	
@@ -64,7 +74,9 @@ void range_clock_setup(int sample_rate) {
 	
 }
 
-// setup adc clock
+/**
+ * Setup PWMSS0 for ADC master clock.
+ */
 void adc_clock_setup() {
 	
 	// setup ehrpwm

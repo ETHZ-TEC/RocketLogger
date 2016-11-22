@@ -3,7 +3,6 @@
 // reset calibration
 /**
  * Set all offsets to default state (0).
- * @return Indicates success.
  */
 void reset_offsets() {
 	int i;
@@ -14,7 +13,6 @@ void reset_offsets() {
 
 /**
  * Set all scales to default state (1).
- * @return Indicates success.
  */
 void reset_scales() {
 	int i;
@@ -25,7 +23,8 @@ void reset_scales() {
 
 /**
  * Read in calibration file.
- * @return Indicates success.
+ * @param conf Pointer to {@link rl_conf} struct.
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
  */
 int read_calibration(struct rl_conf* conf) {
 	// check if calibration file existing
@@ -59,22 +58,3 @@ int read_calibration(struct rl_conf* conf) {
 	return SUCCESS;
 }
 
-/**
- * Write calibration values to file.
- * @return Indicates success.
- */
-int write_calibration() {
-	// open calibration file
-	FILE* file = fopen(CALIBRATION_FILE, "w+");
-	if(file == NULL) {
-		rl_log(ERROR, "failed to open calibration file");
-		return FAILURE;
-	}
-	// write values
-	fwrite(offsets, sizeof(int32_t), NUM_CHANNELS, file);
-	fwrite(scales, sizeof(double), NUM_CHANNELS, file);
-	
-	//close file
-	fclose(file);
-	return SUCCESS;
-}
