@@ -7,7 +7,7 @@ end
 %% read files
 rld_il1 = rld('20161102_cal_i1l_auto.rld');
 rld_il2 = rld('20161102_cal_i2l_auto.rld');
-rld_ih = rld('20161103_cal_ih_2x_auto.rld');
+rld_ih = rld('20161122_cal_ih_2x_auto.rld');
 rld_v = rld('20161027_cal_v_auto_500ms.rld');
 
 %% perform fitting
