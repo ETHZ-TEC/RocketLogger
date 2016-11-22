@@ -1,7 +1,4 @@
 $(function() {
-	
-		// TODO
-		// currents: less average!
 		
 		
 		// CONSTANTS
@@ -18,9 +15,11 @@ $(function() {
 		
 		NUM_PLOT_CHANNELS = 12;
 		NUM_DIG_CHANNELS = 6;
-		
 		NUM_CHANNELS = 8;
 		NUM_I_CHANNELS = 2;
+		
+		VOLTAGE_SCALE = 10000;
+		CURRENT_SCALE = 1000000;
 		
 		UPDATE_INTERVAL = 500;
 		STATUS_TIMEOUT_TIME = 3000;
@@ -32,7 +31,13 @@ $(function() {
 		
 		DIG_DIST_FACTOR = 1.5;
 		
-		tScales = [1,10,100];
+		T_SCALES = [1,10,100];
+		
+		GB_SCALE = 1024*1024*1024;
+		MB_SCALE = 1024*1024;
+		KB_SCALE = 1024;
+		MS_SCALE = 1000;
+		KSPS = 1000;
 		
 		
 		
@@ -46,7 +51,7 @@ $(function() {
 		var reqId = 0;
 		var plotEnabled = '1';
 		var tScale = 0;
-		var maxBufferCount = TIME_DIV * tScales[tScale];
+		var maxBufferCount = TIME_DIV * T_SCALES[tScale];
 		var currentTime = 0;
 		var filename = "data.rld";
 		var loadDefault = false;
@@ -140,7 +145,7 @@ $(function() {
 						
 						// free disk space
 						freeSpace = tempState[2];
-						document.getElementById("free_space").innerHTML = 'Free Disk Space: ' + (parseInt(freeSpace)/1070599167).toFixed(3) + 'GB';
+						document.getElementById("free_space").innerHTML = 'Free Disk Space: ' + (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
 						
 						// left sampling time 
 						if($("#enable_storing:checked").length > 0) {
@@ -224,7 +229,7 @@ $(function() {
 				var rate = (numChannelsActivated+1) * 4 * tempSampleRate;
 				var timeLeft = freeSpace/rate;
 				
-				var date = new Date(timeLeft * 1000);
+				var date = new Date(timeLeft * MS_SCALE);
 				var month = date.getMonth();
 				if(month>0) {
 					document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
@@ -254,7 +259,7 @@ $(function() {
 			var digitalInputs = tempState[5];
 			var fileFormat = tempState[6];
 			var tempFilename = tempState[7];
-			var maxFileSize = parseInt(tempState[8])/1024/1024;
+			var maxFileSize = parseInt(tempState[8])/MB_SCALE;
 			var tempChannels = JSON.parse(tempState[9]);
 			var tempForceHighChannels = JSON.parse(tempState[10]);
 			var samplesTaken = tempState[11];
@@ -335,8 +340,8 @@ $(function() {
 			if(maxFileSize > 0) {
 				document.getElementById("file_size_limited").checked = true;
 				var e = document.getElementById("file_size_unit");
-				if(maxFileSize >= 1024) {
-					maxFileSize = maxFileSize / 1024;
+				if(maxFileSize >= KB_SCALE) {
+					maxFileSize = maxFileSize / KB_SCALE;
 					e.selectedIndex = 1;
 				} else {
 					e.selectedIndex = 0;
@@ -417,7 +422,7 @@ $(function() {
 			if (tempTScale != tScale) {
 				resetData();
 				tScale = tempTScale;
-				maxBufferCount = TIME_DIV * tScales[tScale];
+				maxBufferCount = TIME_DIV * T_SCALES[tScale];
 			}
 			
 			// process data
@@ -440,12 +445,12 @@ $(function() {
 						if(plotChannels[j]) {
 							if(!isDigital[j]) {
 								if(isCurrent[j]) {
-									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/1000000]);
+									plotData[j].push([currentTime-MS_SCALE*(bufferCount-1) + MS_SCALE/bufferSize*i, tempData[k]/CURRENT_SCALE]);
 								} else {
-									plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, tempData[k]/10000]);
+									plotData[j].push([currentTime-MS_SCALE*(bufferCount-1) + MS_SCALE/bufferSize*i, tempData[k]/VOLTAGE_SCALE]);
 								}
 							} else {
-								plotData[j].push([currentTime-1000*(bufferCount-1) + 1000/bufferSize*i, parseInt(tempData[k])]);
+								plotData[j].push([currentTime-MS_SCALE*(bufferCount-1) + MS_SCALE/bufferSize*i, parseInt(tempData[k])]);
 							}
 							k++;
 						}
@@ -673,8 +678,8 @@ $(function() {
 			} else {
 				resetVPlot();
 			}
-			vPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            vPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
+			vPlot.getOptions().xaxes[0].min = currentTime - MS_SCALE * (maxBufferCount - 1);
+            vPlot.getOptions().xaxes[0].max = currentTime + MS_SCALE - 10*T_SCALES[tScale];
 			vPlot.setupGrid();
 			vPlot.draw();
 			
@@ -688,8 +693,8 @@ $(function() {
 			} else {
 				resetIPlot();
 			}
-			iPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            iPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
+			iPlot.getOptions().xaxes[0].min = currentTime - MS_SCALE * (maxBufferCount - 1);
+            iPlot.getOptions().xaxes[0].max = currentTime + MS_SCALE - 10*T_SCALES[tScale];
 			iPlot.setupGrid();
 			iPlot.draw();
 			
@@ -705,8 +710,8 @@ $(function() {
 			resetDigPlot();
 			digPlot.getOptions().yaxes[0].max = numDigDisplayed*DIG_DIST_FACTOR-0.4,
 			digPlot.setData(getDigData());
-			digPlot.getOptions().xaxes[0].min = currentTime - 1000 * (maxBufferCount - 1);
-            digPlot.getOptions().xaxes[0].max = currentTime + 1000 - 10*tScales[tScale];
+			digPlot.getOptions().xaxes[0].min = currentTime - MS_SCALE * (maxBufferCount - 1);
+            digPlot.getOptions().xaxes[0].max = currentTime + MS_SCALE - 10*T_SCALES[tScale];
 			digPlot.setupGrid();
 			digPlot.draw();
 			
@@ -971,7 +976,12 @@ $(function() {
 			
 			// rate
 			var e = document.getElementById("sample_rate");
-			var tempSampleRate = e.options[e.selectedIndex].value;			if(tempSampleRate >= 1000) {				tempSampleRate = tempSampleRate/1000 + "k";			}			startPost.sampleRate = tempSampleRate;			
+			var tempSampleRate = e.options[e.selectedIndex].value;
+			if(tempSampleRate >= KSPS) {
+				tempSampleRate = tempSampleRate/KSPS + "k";
+			}
+			startPost.sampleRate = tempSampleRate;	
+			
 			
 			// file
 			if ($("#enable_storing:checked").length > 0) {
