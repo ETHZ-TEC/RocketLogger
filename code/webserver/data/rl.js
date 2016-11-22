@@ -33,9 +33,9 @@ $(function() {
 		
 		T_SCALES = [1,10,100];
 		
-		GB_SCALE = 1024*1024*1024;
-		MB_SCALE = 1024*1024;
-		KB_SCALE = 1024;
+		GB_SCALE = 1000000000;
+		MB_SCALE = 1000000;
+		KB_SCALE = 1000;
 		MS_SCALE = 1000;
 		KSPS = 1000;
 		
@@ -1009,7 +1009,7 @@ $(function() {
 					alert("Too small file size! Minimum is 5MB");
 					return false;
 				}
-				var size = ($("#file_size").val()) + e.options[e.selectedIndex].value;
+				var size = (Math.round($("#file_size").val())) + e.options[e.selectedIndex].value;
 				startPost.fileSize = size;
 				
 			} else {

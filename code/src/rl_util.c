@@ -291,21 +291,21 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 						switch(argv[i][strlen(argv[i])-1]) {
 							case 'k':
 							case 'K':
-								conf->max_file_size *= 1024;
+								conf->max_file_size *= 1000;
 								break;
 							case 'm':
 							case 'M':
-								conf->max_file_size *= 1024*1024;
+								conf->max_file_size *= 1000000;
 								break;
 							case 'g':
 							case 'G':
-								conf->max_file_size *= 1024*1024*1024;
+								conf->max_file_size *= 1000000000;
 								break;
 							default:
 								break;
 						}
 						// check file size
-						if(conf->max_file_size != 0 && conf->max_file_size < 5*1024*1024) {
+						if(conf->max_file_size != 0 && conf->max_file_size < 5000000) {
 							rl_log(ERROR, "too small file size (min: 5m)");
 							return FAILURE;
 						}
