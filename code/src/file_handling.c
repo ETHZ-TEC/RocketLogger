@@ -452,12 +452,6 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 			avg_valid[j][0] = avg_valid[j][0] & valid1;
 			avg_valid[j][1] = avg_valid[j][1] & valid2;
 		}
-		/*avg_valid[BUF1_INDEX][0] = avg_valid[BUF1_INDEX][0] & valid1;
-		avg_valid[BUF1_INDEX][1] = avg_valid[BUF1_INDEX][1] & valid2;
-		avg_valid[BUF10_INDEX][0] = avg_valid[BUF10_INDEX][0] & valid1;
-		avg_valid[BUF10_INDEX][1] = avg_valid[BUF10_INDEX][1] & valid2;
-		avg_valid[BUF100_INDEX][0] = avg_valid[BUF100_INDEX][0] & valid1;
-		avg_valid[BUF100_INDEX][1] = avg_valid[BUF100_INDEX][1] & valid2;*/
 		
 		
 		// HANDLE AVERAGE DATA //
@@ -469,7 +463,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 				
 				// average
 				for(j=0; j<num_channels; j++) {
-					//avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
+					avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
 					avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
 				}
 				
