@@ -5,7 +5,8 @@ void rl_print_config(struct rl_conf* conf) {
 	
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
 
-										printf("  Sampling rate:   %dkSps\n", conf->sample_rate);
+	if(conf->sample_rate >= 1000) {		printf("  Sampling rate:   %dkSps\n", conf->sample_rate/1000);
+	} else {							printf("  Sampling rate:   %dSps\n", conf->sample_rate);}
 										printf("  Update rate:     %dHz\n", conf->update_rate);
 	if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
 	else								printf("  Webserver:       disabled\n");
@@ -108,6 +109,10 @@ int rl_sample(struct rl_conf* conf) {
 			conf->sample_limit = 0;
 			conf->enable_web_server = 0;
 			conf->file_format = NO_FILE;
+			if(conf->sample_rate < 1000) {
+				rl_log(WARNING, "too low sample rate. Setting rate to 1kSps");
+				conf->sample_rate = 1000;
+			}
 			break;
 		default:
 			rl_log(ERROR, "wrong mode");

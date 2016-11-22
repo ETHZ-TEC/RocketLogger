@@ -45,7 +45,7 @@ int read_calibration(struct rl_conf* conf) {
 	fread(scales, sizeof(double), NUM_CHANNELS, file);
 	
 	// calculate values for high rates
-	if(conf->sample_rate == 32 || conf->sample_rate == 64) {
+	if(conf->sample_rate == 32000 || conf->sample_rate == 64000) {
 		int i;
 		for (i=0; i<NUM_CHANNELS; i++) {
 			offsets[i] = offsets[i]/256;

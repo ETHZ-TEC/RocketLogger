@@ -9,7 +9,7 @@
 				$parse_error = false;
 				
 				// parse and check attributes
-				if(preg_match("/^\d+$/", $_POST['sampleRate']) == 1) {
+				if(preg_match("/^\d+[k]?$/", $_POST['sampleRate']) == 1) {
 					$command = $command . " -r " . $_POST['sampleRate'];
 				} else {
 					$parse_error = true;

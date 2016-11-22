@@ -69,5 +69,5 @@
 int pwm_setup();
 void pwm_close();
 
-void range_clock_setup(int sample_rate); // sampling rate [kHz]
+void range_clock_setup(int sample_rate); // sampling rate [Hz]
 void adc_clock_setup();

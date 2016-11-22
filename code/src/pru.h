@@ -138,7 +138,7 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
 void pru_set_state(rl_pru_state state);
 int pru_init();
-int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf);
+int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor);
 
 int pru_sample(FILE* data, struct rl_conf* conf);
 
