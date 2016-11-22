@@ -6,7 +6,7 @@ function [cal] = rl_do_cal (create_plots)
 %   Return Values:
 %      - cal:              rl_cal object from the calibration
 
-if ~exist('createPlots', 'var')
+if ~exist('create_plots', 'var')
     create_plots = 0;
 end
 
