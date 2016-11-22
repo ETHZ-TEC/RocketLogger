@@ -287,7 +287,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 				
 				case FILE_SIZE:
 					if (argc > ++i && isdigit(argv[i][0])) {
-						conf->max_file_size = atoi(argv[i]);
+						conf->max_file_size = atoll(argv[i]);
 						switch(argv[i][strlen(argv[i])-1]) {
 							case 'k':
 							case 'K':

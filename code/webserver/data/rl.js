@@ -1009,7 +1009,12 @@ $(function() {
 					alert("Too small file size! Minimum is 5MB");
 					return false;
 				}
-				var size = (Math.round($("#file_size").val())) + e.options[e.selectedIndex].value;
+				var size = $("#file_size").val();
+				if(e.options[e.selectedIndex].value == 'm') {
+					size *= MB_SCALE;
+				} else {
+					size *= GB_SCALE;
+				}
 				startPost.fileSize = size;
 				
 			} else {
