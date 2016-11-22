@@ -245,8 +245,8 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// average (for low rates)
 	uint32_t avg_factor = 1;
-	if(conf->sample_rate < 1000) {
-		avg_factor = 1000 / conf->sample_rate;
+	if(conf->sample_rate < MIN_ADC_RATE) {
+		avg_factor = MIN_ADC_RATE / conf->sample_rate;
 	}
 	
 	

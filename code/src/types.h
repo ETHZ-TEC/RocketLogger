@@ -87,6 +87,8 @@
 #define DIGIN5_BIT 4
 #define DIGIN6_BIT 8
 
+#define MIN_ADC_RATE 1000
+
 
 
 // ROCKETLOGGER

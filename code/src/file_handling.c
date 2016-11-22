@@ -462,7 +462,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		
 		// HANDLE AVERAGE DATA //
 		
-		if(conf->enable_web_server == 1 || conf->sample_rate < 1000) {
+		if(conf->enable_web_server == 1 || conf->sample_rate < MIN_ADC_RATE) {
 			
 			// buffer 1
 			if((i+1)%avg_length[BUF1_INDEX] == 0) {
@@ -719,7 +719,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		// WRITE FILE IF HIGH RATE //
 		
 		// write binary channels
-		if(conf->sample_rate >= 1000) {
+		if(conf->sample_rate >= MIN_ADC_RATE) {
 			if (bin_channel_pos > 0) {
 				if (conf->file_format == BIN) {
 					fwrite(&bin_data, sizeof(uint32_t), 1, data);
