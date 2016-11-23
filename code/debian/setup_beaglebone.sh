@@ -46,7 +46,7 @@ echo "> Updating some security settings"
 cp -f ssh/sshd_config /etc/ssh/
 
 # copy public keys for log in
-mkdir -f /home/rocketlogger/.ssh/
+mkdir -p /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
 cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
@@ -69,7 +69,7 @@ cp -f network/isc-dhcp-server /etc/default/isc-dhcp-server
 cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
 
 # create RL folder
-mkdir /etc/rocketlogger
+mkdir -p /etc/rocketlogger
 
 ## done
 echo "Done. Please reboot to apply all changes."
