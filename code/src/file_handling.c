@@ -147,7 +147,7 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 			// voltage
 			} else {
 				file_header->channel[j].unit = RL_UNIT_VOLT;
-				file_header->channel[j].channel_scale = RL_SCALE_TEN_NANO;
+				file_header->channel[j].channel_scale = RL_SCALE_MICRO;
 				file_header->channel[j].valid_data_channel = NO_VALID_DATA;
 			}
 			file_header->channel[j].data_size = 4;

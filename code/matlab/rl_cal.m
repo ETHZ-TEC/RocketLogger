@@ -12,7 +12,7 @@ classdef rl_cal < handle
         POSITIVE_SCALE_CHANNELS = [rl_cal.IH_INDEX, rl_cal.IL_INDEX];
         
         % Scales (per bit) for the values, that are stored in the binary files
-        FILE_SCALE_V = 1e-8;
+        FILE_SCALE_V = 1e-6;
         FILE_SCALE_IL = 1e-11;
         FILE_SCALE_IH = 1e-9;
         
