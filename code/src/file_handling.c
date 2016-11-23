@@ -448,7 +448,7 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		}
 		
 		// average valid info
-		for(j=0; j<BUF100_INDEX; j++) {
+		for(j=0; j<=BUF100_INDEX; j++) {
 			avg_valid[j][0] = avg_valid[j][0] & valid1;
 			avg_valid[j][1] = avg_valid[j][1] & valid2;
 		}
