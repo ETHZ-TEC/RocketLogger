@@ -46,7 +46,7 @@ echo "> Updating some security settings"
 cp -f ssh/sshd_config /etc/ssh/
 
 # copy public keys for log in
-mkdir /home/rocketlogger/.ssh/
+mkdir -f /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
 cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
