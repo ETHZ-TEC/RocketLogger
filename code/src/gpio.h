@@ -13,9 +13,14 @@
 /// Minimal time a button needs to be pressed (in µs)
 #define MIN_BUTTON_TIME 100000
 
-/// GPIO direction
+/**
+ * GPIO direction definition
+ */
 typedef enum direction {IN, OUT} rl_direction;
-/// GPIO interrupt edge
+
+/**
+ * GPIO interrupt edge definition
+ */
 typedef enum edge {NONE, RISING, FALLING, BOTH} rl_edge;
 
 // gpio unexport

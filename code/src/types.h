@@ -42,9 +42,6 @@
 
 // DEFINES
 
-// add currents (1: add, 0: not add)
-#define ADD_CURRENTS 1
-
 // return codes
 #define SUCCESS 1
 #define UNDEFINED 0

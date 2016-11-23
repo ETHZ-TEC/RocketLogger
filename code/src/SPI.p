@@ -22,14 +22,13 @@
 // pru data (position in memory)
 #define STATE_POS			0
 #define PRECISION_POS		4
-#define SAMPLE_SIZE_POS		8	// unused? TODO: remove
+#define SAMPLE_SIZE_POS		8	// unused
 #define BUFFER0_POS			12
 #define BUFFER1_POS			16
 #define BUFFER_SIZE_POS		20
 #define SAMPLE_LIMIT_POS	24
-#define ADD_CURRENTS_POS	28
-#define NUMBER_COMMANDS_POS	32
-#define MEM_COMMANDS_POS	36
+#define NUMBER_COMMANDS_POS	28
+#define MEM_COMMANDS_POS	32
 
 
 // gpio registers
@@ -54,11 +53,11 @@
 #define V4_REG r19
 
 #define I1H_REG r10
-#define I1M_REG r11
+#define I1M_REG r11 // unused
 #define I1L_REG r12
 
 #define I2H_REG r15
-#define I2M_REG r16
+#define I2M_REG r16 // unused
 #define I2L_REG r17
 
 // new channels
@@ -84,7 +83,7 @@
 // status regs			r24-r25
 #define MASK_NEG		r26
 #define MASK_POS		r27
-#define ADD_CURRENTS	r28
+#define UNUSED			r28 // unused
 #define WAIT_VAR		r29
 
 
@@ -221,7 +220,7 @@ INP1LOW:
 	// read status word
 	receive_word ADC1_STATUS_REG, ADC2_STATUS_REG, STATUS_SIZE 
 	
-	// read all channels -> TODO: adapt to new hardware
+	// read all channels
 	receive_word I1H_REG,	I2H_REG,	PRECISION
 	receive_word I1H_2_REG,	I2H_2_REG,	PRECISION
 	receive_word I1M_REG,	I2M_REG,	PRECISION
@@ -307,7 +306,6 @@ LOAD:
 	LBBO NUMBER_SAMPLES,	BASE_ADDRESS, SAMPLE_LIMIT_POS, 4	// number of samples to get
 	LBBO BUFFER_SIZE,		BASE_ADDRESS, BUFFER_SIZE_POS, 4	// buffer size
 	LBBO PRECISION,			BASE_ADDRESS, PRECISION_POS, 4		// precision
-	LBBO ADD_CURRENTS,		BASE_ADDRESS, ADD_CURRENTS_POS, 4	// add currents
 	MOV BUFFER_NUMBER, 0										// buffer number
 	
 	// store buffer number to memory
@@ -387,22 +385,16 @@ READ:
 	QBEQ HIGHPRECISION, PRECISION, 24
 	
 	
-	// add current channels if requested
-	QBEQ NOTADDLOW, ADD_CURRENTS, 0
-	
-	// v2
+	// add current channels 
 	ADD I1H_REG, I1H_REG, I1H_2_REG
 	ADD I1L_REG, I1L_REG, I1L_2_REG
 	ADD I2H_REG, I2H_REG, I2H_2_REG
 	ADD I2L_REG, I2L_REG, I2L_2_REG
 	
-NOTADDLOW:
 	
 	// I1
 	SBBO I1H_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
-	//SBBO I1M_REG, MEM_POINTER, 0, 2
-	//ADD MEM_POINTER, MEM_POINTER, 2
 	SBBO I1L_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
 	
@@ -415,8 +407,6 @@ NOTADDLOW:
 	// I2
 	SBBO I2H_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
-	//SBBO I2M_REG, MEM_POINTER, 0, 2
-	//ADD MEM_POINTER, MEM_POINTER, 2
 	SBBO I2L_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
 	
@@ -430,6 +420,7 @@ NOTADDLOW:
 	
 HIGHPRECISION:
 
+	// sign extension (24->32bit)
 	sign_extend I1H_REG
 	sign_extend I1H_2_REG
 	sign_extend I1M_REG
@@ -446,23 +437,16 @@ HIGHPRECISION:
 	sign_extend V4_REG
 	
 	
-	// add current channels if requested
-	QBEQ NOTADDHIGH, ADD_CURRENTS, 0
-	
-	// v2
+	// add current channels
 	ADD I1H_REG, I1H_REG, I1H_2_REG
 	ADD I1L_REG, I1L_REG, I1L_2_REG
 	ADD I2H_REG, I2H_REG, I2H_2_REG
 	ADD I2L_REG, I2L_REG, I2L_2_REG
 	
-NOTADDHIGH:
-	
 	
 	// I1
 	SBBO I1H_REG, MEM_POINTER, 0, 4
 	ADD MEM_POINTER, MEM_POINTER, 4
-	//SBBO I1M_REG, MEM_POINTER, 0, 4
-	//ADD MEM_POINTER, MEM_POINTER, 4
 	SBBO I1L_REG, MEM_POINTER, 0, 4
 	ADD MEM_POINTER, MEM_POINTER, 4
 	
@@ -475,8 +459,6 @@ NOTADDHIGH:
 	// I2
 	SBBO I2H_REG, MEM_POINTER, 0, 4
 	ADD MEM_POINTER, MEM_POINTER, 4
-	//SBBO I2M_REG, MEM_POINTER, 0, 4
-	//ADD MEM_POINTER, MEM_POINTER, 4
 	SBBO I2L_REG, MEM_POINTER, 0, 4
 	ADD MEM_POINTER, MEM_POINTER, 4
 	

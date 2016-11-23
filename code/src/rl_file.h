@@ -17,6 +17,7 @@
 #define RL_SCALE_PICO -12
 #define RL_SCALE_TEN_PICO -11
 #define RL_SCALE_NANO -9
+#define RL_SCALE_TEN_NANO -8
 #define RL_SCALE_MICRO -6
 #define RL_SCALE_MILLI -3
 #define RL_SCALE_NONE 0
