@@ -204,7 +204,6 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_fa
 	uint32_t buffer_size_bytes = pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	pru->buffer0_location = read_file_value(MMAP_FILE "addr");
 	pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
-	pru->add_currents = ADD_CURRENTS;
 	
 	
 	// set commands

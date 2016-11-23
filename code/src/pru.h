@@ -126,7 +126,6 @@ struct pru_data_struct {
 	uint32_t buffer1_location;
 	uint32_t buffer_size;
 	uint32_t sample_limit;
-	uint32_t add_currents;
 	uint32_t number_commands;
 	uint32_t commands[NUMBER_ADC_COMMANDS];
 };
