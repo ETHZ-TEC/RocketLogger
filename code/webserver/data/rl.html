@@ -138,21 +138,21 @@
 							</div>
 							<div class="row top-buffer">
 								<div class="col-md-1">
-									<button id="start" class="btn btn-default">Start</button>
+									<button id="start" class="btn btn-default" data-toggle="tooltip" title="Start new measurement">Start</button>
 								</div>
 								<div class="col-md-1">
-									<button id="stop" class="btn btn-default">Stop</button>
+									<button id="stop" class="btn btn-default" data-toggle="tooltip" title="Stop current measurement">Stop</button>
 								</div>
 								<div class="col-md-1">
 								</div>
 								<div class="col-md-3">
 									<div class="checkbox">
-										<label><input id="calibration" type="checkbox"></input>Ignore Calibration</label>
+										<label><input id="calibration" type="checkbox" data-toggle="tooltip" title="Ignore existing calibration"></input>Ignore Calibration</label>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="checkbox">
-										<label><input id="active" type="checkbox" checked="checked"></input>Always Active</label>
+										<label><input id="active" type="checkbox" checked="checked" data-toggle="tooltip" title="Keep the web interface always active"></input>Always Active</label>
 									</div>
 								</div>
 							</div>
@@ -171,11 +171,11 @@
 							<div class="row top-buffer">
 								<div class="col-md-3">
 									<div class="checkbox">
-										<label><input id="set_default" type="checkbox" ></input>Set as Default</label>
+										<label><input id="set_default" type="checkbox" data-toggle="tooltip" title="Set current configuration as default"></input>Set as Default</label>
 									</div>
 								</div>
 								<div class="col-md-6">
-									<button id="load_default" class="btn btn-default">Load Default Configuration</button>
+									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Load default configuration">Load Default</button>
 								</div>
 								
 							</div>
@@ -187,7 +187,7 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="checkbox">
-												<label><input id="enable_storing" type="checkbox" checked="checked"></input>Enable File Storing</label>
+												<label><input id="enable_storing" type="checkbox" checked="checked" data-toggle="tooltip" title="Store data to file"></input>Enable File Storing</label>
 											</div>
 										</div>
 									</div>
@@ -214,23 +214,23 @@
 										<div class="col-md-3">
 										</div>
 										<div class="col-md-2">
-											<button id="download" class="btn btn-default">Download</button>
+											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file">Download</button>
 										</div>
 										<div class="col-md-3">
-											<button id="list" class="btn btn-default">Browse Files</button>
+											<button id="list" class="btn btn-default" data-toggle="tooltip" title="Show all files">Browse Files</button>
 										</div>
 										<div class="col-md-3">
-											<button id="date_to_filename" class="btn btn-default">Date to Filename</button>
+											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date to file name">Date to Filename</button>
 										</div>
 									</div>
 									<div class="row top-buffer">
 										<div class="col-md-3">
 											<div class="checkbox">
-												<label><input id="file_size_limited" type="checkbox">Split Files</label>
+												<label><input id="file_size_limited" type="checkbox" data-toggle="tooltip" title="Split data files, if larger than maximum">Split Files</label>
 											</div>
 										</div>
 										<div class="col-md-2">
-											<input type="text" class="form-control" id="file_size" value="1" data-toggle="tooltip" title="Maximum File Size" disabled>
+											<input type="text" class="form-control" id="file_size" value="1" data-toggle="tooltip" title="Maximum file size" disabled>
 										</div>
 										<div class="col-md-3">
 											<select class="form-control"  id="file_size_unit" disabled>
@@ -244,7 +244,7 @@
 											Log File:
 										</div>
 										<div class="col-md-3">
-											<button id="download_log" class="btn btn-default">Log</button>
+											<button id="download_log" class="btn btn-default" data-toggle="tooltip" title="Show log file">Log</button>
 										</div>
 									</div>
 								</div>
@@ -293,7 +293,7 @@
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="fhr1" type="checkbox">Force High Range</label>
+													<label><input id="fhr1" type="checkbox" data-toggle="tooltip" title="Force I1 to high range">Force High Range</label>
 												</div>
 											</div>
 										</div>
@@ -314,17 +314,17 @@
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="fhr2" type="checkbox">Force High Range</label>
+													<label><input id="fhr2" type="checkbox" data-toggle="tooltip" title="Force I2 to high range">Force High Range</label>
 												</div>
 											</div>
 										</div>
 									</div>
 									<div class="row">
 										<div class="col-md-4">
-											<button id="select" class="btn btn-default">Select All</button>
+											<button id="select" class="btn btn-default" data-toggle="tooltip" title="Select all channels">Select All</button>
 										</div>
 										<div class="col-md-4">
-											<button id="deselect" class="btn btn-default">Deselect All</button>
+											<button id="deselect" class="btn btn-default" data-toggle="tooltip" title="Deselect all channels">Deselect All</button>
 										</div>
 									</div>
 								</div>
@@ -336,10 +336,10 @@
 									<h3>Rates</h3>
 									<div class="row">
 										<div class="col-md-3">
-											Samplerate:
+											Sampling Rate:
 										</div>
 										<div class="col-md-4">
-											<select class="form-control"  id="sample_rate">
+											<select class="form-control"  id="sample_rate" data-toggle="tooltip" title="Data sampling rate">
 												<option value=1>1Sps</option>
 												<option value=10>10Sps</option>
 												<option value=100>100Sps</option>
@@ -358,7 +358,7 @@
 									<h3>Digital Signals</h3>
 									<div class="row">
 										<div class="checkbox">
-											<label><input id="digital_inputs" type="checkbox" checked="checked">Log Digital Inputs</label>
+											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Log ditigal inputs">Log Digital Inputs</label>
 										</div>
 									</div>
 								</div>
@@ -378,7 +378,7 @@
 							<div class="row">
 								<div class="col-md-2">
 									<div class="checkbox">
-										<label><input id="plotting" type="checkbox" checked="checked">Update Plot</label>
+										<label><input id="plotting" type="checkbox" checked="checked" data-toggle="tooltip" title="Activate plot update">Update Plot</label>
 									</div>
 								</div>
 							</div>
@@ -387,7 +387,7 @@
 									Time Scale:
 								</div>
 								<div class="col-md-2">
-									<select class="form-control" id="time_scale">
+									<select class="form-control" id="time_scale" data-toggle="tooltip" title="Plot time scale">
 										<option value=0>1s/div</option>
 										<option value=1>10s/div</option>
 										<option value=2>100s/div</option>
@@ -406,24 +406,24 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label><input id="plot_v1" type="checkbox"  checked="checked"></input>Plot V1</label>
+											<label><input id="plot_v1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V1 in plot"></input>Plot V1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label><input id="plot_v2" type="checkbox"  checked="checked"></input>Plot V2</label>
+											<label><input id="plot_v2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V2 in plot"></input>Plot V2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label><input id="plot_v3" type="checkbox"  checked="checked"></input>Plot V3</label>
+											<label><input id="plot_v3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V3 in plot"></input>Plot V3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label><input id="plot_v4" type="checkbox"  checked="checked"></input>Plot V4</label>
+											<label><input id="plot_v4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V4 in plot"></input>Plot V4</label>
 										</div>
 									</div>
 								</div>
@@ -456,12 +456,12 @@
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#0072BD">
-										<label><input id="plot_i1" type="checkbox"  checked="checked"></input>Plot I1</label>
+										<label><input id="plot_i1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show I1 in plot"></input>Plot I1</label>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#D95319">
-										<label><input id="plot_i2" type="checkbox"  checked="checked"></input>Plot I2</label>
+										<label><input id="plot_i2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show I2 in plot"></input>Plot I2</label>
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -496,36 +496,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label><input id="plot_d1" type="checkbox"  checked="checked"></input>Plot DigIn1</label>
+											<label><input id="plot_d1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn1 in plot"></input>Plot DigIn1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label><input id="plot_d2" type="checkbox"  checked="checked"></input>Plot DigIn2</label>
+											<label><input id="plot_d2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn2 in plot"></input>Plot DigIn2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label><input id="plot_d3" type="checkbox"  checked="checked"></input>Plot DigIn3</label>
+											<label><input id="plot_d3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn3 in plot"></input>Plot DigIn3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label><input id="plot_d4" type="checkbox"  checked="checked"></input>Plot DigIn4</label>
+											<label><input id="plot_d4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn4 in plot"></input>Plot DigIn4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label><input id="plot_d5" type="checkbox"  checked="checked"></input>Plot DigIn5</label>
+											<label><input id="plot_d5" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn5 in plot"></input>Plot DigIn5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label><input id="plot_d6" type="checkbox"  checked="checked"></input>Plot DigIn6</label>
+											<label><input id="plot_d6" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn6 in plot"></input>Plot DigIn6</label>
 										</div>
 									</div>
 								</div>
