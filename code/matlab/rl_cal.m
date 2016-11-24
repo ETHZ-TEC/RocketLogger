@@ -26,7 +26,7 @@ classdef rl_cal < handle
         CAL_STEP_V = 100e-3;
         CAL_STEP_IL = 20e-6;
         CAL_STEP_IH = 2e-3;
-        CAL_MIN_STABLE_SAMPLES = 200;
+        CAL_MIN_STABLE_SAMPLES = 150;
     end
     
     properties
