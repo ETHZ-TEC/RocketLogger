@@ -297,10 +297,10 @@ void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 
 /**
  * Merge high/low currents for web interface
- * @param valid
- * @param dest
- * @param src
- * @param conf
+ * @param valid Valid information of low range current channels
+ * @param dest Pointer to destination array
+ * @param src Pointer to source array
+ * @param conf Pointer to current {@link rl_conf} configuration
  */
 void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf* conf) {
 	
@@ -348,8 +348,20 @@ void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf*
 	}
 }
 
+/// Test variable to remove
 int test = 0;
-int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data_ptr) {
+
+/**
+ * Handle a data buffer, dependent on current configuration
+ * @param data File pointer to data file
+ * @param buffer_addr Pointer to buffer to handle
+ * @param sample_size Size of samples to read
+ * @param samples_buffer Number of samples to read
+ * @param conf Current {@link rl_conf} configuration.
+ * @param sem_id ID of semaphores for shared web data
+ * @param web_data_ptr Pointer to shared web data
+ */
+void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t samples_buffer, struct rl_conf* conf, int sem_id, struct web_shm* web_data_ptr) {
 	
 	// INIT //
 	
@@ -816,6 +828,4 @@ int store_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uint32_t s
 		
 		}
 	}
-	
-	return SUCCESS;
 }

@@ -467,8 +467,8 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			}
 		}
 		
-		// store the buffer
-		store_buffer(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
+		// handle the buffer
+		handle_data_buffer(data, buffer_addr+4, pru.sample_size, samples_buffer, conf, sem_id, web_data);
 		
 		// update and write header
 		if (conf->file_format != NO_FILE) {
