@@ -1,7 +1,10 @@
 #include "file_handling.h"
 
+/// Channel names
 const char* channel_names[NUM_CHANNELS] = {"I1H","I1L","V1","V2","I2H","I2L","V3","V4"};
+/// Digital input names
 const char* digital_input_names[NUM_DIGITAL_INPUTS] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
+/// Valid channel names
 const char* valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
 
 /// Global variable to determine i1l valid channel
@@ -9,7 +12,11 @@ int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel
 int i2l_valid_channel = 0;
 
-
+/**
+ * Create time stamps (real and monotonic)
+ * @param time_real Pointer to {@link time_stamp} struct
+ * @param time_monotonic  Pointer to {@link time_stamp} struct
+ */
 void create_time_stamp(struct time_stamp* time_real, struct time_stamp* time_monotonic) {
 	
 	struct timespec spec_real;
@@ -32,8 +39,10 @@ void create_time_stamp(struct time_stamp* time_real, struct time_stamp* time_mon
 }
 
 
-// NEW HEADER
-
+/**
+ * Get MAC address of device
+ * @param mac_address Empty array with size {@link MAC_ADDRESS_LENGTH}
+ */
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
 	
 	FILE* fp = fopen (MAC_ADDRESS_FILE, "r");
@@ -46,6 +55,11 @@ void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
 	fclose(fp);
 }
 
+/**
+ * Set up file header lead-in with current configuration
+ * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
+ * @param conf Pointer to current {@link rl_conf} struct
+ */
 void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	
 	// number channels
@@ -85,6 +99,11 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	
 }
 
+/**
+ * Set up channel information for file header with current configuration
+ * @param file_header Pointer to {@link rl_file_header} struct to set up
+ * @param conf Pointer to current {@link rl_conf} struct
+ */
 void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 	
 	int i;
@@ -157,7 +176,11 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 	}
 }
 
-
+/**
+ * Set up file header with current configuration
+ * @param file_header Pointer to {@link rl_file_header} to set up
+ * @param conf Pointer to current {@link rl_conf} struct
+ */
 void setup_header(struct rl_file_header* file_header, struct rl_conf* conf) {
 	
 	// comment
@@ -169,11 +192,16 @@ void setup_header(struct rl_file_header* file_header, struct rl_conf* conf) {
 	
 }
 
-void store_header(FILE* data, struct rl_file_header* file_header) {
+/**
+ * Store file header to file (in binary format)
+ * @param data File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void store_header_bin(FILE* data, struct rl_file_header* file_header) {
 	
 	int total_channel_count = file_header->lead_in.channel_bin_count + file_header->lead_in.channel_count;
 	
-	// write lead in
+	// write lead-in
 	fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1, data);
 	// write comment
 	fwrite(file_header->comment, file_header->lead_in.comment_length, 1, data);
@@ -182,8 +210,13 @@ void store_header(FILE* data, struct rl_file_header* file_header) {
 	
 }
 
+/**
+ * Store file header to file (in CSV format)
+ * @param data File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
 void store_header_csv(FILE* data, struct rl_file_header* file_header) {
-	// lead in
+	// lead-in
 	fprintf(data, "RocketLogger CSV File\n");
 	fprintf(data, "File Version,%u\n", (uint32_t) file_header->lead_in.file_version);
 	fprintf(data, "Block Size,%u\n", (uint32_t) file_header->lead_in.data_block_size);
@@ -234,7 +267,12 @@ void store_header_csv(FILE* data, struct rl_file_header* file_header) {
 	fprintf(data, "\n");
 }
 
-void update_header(FILE* data, struct rl_file_header* file_header) {
+/**
+ * Update file with new header lead-in (to write current sample count) in binary format
+ * @param data File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void update_header_bin(FILE* data, struct rl_file_header* file_header) {
 	
 	// seek to beginning and rewrite lead_in
 	rewind(data);
@@ -242,6 +280,11 @@ void update_header(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
+/**
+ * Update file with new header lead-in (to write current sample count) in CSV format
+ * @param data File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
 void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 	rewind(data);
 	fprintf(data, "RocketLogger CSV File\n");
@@ -252,7 +295,13 @@ void update_header_csv(FILE* data, struct rl_file_header* file_header) {
 	fseek(data, 0, SEEK_END);
 }
 
-
+/**
+ * Merge high/low currents for web interface
+ * @param valid
+ * @param dest
+ * @param src
+ * @param conf
+ */
 void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf* conf) {
 	
 	int ch_in = 0;

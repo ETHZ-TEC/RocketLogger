@@ -335,7 +335,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// store header
 	if(conf->file_format == BIN) {
-		store_header(data, &file_header);
+		store_header_bin(data, &file_header);
 	} else if (conf->file_format == CSV) {
 		store_header_csv(data, &file_header);
 	}
@@ -415,7 +415,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 				
 				// store header
 				if(conf->file_format == BIN) {
-					store_header(data, &file_header);
+					store_header_bin(data, &file_header);
 				} else if (conf->file_format == CSV) {
 					store_header_csv(data, &file_header);
 				}
@@ -477,7 +477,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 			file_header.lead_in.sample_count += samples_buffer/avg_factor;
 			
 			if(conf->file_format == BIN) {
-				update_header(data, &file_header);
+				update_header_bin(data, &file_header);
 			} else if(conf->file_format == CSV) {
 				update_header_csv(data, &file_header);
 			}
