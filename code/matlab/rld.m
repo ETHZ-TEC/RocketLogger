@@ -337,8 +337,9 @@ classdef rld
         function plot(obj, channel, time, pretty_plot )
             %PLOT Plots different channels of a RLD object
             %   Parameters:
-            %      - obj:          Existing rld object
             %      - channel:      Cell with channel names to plot
+            %                      Also allowed: 'all', 'voltages',
+            %                                    'currents', 'digital'
             %      - time:         Set to 1, if x-axis should be in
             %                      absolute time
             %      - pretty_plot:  Set to 1, if pretty plot should be
@@ -356,10 +357,51 @@ classdef rld
             end
             separate_axis = true;
             
-            % selective plot
+            % all channels
             if ~exist('channel', 'var') || sum(strcmp(channel, 'all')) == 1
                 num_channels = obj.header.channel_count;
                 plot_channels = (1:num_channels) + obj.header.channel_bin_count;
+            
+            % all voltages
+            elseif sum(strcmp(channel, 'voltages')) == 1
+                num_channels = 0;
+                for i=1:(obj.header.channel_bin_count+obj.header.channel_count)
+                    if obj.channels(i).unit == RL_UNIT_VOLT
+                        num_channels = num_channels + 1;
+                        plot_channels(num_channels) = i;
+                    end
+                end
+                if num_channels == 0
+                    error('No voltage channel found');
+                end
+                
+            % all currents
+            elseif sum(strcmp(channel, 'currents')) == 1
+                num_channels = 0;
+                for i=1:(obj.header.channel_bin_count+obj.header.channel_count)
+                    if obj.channels(i).unit == RL_UNIT_AMPERE
+                        num_channels = num_channels + 1;
+                        plot_channels(num_channels) = i;
+                    end
+                end
+                if num_channels == 0
+                    error('No current channel found');
+                end
+                
+            % all digital channels
+            elseif sum(strcmp(channel, 'digital')) == 1
+                num_channels = 0;
+                for i=1:(obj.header.channel_bin_count+obj.header.channel_count)
+                    if obj.channels(i).unit == RL_UNIT_BINARY
+                        num_channels = num_channels + 1;
+                        plot_channels(num_channels) = i;
+                    end
+                end
+                if num_channels == 0
+                    error('No digital channel found');
+                end
+                
+            % selective
             else
                 assert(iscell(channel), 'Channel argument has to be of type cell array');
                 num_channels = numel(channel);
