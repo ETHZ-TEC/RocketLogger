@@ -339,6 +339,9 @@ $(function() {
 			// max file size
 			if(maxFileSize > 0) {
 				document.getElementById("file_size_limited").checked = true;
+				document.getElementById("file_size_unit").disabled = false;
+				document.getElementById("file_size").disabled = false;
+				
 				var e = document.getElementById("file_size_unit");
 				if(maxFileSize >= KB_SCALE) {
 					maxFileSize = maxFileSize / KB_SCALE;
@@ -349,6 +352,8 @@ $(function() {
 				$("#file_size").val(maxFileSize.toString());
 			} else {
 				document.getElementById("file_size_limited").checked = false;
+				document.getElementById("file_size_unit").disabled = true;
+				document.getElementById("file_size").disabled = true;
 			}
 			
 			// channels
@@ -1094,6 +1099,17 @@ $(function() {
 				filename = filename.slice(0,-4) + ".csv";
 			}
 			$("#filename").val(filename);
+		});
+		
+		$("#file_size_limited").change(function () {
+			
+			if ($("#file_size_limited:checked").length > 0) {
+				document.getElementById("file_size").disabled = false;
+				document.getElementById("file_size_unit").disabled = false;
+			} else {
+				document.getElementById("file_size").disabled = true;
+				document.getElementById("file_size_unit").disabled = true;
+			}
 		});
 		
 		
