@@ -166,7 +166,7 @@
 								</div>
 								<div class="col-md-6">
 									<div class="checkbox">
-										<label><input id="active" type="checkbox" checked="checked" data-toggle="tooltip" title="Keep the web interface always active"></input>Always Active</label>
+										<label data-toggle="tooltip" title="Refresh the web interface in background"><input id="active" type="checkbox" checked="checked"></input>Refresh in Background</label>
 									</div>
 								</div>
 							</div>
@@ -184,18 +184,11 @@
 							<div class="row top-buffer">
 								<div class="col-md-3">
 									<div class="checkbox">
-										<label><input id="set_default" type="checkbox" data-toggle="tooltip" title="Set current configuration as default"></input>Store Configuration</label>
+										<label data-toggle="tooltip" title="Store current configuration as default"><input id="set_default" type="checkbox"></input>Store Configuration</label>
 									</div>
 								</div>
 								<div class="col-md-3">
-									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Load default configuration">Restore Configuration</button>
-								</div>
-								<div class="col-md-3">
-								</div>
-								<div class="col-md-3">
-									<div class="checkbox">
-										<label><input id="calibration" type="checkbox" data-toggle="tooltip" title="Ignore existing calibration"></input>Ignore Calibration</label>
-									</div>
+									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Restore default configuration">Restore Configuration</button>
 								</div>
 							</div>
 							
@@ -206,7 +199,7 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="checkbox">
-												<label><input id="enable_storing" type="checkbox" checked="checked" data-toggle="tooltip" title="Store data to file"></input>Enable File Storing</label>
+												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked"></input>Enable File Storing</label>
 											</div>
 										</div>
 									</div>
@@ -245,7 +238,7 @@
 									<div class="row top-buffer">
 										<div class="col-md-3">
 											<div class="checkbox">
-												<label><input id="file_size_limited" type="checkbox" data-toggle="tooltip" title="Split data files, if larger than maximum">Split Files</label>
+												<label data-toggle="tooltip" title="Split data files, if larger than maximum"><input id="file_size_limited" type="checkbox">Split Files</label>
 											</div>
 										</div>
 										<div class="col-md-2">
@@ -263,7 +256,7 @@
 											Log File:
 										</div>
 										<div class="col-md-3">
-											<button id="download_log" class="btn btn-default" data-toggle="tooltip" title="Show log file">Log</button>
+											<button id="download_log" class="btn btn-default" data-toggle="tooltip" title="Show log file">Open Log File</button>
 										</div>
 									</div>
 								</div>
@@ -271,27 +264,34 @@
 								<!-- Channels Section -->
 								<div class="col-md-6">
 									<h3>Analog Channels</h3>
-									<div class="row">
+									<div class="row">									
+										<div class="col-md-12">
+											<div class="checkbox">
+												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="calibration" type="checkbox"></input>Ignore Calibration</label>
+											</div>
+										</div>
+									</div>
+									<div class="row top-buffer">
 										<div class="col-md-4">
 											<b>Voltage</b>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="v1" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample V1">V1</label>
+													<label data-toggle="tooltip" title="Sample V1"><input id="v1" type="checkbox" checked="checked">V1</label>
 												</div>
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="v2" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample V2">V2</label>
+													<label data-toggle="tooltip" title="Sample V2"><input id="v2" type="checkbox" checked="checked">V2</label>
 												</div>
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="v3" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample V3">V3</label>
+													<label data-toggle="tooltip" title="Sample V3"><input id="v3" type="checkbox" checked="checked">V3</label>
 												</div>
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="v4" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample V4">V4</label>
+													<label data-toggle="tooltip" title="Sample V4"><input id="v4" type="checkbox" checked="checked">V4</label>
 												</div>
 											</div>
 										</div>
@@ -299,12 +299,12 @@
 											<b>Current 1</b>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="i1h" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample I1H">I1H</label>
+													<label data-toggle="tooltip" title="Sample I1H"><input id="i1h" type="checkbox" checked="checked">I1H</label>
 												</div>
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="i1l" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample I1L">I1L</label>
+													<label data-toggle="tooltip" title="Sample I1L"><input id="i1l" type="checkbox" checked="checked">I1L</label>
 												</div>
 											</div>
 											<div class="row">
@@ -312,7 +312,7 @@
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="fhr1" type="checkbox" data-toggle="tooltip" title="Force I1 to high range">Force High Range</label>
+													<label data-toggle="tooltip" title="Force I1 to high range"><input id="fhr1" type="checkbox">Force High Range</label>
 												</div>
 											</div>
 										</div>
@@ -320,12 +320,12 @@
 											<b>Current 2</b>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="i2h" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample I2H">I2H</label>
+													<label data-toggle="tooltip" title="Sample I2H"><input id="i2h" type="checkbox" checked="checked">I2H</label>
 												</div>
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="i2l" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample I2L">I2L</label>
+													<label data-toggle="tooltip" title="Sample I2L"><input id="i2l" type="checkbox" checked="checked">I2L</label>
 												</div>
 											</div>
 											<div class="row">
@@ -333,7 +333,7 @@
 											</div>
 											<div class="row">
 												<div class="checkbox">
-													<label><input id="fhr2" type="checkbox" data-toggle="tooltip" title="Force I2 to high range">Force High Range</label>
+													<label data-toggle="tooltip" title="Force I2 to high range"><input id="fhr2" type="checkbox">Force High Range</label>
 												</div>
 											</div>
 										</div>
@@ -352,7 +352,7 @@
 							<!-- Rate Section -->
 							<div class="row">
 								<div class="col-md-6">
-									<h3>Rates</h3>
+									<h3>Sampling</h3>
 									<div class="row">
 										<div class="col-md-3">
 											Sample Rate:
@@ -377,7 +377,7 @@
 									<h3>Digital Channels</h3>
 									<div class="row">
 										<div class="checkbox">
-											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample digital inputs">Sample Digital Inputs</label>
+											<label data-toggle="tooltip" title="Sample digital inputs"><input id="digital_inputs" type="checkbox" checked="checked">Sample Digital Inputs</label>
 										</div>
 									</div>
 								</div>
@@ -397,7 +397,7 @@
 							<div class="row">
 								<div class="col-md-2">
 									<div class="checkbox">
-										<label><input id="plotting" type="checkbox" checked="checked" data-toggle="tooltip" title="Activate plot update">Update Plot</label>
+										<label data-toggle="tooltip" title="Activate plot update"><input id="plotting" type="checkbox" checked="checked">Update Plot</label>
 									</div>
 								</div>
 							</div>
@@ -425,24 +425,24 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label><input id="plot_v1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V1 in plot"></input>Plot V1</label>
+											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked"></input>Plot V1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label><input id="plot_v2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V2 in plot"></input>Plot V2</label>
+											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked"></input>Plot V2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label><input id="plot_v3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V3 in plot"></input>Plot V3</label>
+											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked"></input>Plot V3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label><input id="plot_v4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show V4 in plot"></input>Plot V4</label>
+											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked"></input>Plot V4</label>
 										</div>
 									</div>
 								</div>
@@ -475,12 +475,12 @@
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#0072BD">
-										<label><input id="plot_i1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show I1 in plot"></input>Plot I1</label>
+										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked"></input>Plot I1</label>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#D95319">
-										<label><input id="plot_i2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show I2 in plot"></input>Plot I2</label>
+										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked"></input>Plot I2</label>
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -515,36 +515,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label><input id="plot_d1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI1 in plot"></input>Plot DI1</label>
+											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked"></input>Plot DI1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label><input id="plot_d2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI2 in plot"></input>Plot DI2</label>
+											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked"></input>Plot DI2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label><input id="plot_d3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI3 in plot"></input>Plot DI3</label>
+											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked"></input>Plot DI3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label><input id="plot_d4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI4 in plot"></input>Plot DI4</label>
+											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked"></input>Plot DI4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label><input id="plot_d5" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI5 in plot"></input>Plot DI5</label>
+											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked"></input>Plot DI5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label><input id="plot_d6" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI6 in plot"></input>Plot DI6</label>
+											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked"></input>Plot DI6</label>
 										</div>
 									</div>
 								</div>
@@ -561,7 +561,7 @@
 		</div>
 
 		<div id="footer">
-			RocketLogger by Stefan Lippuner and Matthias Leubin - ETH Zürich - 2016
+			&copy; <script type="text/javascript">document.write(new Date().getFullYear());</script>, ETH Zurich, Computer Engineering Group. <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a>
 		</div>
 	</div>
 </body>
