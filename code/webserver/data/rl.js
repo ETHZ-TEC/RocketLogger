@@ -26,7 +26,7 @@ $(function() {
 		STOP_TIMEOUT_TIME = 3000;
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
-		CHANNEL_NAMES = ["DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6", "I1", "V1", "V2", "I2", "V3", "V4"];
+		CHANNEL_NAMES = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6", "I1", "V1", "V2", "I2", "V3", "V4"];
 		CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
 		
 		DIG_DIST_FACTOR = 1.5;
@@ -38,6 +38,14 @@ $(function() {
 		KB_SCALE = 1000;
 		MS_SCALE = 1000;
 		KSPS = 1000;
+		
+		// KEYS
+		KEY_S = 83;
+		KEY_L = 76;
+		KEY_D = 68;
+		KEY_1 = 49;
+		KEY_2 = 50;
+		KEY_3 = 51;
 		
 		
 		
@@ -76,7 +84,7 @@ $(function() {
 		
 		// ajax post object
 		var statusPost;		
-		var startPost = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
+		var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 		
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
@@ -145,13 +153,13 @@ $(function() {
 						
 						// free disk space
 						freeSpace = tempState[2];
-						document.getElementById("free_space").innerHTML = 'Free Disk Space: ' + (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
+						document.getElementById("free_space").innerHTML = (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
 						
 						// left sampling time 
 						if($("#enable_storing:checked").length > 0) {
 							showSamplingTime();
 						} else {
-							document.getElementById("time_left").innerHTML = "Sampling Time Left: ∞";
+							document.getElementById("time_left").innerHTML = "∞";
 						}
 						
 						// display status on page
@@ -161,6 +169,10 @@ $(function() {
 							starting = false;
 							error = false;
 							
+							// color buttons
+							document.getElementById("stop").className = "btn btn-danger";
+							document.getElementById("start").className = "btn btn-default";
+							
 							if(stopping == true) {
 								document.getElementById("status").innerHTML = 'Status: STOPPING';
 							} else {
@@ -169,6 +181,11 @@ $(function() {
 							parseStatus(tempState);
 							
 						} else {
+							
+							// color buttons
+							document.getElementById("stop").className = "btn btn-default";
+							document.getElementById("start").className = "btn btn-success";
+							
 							if(state == RL_ERROR || error == true) {
 								document.getElementById("status").innerHTML = 'Status: ERROR';
 							} else if (starting == true) {
@@ -182,7 +199,10 @@ $(function() {
 							
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
-							document.getElementById("webserver").innerHTML = "";
+							document.getElementById("samples_taken").innerHTML = "";
+							document.getElementById("samples_taken_val").innerHTML = "";
+							document.getElementById("time_sampled").innerHTML = "";
+							document.getElementById("time_sampled_val").innerHTML = "";
 							
 							// load default
 							if(loadDefault) {
@@ -193,6 +213,9 @@ $(function() {
 								timeOut = setTimeout(update, UPDATE_INTERVAL);
 							}
 						}
+						
+						enableDisableConf();
+						
 					} else {
 						// error occured
 						error = true;
@@ -212,7 +235,7 @@ $(function() {
 			
 			var e = document.getElementById("file_format");
 			if(e.options[e.selectedIndex].value == "csv") {
-				document.getElementById("time_left").innerHTML = "Sampling Time Left: unknown";
+				document.getElementById("time_left").innerHTML = "unknown";
 				
 			} else {
 			
@@ -232,7 +255,7 @@ $(function() {
 				var date = new Date(timeLeft * MS_SCALE);
 				var month = date.getMonth();
 				if(month>0) {
-					document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
+					document.getElementById("time_left").innerHTML = "> 1Month";
 				} else {
 				
 					var day = date.getDate()-1;
@@ -246,7 +269,7 @@ $(function() {
 					if(day>0) {
 						t = day + "d " + t;
 					}
-					document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+					document.getElementById("time_left").innerHTML = t;
 					
 				}
 			}
@@ -331,6 +354,9 @@ $(function() {
 				}
 				document.getElementById("enable_storing").checked = true;
 			}
+			if(state != RL_RUNNING) {
+				enableDisableFile();
+			}
 			
 			// file name
 			filename = tempFilename.slice(14);
@@ -339,8 +365,6 @@ $(function() {
 			// max file size
 			if(maxFileSize > 0) {
 				document.getElementById("file_size_limited").checked = true;
-				document.getElementById("file_size_unit").disabled = false;
-				document.getElementById("file_size").disabled = false;
 				
 				var e = document.getElementById("file_size_unit");
 				if(maxFileSize >= KB_SCALE) {
@@ -352,8 +376,6 @@ $(function() {
 				$("#file_size").val(maxFileSize.toString());
 			} else {
 				document.getElementById("file_size_limited").checked = false;
-				document.getElementById("file_size_unit").disabled = true;
-				document.getElementById("file_size").disabled = true;
 			}
 			
 			// channels
@@ -381,9 +403,40 @@ $(function() {
 			
 			// samples taken
 			if(state == RL_RUNNING) {
-				document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+				
+				// determine sampled time
+				var date = new Date(samplesTaken/sampleRate * MS_SCALE);
+				var month = date.getMonth();
+				if(month>0) {
+					document.getElementById("time_left").innerHTML = "> 1Month";
+				} else {
+				
+					var day = date.getDate()-1;
+					var h = date.getUTCHours();
+					var m = date.getUTCMinutes();
+					var s = date.getUTCSeconds();
+					
+					var t = s + "s";
+					if(m>0) {
+						t = m + "min " + t;
+					}
+					if(h>0) {
+						t = h + "h " + t;
+					}
+					if(day>0) {
+						t = day + "d " + t;
+					}
+				}
+				
+				document.getElementById("samples_taken").innerHTML = 'Samples Taken:';
+				document.getElementById("samples_taken_val").innerHTML = samplesTaken;
+				document.getElementById("time_sampled").innerHTML = 'Time Sampled:';
+				document.getElementById("time_sampled_val").innerHTML = t;
 			} else {
-				document.getElementById("webserver").innerHTML = '';
+				document.getElementById("samples_taken").innerHTML = '';
+				document.getElementById("samples_taken_val").innerHTML = '';
+				document.getElementById("time_sampled").innerHTML = '';
+				document.getElementById("time_sampled_val").innerHTML = '';
 			}
 			
 			// data
@@ -794,9 +847,12 @@ $(function() {
 				return false;
 			}
 		
-			if(!parseConf()){
+			var startPost = parseConf();
+			if(!startPost){
 				return false;
 			}
+			
+			startPost.command = 'start';
 			
 			// reset data
 			resetData();
@@ -853,6 +909,7 @@ $(function() {
 					data: {command: 'stop'},
 					
 					complete: function (response) {
+						// do nothing
 					}
 				});
 				// set time-out, if stopping fails
@@ -862,6 +919,40 @@ $(function() {
 		
 		function stopFailed() {
 			stopping = false;
+		}
+		
+		// set default button
+		$("#set_default").click(function () {
+			setDefault();
+		});
+		
+		function setDefault() {
+		
+			var setPost = parseConf();
+			if(!setPost){
+				return false;
+			}
+			
+			setPost.command = 'set_conf';
+			
+			$.ajax({
+				type: "post",
+				url:'rl.php',
+				dataType: 'json',
+				data: setPost,
+				
+				complete: function (response) {
+					$('#output').html(response.responseText);
+					var startResp = JSON.parse(response.responseText);
+					if(startResp[0] == "ERROR") {
+						// alert error
+						alert("Server error: " + startResp[1]);
+						
+						// reset state to error
+						error = true;
+					}
+				}
+			});
 		}
 		
 		// deselect button
@@ -892,226 +983,6 @@ $(function() {
 			document.getElementById("fhr1").checked = forceHighChannels[0];
 			document.getElementById("fhr2").checked = forceHighChannels[1];
 		}
-		
-		// CONFIGURATION PARSING
-		
-		
-		function parseChannels() {
-			var numChannels = 0;
-			channels.fill(false);
-			
-			if ($("#i1h:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "0";
-				} else {
-					startPost.channels += ",0";
-				}
-				channels[0] = true;
-				numChannels++;
-			}
-			if ($("#i1l:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "1";
-				} else {
-					startPost.channels += ",1";
-				}
-				channels[1] = true;
-				numChannels++;
-			}
-			if ($("#v1:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "2";
-				} else {
-					startPost.channels += ",2";
-				}
-				channels[2] = true;
-				numChannels++;
-			}
-			if ($("#v2:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "3";
-				} else {
-					startPost.channels += ",3";
-				}
-				channels[3] = true;
-				numChannels++;
-			}
-			
-			if ($("#i2h:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "4";
-				} else {
-					startPost.channels += ",4";
-				}
-				channels[4] = true;
-				numChannels++;
-			}
-			if ($("#i2l:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "5";
-				} else {
-					startPost.channels += ",5";
-				}
-				channels[5] = true;
-				numChannels++;
-			}
-			if ($("#v3:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "6";
-				} else {
-					startPost.channels += ",6";
-				}
-				channels[6] = true;
-				numChannels++;
-			}
-			if ($("#v4:checked").length > 0) {
-				if (numChannels == 0) {
-					startPost.channels = "7";
-				} else {
-					startPost.channels += ",7";
-				}
-				channels[7] = true;
-				numChannels++;
-			}
-			
-			return numChannels;
-		}
-		
-		function parseConf() {
-			
-			// rate
-			var e = document.getElementById("sample_rate");
-			var tempSampleRate = e.options[e.selectedIndex].value;
-			if(tempSampleRate >= KSPS) {
-				tempSampleRate = tempSampleRate/KSPS + "k";
-			}
-			startPost.sampleRate = tempSampleRate;	
-			
-			
-			// file
-			if ($("#enable_storing:checked").length > 0) {
-				startPost.fileName = filename;
-			} else {
-				startPost.fileName = "0"; // no storing
-			}
-			
-			// file format
-			var e = document.getElementById("file_format");
-			var r = document.getElementById("sample_rate");
-			startPost.fileFormat = e.options[e.selectedIndex].value;
-			if (e.options[e.selectedIndex].value == "csv" && (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000)) {
-				if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
-					return false;
-				}
-			}
-			
-			// file size
-			if ($("#file_size_limited:checked").length > 0) {
-				var e = document.getElementById("file_size_unit");
-				
-				// check size
-				if(parseInt($("#file_size").val()) < 5 && e.options[e.selectedIndex].value == "m") {
-					alert("Too small file size! Minimum is 5MB");
-					return false;
-				}
-				var size = $("#file_size").val();
-				if(e.options[e.selectedIndex].value == 'm') {
-					size *= MB_SCALE;
-				} else {
-					size *= GB_SCALE;
-				}
-				startPost.fileSize = size;
-				
-			} else {
-				startPost.fileSize = "0";
-			}
-			
-			// channels
-			if(parseChannels() == 0) {
-				alert("No channel selected!");
-				return false;
-			}
-			
-			// force-channels
-			var first = 1;
-			if ($("#fhr1:checked").length > 0) {
-				if (first == 1) {
-					startPost.forceHigh = "1";
-					first = 0;
-				} else {
-					startPost.forceHigh += ",1";
-				}
-			}
-			if ($("#fhr2:checked").length > 0) {
-				if (first == 1) {
-					startPost.forceHigh = "2";
-					first = 0;
-				} else {
-					startPost.forceHigh += ",2";
-				}
-			}
-			if(first == 1) { // no forcing
-				startPost.forceHigh = "0";
-			}
-			
-			
-			// digital inputs
-			if ($("#digital_inputs:checked").length > 0) {
-				startPost.digitalInputs = '1';
-			} else {
-				startPost.digitalInputs = '0';
-			}
-			
-			// set as default
-			if ($("#set_default:checked").length > 0) {
-				startPost.setDefault = '1';
-			} else {
-				startPost.setDefault = '0';
-			}
-			
-			// ignore calibration
-			if ($("#calibration:checked").length > 0) {
-				startPost.ignoreCalibration = "1";
-			} else {
-				startPost.ignoreCalibration = "0";
-			}
-			
-			return true;
-		}
-		
-		// FILE HANDLING
-
-		// file name
-		$("#filename").val(filename).change(function () { // change filename
-			var v = $(this).val();
-			if (v) {
-				filename = v;
-				$(this).val(filename);
-			}
-		});
-		
-		
-		$("#file_format").change(function () { // swap all filenames between csv and rld
-			var e = document.getElementById("file_format");
-			if (e.options[e.selectedIndex].value == "bin") {
-				filename = filename.slice(0,-4) + ".rld";
-			} else {
-				filename = filename.slice(0,-4) + ".csv";
-			}
-			$("#filename").val(filename);
-		});
-		
-		$("#file_size_limited").change(function () {
-			
-			if ($("#file_size_limited:checked").length > 0) {
-				document.getElementById("file_size").disabled = false;
-				document.getElementById("file_size_unit").disabled = false;
-			} else {
-				document.getElementById("file_size").disabled = true;
-				document.getElementById("file_size_unit").disabled = true;
-			}
-		});
-		
 		
 		// download button
 		$("#download").click(function () {
@@ -1156,6 +1027,269 @@ $(function() {
 			window.open(file);
 		});
 		
+		
+		
+		// CONFIGURATION PARSING
+		
+		
+		function parseChannels() {
+			var numChannels = 0;
+			channels.fill(false);
+			
+			if ($("#i1h:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "0";
+				} else {
+					config.channels += ",0";
+				}
+				channels[0] = true;
+				numChannels++;
+			}
+			if ($("#i1l:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "1";
+				} else {
+					config.channels += ",1";
+				}
+				channels[1] = true;
+				numChannels++;
+			}
+			if ($("#v1:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "2";
+				} else {
+					config.channels += ",2";
+				}
+				channels[2] = true;
+				numChannels++;
+			}
+			if ($("#v2:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "3";
+				} else {
+					config.channels += ",3";
+				}
+				channels[3] = true;
+				numChannels++;
+			}
+			
+			if ($("#i2h:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "4";
+				} else {
+					config.channels += ",4";
+				}
+				channels[4] = true;
+				numChannels++;
+			}
+			if ($("#i2l:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "5";
+				} else {
+					config.channels += ",5";
+				}
+				channels[5] = true;
+				numChannels++;
+			}
+			if ($("#v3:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "6";
+				} else {
+					config.channels += ",6";
+				}
+				channels[6] = true;
+				numChannels++;
+			}
+			if ($("#v4:checked").length > 0) {
+				if (numChannels == 0) {
+					config.channels = "7";
+				} else {
+					config.channels += ",7";
+				}
+				channels[7] = true;
+				numChannels++;
+			}
+			
+			return numChannels;
+		}
+		
+		function parseConf() {
+			
+			// rate
+			var e = document.getElementById("sample_rate");
+			var tempSampleRate = e.options[e.selectedIndex].value;
+			if(tempSampleRate >= KSPS) {
+				tempSampleRate = tempSampleRate/KSPS + "k";
+			}
+			config.sampleRate = tempSampleRate;	
+			
+			
+			// file
+			if ($("#enable_storing:checked").length > 0) {
+				config.fileName = filename;
+			} else {
+				config.fileName = "0"; // no storing
+			}
+			
+			// file format
+			var e = document.getElementById("file_format");
+			var r = document.getElementById("sample_rate");
+			config.fileFormat = e.options[e.selectedIndex].value;
+			if (e.options[e.selectedIndex].value == "csv" && (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000)) {
+				if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
+					return false;
+				}
+			}
+			
+			// file size
+			if ($("#file_size_limited:checked").length > 0) {
+				var e = document.getElementById("file_size_unit");
+				
+				// check size
+				if(parseInt($("#file_size").val()) < 5 && e.options[e.selectedIndex].value == "m") {
+					alert("Too small file size! Minimum is 5MB");
+					return false;
+				}
+				var size = $("#file_size").val();
+				if(e.options[e.selectedIndex].value == 'm') {
+					size *= MB_SCALE;
+				} else {
+					size *= GB_SCALE;
+				}
+				config.fileSize = size;
+				
+			} else {
+				config.fileSize = "0";
+			}
+			
+			// channels
+			if(parseChannels() == 0) {
+				alert("No channel selected!");
+				return false;
+			}
+			
+			// force-channels
+			var first = 1;
+			if ($("#fhr1:checked").length > 0) {
+				if (first == 1) {
+					config.forceHigh = "1";
+					first = 0;
+				} else {
+					config.forceHigh += ",1";
+				}
+			}
+			if ($("#fhr2:checked").length > 0) {
+				if (first == 1) {
+					config.forceHigh = "2";
+					first = 0;
+				} else {
+					config.forceHigh += ",2";
+				}
+			}
+			if(first == 1) { // no forcing
+				config.forceHigh = "0";
+			}
+			
+			
+			// digital inputs
+			if ($("#digital_inputs:checked").length > 0) {
+				config.digitalInputs = '1';
+			} else {
+				config.digitalInputs = '0';
+			}
+			
+			// ignore calibration
+			if ($("#calibration:checked").length > 0) {
+				config.ignoreCalibration = "1";
+			} else {
+				config.ignoreCalibration = "0";
+			}
+			
+			return config;
+		}
+		
+		// FILE HANDLING
+
+		// file name
+		$("#filename").val(filename).change(function () { // change filename
+			var v = $(this).val();
+			if (v) {
+				filename = v;
+				$(this).val(filename);
+			}
+		});
+		
+		
+		$("#file_format").change(function () { // swap all filenames between csv and rld
+			var e = document.getElementById("file_format");
+			if (e.options[e.selectedIndex].value == "bin") {
+				filename = filename.slice(0,-4) + ".rld";
+			} else {
+				filename = filename.slice(0,-4) + ".csv";
+			}
+			$("#filename").val(filename);
+		});
+		
+		function enableDisableFile() {
+			
+			if ($("#enable_storing:checked").length > 0) {
+				document.getElementById("file_format").disabled = false;
+				document.getElementById("filename").disabled = false;
+				document.getElementById("date_to_filename").disabled = false;
+				document.getElementById("file_size_limited").disabled = false;
+				document.getElementById("file_size").disabled = false;
+				document.getElementById("file_size_unit").disabled = false;
+				document.getElementById("download").disabled = false;
+			} else {
+				document.getElementById("file_format").disabled = true;
+				document.getElementById("filename").disabled = true;
+				document.getElementById("date_to_filename").disabled = true;
+				document.getElementById("file_size_limited").disabled = true;
+				document.getElementById("file_size").disabled = true;
+				document.getElementById("file_size_unit").disabled = true;
+				document.getElementById("download").disabled = true;
+			}
+		}
+		
+		
+		// configuration disable
+		function enableDisableConf() {
+			if(state == RL_RUNNING) {
+				
+				// disable start, enable stop button
+				document.getElementById("start").disabled = true;
+				document.getElementById("stop").disabled = false;
+				
+				
+				// disable conf
+				$('#collapse2').find('*').attr('disabled', true);
+				
+				// re-enable buttons
+				if ($("#enable_storing:checked").length > 0) {
+					document.getElementById("download").disabled = false;
+				}
+				document.getElementById("list").disabled = false;
+				document.getElementById("download_log").disabled = false;
+			} else {
+				
+				// disable start, enable stop button
+				document.getElementById("start").disabled = false;
+				document.getElementById("stop").disabled = true;
+				
+				// enable conf
+				$('#collapse2').find('*').attr('disabled', false);
+				
+				// disable file conf
+				enableDisableFile();
+				if ($("#file_size_limited:checked").length <= 0) {
+					document.getElementById("file_size").disabled = true;
+					document.getElementById("file_size_unit").disabled = true;
+				}
+			}
+		}
+		
+		
+		
 		// calibration ignore checkbox
 		$("#calibration").change(function () {
 			if(state == RL_RUNNING) {
@@ -1163,10 +1297,34 @@ $(function() {
 			}
 		});
 		
-		// never ending update function
+		// reset plots
 		resetVPlot();
 		resetIPlot();
 		resetDigPlot();
+		
+		// never ending update function
 		update();
+		
+		document.addEventListener('keydown', function(event) {
+			// start/stop
+			if(event.keyCode == KEY_S) {
+				if(state == RL_RUNNING) {
+					stop();
+				} else {
+					start();
+				}
+			// load default conf
+			} else if(event.keyCode == KEY_L) {
+				loadDefault = true;
+			// store default conf
+			} else if(event.keyCode == KEY_D) {
+				setDefault();
+			// time scale
+			} else if(event.keyCode == KEY_1 || event.keyCode == KEY_2 || event.keyCode == KEY_3) {
+				
+				var e = document.getElementById("time_scale");
+				e.selectedIndex = event.keyCode - 49;
+			}
+		});
 
 });
