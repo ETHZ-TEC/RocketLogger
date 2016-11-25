@@ -199,7 +199,10 @@ $(function() {
 							
 							// reset displays
 							document.getElementById("dataAvailable").innerHTML = "";
-							document.getElementById("webserver").innerHTML = "";
+							document.getElementById("samples_taken").innerHTML = "";
+							document.getElementById("samples_taken_val").innerHTML = "";
+							document.getElementById("time_sampled").innerHTML = "";
+							document.getElementById("time_sampled_val").innerHTML = "";
 							
 							// load default
 							if(loadDefault) {
@@ -400,9 +403,40 @@ $(function() {
 			
 			// samples taken
 			if(state == RL_RUNNING) {
-				document.getElementById("webserver").innerHTML = 'Samples Taken: ' + samplesTaken;
+				
+				// determine sampled time
+				var date = new Date(samplesTaken/sampleRate * MS_SCALE);
+				var month = date.getMonth();
+				if(month>0) {
+					document.getElementById("time_left").innerHTML = "> 1Month";
+				} else {
+				
+					var day = date.getDate()-1;
+					var h = date.getUTCHours();
+					var m = date.getUTCMinutes();
+					var s = date.getUTCSeconds();
+					
+					var t = s + "s";
+					if(m>0) {
+						t = m + "min " + t;
+					}
+					if(h>0) {
+						t = h + "h " + t;
+					}
+					if(day>0) {
+						t = day + "d " + t;
+					}
+				}
+				
+				document.getElementById("samples_taken").innerHTML = 'Samples Taken:';
+				document.getElementById("samples_taken_val").innerHTML = samplesTaken;
+				document.getElementById("time_sampled").innerHTML = 'Time Sampled:';
+				document.getElementById("time_sampled_val").innerHTML = t;
 			} else {
-				document.getElementById("webserver").innerHTML = '';
+				document.getElementById("samples_taken").innerHTML = '';
+				document.getElementById("samples_taken_val").innerHTML = '';
+				document.getElementById("time_sampled").innerHTML = '';
+				document.getElementById("time_sampled_val").innerHTML = '';
 			}
 			
 			// data
