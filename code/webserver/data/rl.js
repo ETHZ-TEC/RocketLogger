@@ -76,7 +76,7 @@ $(function() {
 		
 		// ajax post object
 		var statusPost;		
-		var startPost = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
+		var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 		
 		// channel information
 		var channels = [true, true, true, true, true, true, true, true];
@@ -805,9 +805,12 @@ $(function() {
 				return false;
 			}
 		
-			if(!parseConf()){
+			var startPost = parseConf();
+			if(!startPost){
 				return false;
 			}
+			
+			startPost.command = 'start';
 			
 			// reset data
 			resetData();
@@ -864,6 +867,7 @@ $(function() {
 					data: {command: 'stop'},
 					
 					complete: function (response) {
+						// do nothing
 					}
 				});
 				// set time-out, if stopping fails
@@ -873,6 +877,40 @@ $(function() {
 		
 		function stopFailed() {
 			stopping = false;
+		}
+		
+		// set default button
+		$("#set_default").click(function () {
+			set_default();
+		});
+		
+		function set_default() {
+		
+			var setPost = parseConf();
+			if(!setPost){
+				return false;
+			}
+			
+			setPost.command = 'set_conf';
+			
+			$.ajax({
+				type: "post",
+				url:'rl.php',
+				dataType: 'json',
+				data: setPost,
+				
+				complete: function (response) {
+					$('#output').html(response.responseText);
+					var startResp = JSON.parse(response.responseText);
+					if(startResp[0] == "ERROR") {
+						// alert error
+						alert("Server error: " + startResp[1]);
+						
+						// reset state to error
+						error = true;
+					}
+				}
+			});
 		}
 		
 		// deselect button
@@ -958,36 +996,36 @@ $(function() {
 			
 			if ($("#i1h:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "0";
+					config.channels = "0";
 				} else {
-					startPost.channels += ",0";
+					config.channels += ",0";
 				}
 				channels[0] = true;
 				numChannels++;
 			}
 			if ($("#i1l:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "1";
+					config.channels = "1";
 				} else {
-					startPost.channels += ",1";
+					config.channels += ",1";
 				}
 				channels[1] = true;
 				numChannels++;
 			}
 			if ($("#v1:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "2";
+					config.channels = "2";
 				} else {
-					startPost.channels += ",2";
+					config.channels += ",2";
 				}
 				channels[2] = true;
 				numChannels++;
 			}
 			if ($("#v2:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "3";
+					config.channels = "3";
 				} else {
-					startPost.channels += ",3";
+					config.channels += ",3";
 				}
 				channels[3] = true;
 				numChannels++;
@@ -995,36 +1033,36 @@ $(function() {
 			
 			if ($("#i2h:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "4";
+					config.channels = "4";
 				} else {
-					startPost.channels += ",4";
+					config.channels += ",4";
 				}
 				channels[4] = true;
 				numChannels++;
 			}
 			if ($("#i2l:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "5";
+					config.channels = "5";
 				} else {
-					startPost.channels += ",5";
+					config.channels += ",5";
 				}
 				channels[5] = true;
 				numChannels++;
 			}
 			if ($("#v3:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "6";
+					config.channels = "6";
 				} else {
-					startPost.channels += ",6";
+					config.channels += ",6";
 				}
 				channels[6] = true;
 				numChannels++;
 			}
 			if ($("#v4:checked").length > 0) {
 				if (numChannels == 0) {
-					startPost.channels = "7";
+					config.channels = "7";
 				} else {
-					startPost.channels += ",7";
+					config.channels += ",7";
 				}
 				channels[7] = true;
 				numChannels++;
@@ -1041,20 +1079,20 @@ $(function() {
 			if(tempSampleRate >= KSPS) {
 				tempSampleRate = tempSampleRate/KSPS + "k";
 			}
-			startPost.sampleRate = tempSampleRate;	
+			config.sampleRate = tempSampleRate;	
 			
 			
 			// file
 			if ($("#enable_storing:checked").length > 0) {
-				startPost.fileName = filename;
+				config.fileName = filename;
 			} else {
-				startPost.fileName = "0"; // no storing
+				config.fileName = "0"; // no storing
 			}
 			
 			// file format
 			var e = document.getElementById("file_format");
 			var r = document.getElementById("sample_rate");
-			startPost.fileFormat = e.options[e.selectedIndex].value;
+			config.fileFormat = e.options[e.selectedIndex].value;
 			if (e.options[e.selectedIndex].value == "csv" && (r.options[r.selectedIndex].value == 64000 || r.options[r.selectedIndex].value == 32000)) {
 				if(!confirm("Warning: Using CSV-files with high data rates may cause overruns!")) {
 					return false;
@@ -1076,10 +1114,10 @@ $(function() {
 				} else {
 					size *= GB_SCALE;
 				}
-				startPost.fileSize = size;
+				config.fileSize = size;
 				
 			} else {
-				startPost.fileSize = "0";
+				config.fileSize = "0";
 			}
 			
 			// channels
@@ -1092,47 +1130,40 @@ $(function() {
 			var first = 1;
 			if ($("#fhr1:checked").length > 0) {
 				if (first == 1) {
-					startPost.forceHigh = "1";
+					config.forceHigh = "1";
 					first = 0;
 				} else {
-					startPost.forceHigh += ",1";
+					config.forceHigh += ",1";
 				}
 			}
 			if ($("#fhr2:checked").length > 0) {
 				if (first == 1) {
-					startPost.forceHigh = "2";
+					config.forceHigh = "2";
 					first = 0;
 				} else {
-					startPost.forceHigh += ",2";
+					config.forceHigh += ",2";
 				}
 			}
 			if(first == 1) { // no forcing
-				startPost.forceHigh = "0";
+				config.forceHigh = "0";
 			}
 			
 			
 			// digital inputs
 			if ($("#digital_inputs:checked").length > 0) {
-				startPost.digitalInputs = '1';
+				config.digitalInputs = '1';
 			} else {
-				startPost.digitalInputs = '0';
-			}
-			
-			// set as default
-			if ($("#set_default:checked").length > 0) {
-				startPost.setDefault = '1';
-			} else {
-				startPost.setDefault = '0';
+				config.digitalInputs = '0';
 			}
 			
 			// ignore calibration
 			if ($("#calibration:checked").length > 0) {
-				startPost.ignoreCalibration = "1";
+				config.ignoreCalibration = "1";
 			} else {
-				startPost.ignoreCalibration = "0";
+				config.ignoreCalibration = "0";
 			}
 			
-			return true;
+			return config;
 		}
 		
 		// FILE HANDLING
@@ -1224,10 +1255,12 @@ $(function() {
 			}
 		});
 		
-		// never ending update function
+		// reset plots
 		resetVPlot();
 		resetIPlot();
 		resetDigPlot();
+		
+		// never ending update function
 		update();
 
 });
