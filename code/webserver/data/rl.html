@@ -5,12 +5,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>RocketLogger</title>
 	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-	<script language="javascript" type="text/javascript" src="jquery.js"></script>
-	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
-	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
-	<script language="javascript" type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="flot/jquery.flot.js"></script>
+	<script type="text/javascript" src="flot/jquery.flot.time.js"></script>
+	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="rl.js"></script>
-	<script>
+	<script type="text/javascript">
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip({
 				trigger : 'hover'
@@ -18,7 +18,7 @@
 		});
 	</script>
 	
-	<style>
+	<style type="text/css">
 
 		body {
 			font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
@@ -166,7 +166,7 @@
 								</div>
 								<div class="col-md-6">
 									<div class="checkbox">
-										<label data-toggle="tooltip" title="Refresh the web interface in background"><input id="active" type="checkbox" checked="checked"></input>Refresh in Background</label>
+										<label data-toggle="tooltip" title="Refresh the web interface in background"><input id="active" type="checkbox" checked="checked">Refresh in Background</label>
 									</div>
 								</div>
 							</div>
@@ -197,7 +197,7 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked"></input>Enable File Storing</label>
+												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked">Enable File Storing</label>
 											</div>
 										</div>
 									</div>
@@ -265,7 +265,7 @@
 									<div class="row">									
 										<div class="col-md-12">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="calibration" type="checkbox"></input>Ignore Calibration</label>
+												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="calibration" type="checkbox">Ignore Calibration</label>
 											</div>
 										</div>
 									</div>
@@ -423,24 +423,24 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked"></input>Plot V1</label>
+											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked">Plot V1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked"></input>Plot V2</label>
+											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked">Plot V2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked"></input>Plot V3</label>
+											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked">Plot V3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked"></input>Plot V4</label>
+											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked">Plot V4</label>
 										</div>
 									</div>
 								</div>
@@ -473,12 +473,12 @@
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#0072BD">
-										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked"></input>Plot I1</label>
+										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked">Plot I1</label>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#D95319">
-										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked"></input>Plot I2</label>
+										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked">Plot I2</label>
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -513,36 +513,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked"></input>Plot DI1</label>
+											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked">Plot DI1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked"></input>Plot DI2</label>
+											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked">Plot DI2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked"></input>Plot DI3</label>
+											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked">Plot DI3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked"></input>Plot DI4</label>
+											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked">Plot DI4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked"></input>Plot DI5</label>
+											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked">Plot DI5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked"></input>Plot DI6</label>
+											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked">Plot DI6</label>
 										</div>
 									</div>
 								</div>
