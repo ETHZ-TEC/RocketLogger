@@ -1,6 +1,8 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
 
+# store current working directory
+SCRIPT_DIR=`pwd`
 
 # need to run as root
 echo "> Checking root permission"
@@ -40,7 +42,7 @@ cp -f sudo/sudoers /etc/
 
 
 ## security
-echo "> Updating some security settings"
+echo "> Updating some security and permission settings"
 
 # copy more secure ssh configuration
 cp -f ssh/sshd_config /etc/ssh/
@@ -50,6 +52,9 @@ mkdir -p /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
 cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+
+# change ssh welcome message
+echo "RocketLogger v1.0" > /etc/issue.net
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/
@@ -70,6 +75,23 @@ cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
 
 # create RL folder
 mkdir -p /etc/rocketlogger
+
+
+## updates
+echo "> Updating system"
+
+# copy network interface configuration
+apt update
+apt upgrade
+
+
+## grow file system
+echo "> Grow file system size"
+
+# use pre installed script that comes with image
+cd /opt/scripts/tools/ && git pull && sudo ./grow_partition.sh
+cd "${SCRIPT_DIR}"
+
 
 ## done
 echo "Done. Please reboot to apply all changes."
