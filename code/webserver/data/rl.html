@@ -55,6 +55,16 @@
 			color: black;
 		}
 		
+		.panel-heading .accordion-toggle:after {
+			font-family: "Glyphicons Halflings";
+			content: "\e114";
+			float: left;
+			color: black;
+		}
+		.panel-heading .accordion-toggle.collapsed:after {
+			content: "\e080";
+		}
+		
 		.analog-container {
 			box-sizing: border-box;
 			width: 850px;
@@ -116,7 +126,7 @@
 			<div class="panel-group" id="accordion" >
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<h2 data-toggle="collapse" href="#collapse1">
+						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse1">
 							Status & Control
 						</h2>
 					</div>
@@ -159,8 +169,8 @@
 
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<h2 data-toggle="collapse" href="#collapse2">
-							Configuration
+						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse2">
+							 Configuration
 						</h2>
 					</div>
 					<div id="collapse2" class="panel-collapse collapse in">
@@ -217,7 +227,7 @@
 										<div class="col-md-3">
 										</div>
 										<div class="col-md-3">
-											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date to file name">Date to Filename</button>
+											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date to file name">Add Date Prefix</button>
 										</div>
 										<div class="col-md-2">
 											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file">Download</button>
@@ -372,8 +382,8 @@
 				
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<h2 data-toggle="collapse" href="#collapse3">
-							Plots
+						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse3">
+							 Plots
 						</h2>
 					</div>
 					<div id="collapse3" class="panel-collapse collapse in">
