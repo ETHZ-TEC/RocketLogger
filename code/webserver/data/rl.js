@@ -145,13 +145,13 @@ $(function() {
 						
 						// free disk space
 						freeSpace = tempState[2];
-						document.getElementById("free_space").innerHTML = 'Free Disk Space: ' + (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
+						document.getElementById("free_space").innerHTML = (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
 						
 						// left sampling time 
 						if($("#enable_storing:checked").length > 0) {
 							showSamplingTime();
 						} else {
-							document.getElementById("time_left").innerHTML = "Sampling Time Left: ∞";
+							document.getElementById("time_left").innerHTML = "∞";
 						}
 						
 						// display status on page
@@ -162,8 +162,8 @@ $(function() {
 							error = false;
 							
 							// color buttons
-							document.getElementById("stop").style.color = 'red';
-							document.getElementById("start").style.background = '';
+							document.getElementById("stop").className = "btn btn-danger";
+							document.getElementById("start").className = "btn btn-default";
 							
 							if(stopping == true) {
 								document.getElementById("status").innerHTML = 'Status: STOPPING';
@@ -175,8 +175,8 @@ $(function() {
 						} else {
 							
 							// color buttons
-							document.getElementById("stop").style.color = '';
-							document.getElementById("start").style.background = 'green';
+							document.getElementById("stop").className = "btn btn-default";
+							document.getElementById("start").className = "btn btn-success";
 							
 							if(state == RL_ERROR || error == true) {
 								document.getElementById("status").innerHTML = 'Status: ERROR';
@@ -224,7 +224,7 @@ $(function() {
 			
 			var e = document.getElementById("file_format");
 			if(e.options[e.selectedIndex].value == "csv") {
-				document.getElementById("time_left").innerHTML = "Sampling Time Left: unknown";
+				document.getElementById("time_left").innerHTML = "unknown";
 				
 			} else {
 			
@@ -244,7 +244,7 @@ $(function() {
 				var date = new Date(timeLeft * MS_SCALE);
 				var month = date.getMonth();
 				if(month>0) {
-					document.getElementById("time_left").innerHTML = "Sampling Time Left: > 1Month";
+					document.getElementById("time_left").innerHTML = "> 1Month";
 				} else {
 				
 					var day = date.getDate()-1;
@@ -258,7 +258,7 @@ $(function() {
 					if(day>0) {
 						t = day + "d " + t;
 					}
-					document.getElementById("time_left").innerHTML = "Sampling Time Left: ≈ " + t;
+					document.getElementById("time_left").innerHTML = t;
 					
 				}
 			}

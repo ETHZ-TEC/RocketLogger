@@ -57,6 +57,8 @@
 		
 		.panel-heading .accordion-toggle:after {
 			font-family: "Glyphicons Halflings";
+			margin: 0.5em;
+			font-size: 0.5em;
 			content: "\e114";
 			float: left;
 			color: black;
@@ -118,33 +120,38 @@
 	<div class="container">
 		
 		<div class="page-header">
-			<h1>RocketLogger Remote Control</h1>
+			<h1 style="color:black">RocketLogger Remote Control</h1>
 		</div>
 
 		<div id="content">
 		
-			<div class="panel-group" id="accordion" >
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse1">
+			
+						<h2 class="panel-heading" style="color:black">
 							Status & Control
 						</h2>
-					</div>
-					<div id="collapse1" class="panel-collapse collapse in">
+					
 						<div class="panel-body">
 							<div class="row top-buffer">
 								<div class="col-md-3">
 									<div id="status">Status: </div>
 								</div>
 								<div class="col-md-4">
-									<div id="webserver">Samples Taken: </div>
+									<div id="webserver"></div>
 								</div>
-								<div class="col-md-5">
+								<div class="col-md-2">
 									<div class="row">
-										<div id="free_space">Free Disk Space: </div>
+										<div>Free Disk Space:</div>
 									</div>
 									<div class="row">
-										<div id="time_left">Sampling Time Left: </div>
+										<div>Sampling Time Left:</div>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<div class="row">
+										<div id="free_space"></div>
+									</div>
+									<div class="row">
+										<div id="time_left"></div>
 									</div>
 								</div>
 							</div>
@@ -164,9 +171,8 @@
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-
+						
+			<div class="panel-group" id="accordion" >
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse2">
@@ -371,7 +377,7 @@
 									<h3>Digital Channels</h3>
 									<div class="row">
 										<div class="checkbox">
-											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample digital inputs">Sample DI</label>
+											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Sample digital inputs">Sample Digital Inputs</label>
 										</div>
 									</div>
 								</div>
