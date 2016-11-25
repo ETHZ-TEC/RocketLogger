@@ -39,6 +39,14 @@ $(function() {
 		MS_SCALE = 1000;
 		KSPS = 1000;
 		
+		// KEYS
+		KEY_S = 83;
+		KEY_L = 76;
+		KEY_D = 68;
+		KEY_1 = 49;
+		KEY_2 = 50;
+		KEY_3 = 51;
+		
 		
 		
 		
@@ -881,10 +889,10 @@ $(function() {
 		
 		// set default button
 		$("#set_default").click(function () {
-			set_default();
+			setDefault();
 		});
 		
-		function set_default() {
+		function setDefault() {
 		
 			var setPost = parseConf();
 			if(!setPost){
@@ -1262,5 +1270,27 @@ $(function() {
 		
 		// never ending update function
 		update();
+		
+		document.addEventListener('keydown', function(event) {
+			// start/stop
+			if(event.keyCode == KEY_S) {
+				if(state == RL_RUNNING) {
+					stop();
+				} else {
+					start();
+				}
+			// load default conf
+			} else if(event.keyCode == KEY_L) {
+				loadDefault = true;
+			// store default conf
+			} else if(event.keyCode == KEY_D) {
+				setDefault();
+			// time scale
+			} else if(event.keyCode == KEY_1 || event.keyCode == KEY_2 || event.keyCode == KEY_3) {
+				
+				var e = document.getElementById("time_scale");
+				e.selectedIndex = event.keyCode - 49;
+			}
+		});
 
 });
