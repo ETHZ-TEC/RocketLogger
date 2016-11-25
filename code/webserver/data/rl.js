@@ -26,7 +26,7 @@ $(function() {
 		STOP_TIMEOUT_TIME = 3000;
 		MISMATCH_TIMEOUT_TIME = 3000;
 		
-		CHANNEL_NAMES = ["DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6", "I1", "V1", "V2", "I2", "V3", "V4"];
+		CHANNEL_NAMES = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6", "I1", "V1", "V2", "I2", "V3", "V4"];
 		CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
 		
 		DIG_DIST_FACTOR = 1.5;
@@ -161,6 +161,10 @@ $(function() {
 							starting = false;
 							error = false;
 							
+							// color buttons
+							document.getElementById("stop").style.color = 'red';
+							document.getElementById("start").style.background = '';
+							
 							if(stopping == true) {
 								document.getElementById("status").innerHTML = 'Status: STOPPING';
 							} else {
@@ -169,6 +173,11 @@ $(function() {
 							parseStatus(tempState);
 							
 						} else {
+							
+							// color buttons
+							document.getElementById("stop").style.color = '';
+							document.getElementById("start").style.background = 'green';
+							
 							if(state == RL_ERROR || error == true) {
 								document.getElementById("status").innerHTML = 'Status: ERROR';
 							} else if (starting == true) {
@@ -193,6 +202,9 @@ $(function() {
 								timeOut = setTimeout(update, UPDATE_INTERVAL);
 							}
 						}
+						
+						enableDisableConf();
+						
 					} else {
 						// error occured
 						error = true;
@@ -331,6 +343,9 @@ $(function() {
 				}
 				document.getElementById("enable_storing").checked = true;
 			}
+			if(state != RL_RUNNING) {
+				enableDisableFile();
+			}
 			
 			// file name
 			filename = tempFilename.slice(14);
@@ -339,8 +354,6 @@ $(function() {
 			// max file size
 			if(maxFileSize > 0) {
 				document.getElementById("file_size_limited").checked = true;
-				document.getElementById("file_size_unit").disabled = false;
-				document.getElementById("file_size").disabled = false;
 				
 				var e = document.getElementById("file_size_unit");
 				if(maxFileSize >= KB_SCALE) {
@@ -352,8 +365,6 @@ $(function() {
 				$("#file_size").val(maxFileSize.toString());
 			} else {
 				document.getElementById("file_size_limited").checked = false;
-				document.getElementById("file_size_unit").disabled = true;
-				document.getElementById("file_size").disabled = true;
 			}
 			
 			// channels
@@ -381,7 +392,7 @@ $(function() {
 			
 			// samples taken
 			if(state == RL_RUNNING) {
-				document.getElementById("webserver").innerHTML = 'Samples taken: ' + samplesTaken;
+				document.getElementById("webserver").innerHTML = 'Samples Taken: ' + samplesTaken;
 			} else {
 				document.getElementById("webserver").innerHTML = '';
 			}
@@ -893,6 +904,51 @@ $(function() {
 			document.getElementById("fhr2").checked = forceHighChannels[1];
 		}
 		
+		// download button
+		$("#download").click(function () {
+			file = 'data/' + filename;
+			window.open(file);
+		});
+		
+		// list button
+		$("#list").click(function () {
+			window.open('data');
+		});
+		
+		// date to filename button
+		$("#date_to_filename").click(function () {
+			
+			// check filename for date
+			var patt = /\d{8}_/;
+			if (patt.test(filename)) {
+				filename = filename.slice(9);
+			}
+			
+			// add current date
+			var currentDate = new Date();
+			var d = currentDate.getDate().toString();
+			if(d<10) {
+				d="0" + d;
+			}
+			var m = (currentDate.getMonth()+1).toString();
+			if(m<10) {
+				m = "0" + m;
+			}
+			var y = currentDate.getFullYear().toString();
+			filename = y + m + d + "_" + filename;
+			$("#filename").val(filename);
+		});
+		
+		
+		
+		// log download
+		$("#download_log").click(function () {
+			file = 'log/log.txt';
+			window.open(file);
+		});
+		
+		
+		
 		// CONFIGURATION PARSING
 		
 		
@@ -1101,60 +1157,65 @@ $(function() {
 			$("#filename").val(filename);
 		});
 		
-		$("#file_size_limited").change(function () {
+		function enableDisableFile() {
 			
-			if ($("#file_size_limited:checked").length > 0) {
+			if ($("#enable_storing:checked").length > 0) {
+				document.getElementById("file_format").disabled = false;
+				document.getElementById("filename").disabled = false;
+				document.getElementById("date_to_filename").disabled = false;
+				document.getElementById("file_size_limited").disabled = false;
 				document.getElementById("file_size").disabled = false;
 				document.getElementById("file_size_unit").disabled = false;
+				document.getElementById("download").disabled = false;
 			} else {
+				document.getElementById("file_format").disabled = true;
+				document.getElementById("filename").disabled = true;
+				document.getElementById("date_to_filename").disabled = true;
+				document.getElementById("file_size_limited").disabled = true;
 				document.getElementById("file_size").disabled = true;
 				document.getElementById("file_size_unit").disabled = true;
+				document.getElementById("download").disabled = true;
 			}
-		});
+		}
 		
 		
-		// download button
-		$("#download").click(function () {
-			file = 'data/' + filename;
-			window.open(file);
-		});
-		
-		// list button
-		$("#list").click(function () {
-			window.open('data');
-		});
-		
-		// date to filename button
-		$("#date_to_filename").click(function () {
-			
-			// check filename for date
-			var patt = /\d{8}_/;
-			if (patt.test(filename)) {
-				filename = filename.slice(9);
+		// configuration disable
+		function enableDisableConf() {
+			if(state == RL_RUNNING) {
+				
+				// disable start, enable stop button
+				document.getElementById("start").disabled = true;
+				document.getElementById("stop").disabled = false;
+				
+				
+				// disable conf
+				$('#collapse2').find('*').attr('disabled', true);
+				
+				// re-enable buttons
+				if ($("#enable_storing:checked").length > 0) {
+					document.getElementById("download").disabled = false;
+				}
+				document.getElementById("list").disabled = false;
+				document.getElementById("download_log").disabled = false;
+			} else {
+				
+				// disable start, enable stop button
+				document.getElementById("start").disabled = false;
+				document.getElementById("stop").disabled = true;
+				
+				// enable conf
+				$('#collapse2').find('*').attr('disabled', false);
+				
+				// disable file conf
+				enableDisableFile();
+				if ($("#file_size_limited:checked").length <= 0) {
+					document.getElementById("file_size").disabled = true;
+					document.getElementById("file_size_unit").disabled = true;
+				}
 			}
-			
-			// add current date
-			var currentDate = new Date();
-			var d = currentDate.getDate().toString();
-			if(d<10) {
-				d="0" + d;
-			}
-			var m = (currentDate.getMonth()+1).toString();
-			if(m<10) {
-				m = "0" + m;
-			}
-			var y = currentDate.getFullYear().toString();
-			filename = y + m + d + "_" + filename;
-			$("#filename").val(filename);
-		});
+		}
 		
 		
-		
-		// log download
-		$("#download_log").click(function () {
-			file = 'log/log.txt';
-			window.open(file);
-		});
 		
 		// calibration ignore checkbox
 		$("#calibration").change(function () {

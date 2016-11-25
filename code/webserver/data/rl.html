@@ -124,17 +124,17 @@
 						<div class="panel-body">
 							<div class="row top-buffer">
 								<div class="col-md-3">
-									<div id="status"> </div>
+									<div id="status">Status: </div>
 								</div>
 								<div class="col-md-4">
-									<div id="webserver"> </div>
+									<div id="webserver">Samples Taken: </div>
 								</div>
 								<div class="col-md-5">
 									<div class="row">
-										<div id="free_space"> </div>
+										<div id="free_space">Free Disk Space: </div>
 									</div>
 									<div class="row">
-										<div id="time_left"> </div>
+										<div id="time_left">Sampling Time Left: </div>
 									</div>
 								</div>
 							</div>
@@ -146,11 +146,6 @@
 									<button id="stop" class="btn btn-default" data-toggle="tooltip" title="Stop current measurement">Stop</button>
 								</div>
 								<div class="col-md-1">
-								</div>
-								<div class="col-md-3">
-									<div class="checkbox">
-										<label><input id="calibration" type="checkbox" data-toggle="tooltip" title="Ignore existing calibration"></input>Ignore Calibration</label>
-									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="checkbox">
@@ -173,13 +168,19 @@
 							<div class="row top-buffer">
 								<div class="col-md-3">
 									<div class="checkbox">
-										<label><input id="set_default" type="checkbox" data-toggle="tooltip" title="Set current configuration as default"></input>Set as Default</label>
+										<label><input id="set_default" type="checkbox" data-toggle="tooltip" title="Set current configuration as default"></input>Store Configuration</label>
 									</div>
 								</div>
-								<div class="col-md-6">
-									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Load default configuration">Load Default</button>
+								<div class="col-md-3">
+									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Load default configuration">Restore Configuration</button>
 								</div>
-								
+								<div class="col-md-3">
+								</div>
+								<div class="col-md-3">
+									<div class="checkbox">
+										<label><input id="calibration" type="checkbox" data-toggle="tooltip" title="Ignore existing calibration"></input>Ignore Calibration</label>
+									</div>
+								</div>
 							</div>
 							
 							<!-- File Section -->
@@ -215,14 +216,14 @@
 									<div class="row small-top-buffer">
 										<div class="col-md-3">
 										</div>
+										<div class="col-md-3">
+											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date to file name">Date to Filename</button>
+										</div>
 										<div class="col-md-2">
 											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file">Download</button>
 										</div>
 										<div class="col-md-3">
 											<button id="list" class="btn btn-default" data-toggle="tooltip" title="Show all files">Browse Files</button>
-										</div>
-										<div class="col-md-3">
-											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date to file name">Date to Filename</button>
 										</div>
 									</div>
 									<div class="row top-buffer">
@@ -253,7 +254,7 @@
 								
 								<!-- Channels Section -->
 								<div class="col-md-6">
-									<h3>Channels</h3>
+									<h3>Analog Channels</h3>
 									<div class="row">
 										<div class="col-md-4">
 											<b>Voltage</b>
@@ -338,7 +339,7 @@
 									<h3>Rates</h3>
 									<div class="row">
 										<div class="col-md-3">
-											Sampling Rate:
+											Sample Rate:
 										</div>
 										<div class="col-md-4">
 											<select class="form-control"  id="sample_rate" data-toggle="tooltip" title="Data sampling rate">
@@ -357,10 +358,10 @@
 									</div>
 								</div>
 								<div class="col-md-6">
-									<h3>Digital Signals</h3>
+									<h3>Digital Channels</h3>
 									<div class="row">
 										<div class="checkbox">
-											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Log ditigal inputs">Log Digital Inputs</label>
+											<label><input id="digital_inputs" type="checkbox" checked="checked" data-toggle="tooltip" title="Log ditigal inputs">Sample DI</label>
 										</div>
 									</div>
 								</div>
@@ -498,36 +499,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label><input id="plot_d1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn1 in plot"></input>Plot DigIn1</label>
+											<label><input id="plot_d1" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI1 in plot"></input>Plot DI1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label><input id="plot_d2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn2 in plot"></input>Plot DigIn2</label>
+											<label><input id="plot_d2" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI2 in plot"></input>Plot DI2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label><input id="plot_d3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn3 in plot"></input>Plot DigIn3</label>
+											<label><input id="plot_d3" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI3 in plot"></input>Plot DI3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label><input id="plot_d4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn4 in plot"></input>Plot DigIn4</label>
+											<label><input id="plot_d4" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI4 in plot"></input>Plot DI4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label><input id="plot_d5" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn5 in plot"></input>Plot DigIn5</label>
+											<label><input id="plot_d5" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI5 in plot"></input>Plot DI5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label><input id="plot_d6" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DigIn6 in plot"></input>Plot DigIn6</label>
+											<label><input id="plot_d6" type="checkbox"  checked="checked" data-toggle="tooltip" title="Show DI6 in plot"></input>Plot DI6</label>
 										</div>
 									</div>
 								</div>
