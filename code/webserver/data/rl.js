@@ -354,9 +354,6 @@ function parseStatus(tempState) {
 		}
 		document.getElementById("enable_storing").checked = true;
 	}
-	if(state != RL_RUNNING) {
-		enableDisableFile();
-	}
 	
 	// file name
 	filename = tempFilename.slice(14);
@@ -1116,7 +1113,7 @@ function parseConf() {
 }
 
 function enableDisableFile() {
-			
+	
 	if ($("#enable_storing:checked").length > 0) {
 		document.getElementById("file_format").disabled = false;
 		document.getElementById("filename").disabled = false;

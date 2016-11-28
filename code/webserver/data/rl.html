@@ -216,7 +216,7 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked">Enable File Storing</label>
+												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked" onclick="enableDisableConf()">Enable File Storing</label>
 											</div>
 										</div>
 									</div>
@@ -255,7 +255,7 @@
 									<div class="row top-buffer">
 										<div class="col-md-3">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Split data files, if larger than maximum"><input id="file_size_limited" type="checkbox">Split Files</label>
+												<label data-toggle="tooltip" title="Split data files, if larger than maximum"><input id="file_size_limited" type="checkbox" onclick="enableDisableConf()">Split Files</label>
 											</div>
 										</div>
 										<div class="col-md-2">
@@ -442,24 +442,24 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked">Plot V1</label>
+											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked">Plot V2</label>
+											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked">Plot V3</label>
+											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked">Plot V4</label>
+											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V4</label>
 										</div>
 									</div>
 								</div>
@@ -492,12 +492,12 @@
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#0072BD">
-										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked">Plot I1</label>
+										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I1</label>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#D95319">
-										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked">Plot I2</label>
+										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I2</label>
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -532,36 +532,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked">Plot DI1</label>
+											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked">Plot DI2</label>
+											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked">Plot DI3</label>
+											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked">Plot DI4</label>
+											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked">Plot DI5</label>
+											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked">Plot DI6</label>
+											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI6</label>
 										</div>
 									</div>
 								</div>
