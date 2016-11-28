@@ -3,7 +3,7 @@
 /// Channel names
 const char* channel_names[NUM_CHANNELS] = {"I1H","I1L","V1","V2","I2H","I2L","V3","V4"};
 /// Digital input names
-const char* digital_input_names[NUM_DIGITAL_INPUTS] = {"DigIn1", "DigIn2", "DigIn3", "DigIn4", "DigIn5", "DigIn6"};
+const char* digital_input_names[NUM_DIGITAL_INPUTS] = {"DI1", "DI2", "DI3", "DI4", "DI5", "DI6"};
 /// Valid channel names
 const char* valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
 
