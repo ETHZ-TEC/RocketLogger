@@ -40,6 +40,7 @@ KSPS = 1000;
 KEY_S = 83;
 KEY_L = 76;
 KEY_D = 68;
+KEY_P = 80;
 KEY_1 = 49;
 KEY_2 = 50;
 KEY_3 = 51;
@@ -1341,6 +1342,15 @@ $(function() {
 			// store default conf
 			} else if(event.keyCode == KEY_D) {
 				setDefault();
+			// pause/unpause plot
+			} else if(event.keyCode == KEY_P) {
+				if(plotEnabled == '1') {
+					plotEnabled = '0';
+					document.getElementById("plotting").checked = false;
+				} else {
+					plotEnabled = '1';
+					document.getElementById("plotting").checked = true;
+				}
 			// time scale
 			} else if(event.keyCode == KEY_1 || event.keyCode == KEY_2 || event.keyCode == KEY_3) {
 				
