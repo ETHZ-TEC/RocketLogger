@@ -1,8 +1,14 @@
 #include "gpio.h"
 
+/// Linux GPIO number of start/stop button
 #define GPIO_BUTTON 26
-#define MIN_INTERVAl 1 // minimal interval between 2 interrupts (in s)
+/// Minimal time interval between two interrupts (in seconds)
+#define MIN_INTERVAL 1
 
+/**
+ * Setup button GPIO
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int gpio_setup() {
 	
 	int ret1 = gpio_export(GPIO_BUTTON);
@@ -16,6 +22,10 @@ int gpio_setup() {
 	return SUCCESS;
 }
 
+/**
+ * GPIO interrupt handler
+ * @param value GPIO value after interrupt
+ */
 void interrupt_handler(int value) {
 	
 	if (value == 0) { // only react if button pressed enough long
@@ -30,13 +40,16 @@ void interrupt_handler(int value) {
 		}
 		
 		// debouncing
-		sleep(MIN_INTERVAl);
+		sleep(MIN_INTERVAL);
 		
 	}
 	
 }
 
-
+/**
+ * Main RocketLogger deamon program. Waits on interrupt on button GPIO and starts/stops RocketLogger
+ * @return standard Linux return codes
+ */
 int main() {
 	
 	int timeout = -1; //infinite timeout
