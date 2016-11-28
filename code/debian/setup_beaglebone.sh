@@ -81,8 +81,8 @@ mkdir -p /etc/rocketlogger
 echo "> Updating system"
 
 # copy network interface configuration
-apt update
-apt upgrade
+apt-get update --assume-yes
+apt-get upgrade --assume-yes
 
 
 ## grow file system
