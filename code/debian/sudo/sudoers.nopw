@@ -13,8 +13,11 @@ Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 # Host alias specification
 
 # User alias specification
+User_Alias ADMINS = %admin
+User_Alias ROCKETLOGGER_WEB = www-data, %www-data
 
 # Cmnd alias specification
+Cmnd_Alias ROCKETLOGGER_CMDS = /bin/rocketlogger
 
 # User privilege specification
 root    ALL=(ALL:ALL) ALL
@@ -22,6 +25,13 @@ root    ALL=(ALL:ALL) ALL
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL:ALL) ALL
 
+# Allow admins to execute commands with root privileges without password
+ADMINS ALL=(ALL) NOPASSWD: ALL
+
+# Allow rocketlogger web interface to execute rocketlogger binary as root
+ROCKETLOGGER_WEB ALL=NOPASSWD: ROCKETLOGGER_CMDS
+
 # See sudoers(5) for more information on "#include" directives:
 
 #includedir /etc/sudoers.d
+rocketlogger  ALL=NOPASSWD: ALL

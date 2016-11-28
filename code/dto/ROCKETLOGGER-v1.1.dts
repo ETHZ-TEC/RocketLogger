@@ -206,7 +206,7 @@
     __overlay__ {
       adc_clock {
         compatible = "ti,am33xx-ehrpwm";
-        pwms = <&ehrpwm0 0 500000 PWM_POLARITY_INVERTED>
+        pwms = <&ehrpwm0 0 500000 PWM_POLARITY_INVERTED>;
         pwm-names = "rl_pwm0";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_pwm0_pins>;
@@ -222,7 +222,7 @@
     __overlay__ {
       range_switch_clock {
         compatible = "ti,am33xx-ehrpwm";
-        pwms = <&ehrpwm1 0 500000 PWM_POLARITY_INVERTED>
+        pwms = <&ehrpwm1 0 500000 PWM_POLARITY_INVERTED>;
         pwm-names = "rl_pwm1";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_pwm1_pins>;
