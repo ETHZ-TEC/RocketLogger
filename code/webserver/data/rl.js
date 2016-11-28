@@ -1224,6 +1224,12 @@ function plotsCollapsed() {
 
 // ------------------------------------------------------------------------ //
 
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip({
+		trigger : 'hover'
+	}); 
+});
+
 $(function() {
 
 		window.onfocus = function () { 
