@@ -6,3 +6,7 @@ dt-docs/
   beagle bone pin header mux documentatation downloaded from:
   https://github.com/derekmolloy/boneDeviceTree/tree/master/docs/
 
+
+PRU on Debian Jessie
+  https://groups.google.com/forum/#!msg/beagleboard/l59Dx8ygxNg/GvIzOJSzDAAJ
+
