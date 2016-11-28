@@ -83,12 +83,8 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	if(conf->calibration == CAL_USE) {
-		read_calibration(conf);
-	} else {
-		reset_offsets();
-		reset_scales();
-	}
+	read_calibration(conf);
+
 	
 	// SAMPLE
 	if(pru_sample(data, conf) == FAILURE) {
