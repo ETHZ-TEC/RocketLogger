@@ -99,7 +99,9 @@ var vScale = 1;
 var iScale = 1;
 
 var vAxisLabel = "Voltage [V]";
-var iAxisLabel = "Current [µA]"
+var iAxisLabel = "Current [µA]";
+
+var plotCollapseEnabled = true;
 
 
 // plots
@@ -1199,6 +1201,24 @@ function showLog() {
 
 function browseFiles() {
 	window.open('data');
+}
+
+function plotsCollapsed() {
+	var collapsing = $('#collapse3').hasClass('in');
+	if(collapsing == true) {
+		if(plotEnabled == '1') {
+			plotCollapseEnabled = true;
+		} else {
+			plotCollapseEnabled = false;
+		}
+		plotEnabled = '0';
+		document.getElementById("plotting").checked = false;
+	} else {
+		if(plotCollapseEnabled == true) {
+			plotEnabled = '1';
+			document.getElementById("plotting").checked = true;
+		}
+	}
 }
 
 
