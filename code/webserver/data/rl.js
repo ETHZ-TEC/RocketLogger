@@ -1171,6 +1171,16 @@ function enableDisableConf() {
 	}
 }
 
+function download() {
+	file = 'data/' + filename;
+	window.open(file);
+}
+
+function show_log() {
+	file = 'log/log.txt';
+	window.open(file);
+}
+
 
 // ------------------------------------------------------------------------ //
 
@@ -1242,12 +1252,6 @@ $(function() {
 			updateChannels();
 		});
 		
-		// download button
-		$("#download").click(function () {
-			file = 'data/' + filename;
-			window.open(file);
-		});
-		
 		// list button
 		$("#list").click(function () {
 			window.open('data');
@@ -1276,15 +1280,6 @@ $(function() {
 			filename = y + m + d + "_" + filename;
 			$("#filename").val(filename);
 		});
-		
-		
-		
-		// log download
-		$("#download_log").click(function () {
-			file = 'log/log.txt';
-			window.open(file);
-		});
-		
 		
 		
 		
