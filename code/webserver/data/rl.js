@@ -1,4 +1,4 @@
-// CONSTANTS
+// --- CONSTANTS --- //
 RL_RUNNING = "1";
 RL_OFF = "0";
 RL_ERROR = "-1";
@@ -44,34 +44,26 @@ KEY_1 = 49;
 KEY_2 = 50;
 KEY_3 = 51;
 
-// GLOBAL VARIABLES
-		
+
+
+// --- GLOBAL VARIABLES --- //
+
+// state
 var state = RL_OFF;
 var error = false;
 var stopping = false;
 var starting = false;
 var reqId = 0;
-var plotEnabled = '1';
-var tScale = 0;
-var maxBufferCount = TIME_DIV * T_SCALES[tScale];
 var currentTime = 0;
+
+var isActive = true;
+
+
+// configuration
 var filename = "data.rld";
 var loadDefault = false;
 var freeSpace;
 
-var vScale = 1;
-var iScale = 1;
-
-var timeOut;
-var startTimeOut;
-
-// data
-var plotBufferCount = 0;
-var plotData;
-
-// ajax post object
-var statusPost;		
-var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
 
 // channel information
 var channels = [true, true, true, true, true, true, true, true];
@@ -82,10 +74,20 @@ var numDigDisplayed;
 isCurrent = [false, false, false, false, false, false, true, false, false, true, false, false];
 isDigital = [true, true, true, true, true, true, false, false, false, false, false, false];
 
+
+// plotting
+var plotEnabled = '1';
+var tScale = 0;
+var maxBufferCount = TIME_DIV * T_SCALES[tScale];
+var plotBufferCount = 0;
+var plotData;
+
+var vScale = 1;
+var iScale = 1;
+
 var vAxisLabel = "Voltage [V]";
 var iAxisLabel = "Current [µA]"
 
-var isActive = true;
 
 // plots
 var vPlot;
@@ -93,8 +95,21 @@ var iPlot;
 var digPlot;
 
 
+// time out
+var timeOut;
+var startTimeOut;
+
+
+// ajax post object
+var statusPost;		
+var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
+
+
+
+// --- FUNCTIONS --- //
+
+
 // UPDATE
-		
 function update() {
 
 	// get status
