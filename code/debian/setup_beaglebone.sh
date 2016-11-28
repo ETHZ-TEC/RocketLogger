@@ -27,8 +27,9 @@ echo "rocketlogger:beaglebone" | chpasswd
 # change home directory to /home/rocketlogger
 usermod -d /home/rocketlogger -m rocketlogger
 
-# add rocketlogger user to admin group for sudo commands
+# add rocketlogger user to admin and sudo group for super user commands
 usermod -a -G admin rocketlogger
+usermod -a -G sudo rocketlogger
 
 # display updated user configuration
 id rocketlogger

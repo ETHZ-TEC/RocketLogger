@@ -22,7 +22,7 @@ Project Organization
 --------------------
 The project consists of two parts
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
-* The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
+* The [RocketLogger Software Stack](code) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
 
 
 Prerequisites
@@ -31,15 +31,15 @@ Prerequisites
 ### Hardware Design
  * Altium Designer installation (version 16.1 was used for the PCB design)
 
-More details regarding the hardware design can be found on the [RocketLogger Hardware](wikis/hardware) wiki page.
+More details regarding the hardware design can be found on the [RocketLogger Hardware](#home#hardware) wiki page.
 
 ### Software Installation
- * To compile the RocketLogger software the following system components are required (install using `apt`):
+ * To compile the RocketLogger software the following system components are required (install using `apt-get`):
    `ntp gcc libncurses5-dev libi2c-dev clang`
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
 ```
-apt install linux-headers-$(uname -r)
+apt-get install linux-headers-$(uname -r)
 ```
  * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
    A PRU compiler and application loader library are required to compile and deploy this functionality.
@@ -56,4 +56,4 @@ lighttpd php5-cgi unzip
 hostapd isc-dhcp-server
 ```
 
-For further details regarding software installation and system configuration check the [RocketLogger Software Stack](wikis/software) wiki page.
+For further details regarding software installation and system configuration check the [RocketLogger Software Stack](#software) wiki page.
