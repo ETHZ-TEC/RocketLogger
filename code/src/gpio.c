@@ -178,7 +178,7 @@ int gpio_get_value(int num) {
 /**
  * Wait on GPIO interrupt.
  * @param num Linux GPIO number.
- * @param timeout Maximum waiting time (in ms).
+ * @param timeout Maximum waiting time (in ms). Set to 0 for infinite time out.
  * @return {@link SUCCESS} in case of interrupt, {@link FAILURE} otherwise.
  */
 int gpio_wait_interrupt(int num, int timeout) {
