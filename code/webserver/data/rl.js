@@ -1,42 +1,54 @@
 // --- CONSTANTS --- //
+
+// state
 RL_RUNNING = "1";
 RL_OFF = "0";
 RL_ERROR = "-1";
 
+
+// file
 NO_FILE = "0";
 CSV = "1";
 BIN = "2";
 
-BUFFER_SIZE  = 100;
-TIME_DIV = 10;
 
+// configuration
 NUM_PLOT_CHANNELS = 12;
 NUM_DIG_CHANNELS = 6;
 NUM_CHANNELS = 8;
 NUM_I_CHANNELS = 2;
 
+
+// plot
+BUFFER_SIZE  = 100;
+TIME_DIV = 10;
+
 VOLTAGE_SCALE = 100000;
 CURRENT_SCALE = 100000;
-
-UPDATE_INTERVAL = 500;
-STATUS_TIMEOUT_TIME = 3000;
-STOP_TIMEOUT_TIME = 3000;
-MISMATCH_TIMEOUT_TIME = 3000;
-
-CHANNEL_NAMES = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6", "I1", "V1", "V2", "I2", "V3", "V4"];
-CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
 
 DIG_DIST_FACTOR = 1.5;
 
 T_SCALES = [1,10,100];
 
+CHANNEL_NAMES = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6", "I1", "V1", "V2", "I2", "V3", "V4"];
+CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
+
+
+// time-out
+UPDATE_INTERVAL = 500;
+STATUS_TIMEOUT_TIME = 3000;
+STOP_TIMEOUT_TIME = 3000;
+
+
+// scales
 GB_SCALE = 1000000000;
 MB_SCALE = 1000000;
 KB_SCALE = 1000;
 MS_SCALE = 1000;
 KSPS = 1000;
 
-// KEYS
+
+// keys
 KEY_S = 83;
 KEY_L = 76;
 KEY_D = 68;
@@ -515,7 +527,7 @@ function dataReceived (tempState) {
 	}
 }
 
-// update
+// update plot
 function updatePlot() {
 	
 	// update channels to display
@@ -706,6 +718,7 @@ function getDigData() {
 	return digDataRev;
 }
 
+// max v value for auto scale
 function maxVValue(data) {
 			
 	var max = 0;
@@ -728,6 +741,7 @@ function maxVValue(data) {
 	return max;
 }
 
+// max i value for auto scale
 function maxIValue(data) {
 	
 	var max = 0;
@@ -804,6 +818,7 @@ function resetDigPlot() {
 	});
 }
 
+// start
 function start() {
 		
 	if(state == RL_RUNNING) {
@@ -855,6 +870,7 @@ function startFailed() {
 	error = true;
 }
 
+// stop
 function stop() {
 	if (state == RL_OFF) {
 		alert("RocketLogger not running!");
@@ -884,6 +900,7 @@ function stopFailed() {
 	stopping = false;
 }
 
+// set default conf
 function setDefault() {
 		
 	var setPost = parseConf();
@@ -913,6 +930,7 @@ function setDefault() {
 	});
 }
 
+// channel update
 function updateChannels () {
 	document.getElementById("i1h").checked = channels[0];
 	document.getElementById("i1l").checked = channels[1];
@@ -935,89 +953,6 @@ function updateDisplayChannels() {
 }
 
 // CONFIGURATION PARSING
-		
-		
-function parseChannels() {
-	var numChannels = 0;
-	channels.fill(false);
-	
-	if ($("#i1h:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "0";
-		} else {
-			config.channels += ",0";
-		}
-		channels[0] = true;
-		numChannels++;
-	}
-	if ($("#i1l:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "1";
-		} else {
-			config.channels += ",1";
-		}
-		channels[1] = true;
-		numChannels++;
-	}
-	if ($("#v1:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "2";
-		} else {
-			config.channels += ",2";
-		}
-		channels[2] = true;
-		numChannels++;
-	}
-	if ($("#v2:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "3";
-		} else {
-			config.channels += ",3";
-		}
-		channels[3] = true;
-		numChannels++;
-	}
-	
-	if ($("#i2h:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "4";
-		} else {
-			config.channels += ",4";
-		}
-		channels[4] = true;
-		numChannels++;
-	}
-	if ($("#i2l:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "5";
-		} else {
-			config.channels += ",5";
-		}
-		channels[5] = true;
-		numChannels++;
-	}
-	if ($("#v3:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "6";
-		} else {
-			config.channels += ",6";
-		}
-		channels[6] = true;
-		numChannels++;
-	}
-	if ($("#v4:checked").length > 0) {
-		if (numChannels == 0) {
-			config.channels = "7";
-		} else {
-			config.channels += ",7";
-		}
-		channels[7] = true;
-		numChannels++;
-	}
-	
-	return numChannels;
-}
-
 function parseConf() {
 	
 	// rate
@@ -1113,27 +1048,86 @@ function parseConf() {
 	return config;
 }
 
-function enableDisableFile() {
+function parseChannels() {
+	var numChannels = 0;
+	channels.fill(false);
 	
-	if ($("#enable_storing:checked").length > 0) {
-		document.getElementById("file_format").disabled = false;
-		document.getElementById("filename").disabled = false;
-		document.getElementById("date_to_filename").disabled = false;
-		document.getElementById("file_size_limited").disabled = false;
-		document.getElementById("file_size").disabled = false;
-		document.getElementById("file_size_unit").disabled = false;
-		document.getElementById("download").disabled = false;
-	} else {
-		document.getElementById("file_format").disabled = true;
-		document.getElementById("filename").disabled = true;
-		document.getElementById("date_to_filename").disabled = true;
-		document.getElementById("file_size_limited").disabled = true;
-		document.getElementById("file_size").disabled = true;
-		document.getElementById("file_size_unit").disabled = true;
-		document.getElementById("download").disabled = true;
+	if ($("#i1h:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "0";
+		} else {
+			config.channels += ",0";
+		}
+		channels[0] = true;
+		numChannels++;
 	}
+	if ($("#i1l:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "1";
+		} else {
+			config.channels += ",1";
+		}
+		channels[1] = true;
+		numChannels++;
+	}
+	if ($("#v1:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "2";
+		} else {
+			config.channels += ",2";
+		}
+		channels[2] = true;
+		numChannels++;
+	}
+	if ($("#v2:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "3";
+		} else {
+			config.channels += ",3";
+		}
+		channels[3] = true;
+		numChannels++;
+	}
+	
+	if ($("#i2h:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "4";
+		} else {
+			config.channels += ",4";
+		}
+		channels[4] = true;
+		numChannels++;
+	}
+	if ($("#i2l:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "5";
+		} else {
+			config.channels += ",5";
+		}
+		channels[5] = true;
+		numChannels++;
+	}
+	if ($("#v3:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "6";
+		} else {
+			config.channels += ",6";
+		}
+		channels[6] = true;
+		numChannels++;
+	}
+	if ($("#v4:checked").length > 0) {
+		if (numChannels == 0) {
+			config.channels = "7";
+		} else {
+			config.channels += ",7";
+		}
+		channels[7] = true;
+		numChannels++;
+	}
+	
+	return numChannels;
 }
-
 
 // configuration disable
 function enableDisableConf() {
@@ -1170,15 +1164,41 @@ function enableDisableConf() {
 		}
 	}
 }
+function enableDisableFile() {
+	
+	if ($("#enable_storing:checked").length > 0) {
+		document.getElementById("file_format").disabled = false;
+		document.getElementById("filename").disabled = false;
+		document.getElementById("date_to_filename").disabled = false;
+		document.getElementById("file_size_limited").disabled = false;
+		document.getElementById("file_size").disabled = false;
+		document.getElementById("file_size_unit").disabled = false;
+		document.getElementById("download").disabled = false;
+	} else {
+		document.getElementById("file_format").disabled = true;
+		document.getElementById("filename").disabled = true;
+		document.getElementById("date_to_filename").disabled = true;
+		document.getElementById("file_size_limited").disabled = true;
+		document.getElementById("file_size").disabled = true;
+		document.getElementById("file_size_unit").disabled = true;
+		document.getElementById("download").disabled = true;
+	}
+}
 
+
+// files
 function download() {
 	file = 'data/' + filename;
 	window.open(file);
 }
 
-function show_log() {
+function showLog() {
 	file = 'log/log.txt';
 	window.open(file);
+}
+
+function browseFiles() {
+	window.open('data');
 }
 
 
@@ -1214,8 +1234,7 @@ $(function() {
 			updatePlot();
 		});
 		
-		// reset plot
-		resetData();
+		
 		
 		
 		// BUTTONS
@@ -1250,11 +1269,6 @@ $(function() {
 		$("#select").click(function () {
 			channels.fill(true);
 			updateChannels();
-		});
-		
-		// list button
-		$("#list").click(function () {
-			window.open('data');
 		});
 		
 		// date to filename button
@@ -1315,13 +1329,6 @@ $(function() {
 			}
 		});
 		
-		// reset plots
-		resetVPlot();
-		resetIPlot();
-		resetDigPlot();
-		
-		// never ending update function
-		update();
 		
 		document.addEventListener('keydown', function(event) {
 			// start/stop
@@ -1353,5 +1360,18 @@ $(function() {
 				e.selectedIndex = event.keyCode - 49;
 			}
 		});
+		
+		
+		// reset data
+		resetData();
+		
+		// reset plots
+		resetVPlot();
+		resetIPlot();
+		resetDigPlot();
+		
+		// never ending update function
+		update();
+
 
 });
