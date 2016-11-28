@@ -118,78 +118,90 @@
 <body>
 
 	<div class="container">
+	
+		<div class="row top-buffer">
+			<div class="col-md-4">
+				<img class="img-responsive" src="images/eth_logo_small.png" alt="TIK Logo">
+			</div>
+			<div class="col-md-4">
+			</div>
+			<div class="col-md-4">
+				<img class="img-responsive" src="images/tik_logo_small.png" alt="TIK Logo" align="right">
+			</div>
+		</div>
 		
 		<div class="page-header">
 			<h1 style="color:black">RocketLogger Remote Control</h1>
 		</div>
 
 		<div id="content">
-		
 			
-						<h2 class="panel-heading" style="color:black">
-							Status & Control
-						</h2>
-					
-						<div class="panel-body">
-							<div class="row top-buffer">
-								<div class="col-md-3">
-									<div id="status">Status: </div>
+			<div class="panel panel-default">
+				<h2 class="panel-heading" style="color:black">
+					Status & Control
+				</h2>
+			
+				<div class="panel-body">
+					<div class="row top-buffer">
+						<div class="col-md-3">
+							<div id="status">Status: </div>
+						</div>
+						<div class="col-md-5">
+							<div class="row">
+								<div class="col-md-5">
+									<div id="samples_taken"></div>
 								</div>
-								<div class="col-md-4">
-									<div class="row">
-										<div class="col-md-5">
-											<div id="samples_taken"></div>
-										</div>
-										<div class="col-md-7">
-											<div id="samples_taken_val"></div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-md-5">
-											<div id="time_sampled"></div>
-										</div>
-										<div class="col-md-7">
-											<div id="time_sampled_val"></div>
-										</div>
-									</div>
-									
-									
-								</div>
-								<div class="col-md-4">
-									<div class="row">
-										<div class="col-md-6">
-											<div>Free Disk Space:</div>
-										</div>
-										<div class="col-md-6">
-											<div id="free_space"></div>
-										</div>
-									</div>
-									<div class="row">
-										<div class="col-md-6">
-											<div>Sampling Time Left:</div>
-										</div>
-										<div class="col-md-6">
-											<div id="time_left"></div>
-										</div>
-									</div>
+								<div class="col-md-7">
+									<div id="samples_taken_val"></div>
 								</div>
 							</div>
-							<div class="row top-buffer">
-								<div class="col-md-1">
-									<button id="start" class="btn btn-default" data-toggle="tooltip" title="Start new measurement">Start</button>
+							<div class="row">
+								<div class="col-md-5">
+									<div id="time_sampled"></div>
 								</div>
-								<div class="col-md-1">
-									<button id="stop" class="btn btn-default" data-toggle="tooltip" title="Stop current measurement">Stop</button>
+								<div class="col-md-7">
+									<div id="time_sampled_val"></div>
 								</div>
-								<div class="col-md-1">
+							</div>
+							
+							
+						</div>
+						<div class="col-md-4">
+							<div class="row">
+								<div class="col-md-6">
+									<div>Free Disk Space:</div>
 								</div>
 								<div class="col-md-6">
-									<div class="checkbox">
-										<label data-toggle="tooltip" title="Refresh the web interface in background"><input id="active" type="checkbox" checked="checked">Refresh in Background</label>
-									</div>
+									<div id="free_space"></div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-6">
+									<div>Sampling Time Left:</div>
+								</div>
+								<div class="col-md-6">
+									<div id="time_left"></div>
 								</div>
 							</div>
 						</div>
+					</div>
+					<div class="row top-buffer">
+						<div class="col-md-1">
+							<button id="start" class="btn btn-default" data-toggle="tooltip" title="Start new measurement">Start</button>
+						</div>
+						<div class="col-md-1">
+							<button id="stop" class="btn btn-default" data-toggle="tooltip" title="Stop current measurement">Stop</button>
+						</div>
+						<div class="col-md-1">
+						</div>
+						<div class="col-md-6">
+							<div class="checkbox">
+								<label data-toggle="tooltip" title="Refresh the web interface in background"><input id="active" type="checkbox" checked="checked">Refresh in Background</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 						
 			<div class="panel-group" id="accordion" >
 				<div class="panel panel-default">
@@ -216,7 +228,7 @@
 									<div class="row">
 										<div class="col-md-6">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked">Enable File Storing</label>
+												<label data-toggle="tooltip" title="Store data to file"><input id="enable_storing" type="checkbox" checked="checked" onclick="enableDisableConf()">Enable File Storing</label>
 											</div>
 										</div>
 									</div>
@@ -246,16 +258,16 @@
 											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date prefix to file name">Add Date Prefix</button>
 										</div>
 										<div class="col-md-2">
-											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file">Download</button>
+											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file" onclick="download()">Download</button>
 										</div>
 										<div class="col-md-3">
-											<button id="list" class="btn btn-default" data-toggle="tooltip" title="Show all files">Browse Files</button>
+											<button id="list" class="btn btn-default" data-toggle="tooltip" title="Show all files" onclick="browseFiles()">Browse Files</button>
 										</div>
 									</div>
 									<div class="row top-buffer">
 										<div class="col-md-3">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Split data files, if larger than maximum"><input id="file_size_limited" type="checkbox">Split Files</label>
+												<label data-toggle="tooltip" title="Split data files, if larger than maximum"><input id="file_size_limited" type="checkbox" onclick="enableDisableConf()">Split Files</label>
 											</div>
 										</div>
 										<div class="col-md-2">
@@ -273,7 +285,7 @@
 											Log File:
 										</div>
 										<div class="col-md-3">
-											<button id="download_log" class="btn btn-default" data-toggle="tooltip" title="Show log file">Open Log File</button>
+											<button id="download_log" class="btn btn-default" data-toggle="tooltip" title="Show log file" onclick="showLog()">Open Log File</button>
 										</div>
 									</div>
 								</div>
@@ -442,24 +454,24 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked">Plot V1</label>
+											<label data-toggle="tooltip" title="Show V1 in plot"><input id="plot_v1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked">Plot V2</label>
+											<label data-toggle="tooltip" title="Show V2 in plot"><input id="plot_v2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked">Plot V3</label>
+											<label data-toggle="tooltip" title="Show V3 in plot"><input id="plot_v3" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked">Plot V4</label>
+											<label data-toggle="tooltip" title="Show V4 in plot"><input id="plot_v4" type="checkbox"  checked="checked" onclick="updatePlot()">Plot V4</label>
 										</div>
 									</div>
 								</div>
@@ -492,12 +504,12 @@
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#0072BD">
-										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked">Plot I1</label>
+										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I1</label>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="checkbox" style="color:#D95319">
-										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked">Plot I2</label>
+										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I2</label>
 									</div>
 								</div>
 								<div class="col-md-2">
@@ -532,36 +544,36 @@
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#0072BD">
-											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked">Plot DI1</label>
+											<label data-toggle="tooltip" title="Show DI1 in plot"><input id="plot_d1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI1</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#D95319">
-											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked">Plot DI2</label>
+											<label data-toggle="tooltip" title="Show DI2 in plot"><input id="plot_d2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI2</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#EDB120">
-											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked">Plot DI3</label>
+											<label data-toggle="tooltip" title="Show DI3 in plot"><input id="plot_d3" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI3</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#7E2F8E">
-											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked">Plot DI4</label>
+											<label data-toggle="tooltip" title="Show DI4 in plot"><input id="plot_d4" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI4</label>
 										</div>
 									</div>
 								</div>
 								<div class="col-md-2">
 									<div class="row">
 										<div class="checkbox" style="color:#77AC30">
-											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked">Plot DI5</label>
+											<label data-toggle="tooltip" title="Show DI5 in plot"><input id="plot_d5" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI5</label>
 										</div>
 									</div>
 									<div class="row">
 										<div class="checkbox" style="color:#4DBEEE">
-											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked">Plot DI6</label>
+											<label data-toggle="tooltip" title="Show DI6 in plot"><input id="plot_d6" type="checkbox"  checked="checked" onclick="updatePlot()">Plot DI6</label>
 										</div>
 									</div>
 								</div>
