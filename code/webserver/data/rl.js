@@ -30,6 +30,10 @@ DIG_DIST_FACTOR = 1.5;
 
 T_SCALES = [1,10,100];
 
+STD_WIDTH = 878;
+MAX_DIG_PLOT_HEIGHT = 470;
+MIN_DIG_PLOT_HEIGHT = 214;
+
 CHANNEL_NAMES = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6", "I1", "V1", "V2", "I2", "V3", "V4"];
 CHANNEL_COLORS = ["#0072BD","#D95319","#EDB120","#7E2F8E","#77AC30", "#4DBEEE", "#0072BD","#0072BD","#D95319","#D95319","#EDB120","#77AC30"];
 
@@ -532,6 +536,8 @@ function dataReceived (tempState) {
 // update plot
 function updatePlot() {
 	
+	resizePlot();
+	
 	// update channels to display
 	updateDisplayChannels();
 			
@@ -566,14 +572,6 @@ function updatePlot() {
 	iPlot.draw();
 	
 	// digPlot
-	numDigDisplayed = 0;
-	for(var i=0; i<NUM_DIG_CHANNELS; i++) {
-		if(displayChannels[i] == true) {
-			numDigDisplayed++;
-		}
-	}
-	var size = (70*numDigDisplayed + 50).toString() + "px"; // TODO constants
-	document.getElementById("dig_plot").style.height=size;
 	resetDigPlot();
 	digPlot.getOptions().yaxes[0].max = numDigDisplayed*DIG_DIST_FACTOR-0.4,
 	digPlot.setData(getDigData());
@@ -582,6 +580,23 @@ function updatePlot() {
 	digPlot.setupGrid();
 	digPlot.draw();
 	
+}
+
+function resizePlot(plotPlaceholder) {
+	var plotWidth = $('#v_plot').width();
+	$('#v_plot').height(plotWidth/2);
+	$('#i_plot').height(plotWidth/2);
+	
+	numDigDisplayed = 0;
+	for(var i=0; i<NUM_DIG_CHANNELS; i++) {
+		if(displayChannels[i] == true) {
+			numDigDisplayed++;
+		}
+	}
+	var size = 70*numDigDisplayed + 50; // TODO constants
+	var relSize = size/MAX_DIG_PLOT_HEIGHT;
+	size = Math.max(MIN_DIG_PLOT_HEIGHT, plotWidth/2 * relSize);
+	$('#dig_plot').height(size);
 }
 
 // convert data for plotting
@@ -771,6 +786,9 @@ function maxIValue(data) {
 
 // v plot
 function resetVPlot() {
+	
+	resizePlot();
+	
 	vPlot = $.plot("#vPlaceholder", getVData(), {
 		series: {
 			shadowSize: 0
@@ -787,6 +805,9 @@ function resetVPlot() {
 
 // i plot
 function resetIPlot() {
+	
+	resizePlot();
+	
 	iPlot = $.plot("#iPlaceholder", getIData(), {
 		series: {
 			shadowSize: 0
@@ -803,6 +824,8 @@ function resetIPlot() {
 
 // di plot
 function resetDigPlot() {
+	
+	resizePlot();
 	
 	digPlot = $.plot("#digPlaceholder", getDigData(), {
 		series: {
@@ -1387,6 +1410,9 @@ $(function() {
 			}
 		});
 		
+		window.onresize = function(event) {
+			updatePlot();
+		}
 		
 		// reset data
 		resetData();
