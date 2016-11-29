@@ -27,8 +27,8 @@ void reset_scales() {
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
  */
 int read_calibration(struct rl_conf* conf) {
-	// check if calibration file existing
-	if(open(CALIBRATION_FILE, O_RDWR) <= 0) {
+	// check if calibration ignored or calibration file not existing
+	if(conf->calibration != CAL_USE || open(CALIBRATION_FILE, O_RDWR) <= 0) {
 		rl_log(WARNING, "no calibration file, returning uncalibrated values");
 		reset_offsets();
 		reset_scales();

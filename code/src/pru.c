@@ -8,9 +8,16 @@
 
 // PRU TIMEOUT WRAPPER
 
-pthread_mutex_t calculating = PTHREAD_MUTEX_INITIALIZER;
+/// PRU access mutex
+pthread_mutex_t waiting = PTHREAD_MUTEX_INITIALIZER;
+
+/// Notification variable
 pthread_cond_t done = PTHREAD_COND_INITIALIZER;
 
+/**
+ * Wait on PRU event
+ * @param voidEvent PRU event to wait on
+ */
 void *pru_wait_event(void* voidEvent) {
 
 	unsigned int event = *((unsigned int *) voidEvent);
@@ -28,13 +35,19 @@ void *pru_wait_event(void* voidEvent) {
 	return NULL;
 }
 
+/**
+ * Wrapper for PRU event waiting with time out
+ * @param event PRU event to wait on
+ * @param timeout Time out in seconds
+ * @return error code of pthread timedwait function
+ */
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 	
 	struct timespec abs_time;
 	pthread_t tid;
 	int err;
 
-	pthread_mutex_lock(&calculating);
+	pthread_mutex_lock(&waiting);
 
 	// pthread cond_timedwait expects an absolute time to wait until
 	clock_gettime(CLOCK_REALTIME, &abs_time);
@@ -43,10 +56,10 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 	pthread_create(&tid, NULL, pru_wait_event, (void *) &event);
 
 	// TODO: pthread_cond_timedwait can return spuriously: this should be in a loop for production code
-	err = pthread_cond_timedwait(&done, &calculating, &abs_time);
+	err = pthread_cond_timedwait(&done, &waiting, &abs_time);
 
 	if (!err) {
-		pthread_mutex_unlock(&calculating);
+		pthread_mutex_unlock(&waiting);
 	}
 
 	return err;
@@ -57,7 +70,9 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 
 
 // PRU MEMORY MAPPING
-
+/**
+ * Map PRU memory into user space
+ */
 void* map_pru_memory() {
 	
 	// get pru memory location and size
@@ -84,6 +99,11 @@ void* map_pru_memory() {
 	return pru_mmap;
 }
 
+/**
+ * Unmap PRU memory from user space
+ * @param pru_mmap Pointer to mapped memory
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int unmap_pru_memory(void* pru_mmap) {
 	
 	// get pru memory size
@@ -103,14 +123,20 @@ int unmap_pru_memory(void* pru_mmap) {
 
 // PRU INITIALISATION
 
-// set state to PRU
+/**
+ * Write state to PRU
+ * @param state PRU state to write
+ */
 void pru_set_state(rl_pru_state state){
 		
 	prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*) &state, sizeof(int));
 	
 }
 
-// PRU initiation
+/**
+ * PRU initiation
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int pru_init() {
 
 	#if TEST_MODE == 1
@@ -129,7 +155,14 @@ int pru_init() {
 	return SUCCESS;
 }
 
-int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor) {
+/**
+ * PRU data struct setup
+ * @param pru Pointer to {@link pru_data_struct} to setup
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param avg_factor Average factor for sampling rates smaller than minimal ADC rate
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor) {
 	
 	uint32_t pru_sample_rate;
 
@@ -229,8 +262,12 @@ int pru_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_fa
 
 
 
-// MAIN SAMPLE FUNCTION
-
+/**
+ * Main PRU sampling function
+ * @param data File pointer to data file
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	
@@ -302,7 +339,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	
 	// setup PRU
 	struct pru_data_struct pru;
-	pru_setup(&pru, conf, avg_factor);
+	pru_data_setup(&pru, conf, avg_factor);
 	unsigned int number_buffers = ceil_div(conf->sample_limit*avg_factor, pru.buffer_size);
 	unsigned int buffer_size_bytes = pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) + PRU_BUFFER_STATUS_SIZE;
 	
@@ -498,7 +535,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// print meter output
 		if(conf->mode == METER) {
-			print_meter(conf, buffer_addr+4, pru.sample_size);
+			meter_print_buffer(conf, buffer_addr+4, pru.sample_size);
 		}
 	}
 	
@@ -544,10 +581,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 
 
 
-// PRU STOPPING
-
-// stop PRU when in continuous mode
-int pru_stop() {
+/**
+ * Stop and shut down PRU operation
+ */
+void pru_stop() {
 	
 	// write OFF to PRU state (so PRU can clean up)
 	pru_set_state(PRU_OFF);
@@ -557,15 +594,14 @@ int pru_stop() {
 		pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
 		prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT); // clear event
 	}
-	
-	return SUCCESS;
 }
 
-// cleanup PRU
-int pru_close() {
+/**
+ * Disable PRU
+ */
+void pru_close() {
 	
 	// Disable PRU and close memory mappings 
 	prussdrv_pru_disable(0);
 	prussdrv_exit();
-	return SUCCESS;
 }

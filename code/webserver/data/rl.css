@@ -1,5 +1,6 @@
 body {
 	font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
+	background-color:#F0F6F6;
 }
 
 #footer {
@@ -15,6 +16,11 @@ body {
 .small-top-buffer{margin-top:5px}
 
 .no-buffer{margin-top:-30px}
+
+.page-header{
+	border-bottom: 3px solid;
+	border-bottom-color: #ddd;
+}
 
 h2 {
 	margin-top: 15px;

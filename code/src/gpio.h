@@ -14,11 +14,23 @@
 #define MIN_BUTTON_TIME 100000
 
 
-/// GPIO direction definition
-typedef enum direction {IN, OUT} rl_direction;
+/**
+ * GPIO direction definition
+ */
+typedef enum direction {
+	IN,//!< GPIO read mode
+	OUT//!< GPIO write mode
+} rl_direction;
 
-/// GPIO interrupt edge definition
-typedef enum edge {NONE, RISING, FALLING, BOTH} rl_edge;
+/**
+ * GPIO interrupt edge definition
+ */
+typedef enum edge {
+	NONE,   //!< No interrupt
+	RISING, //!< Interrupt on rising edge
+	FALLING,//!< Interrupt on falling edge
+	BOTH    //!< Interrupt on both edges
+} rl_edge;
 
 // gpio unexport
 int gpio_unexport(int num);

@@ -2,7 +2,10 @@
 
 #include "rl_hw.h"
 
-// init all hardware modules
+/**
+ * Initiate all hardware modules
+ * @param conf Pointer to current {@link rl_conf} configuration
+ */
 void hw_init(struct rl_conf* conf) {
 	
 	// PWM
@@ -34,6 +37,10 @@ void hw_init(struct rl_conf* conf) {
 	pru_init();
 }
 
+/**
+ * Close all hardware modules
+ * @param conf Pointer to current {@link rl_conf} configuration
+ */
 void hw_close(struct rl_conf* conf) {
 	
 	// PWM
@@ -58,6 +65,11 @@ void hw_close(struct rl_conf* conf) {
 	write_status(&status);
 }
 
+/**
+ * Hardware sampling function
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int hw_sample(struct rl_conf* conf) {
 	
 	// open data file
@@ -71,12 +83,8 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	if(conf->calibration == CAL_USE) {
-		read_calibration(conf);
-	} else {
-		reset_offsets();
-		reset_scales();
-	}
+	read_calibration(conf);
+
 	
 	// SAMPLE
 	if(pru_sample(data, conf) == FAILURE) {

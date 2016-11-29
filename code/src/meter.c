@@ -1,10 +1,15 @@
 #include "meter.h"
 
+/// Analog channel units
 char* channel_units[NUM_CHANNELS] = {"mA","uA","V","V","mA","uA","V","V"};
+/// Analog channel scales
 uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 1000000, 1000000,1000000, 100000, 1000000, 1000000};
+/// Digital input bit location in binary data
 const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
-
+/**
+ * Init meter window
+ */
 void meter_init() {
 	// init ncurses mode
 	initscr();
@@ -15,11 +20,20 @@ void meter_init() {
 	refresh();
 }
 
+/**
+ * Stop meter window
+ */
 void meter_stop() {
 	endwin();
 }
 
-void print_meter(struct rl_conf* conf, void* buffer_addr, uint32_t sample_size) {
+/**
+ * Print data buffer in meter window
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param buffer_addr
+ * @param sample_size Size of samples in buffer
+ */
+void meter_print_buffer(struct rl_conf* conf, void* buffer_addr, uint32_t sample_size) {
 
 	// clear screen
 	erase();

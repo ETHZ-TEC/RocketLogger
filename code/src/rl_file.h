@@ -50,18 +50,20 @@
  * Data unit definition
  */
 typedef enum unit {
-	RL_UNIT_UNDEFINED = 0,
-	RL_UNIT_VOLT = 1,
-	RL_UNIT_AMPERE = 2,
-	RL_UNIT_BINARY = 3,
-	RL_UNIT_RANGE_VALID = 4,
+	RL_UNIT_UNDEFINED = 0,  //!< Undefined unit
+	RL_UNIT_VOLT = 1,       //!< Voltage
+	RL_UNIT_AMPERE = 2,     //!< Current
+	RL_UNIT_BINARY = 3,     //!< Binary signal
+	RL_UNIT_RANGE_VALID = 4,//!< Range valid information
 } rl_unit;
 
 /**
  * Time stamp definition (UNIX time)
  */
 struct time_stamp {
+	/// Seconds in UNIX time
 	int64_t sec;
+	/// Nanoseconds
 	int64_t nsec;
 };
 
