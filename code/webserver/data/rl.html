@@ -86,10 +86,10 @@
 					<div class="row top-buffer">
 						<div class="col-md-2">
 							<div class="row">
-								<div class="col-xs-6">
+								<div class="col-md-6 col-sm-4 col-xs-6">
 									<button id="start" class="btn btn-default" data-toggle="tooltip" title="Start new measurement">Start</button>
 								</div>
-								<div class="col-xs-6">
+								<div class="col-md-6 col-sm-8 col-xs-6">
 									<button id="stop" class="btn btn-default" data-toggle="tooltip" title="Stop current measurement">Stop</button>
 								</div>
 							</div>
@@ -144,6 +144,11 @@
 												<option value="csv">csv</option>
 											</select>
 										</div>
+										<div class="col-md-1">
+										</div>
+										<div class="col-md-3">
+											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date prefix to file name">Add Date Prefix</button>
+										</div>
 									</div>
 									<div class="row small-top-buffer">
 										<div class="col-md-3">
@@ -156,13 +161,10 @@
 									<div class="row small-top-buffer">
 										<div class="col-md-3">
 										</div>
-										<div class="col-md-3">
-											<button id="date_to_filename" class="btn btn-default" data-toggle="tooltip" title="Add date prefix to file name">Add Date Prefix</button>
-										</div>
-										<div class="col-md-2">
+										<div class="col-md-4 col-sm-4">
 											<button id="download" class="btn btn-default" data-toggle="tooltip" title="Download current file" onclick="download()">Download</button>
 										</div>
-										<div class="col-md-3">
+										<div class="col-md-3 col-sm-8">
 											<button id="list" class="btn btn-default" data-toggle="tooltip" title="Show all files" onclick="browseFiles()">Browse Files</button>
 										</div>
 									</div>
@@ -385,9 +387,9 @@
 								<h3>Voltages:</h3>
 							</div>
 							<div class="row">
-								<div class="col-md-2">
+								<div class="col-sm-2">
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox" style="color:#0072BD">
@@ -403,7 +405,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox" style="color:#EDB120">
@@ -419,10 +421,10 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									Voltage Range:
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<select class="form-control" id="voltage_range">
 										<option value=0>Auto</option>
 										<option value=0.1>100µV</option>
@@ -444,22 +446,22 @@
 								<h3>Currents:</h3>
 							</div>
 							<div class="row">
-								<div class="col-md-2">
+								<div class="col-sm-2">
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="checkbox" style="color:#0072BD">
 										<label data-toggle="tooltip" title="Show I1 in plot"><input id="plot_i1" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I1</label>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="checkbox" style="color:#D95319">
 										<label data-toggle="tooltip" title="Show I2 in plot"><input id="plot_i2" type="checkbox"  checked="checked" onclick="updatePlot()">Plot I2</label>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									Current Range:
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<select class="form-control" id="current_range">
 										<option value=0>Auto</option>
 										<option value=0.01>10nA</option>
@@ -483,9 +485,9 @@
 								<h3>Digital Signals:</h3>
 							</div>
 							<div class="row">
-								<div class="col-md-2">
+								<div class="col-sm-2">
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox" style="color:#0072BD">
@@ -501,7 +503,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox" style="color:#EDB120">
@@ -517,7 +519,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-md-2">
+								<div class="col-sm-2">
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox" style="color:#77AC30">
