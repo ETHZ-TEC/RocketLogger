@@ -57,7 +57,7 @@ void rl_log(rl_log_type type, const char* format, ... ) {
 		vprintf(format, args);
 		printf("\n\n");
 		
-		// set state to error // TODO: handle error everywhere
+		// set state to error
 		status.state = RL_ERROR;
 		
 	} else if(type == WARNING) {
