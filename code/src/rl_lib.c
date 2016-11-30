@@ -1,6 +1,10 @@
 #include "rl_lib.h"
 
-
+// TODO: move prints to rl_util
+/**
+ * Print RocketLogger configuration
+ * @param conf Pointer to {@link rl_conf} configuration
+ */
 void rl_print_config(struct rl_conf* conf) {
 	
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
@@ -37,6 +41,10 @@ void rl_print_config(struct rl_conf* conf) {
 	} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
 }
 
+/**
+ * Print RocketLogger status
+ * @param status Pointer to {@link rl_status} status
+ */
 void rl_print_status(struct rl_status* status) {
 	
 	if(status->state == RL_OFF) {
@@ -48,8 +56,11 @@ void rl_print_status(struct rl_status* status) {
 	}
 }
 
-// get status of RL (returns 1 when running)
-rl_state rl_get_status(int print) {
+/**
+ * Get status of RocketLogger
+ * @return current status {@link rl_state}
+ */
+rl_state rl_get_status() {
 	
 	struct rl_status status;
 	
@@ -57,28 +68,26 @@ rl_state rl_get_status(int print) {
 	pid_t pid = get_pid();
 	if(pid == FAILURE || kill(pid, 0) < 0) {
 		// process not running
-		// TODO: handle ERROR
 		status.state = RL_OFF;
 	} else {
 		// read status
 		read_status(&status);
 	}
 	
-	// print config if requested
-	if(print == 1) {
-		rl_print_status(&status);
-	}
-	
 	return status.state;
 }
 
+/**
+ * Read status of RocketLogger
+ * @param status Pointer to {@link rl_status} struct to write to
+ * @return current status {@link rl_state}
+ */
 int rl_read_status(struct rl_status* status) {
 	
 	// get pid
 	pid_t pid = get_pid();
 	if(pid == FAILURE || kill(pid, 0) < 0) {
 		// process not running
-		// TODO: handle ERROR
 		status->state = RL_OFF;
 	} else {
 		// read status
@@ -89,7 +98,11 @@ int rl_read_status(struct rl_status* status) {
 }
 
 
-// main sample function
+/**
+ * RocketLogger sample function
+ * @param conf Pointer to desired {@link rl_conf} configuration
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
 int rl_sample(struct rl_conf* conf) {
 	
 	// check mode
@@ -161,11 +174,14 @@ int rl_sample(struct rl_conf* conf) {
 }
 
 
-// stop function (to stop continuous mode)
+/**
+ * RocketLogger stop function (to stop continuous mode)
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
 int rl_stop() {
 	
 	// check if running
-	if(rl_get_status(0) != RL_RUNNING) {
+	if(rl_get_status() != RL_RUNNING) {
 		rl_log(ERROR, "RocketLogger not running");
 		return FAILURE;
 	}

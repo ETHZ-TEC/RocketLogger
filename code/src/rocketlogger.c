@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 	
 	switch (conf.mode) {
 		case LIMIT:
-			if(rl_get_status(0) == RL_RUNNING) {
+			if(rl_get_status() == RL_RUNNING) {
 				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 			break;
 			
 		case CONTINUOUS:
-			if(rl_get_status(0) == RL_RUNNING) {
+			if(rl_get_status() == RL_RUNNING) {
 				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
@@ -45,17 +45,21 @@ int main(int argc, char* argv[]) {
 			break;
 		
 		case METER:
-			if(rl_get_status(0) == RL_RUNNING) {
+			if(rl_get_status() == RL_RUNNING) {
 				rl_log(ERROR, "RocketLogger already running\n Run:  rocketlogger stop\n");
 				exit(EXIT_FAILURE);
 			}
 			break;
 		
-		case STATUS:
-			return rl_get_status(1);
+		case STATUS: {
+			struct rl_status status;
+			rl_read_status(&status);
+			rl_print_status(&status);
+			return status.state;
+		}
 		
 		case STOPPED:
-			if(rl_get_status(0) != RL_RUNNING) {
+			if(rl_get_status() != RL_RUNNING) {
 				rl_log(ERROR, "RocketLogger not running");
 				exit(EXIT_FAILURE);
 			}
@@ -69,7 +73,7 @@ int main(int argc, char* argv[]) {
 		
 		case SET_DEFAULT:
 			write_default_config(&conf);
-			if(rl_get_status(0) == RL_RUNNING) {
+			if(rl_get_status() == RL_RUNNING) {
 				printf("\n");
 				rl_log(WARNING, "change will not affect current measurement");
 			}

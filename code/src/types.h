@@ -64,7 +64,6 @@
 // constants
 #define MAX_PATH_LENGTH 100
 #define NUM_CHANNELS 8
-#define NUM_PRU_CHANNELS 10 // medium range! -> TODO: remove
 #define NUM_I_CHANNELS 2
 #define NUM_V_CHANNELS 4
 #define NUM_DIGITAL_INPUTS 6

@@ -55,7 +55,6 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 
 	pthread_create(&tid, NULL, pru_wait_event, (void *) &event);
 
-	// TODO: pthread_cond_timedwait can return spuriously: this should be in a loop for production code
 	err = pthread_cond_timedwait(&done, &waiting, &abs_time);
 
 	if (!err) {
