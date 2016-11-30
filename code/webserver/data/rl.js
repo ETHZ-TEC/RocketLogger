@@ -369,11 +369,11 @@ function parseStatus(tempState) {
 	if(state == RL_RUNNING) {
 		if(calibrationTime != 0) {
 			var d = new Date(calibrationTime * MS_SCALE);
-			var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+			var datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
 			document.getElementById("calibration").innerHTML = datestring;
 			document.getElementById("calibration").style.color = "";
 		} else {
-			document.getElementById("calibration").innerHTML = "No Calibration File Found!";
+			document.getElementById("calibration").innerHTML = "No Calibration File!";
 			document.getElementById("calibration").style.color = "red";
 		}
 	} else {
