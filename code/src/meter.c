@@ -67,18 +67,16 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr, uint32_t sample
 		if(conf->channels[j] > 0) {
 			value = 0;
 			if(sample_size == 4) {
-				for(l=0; l<avg_number; l++) { // TODO: combine (with sample_size)
-					value += *( (int32_t *) (buffer_addr + 4*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
+				for(l=0; l<avg_number; l++) {
+					value += *( (int32_t *) (buffer_addr + sample_size*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
-				value = value / (int64_t)avg_number;
-				channel_data[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
 			} else {
 				for(l=0; l<avg_number; l++) {
-					value += *( (int16_t *) (buffer_addr + 2*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
+					value += *( (int16_t *) (buffer_addr + sample_size*j + l*(NUM_CHANNELS*sample_size + PRU_DIG_SIZE)) );
 				}
-				value = value / (int64_t)avg_number;
-				channel_data[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
 			}
+			value = value / (int64_t)avg_number;
+			channel_data[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
 			k++;
 		}
 	}
