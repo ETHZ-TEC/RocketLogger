@@ -64,7 +64,7 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr, uint32_t sample
 	
 	// read, average and scale values (if channel selected)
 	for(j=0; j<NUM_CHANNELS; j++) {
-		if(conf->channels[j] > 0) {
+		if(conf->channels[j] == CHANNEL_ENABLED) {
 			value = 0;
 			if(sample_size == 4) {
 				for(l=0; l<avg_number; l++) {
@@ -85,7 +85,7 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr, uint32_t sample
 	mvprintw(1, 28, "RocketLogger Meter");
 	
 	for(j=0; j<NUM_CHANNELS; j++) {
-		if(conf->channels[j] > 0) {
+		if(conf->channels[j] == CHANNEL_ENABLED) {
 			if(is_current(j)) {
 				// current
 				mvprintw(i*2 + 5, 10, "%s:", channel_names[j]);
