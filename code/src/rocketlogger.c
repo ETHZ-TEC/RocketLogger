@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// start the sampling
-	rl_sample(&conf);
+	rl_start(&conf);
 		
 	exit(EXIT_SUCCESS);
 	

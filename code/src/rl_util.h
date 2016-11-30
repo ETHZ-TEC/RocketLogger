@@ -23,6 +23,8 @@
 
 typedef enum option { FILE_NAME, SAMPLE_RATE, UPDATE_RATE, CHANNEL, FHR, WEB, DIGITAL_INPUTS, DEF_CONF, CALIBRATION, FILE_FORMAT, FILE_SIZE, NO_OPTION } rl_option;
 
+void rl_print_config(struct rl_conf* conf);
+void rl_print_status(struct rl_status* status);
 
 rl_mode get_mode(char* mode);
 rl_option get_option(char* option);

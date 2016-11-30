@@ -7,15 +7,11 @@
 #include "util.h"
 
 
-void rl_print_config(struct rl_conf* conf);
-
-void rl_print_status(struct rl_status* status);
-
 rl_state rl_get_status();
 
 int rl_read_status(struct rl_status* status);
 
-int rl_sample(struct rl_conf* conf);
+int rl_start(struct rl_conf* conf);
 
 int rl_stop();
 

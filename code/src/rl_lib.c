@@ -1,61 +1,5 @@
 #include "rl_lib.h"
 
-// TODO: move prints to rl_util
-/**
- * Print RocketLogger configuration
- * @param conf Pointer to {@link rl_conf} configuration
- */
-void rl_print_config(struct rl_conf* conf) {
-	
-	char file_format_names[3][10] = {"no file", "csv", "binary"};
-
-	if(conf->sample_rate >= KSPS) {		printf("  Sampling rate:   %dkSps\n", conf->sample_rate/KSPS);
-	} else {							printf("  Sampling rate:   %dSps\n", conf->sample_rate);}
-										printf("  Update rate:     %dHz\n", conf->update_rate);
-	if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
-	else								printf("  Webserver:       disabled\n");
-	if(conf->digital_inputs == 1)		printf("  Digital inputs:  enabled\n");
-	else								printf("  Digital inputs:  disabled\n");
-										printf("  File format:     %s\n", file_format_names[conf->file_format]);
-	if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
-	if(conf->max_file_size != 0)		printf("  Max file size:   %lluMB\n", conf->max_file_size/1000000);
-	if(conf->calibration == CAL_IGNORE)	printf("  Calibration:     ignored\n");
-										printf("  Channels:        ");
-	int i;
-	for(i=0; i<NUM_CHANNELS; i++) {
-		if (conf->channels[i] > 0) {
-			printf("%d,", i);
-		}
-	}
-	printf("\n");
-	if (conf->force_high_channels[0] > 0 || conf->force_high_channels[1] > 0) {
-										printf("  Forced channels: ");
-		for(i=0; i<NUM_I_CHANNELS; i++) {
-			if (conf->force_high_channels[i] > 0) {
-				printf("%d,", i+1);
-			}
-		}
-		printf("\n");
-	}
-	if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
-	} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
-}
-
-/**
- * Print RocketLogger status
- * @param status Pointer to {@link rl_status} status
- */
-void rl_print_status(struct rl_status* status) {
-	
-	if(status->state == RL_OFF) {
-		printf("\nRocketLogger IDLE\n\n");
-	} else {
-		printf("\nRocketLogger Status: RUNNING\n");
-		rl_print_config(&(status->conf));
-		printf("  Samples taken:   %d\n\n", status->samples_taken);
-	}
-}
-
 /**
  * Get status of RocketLogger
  * @return current status {@link rl_state}
@@ -99,11 +43,11 @@ int rl_read_status(struct rl_status* status) {
 
 
 /**
- * RocketLogger sample function
+ * RocketLogger start function: start sampling
  * @param conf Pointer to desired {@link rl_conf} configuration
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_sample(struct rl_conf* conf) {
+int rl_start(struct rl_conf* conf) {
 	
 	// check mode
 	switch (conf->mode) {
