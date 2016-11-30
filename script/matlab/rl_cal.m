@@ -55,8 +55,12 @@ classdef rl_cal < handle
                 filename = 'calibration.dat';
             end
             
+            % get UNIX time
+            time = posixtime(datetime());
+            
             file = fopen(filename,'w');
-            fwrite(file,obj.offsets,'int');
+            fwrite(file,time,'int64');
+            fwrite(file,obj.offsets,'int32');
             fwrite(file,obj.scales,'double');
             fclose(file);
 

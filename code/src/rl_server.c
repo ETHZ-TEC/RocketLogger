@@ -83,6 +83,8 @@ void print_status() {
 	printf("%d\n", status.conf.sample_rate);
 	printf("%d\n", status.conf.update_rate);
 	printf("%d\n", status.conf.digital_inputs);
+	printf("%d\n", status.conf.calibration);
+	printf("%llu\n", status.calibration_time);
 	printf("%d\n", status.conf.file_format);
 	printf("%s\n", status.conf.file_name);
 	printf("%llu\n", status.conf.max_file_size);

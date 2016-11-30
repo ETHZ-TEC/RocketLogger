@@ -299,14 +299,16 @@ function parseStatus(tempState) {
 	// EXTRACT STATUS INFO
 	var sampleRate = parseInt(tempState[3]);
 	var digitalInputs = tempState[5];
-	var fileFormat = tempState[6];
-	var tempFilename = tempState[7];
-	var maxFileSize = parseInt(tempState[8])/MB_SCALE;
-	var tempChannels = JSON.parse(tempState[9]);
-	var tempForceHighChannels = JSON.parse(tempState[10]);
-	var samplesTaken = tempState[11];
-	var dataAvailable = tempState[12];
-	var newData = tempState[13];
+	var calibration = tempState[6];
+	var calibrationTime = parseInt(tempState[7]);
+	var fileFormat = tempState[8];
+	var tempFilename = tempState[9];
+	var maxFileSize = parseInt(tempState[10])/MB_SCALE;
+	var tempChannels = JSON.parse(tempState[11]);
+	var tempForceHighChannels = JSON.parse(tempState[12]);
+	var samplesTaken = tempState[13];
+	var dataAvailable = tempState[14];
+	var newData = tempState[15];
 	
 	// PARSE STATUS INFO
 	
@@ -358,6 +360,25 @@ function parseStatus(tempState) {
 	document.getElementById("digital_inputs").checked = (digitalInputs == "1");
 	var digInps = (digitalInputs == "1");
 	
+	// calibration
+	if(calibration == "1") {
+		document.getElementById("ignore_calibration").checked = false;
+	} else {
+		document.getElementById("ignore_calibration").checked = true;
+	}
+	if(state == RL_RUNNING) {
+		if(calibrationTime != 0) {
+			var d = new Date(calibrationTime * MS_SCALE);
+			var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+			document.getElementById("calibration").innerHTML = datestring;
+			document.getElementById("calibration").style.color = "";
+		} else {
+			document.getElementById("calibration").innerHTML = "No Calibration File Found!";
+			document.getElementById("calibration").style.color = "red";
+		}
+	} else {
+		document.getElementById("calibration").innerHTML = "?";
+	}
 	
 	
 	// file format
@@ -487,10 +508,10 @@ function resetData() {
 function dataReceived (tempState) {
 	
 	// extract information
-	var tempTScale = tempState[14];
-	currentTime = parseInt(tempState[15]);
-	var bufferCount = parseInt(tempState[16]);
-	var bufferSize = parseInt(tempState[17]);
+	var tempTScale = tempState[16];
+	currentTime = parseInt(tempState[17]);
+	var bufferCount = parseInt(tempState[18]);
+	var bufferSize = parseInt(tempState[19]);
 	
 	if (tempTScale != tScale) {
 		resetData();
@@ -512,7 +533,7 @@ function dataReceived (tempState) {
 		}
 		
 		for (var i = 0; i < bufferCount * bufferSize; i++) {
-			var tempData = JSON.parse(tempState[18 + i]);
+			var tempData = JSON.parse(tempState[20 + i]);
 			var k = 0;
 			for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 				if(plotChannels[j]) {
@@ -1064,7 +1085,7 @@ function parseConf() {
 	}
 	
 	// ignore calibration
-	if ($("#calibration:checked").length > 0) {
+	if ($("#ignore_calibration:checked").length > 0) {
 		config.ignoreCalibration = "1";
 	} else {
 		config.ignoreCalibration = "0";
@@ -1372,7 +1393,7 @@ $(function() {
 		
 		
 		// calibration ignore checkbox
-		$("#calibration").change(function () {
+		$("#ignore_calibration").change(function () {
 			if(state == RL_RUNNING) {
 				alert("This will not affect the current measurement!");
 			}

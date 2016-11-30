@@ -76,7 +76,7 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr, uint32_t sample
 				}
 			}
 			value = value / (int64_t)avg_number;
-			channel_data[k] = (int32_t) (( (int32_t) value + offsets[j] ) * scales[j]);
+			channel_data[k] = (int32_t) (( (int32_t) value + calibration.offsets[j] ) * calibration.scales[j]);
 			k++;
 		}
 	}

@@ -121,7 +121,10 @@ typedef enum file_format {
 	BIN = 2
 } rl_file_format;
 
-typedef enum use_cal {CAL_USE, CAL_IGNORE} rl_use_cal;
+typedef enum use_cal {
+	CAL_IGNORE = 0,
+	CAL_USE = 1
+} rl_use_cal;
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
@@ -168,6 +171,14 @@ struct rl_status {
 	int samples_taken;
 	int buffer_number;
 	struct rl_conf conf;
+	uint64_t calibration_time;
+};
+
+// calibration
+struct rl_calibration {
+	uint64_t time;
+	int offsets[NUM_CHANNELS];
+	double scales[NUM_CHANNELS];
 };
 
 
@@ -189,8 +200,7 @@ struct rl_status {
 
 struct rl_status status;
 
-int offsets[NUM_CHANNELS];
-double scales[NUM_CHANNELS];
+struct rl_calibration calibration;
 
 extern const char* channel_names[NUM_CHANNELS];
 extern const char* digital_input_names[NUM_DIGITAL_INPUTS];

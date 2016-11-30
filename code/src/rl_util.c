@@ -17,8 +17,9 @@ void rl_print_config(struct rl_conf* conf) {
 	else								printf("  Digital inputs:  disabled\n");
 										printf("  File format:     %s\n", file_format_names[conf->file_format]);
 	if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
-	if(conf->max_file_size != 0)		printf("  Max file size:   %lluMB\n", conf->max_file_size/1000000);
-	if(conf->calibration == CAL_IGNORE)	printf("  Calibration:     ignored\n");
+	if(conf->max_file_size != 0) {		printf("  Max file size:   %lluMB\n", conf->max_file_size/1000000);}
+	if(conf->calibration == CAL_IGNORE){printf("  Calibration:     ignored\n");
+	} else {							printf("  Calibration:     TODO: date\n");}
 										printf("  Channels:        ");
 	int i;
 	for(i=0; i<NUM_CHANNELS; i++) {

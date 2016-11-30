@@ -466,7 +466,7 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 				} else {
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}
-				channel_data[k] = (int32_t) (( value + offsets[j] ) * scales[j]);
+				channel_data[k] = (int32_t) (( value + calibration.offsets[j] ) * calibration.scales[j]);
 				avg_data[BUF1_INDEX][k] += channel_data[k];
 				k++;
 			}
