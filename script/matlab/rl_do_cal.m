@@ -14,7 +14,7 @@ end
 rld_il1 = rld('20161122_i1l.rld');
 rld_il2 = rld('20161122_i2l.rld');
 rld_ih = rld('20161124_ih.rld');
-rld_v = rld('20161124_v.rld');
+rld_v = rld('20161125_v.rld');
 
 %% perform fitting
 cal = rl_cal.calibrate( ...
