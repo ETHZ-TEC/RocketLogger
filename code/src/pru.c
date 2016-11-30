@@ -270,15 +270,6 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t a
  */
 int pru_sample(FILE* data, struct rl_conf* conf) {
 	
-	
-	// STATE (TODO: move to upper layers?)
-	status.state = RL_RUNNING;
-	status.sampling = SAMPLING_OFF;
-	status.samples_taken = 0;
-	status.buffer_number = 0;
-	status.conf = *conf;
-	write_status(&status);
-	
 	// average (for low rates)
 	uint32_t avg_factor = 1;
 	if(conf->sample_rate < MIN_ADC_RATE) {

@@ -35,6 +35,14 @@ void hw_init(struct rl_conf* conf) {
 	
 	// PRU
 	pru_init();
+
+	// STATE
+	status.state = RL_RUNNING;
+	status.sampling = SAMPLING_OFF;
+	status.samples_taken = 0;
+	status.buffer_number = 0;
+	status.conf = *conf;
+	write_status(&status);
 }
 
 /**
@@ -84,7 +92,7 @@ int hw_sample(struct rl_conf* conf) {
 	
 	// read calibration
 	read_calibration(conf);
-
+	
 	
 	// SAMPLE
 	if(pru_sample(data, conf) == FAILURE) {
