@@ -8,19 +8,18 @@ void rl_print_config(struct rl_conf* conf) {
 
 	char file_format_names[3][10] = {"no file", "csv", "binary"};
 
-	if(conf->sample_rate >= KSPS) {		printf("  Sampling rate:   %dkSps\n", conf->sample_rate/KSPS);
-	} else {							printf("  Sampling rate:   %dSps\n", conf->sample_rate);}
-										printf("  Update rate:     %dHz\n", conf->update_rate);
-	if(conf->enable_web_server == 1)	printf("  Webserver:       enabled\n");
-	else								printf("  Webserver:       disabled\n");
-	if(conf->digital_inputs == 1)		printf("  Digital inputs:  enabled\n");
-	else								printf("  Digital inputs:  disabled\n");
-										printf("  File format:     %s\n", file_format_names[conf->file_format]);
-	if(conf->file_format != NO_FILE)	printf("  File name:       %s\n", conf->file_name);
-	if(conf->max_file_size != 0) {		printf("  Max file size:   %lluMB\n", conf->max_file_size/1000000);}
-	if(conf->calibration == CAL_IGNORE){printf("  Calibration:     ignored\n");
-	} else {							printf("  Calibration:     TODO: date\n");}
-										printf("  Channels:        ");
+	if(conf->sample_rate >= KSPS) {		printf("  Sampling rate:    %dkSps\n", conf->sample_rate/KSPS);
+	} else {							printf("  Sampling rate:    %dSps\n", conf->sample_rate);}
+										printf("  Update rate:      %dHz\n", conf->update_rate);
+	if(conf->enable_web_server == 1)	printf("  Webserver:        enabled\n");
+	else								printf("  Webserver:        disabled\n");
+	if(conf->digital_inputs == 1)		printf("  Digital inputs:   enabled\n");
+	else								printf("  Digital inputs:   disabled\n");
+										printf("  File format:      %s\n", file_format_names[conf->file_format]);
+	if(conf->file_format != NO_FILE)	printf("  File name:        %s\n", conf->file_name);
+	if(conf->max_file_size != 0) {		printf("  Max file size:    %lluMB\n", conf->max_file_size/1000000);}
+	if(conf->calibration == CAL_IGNORE){printf("  Calibration:      ignored\n");}
+										printf("  Channels:         ");
 	int i;
 	for(i=0; i<NUM_CHANNELS; i++) {
 		if (conf->channels[i] == CHANNEL_ENABLED) {
@@ -29,7 +28,7 @@ void rl_print_config(struct rl_conf* conf) {
 	}
 	printf("\n");
 	if (conf->force_high_channels[0] == CHANNEL_ENABLED || conf->force_high_channels[1] == CHANNEL_ENABLED) {
-										printf("  Forced channels: ");
+										printf("  Forced channels:  ");
 		for(i=0; i<NUM_I_CHANNELS; i++) {
 			if (conf->force_high_channels[i] == CHANNEL_ENABLED) {
 				printf("%d,", i+1);
@@ -37,8 +36,8 @@ void rl_print_config(struct rl_conf* conf) {
 		}
 		printf("\n");
 	}
-	if (conf->sample_limit == 0) {		printf("  Sample limit:    no limit\n");
-	} else {							printf("  Sample limit:    %d\n", conf->sample_limit);}
+	if (conf->sample_limit == 0) {		printf("  Sample limit:     no limit\n");
+	} else {							printf("  Sample limit:     %d\n", conf->sample_limit);}
 }
 
 /**
@@ -52,7 +51,14 @@ void rl_print_status(struct rl_status* status) {
 	} else {
 		printf("\nRocketLogger Status: RUNNING\n");
 		rl_print_config(&(status->conf));
-		printf("  Samples taken:   %d\n\n", status->samples_taken);
+		printf("  Samples taken:    %d\n", status->samples_taken);
+		time_t time = (time_t) status->calibration_time;
+		if(time > 0) {
+			printf("  Calibration time: %s\n", ctime(&time));
+		} else {
+			printf("  Calibration time: No calibration file found\n");
+		}
+		printf("\n");
 	}
 }
 
