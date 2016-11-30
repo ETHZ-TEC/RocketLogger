@@ -23,8 +23,8 @@ void hw_init(struct rl_conf* conf) {
 	gpio_export(FHR2_GPIO);
 	gpio_dir(FHR1_GPIO, OUT);
 	gpio_dir(FHR2_GPIO, OUT);
-	gpio_set_value(FHR1_GPIO, (conf->force_high_channels[0] == 0));
-	gpio_set_value(FHR2_GPIO, (conf->force_high_channels[1] == 0));
+	gpio_set_value(FHR1_GPIO, (conf->force_high_channels[0] == CHANNEL_DISABLED));
+	gpio_set_value(FHR2_GPIO, (conf->force_high_channels[1] == CHANNEL_DISABLED));
 	// leds
 	gpio_export(LED_STATUS_GPIO);
 	gpio_export(LED_ERROR_GPIO);

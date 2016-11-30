@@ -296,10 +296,10 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		
 		// determine web channels count (merged)
 		int num_web_channels = count_channels(conf->channels);
-		if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
+		if(conf->channels[I1H_INDEX] == CHANNEL_ENABLED && conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 			num_web_channels--;
 		}
-		if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
+		if(conf->channels[I2H_INDEX] == CHANNEL_ENABLED && conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 			num_web_channels--;
 		}
 		if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {

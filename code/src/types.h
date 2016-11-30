@@ -125,9 +125,9 @@ typedef enum use_cal {CAL_USE, CAL_IGNORE} rl_use_cal;
 
 typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 
-// configuration struct
 
-// TODO: use
+
+// channel properties
 #define CHANNEL_DISABLED 0
 #define CHANNEL_ENABLED 1
 
@@ -145,6 +145,7 @@ typedef enum log_type {ERROR, WARNING, INFO} rl_log_type;
 #define DIGITAL_INPUTS_DISABLED 0
 #define DIGITAL_INPUTS_ENABLED 1
 
+// configuration struct
 struct rl_conf {
 	rl_mode mode;
 	int sample_rate;

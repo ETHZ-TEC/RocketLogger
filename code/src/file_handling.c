@@ -69,10 +69,10 @@ void setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 	if(conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
 		channel_bin_count = NUM_DIGITAL_INPUTS;
 	}
-	if(conf->channels[I1L_INDEX] > 0) {
+	if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 		i1l_valid_channel = ++channel_bin_count;
 	}
-	if(conf->channels[I2L_INDEX] > 0) {
+	if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 		i2l_valid_channel = ++channel_bin_count;
 	}
 	// comment length
@@ -127,7 +127,7 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 	}
 	
 	// range valid channels
-	if(conf->channels[I1L_INDEX] > 0) {
+	if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 		file_header->channel[j].unit = RL_UNIT_RANGE_VALID;
 		file_header->channel[j].channel_scale = RL_SCALE_NONE;
 		file_header->channel[j].data_size = 0;
@@ -135,7 +135,7 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 		strcpy(file_header->channel[j].name, valid_info_names[0]);
 		j++;
 	}
-	if(conf->channels[I2L_INDEX] > 0) {
+	if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 		file_header->channel[j].unit = RL_UNIT_RANGE_VALID;
 		file_header->channel[j].channel_scale = RL_SCALE_NONE;
 		file_header->channel[j].data_size = 0;
@@ -146,7 +146,7 @@ void setup_channels(struct rl_file_header* file_header, struct rl_conf* conf) {
 	
 	// analog channels
 	for(i=0; i<NUM_CHANNELS; i++) {
-		if(conf->channels[i] > 0) {
+		if(conf->channels[i] == CHANNEL_ENABLED) {
 			// current
 			if(is_current(i)){
 				// low
@@ -308,42 +308,42 @@ void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf*
 	int ch_out = 0;
 	
 		
-	if(conf->channels[I1H_INDEX] > 0 && conf->channels[I1L_INDEX] > 0) {
+	if(conf->channels[I1H_INDEX] == CHANNEL_ENABLED && conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 		if(valid[0] == 1) {
 			dest[ch_out++] = src[++ch_in];
 		} else {
 			dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 		}
 		ch_in++;
-	} else if(conf->channels[I1H_INDEX] > 0) {
+	} else if(conf->channels[I1H_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++]*H_L_SCALE;
-	} else if(conf->channels[I1L_INDEX] > 0){
+	} else if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED){
 		dest[ch_out++] = src[ch_in++];
 	}
-	if(conf->channels[V1_INDEX] > 0) {
+	if(conf->channels[V1_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++];
 	}
-	if(conf->channels[V2_INDEX] > 0) {
+	if(conf->channels[V2_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++];
 	}
 	
-	if(conf->channels[I2H_INDEX] > 0 && conf->channels[I2L_INDEX] > 0) {
+	if(conf->channels[I2H_INDEX] == CHANNEL_ENABLED && conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 		if(valid[1] == 1) {
 			dest[ch_out++] = src[++ch_in];
 		} else {
 			dest[ch_out++] = src[ch_in++]*H_L_SCALE;
 		}
 		ch_in++;
-	} else if(conf->channels[I2H_INDEX] > 0) {
+	} else if(conf->channels[I2H_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++]*H_L_SCALE;
-	} else if(conf->channels[I2L_INDEX] > 0){
+	} else if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED){
 		dest[ch_out++] = src[ch_in++];
 	}
 	
-	if(conf->channels[V3_INDEX] > 0) {
+	if(conf->channels[V3_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++];
 	}
-	if(conf->channels[V4_INDEX] > 0) {
+	if(conf->channels[V4_INDEX] == CHANNEL_ENABLED) {
 		dest[ch_out++] = src[ch_in++];
 	}
 }
@@ -456,7 +456,7 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 		
 		// read and scale values (if channel selected)
 		for(j=0; j<NUM_CHANNELS; j++) {
-			if(conf->channels[j] > 0) {
+			if(conf->channels[j] == CHANNEL_ENABLED) {
 				if(sample_size == 4) {
 					if (TEST_MODE == 1) {
 						value = 1000*j + test++;
@@ -499,11 +499,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 		uint8_t valid1 = (~bin_adc1) & VALID_MASK;
 		uint8_t valid2 = (~bin_adc2) & VALID_MASK;
 		
-		if(conf->channels[I1L_INDEX] > 0) {
+		if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 			bin_data = bin_data | (valid1 << bin_channel_pos);
 			bin_channel_pos++;
 		}
-		if(conf->channels[I2L_INDEX] > 0) {
+		if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 			bin_data = bin_data | (valid2 << bin_channel_pos);
 			bin_channel_pos++;
 		}
@@ -556,10 +556,10 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 							for(j=0; j<num_bin_channels; j++) {
 								temp_bin = temp_bin | ((bin_avg_data[BUF1_INDEX][j] >= (avg_length[BUF1_INDEX]/2)) << j);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF1_INDEX][0] << j++);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF1_INDEX][1] << j++);
 							}
 							
@@ -570,11 +570,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 								sprintf(value_char, ", %d", (bin_avg_data[BUF1_INDEX][j] >= (avg_length[BUF1_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF1_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF1_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}
@@ -643,10 +643,10 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 							for(j=0; j<num_bin_channels; j++) {
 								temp_bin = temp_bin | ((bin_avg_data[BUF10_INDEX][j] >= (avg_length[BUF10_INDEX]/2)) << j);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF10_INDEX][0] << j++);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF10_INDEX][1] << j++);
 							}
 							
@@ -657,11 +657,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 								sprintf(value_char, ", %d", (bin_avg_data[BUF10_INDEX][j] >= (avg_length[BUF10_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF10_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF10_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}
@@ -726,10 +726,10 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 							for(j=0; j<num_bin_channels; j++) {
 								temp_bin = temp_bin | ((bin_avg_data[BUF100_INDEX][j] >= (avg_length[BUF100_INDEX]/2)) << j);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF100_INDEX][0] << j++);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								temp_bin = temp_bin | (avg_valid[BUF100_INDEX][1] << j++);
 							}
 							
@@ -740,11 +740,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 								sprintf(value_char, ", %d", (bin_avg_data[BUF100_INDEX][j] >= (avg_length[BUF100_INDEX]/2)));
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I1L_INDEX] > 0) {
+							if(conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF100_INDEX][0]);
 								strcat(channel_data_char,value_char);
 							}
-							if(conf->channels[I2L_INDEX] > 0) {
+							if(conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
 								sprintf(value_char, ", %d", avg_valid[BUF100_INDEX][1]);
 								strcat(channel_data_char,value_char);
 							}

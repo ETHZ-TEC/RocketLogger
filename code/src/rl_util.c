@@ -22,15 +22,15 @@ void rl_print_config(struct rl_conf* conf) {
 										printf("  Channels:        ");
 	int i;
 	for(i=0; i<NUM_CHANNELS; i++) {
-		if (conf->channels[i] > 0) {
+		if (conf->channels[i] == CHANNEL_ENABLED) {
 			printf("%d,", i);
 		}
 	}
 	printf("\n");
-	if (conf->force_high_channels[0] > 0 || conf->force_high_channels[1] > 0) {
+	if (conf->force_high_channels[0] == CHANNEL_ENABLED || conf->force_high_channels[1] == CHANNEL_ENABLED) {
 										printf("  Forced channels: ");
 		for(i=0; i<NUM_I_CHANNELS; i++) {
-			if (conf->force_high_channels[i] > 0) {
+			if (conf->force_high_channels[i] == CHANNEL_ENABLED) {
 				printf("%d,", i+1);
 			}
 		}
@@ -265,7 +265,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							// reset default forced channel selection
 							memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
 							if(atoi(c) > 0) {
-								conf->force_high_channels[atoi(c) - 1] = 1;
+								conf->force_high_channels[atoi(c) - 1] = CHANNEL_ENABLED;
 							}
 						} else {
 							rl_log(ERROR, "wrong force-channel number");
@@ -276,7 +276,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 							
 							char* c = &argv[i][2];
 							if (atoi(c) < 3 && atoi(c) > 0) {
-								conf->force_high_channels[atoi(c) - 1] = 1;
+								conf->force_high_channels[atoi(c) - 1] = CHANNEL_ENABLED;
 							} else {
 								rl_log(ERROR, "wrong force-channel number");
 								return FAILURE;

@@ -36,7 +36,7 @@ int count_channels(int channels[NUM_CHANNELS]) {
 	int i = 0;
 	int c = 0;
 	for(i=0; i<NUM_CHANNELS; i++) {
-		if(channels[i] > 0) {
+		if(channels[i] == CHANNEL_ENABLED) {
 			c++;
 		}
 	}
