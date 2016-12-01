@@ -1272,9 +1272,14 @@ function plotsCollapsed() {
 // ------------------------------------------------------------------------ //
 
 $(document).ready(function(){
+	$('[data-toggle="tooltip_help"]').tooltip({
+		trigger : 'hover',
+		placement:'auto bottom'
+	});
 	$('[data-toggle="tooltip"]').tooltip({
-		trigger : 'hover'
-	}); 
+		trigger : 'hover',
+		placement:'auto top',
+	});
 });
 
 $(function() {
