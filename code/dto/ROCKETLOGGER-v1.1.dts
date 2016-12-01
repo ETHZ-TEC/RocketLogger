@@ -16,6 +16,7 @@
   /* board identification */
   part-number = "ROCKETLOGGER";
   version = "00A0";
+
   /* ressources used by the rocketlogger cape */
   exclusive-use =
 

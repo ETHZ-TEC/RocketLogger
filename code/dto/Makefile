@@ -1,10 +1,9 @@
-## Makefile for device tree overlay compilation
+## Makefile for device tree overlay
 
 # files
 TARGET = ROCKETLOGGER-00A0.dtbo
-SRC = ROCKETLOGGER-v1.1.dts
+SRC = ROCKETLOGGER.dts
 TMP = $(SRC).tmp
-INC_DIRS = /usr/src/linux-headers-`uname -r`/include
 
 # install
 INSTALL_DIR = /lib/firmware
@@ -18,7 +17,7 @@ CP = cp -f
 
 # make rules
 $(TARGET): $(SRC)
-	$(CPP) -nostdinc -undef -I $(INC_DIRS) -x assembler-with-cpp -o $(TMP) $^
+	$(CPP) -nostdinc -undef -x assembler-with-cpp -o $(TMP) $^
 	$(DTC) --out-format dtb --out $@ $(TMP)
 	$(RM) $(TMP)
 
@@ -26,7 +25,8 @@ all: $(TARGET)
 
 install: all
 	$(CP) $(TARGET) $(INSTALL_DIR)
-	@echo "Binary installed, configure cape manager manually to load overlay at boot."
+	$(CP) capemgr /etc/default/capemgr
+	@echo "Binary and cape manager config installed, overlay will be loaded automativally after reboot."
 
 .PHONY: clean uninstall
 clean:
@@ -34,4 +34,5 @@ clean:
 
 uninstall:
 	$(RM) $(INSTALL_DIR)/$(TARGET)
+	$(RM) /etc/default/capemgr
 
