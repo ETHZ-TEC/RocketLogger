@@ -32,10 +32,11 @@ classdef rl_cal < handle
     properties
         offsets;
         scales;
+        time;
     end
     
     methods
-        function obj = rl_cal(offsets, scales)
+        function obj = rl_cal(offsets, scales, time)
             %RL_CAL Creates an rl_cal object from calibration vectors
             %   Parameters:
             %      - offests:    Offsets [ADC LSBs]
@@ -44,6 +45,7 @@ classdef rl_cal < handle
             assert(length(scales) == obj.CHANNEL_COUNT, 'Invalid size of scales');
             obj.offsets = offsets;
             obj.scales = scales;
+            obj.time = time;
         end
         
         function write_file(obj, filename)
@@ -56,10 +58,10 @@ classdef rl_cal < handle
             end
             
             % get UNIX time
-            time = posixtime(datetime('now','TimeZone','UTC'));
+            obj.time = posixtime(datetime('now','TimeZone','UTC'));
             
             file = fopen(filename,'w');
-            fwrite(file,time,'int64');
+            fwrite(file,obj.time,'int64');
             fwrite(file,obj.offsets,'int32');
             fwrite(file,obj.scales,'double');
             fclose(file);
@@ -74,7 +76,7 @@ classdef rl_cal < handle
             %were calibrated simulateously
             
             % low range, high range are positive
-            for i = obj.POSITIVE_SCALE_CHANNELS;
+            for i = obj.POSITIVE_SCALE_CHANNELS
                 if obj.scales(i) < 0
                     obj.scales(i) = obj.scales(i) * -1;
                     disp(['Info: Scale ', num2str(i), ' was inverted.']);
@@ -97,12 +99,13 @@ classdef rl_cal < handle
             
             % read in file
             file = fopen(num2str(filename),'r');
-            offsets = fread(file,rl_cal.CHANNEL_COUNT,'int');
+            time = fread(file,1,'int64');
+            offsets = fread(file,rl_cal.CHANNEL_COUNT,'int32');
             scales = fread(file,rl_cal.CHANNEL_COUNT,'double');
             fclose(file);
             
             % create object            
-            obj =  rl_cal(offsets, scales);
+            obj =  rl_cal(offsets, scales, time);
         end
         
         function [obj] = calibrate( v_rld, i1l_rld, i1h_rld, i2l_rld, i2h_rld, plotPareto )
@@ -228,7 +231,8 @@ classdef rl_cal < handle
             %% Finishing
             offsets = offsets ./ scales;
             
-            obj = rl_cal(offsets, scales);
+            % TODO: set time
+            obj = rl_cal(offsets, scales, 0);
         end
         
         function [ values ] = gen_dual_sweep_values( start, stop, step )
