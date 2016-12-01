@@ -56,7 +56,7 @@ classdef rl_cal < handle
             end
             
             % get UNIX time
-            time = posixtime(datetime());
+            time = posixtime(datetime('now','TimeZone','UTC'));
             
             file = fopen(filename,'w');
             fwrite(file,time,'int64');
