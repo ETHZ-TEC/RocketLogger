@@ -144,7 +144,6 @@ void sig_handler(int signo) {
 
 // ------------------------------ FILE READING/WRITING  ------------------------------ //
 
-// reading integer from file
 /**
  * Read a single integer from file.
  * @param filename Path to file.

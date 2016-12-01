@@ -1,6 +1,9 @@
 #include "sem.h"
 
-
+/**
+ * Create RocketLogger semaphore set
+ * @return ID of created set
+ */
 int create_sem() {
 	int sem_id = semget(SEM_KEY, NUM_SEMS, IPC_CREAT | S_IRWXU);
 	if(sem_id < 0) {
@@ -9,6 +12,11 @@ int create_sem() {
 	return sem_id;
 }
 
+/**
+ * Remove semaphore set
+ * @param sem_id ID of set to remove
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int remove_sem(int sem_id) {
 	// remove semaphores
 	if(semctl(sem_id, DATA_SEM, IPC_RMID) < 0) {
@@ -18,6 +26,10 @@ int remove_sem(int sem_id) {
 	return SUCCESS;
 }
 
+/**
+ * Open existing RocketLogger semaphore set
+ * @return ID of opened set
+ */
 int open_sem() {
 	int sem_id = semget(SEM_KEY, NUM_SEMS, S_IRWXU);
 	if(sem_id < 0) {
@@ -26,6 +38,13 @@ int open_sem() {
 	return sem_id;
 }
 
+/**
+ * Wait on a semaphore until access granted
+ * @param sem_id ID of semaphore set
+ * @param sem_num Number of semaphore in set
+ * @param time_out Maximum waiting time
+ * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time out, {@link FAILURE} otherwise
+ */
 int wait_sem(int sem_id, int sem_num, int time_out) {
 	// operation on semaphore
 	int num_ops = 1;
@@ -52,6 +71,13 @@ int wait_sem(int sem_id, int sem_num, int time_out) {
 	return SUCCESS;
 }
 
+/**
+ * Set value to semaphore
+ * @param sem_id ID of semaphore set
+ * @param sem_num Number of semaphore in set
+ * @param val Value to be set to semaphore
+ * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time out, {@link FAILURE} otherwise
+ */
 int set_sem(int sem_id, int sem_num, int val) {
 	// operation on semaphore
 	int num_ops = 1;

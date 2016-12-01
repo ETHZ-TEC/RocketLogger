@@ -5,7 +5,14 @@
 #include "rl_util.h"
 
 
-
+/**
+ * Main RocketLogger binary, controls the sampling
+ *
+ * Arguments:
+ *   - Mode {@link rl_mode}
+ *   - Options {@link rl_option} (+ value)
+ * @return standard Linux return codes
+ */
 int main(int argc, char* argv[]) {
 	
 	struct rl_conf conf;
