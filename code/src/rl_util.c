@@ -1,7 +1,7 @@
 #include "rl_util.h"
 
 /**
- * Print RocketLogger configuration
+ * Print RocketLogger configuration on command line
  * @param conf Pointer to {@link rl_conf} configuration
  */
 void rl_print_config(struct rl_conf* conf) {
@@ -41,7 +41,7 @@ void rl_print_config(struct rl_conf* conf) {
 }
 
 /**
- * Print RocketLogger status
+ * Print RocketLogger status on command line
  * @param status Pointer to {@link rl_status} status
  */
 void rl_print_status(struct rl_status* status) {
@@ -63,6 +63,11 @@ void rl_print_status(struct rl_status* status) {
 }
 
 // argument parsing
+/**
+ * Get RocketLogger mode of provided command line argument
+ * @param mode Pointer to argument string to parse
+ * @return provided mode
+ */
 rl_mode get_mode(char* mode) {
 	if (strcmp(mode, "sample") == 0) {
 		return LIMIT;
@@ -87,6 +92,11 @@ rl_mode get_mode(char* mode) {
 	return NO_MODE;
 }
 
+/**
+ * Get RocketLogger option of provided command line argument
+ * @param option Pointer to argument string to parse
+ * @return provided option
+ */
 rl_option get_option(char* option) {
 	if (strcmp(option, "f") == 0) {
 		return FILE_NAME;
@@ -115,6 +125,12 @@ rl_option get_option(char* option) {
 	return NO_OPTION;
 }
 
+/**
+ * Parse command line argument to selected channels
+ * @param channels Channel array to write
+ * @param value Pointer to argument string to parse
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int parse_channels(int channels[], char* value) {
 	
 	// check first channel number
@@ -152,6 +168,14 @@ int parse_channels(int channels[], char* value) {
 	return SUCCESS;
 }
 
+/**
+ * Parse input arguments of RocketLogger CLI
+ * @param argc Number of input arguments
+ * @param argv Input argument string
+ * @param conf Pointer to {@link rl_conf} configuration to write
+ * @param set_as_default Is set to 1, if configuration should be set as default
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default) {
 
 	int i; // argument count variable
@@ -395,7 +419,9 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 
 
 // help
-
+/**
+ * Print help for RocketLogger CLI on command line
+ */
 void print_usage() {
 	printf("\nUsage:\n");
 	printf("  rocketlogger [mode] -[option] [value]\n\n");
@@ -404,7 +430,6 @@ void print_usage() {
 	printf("    cont               Continuously acquires samples.\n");
 	printf("    meter              Starts RocketLogger Meter.\n");
 	printf("    status             Get status of RocketLogger.\n");
-	printf("    calibrate          Reset RocketLogger calibration.\n");
 	printf("    stop               Stops RocketLogger.\n");
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
 	printf("                         Use 'set 0' to reset the default configuration.\n");
@@ -440,7 +465,10 @@ void print_usage() {
 
 
 // configuration handling
-
+/**
+ * Print provided configuration to command line
+ * @param conf Pointer to {@link rl_conf} configuration
+ */
 void print_config(struct rl_conf* conf) {
 	printf("\nRocketLogger Configuration:\n");
 	rl_print_config(conf);
@@ -448,7 +476,10 @@ void print_config(struct rl_conf* conf) {
 	
 }
 
-
+/**
+ * Reset configuration to standard values
+ * @param conf Pointer to {@link rl_conf} configuration
+ */
 void reset_config(struct rl_conf* conf) {
 	conf->mode = CONTINUOUS;
 	conf->sample_rate = 1000;
@@ -470,6 +501,11 @@ void reset_config(struct rl_conf* conf) {
 	
 }
 
+/**
+ * Read default configuration from file
+ * @param conf Pointer to {@link rl_conf} configuration
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int read_default_config(struct rl_conf* conf) {
 	
 	// check if config file existing
@@ -495,6 +531,11 @@ int read_default_config(struct rl_conf* conf) {
 	return SUCCESS;
 }
 
+/**
+ * Write provided configuration as default to file
+ * @param conf Pointer to {@link rl_conf} configuration to write
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int write_default_config(struct rl_conf* conf) {
 	
 	// open config file

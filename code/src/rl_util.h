@@ -13,15 +13,26 @@
 #include "types.h"
 #include "rl_lib.h"
 
+/// Default configuration file
 #define DEFAULT_CONFIG "/etc/rocketlogger/default.conf"
-#define DEFAULT_CONFIG_NEW "/etc/rocketlogger/default_new.conf"
 
-// ASCII config file defines
-#define MAX_LINE_LENGTH 100
-#define MAX_WORD_LENGTH 100
-#define MAX_WORDS_PER_LINE 3
-
-typedef enum option { FILE_NAME, SAMPLE_RATE, UPDATE_RATE, CHANNEL, FHR, WEB, DIGITAL_INPUTS, DEF_CONF, CALIBRATION, FILE_FORMAT, FILE_SIZE, NO_OPTION } rl_option;
+/**
+ * Available options for RocketLogger CLI
+ */
+typedef enum option {
+	FILE_NAME,     //!< Name of data file to write
+	SAMPLE_RATE,   //!< Sampling rate
+	UPDATE_RATE,   //!< Data file update rate
+	CHANNEL,       //!< Channels to sample
+	FHR,           //!< Channels to force to high range
+	WEB,           //!< En-/disable data averaging for web server
+	DIGITAL_INPUTS,//!< Sample digital inputs
+	DEF_CONF,      //!< Set configuration as default
+	CALIBRATION,   //!< Use/ignore existing calibration values
+	FILE_FORMAT,   //!< File format
+	FILE_SIZE,     //!< Maximum data file size
+	NO_OPTION      //!< No option
+} rl_option;
 
 void rl_print_config(struct rl_conf* conf);
 void rl_print_status(struct rl_status* status);
