@@ -10,31 +10,47 @@
 #include "log.h"
 #include "rl_util.h"
 
+/// Number of input arguments required
 #define ARG_COUNT 4
+/// Maximum string line length
 #define MAX_STRING_LENGTH 150
+/// Maximum string value length
 #define MAX_STRING_VALUE 20
-#define TIME_MARGIN 10 // in ms
+/// Time margin for buffer number (in ms)
+#define TIME_MARGIN 10
 
 // Global variables
+/// ID of semaphore set
 int sem_id;
+/// Pointer to shared memory data
 struct web_shm* web_data;
 
+/// Client request id
 uint32_t id;
+/// 1: data requested, 0: no data requested
 uint8_t get_data;
+/// Requested time scale
 uint32_t t_scale;
+/// Last client time stamp
 int64_t last_time;
-
+/// Time stamp of last buffer stored to shared memory
 int64_t curr_time;
+/// Number of channels sampled
 int8_t num_channels;
 
+/// Current status of RocketLogger
 struct rl_status status;
 
-// buffer sizes
+/// Buffer sizes for different time scales
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE, BUFFER100_SIZE};
 
 
 // functions
-
+/**
+ * Get free disk space in a directory
+ * @param path Path to selected directory
+ * @return Free disk space in bytes
+ */
 int64_t get_free_space(char* path) {
 	
 	struct statvfs stat;
@@ -44,6 +60,11 @@ int64_t get_free_space(char* path) {
 
 }
 
+/**
+ * Print a 32-bit integer array in JSON format
+ * @param data Data array to print
+ * @param length Length of array
+ */
 void print_json_32(int32_t data[], int length) {
 	char str[MAX_STRING_LENGTH];
 	char val[MAX_STRING_VALUE];
@@ -57,6 +78,11 @@ void print_json_32(int32_t data[], int length) {
 	printf("%s",str);
 }
 
+/**
+ * Print a 64-bit integer array in JSON format
+ * @param data Data array to print
+ * @param length Length of array
+ */
 void print_json_64(int64_t data[], int length) {
 	char str[MAX_STRING_LENGTH];
 	char val[MAX_STRING_VALUE];
@@ -70,6 +96,9 @@ void print_json_64(int64_t data[], int length) {
 	printf("%s",str);
 }
 
+/**
+ * Print current status in JSON format
+ */
 void print_status() {
 	// STATUS
 	printf("%d\n", status.state);
@@ -102,10 +131,10 @@ void print_status() {
 		
 }
 
-
+/**
+ * Print requested data in JSON format
+ */
 void print_data() {
-	
-	
 	
 	// print data length
 	int buffer_count = (curr_time - last_time + TIME_MARGIN)/1000;
@@ -169,7 +198,16 @@ void print_data() {
 	}
 }
 
-
+/**
+ * RocketLogger server program. Returns status and current sampling data (if available) when running and default configuration otherwise
+ *
+ * Arguments:
+ *   - Request ID (can be used for client synchronisation)
+ *   - Data requested (1 for yes, 0 for no)
+ *   - Requested time scale (0: 100 samples/s, 1: 10 samples/s, 2: 1 sample/s)
+ *   - Time stamp in UNIX time (UTC) of most recent data available at web client
+ * @return standard Linux return codes
+ */
 int main(int argc, char* argv[]) {
 	
 	// parse arguments

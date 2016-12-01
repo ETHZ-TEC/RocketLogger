@@ -40,7 +40,11 @@ int rl_read_status(struct rl_status* status) {
 	
 	return status->state;
 }
-
+/**
+ * Read calibration file
+ * @param calibration_ptr Pointer to {@link rl_calibration} to write to
+ * @param conf Current {@link rl_conf} configuration
+ */
 void rl_read_calibration(struct rl_calibration* calibration_ptr, struct rl_conf* conf) {
 	read_calibration(conf);
 	memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));

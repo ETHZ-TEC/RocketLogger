@@ -47,7 +47,9 @@ void interrupt_handler(int value) {
 }
 
 /**
- * Main RocketLogger deamon program. Waits on interrupt on button GPIO and starts/stops RocketLogger
+ * Main RocketLogger deamon program. Continuously waits on interrupt on button GPIO and starts/stops RocketLogger
+ *
+ * Arguments: none
  * @return standard Linux return codes
  */
 int main() {

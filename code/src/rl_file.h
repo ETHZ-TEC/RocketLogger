@@ -38,9 +38,10 @@
 /// Maximum channel description length
 #define RL_FILE_CHANNEL_NAME_LENGTH 16 //const uint8_t RL_FILE_CHANNEL_NAME_LENGTH = 16;
 
+/// No additional range valid information available
 #define NO_VALID_DATA 0xFFFF //const uint16_t NO_VALID_DATA = 0xFFFF;
 
-/// Comment length
+/// Comment for file header
 #define RL_FILE_COMMENT "This is a comment"
 
 
@@ -58,10 +59,10 @@ typedef enum unit {
 } rl_unit;
 
 /**
- * Time stamp definition (UNIX time)
+ * Time stamp definition (UNIX time, UTC)
  */
 struct time_stamp {
-	/// Seconds in UNIX time
+	/// Seconds in UNIX time (UTC)
 	int64_t sec;
 	/// Nanoseconds
 	int64_t nsec;
@@ -74,40 +75,40 @@ struct time_stamp {
  * File header lead in (constant size) definition for the binary file.
  */
 struct rl_file_lead_in {
-	/// file magic constant
+	/// File magic constant
 	uint32_t magic; // = RL_FILE_MAGIC;
 
-	/// file version number
+	/// File version number
 	uint16_t file_version; // = RL_FILE_VERSION;
 
-	/// total size of the header in bytes
+	/// Total size of the header in bytes
 	uint16_t header_length; // = 0;
 
-	/// size of the data blocks in the file in rows
+	/// Size of the data blocks in the file in rows
 	uint32_t data_block_size; // = 0;
 
-	/// number of data blocks stored in the file
+	/// Number of data blocks stored in the file
 	uint32_t data_block_count; // = 0;
 
-	/// total sample count
+	/// Total sample count
 	uint64_t sample_count; // = 0;
 
-	/// the sample rate of the measurement
+	/// Sampling rate of the measurement
 	uint16_t sample_rate; // = 0;
 	
-	/// instrument id (mac address)
+	/// Instrument ID (mac address)
 	uint8_t mac_address[MAC_ADDRESS_LENGTH];
 
-	/// start time of the measurement in UNIT time, UTC
+	/// Start time of the measurement in UNIX time, UTC
 	struct time_stamp start_time; // = 0;
 
-	/// comment length
+	/// Comment length
 	uint32_t comment_length; // = 0;
 
-	/// binary channel count
+	/// Binary channel count
 	uint16_t channel_bin_count; // = 0;
 
-	/// number of channels in the file
+	/// Analog channel count
 	uint16_t channel_count; // = 0;
 	
 };
@@ -118,19 +119,19 @@ struct rl_file_lead_in {
  */
 struct rl_file_channel {
 	
-	/// channel unit (binary, voltage or current)
+	/// Channel unit
 	rl_unit unit; // = RL_UNIT_UNDEFINED;
 	
-	/// channel scale (in power of ten, for voltage and current)
+	/// Channel scale (in power of ten, for voltage and current)
 	int32_t channel_scale; // = RL_SCALE_NONE;
 	
-	/// datum size in bytes (for voltage and current)
+	/// Datum size in bytes (for voltage and current)
 	uint16_t data_size; // = 0;
 	
-	/// link to channel valid data (for low-range current channels)
+	/// Link to channel valid data (for low-range current channels)
 	uint16_t valid_data_channel; // = NO_VALID_DATA;
 
-	/// channel name/description
+	/// Channel name/description
 	char name[RL_FILE_CHANNEL_NAME_LENGTH];
 };
 
@@ -139,10 +140,10 @@ struct rl_file_channel {
  */
 struct rl_file_header {
 	
-	/// constant size file header lead in
+	/// File header lead in (constant size)
 	struct rl_file_lead_in lead_in;
 
-	/// comment field
+	/// Comment field
 	char* comment; // = NULL;
 
 	/// Channels definitions (binary and normal)
