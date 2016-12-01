@@ -22,6 +22,12 @@ body {
 	border-bottom-color: #ddd;
 }
 
+.tooltip-inner {
+	text-align: left;
+	max-width:none;
+	white-space:pre;
+}
+
 h2 {
 	margin-top: 15px;
 	font: normal 32px "omnes-pro", Helvetica, Arial, sans-serif;
