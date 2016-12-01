@@ -244,6 +244,9 @@ void store_header_csv(FILE* data, struct rl_file_header* file_header) {
 			case RL_SCALE_MICRO:
 				fprintf(data, " [u");
 				break;
+			case RL_SCALE_TEN_NANO:
+				fprintf(data, " [10n");
+				break;
 			case RL_SCALE_NANO:
 				fprintf(data, " [n");
 				break;
