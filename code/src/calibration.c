@@ -26,15 +26,7 @@ void reset_scales() {
  * @param conf Pointer to {@link rl_conf} struct.
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
  */
-int read_calibration(struct rl_conf* conf) {
-	// check if calibration ignored or calibration file not existing
-	/*if(conf->calibration == CAL_IGNORE || open(CALIBRATION_FILE, O_RDWR) <= 0) {
-		rl_log(WARNING, "no calibration file, returning uncalibrated values");
-		reset_offsets();
-		reset_scales();
-		return SUCCESS;
-	}*/
-
+void read_calibration(struct rl_conf* conf) {
 
 	// open calibration file
 	FILE* file = fopen(CALIBRATION_FILE, "r");
@@ -44,9 +36,7 @@ int read_calibration(struct rl_conf* conf) {
 		reset_offsets();
 		reset_scales();
 		status.calibration_time = 0;
-		return SUCCESS;
-		/*rl_log(ERROR, "failed to open calibration file");
-		return FAILURE;*/
+		return;
 	}
 	// read calibration
 	fread(&calibration, sizeof(struct rl_calibration), 1, file);
@@ -71,6 +61,5 @@ int read_calibration(struct rl_conf* conf) {
 	
 	//close file
 	fclose(file);
-	return SUCCESS;
 }
 

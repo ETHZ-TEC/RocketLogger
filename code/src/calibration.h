@@ -13,4 +13,4 @@
 
 void reset_offsets();
 void reset_scales();
-int read_calibration(struct rl_conf* conf);
+void read_calibration(struct rl_conf* conf);

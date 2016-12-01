@@ -71,20 +71,27 @@ void print_json_64(int64_t data[], int length) {
 }
 
 void print_status() {
+	// STATUS
 	printf("%d\n", status.state);
 	if(status.state != RL_RUNNING) {
 		read_default_config(&status.conf);
+
+		// read calibration time
+		struct rl_calibration tmp_calibration;
+		rl_read_calibration(&tmp_calibration, &status.conf);
+		status.calibration_time = tmp_calibration.time;
 	}
 	// copy of filename (for dirname)
 	char file_name_copy[MAX_PATH_LENGTH];
 	strcpy(file_name_copy, status.conf.file_name);
-	
 	printf("%llu\n", get_free_space(dirname(file_name_copy)));
+	printf("%llu\n", status.calibration_time);
+	
+	// CONFIG
 	printf("%d\n", status.conf.sample_rate);
 	printf("%d\n", status.conf.update_rate);
 	printf("%d\n", status.conf.digital_inputs);
 	printf("%d\n", status.conf.calibration);
-	printf("%llu\n", status.calibration_time);
 	printf("%d\n", status.conf.file_format);
 	printf("%s\n", status.conf.file_name);
 	printf("%llu\n", status.conf.max_file_size);
@@ -182,11 +189,11 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// get status
-	int state = rl_read_status(&status);
+	rl_read_status(&status);
 	
 	
 	// quit, if data not requested or not running or web disabled
-	if(state != RL_RUNNING || status.sampling == SAMPLING_OFF || status.conf.enable_web_server == 0 || get_data == 0) {
+	if(status.state != RL_RUNNING || status.sampling == SAMPLING_OFF || status.conf.enable_web_server == 0 || get_data == 0) {
 		// print request id and status
 		printf("%d\n", id);
 		print_status();

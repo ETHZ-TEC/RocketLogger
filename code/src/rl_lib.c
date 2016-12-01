@@ -41,6 +41,10 @@ int rl_read_status(struct rl_status* status) {
 	return status->state;
 }
 
+void rl_read_calibration(struct rl_calibration* calibration_ptr, struct rl_conf* conf) {
+	read_calibration(conf);
+	memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
+}
 
 /**
  * RocketLogger start function: start sampling
