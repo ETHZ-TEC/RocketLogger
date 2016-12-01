@@ -160,7 +160,7 @@ function getStatus() {
 		
 		complete: function (response) {
 			$('#output').html(response.responseText);
-			var tempState = JSON.parse(response.responseText);
+			tempState = JSON.parse(response.responseText);
 			
 			// clear time-out
 			clearTimeout(timeOut);
@@ -168,84 +168,9 @@ function getStatus() {
 			// extract state
 			respId = tempState[0];
 			if (respId == reqId) {
-				state = tempState[1];
 				
-				// free disk space
-				freeSpace = tempState[2];
-				document.getElementById("free_space").innerHTML = (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
-				
-				// calibration time
-				var calibrationTime = parseInt(tempState[3]);
-				if(calibrationTime != 0) {
-					var d = new Date(calibrationTime * MS_SCALE);
-					var datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
-					document.getElementById("calibration").innerHTML = datestring;
-					document.getElementById("calibration").style.color = "";
-				} else {
-					document.getElementById("calibration").innerHTML = "No Calibration File!";
-					document.getElementById("calibration").style.color = "red";
-				}
-	
-				// left sampling time 
-				if($("#enable_storing:checked").length > 0) {
-					showSamplingTime();
-				} else {
-					document.getElementById("time_left").innerHTML = "∞";
-				}
-				
-				// display status on page
-				if (state == RL_RUNNING) {
-					// parse status and data
-					clearTimeout(startTimeOut);
-					starting = false;
-					error = false;
-					
-					// color buttons
-					document.getElementById("stop").className = "btn btn-danger";
-					document.getElementById("start").className = "btn btn-default";
-					
-					if(stopping == true) {
-						document.getElementById("status").innerHTML = 'Status: STOPPING';
-					} else {
-						document.getElementById("status").innerHTML = 'Status: RUNNING';
-					}
-					parseStatus(tempState);
-					
-				} else {
-					
-					// color buttons
-					document.getElementById("stop").className = "btn btn-default";
-					document.getElementById("start").className = "btn btn-success";
-					
-					if(state == RL_ERROR || error == true) {
-						document.getElementById("status").innerHTML = 'Status: ERROR';
-					} else if (starting == true) {
-						document.getElementById("status").innerHTML = 'Status: STARTING';
-					} else if(state == RL_OFF) {
-						document.getElementById("status").innerHTML = 'Status: IDLE';
-						stopping = false;
-					} else {
-						document.getElementById("status").innerHTML = 'Status: UNKNOWN';
-					}
-					
-					// reset displays
-					document.getElementById("dataAvailable").innerHTML = "";
-					document.getElementById("samples_taken").innerHTML = "";
-					document.getElementById("samples_taken_val").innerHTML = "";
-					document.getElementById("time_sampled").innerHTML = "";
-					document.getElementById("time_sampled_val").innerHTML = "";
-					
-					// load default
-					if(loadDefault) {
-						parseStatus(tempState);
-						loadDefault = false;
-					} else {
-						// set timer
-						timeOut = setTimeout(update, UPDATE_INTERVAL);
-					}
-				}
-				
-				enableDisableConf();
+				// parse status
+				statusReceived(tempState.slice(1));
 				
 			} else {
 				// error occured
@@ -262,7 +187,7 @@ function getStatus() {
 	}
 }
 
-/*function statusReceived(tempState) {
+function statusReceived(tempState) {
 	state = tempState[0];
 				
 	// free disk space
@@ -341,7 +266,7 @@ function getStatus() {
 	}
 	
 	enableDisableConf();
-}*/
+}
 
 function showSamplingTime() {
 	
@@ -390,17 +315,17 @@ function showSamplingTime() {
 function parseStatus(tempState) {
 	
 	// EXTRACT STATUS INFO
-	var sampleRate = parseInt(tempState[4]);
-	var digitalInputs = tempState[6];
-	var calibration = tempState[7];
-	var fileFormat = tempState[8];
-	var tempFilename = tempState[9];
-	var maxFileSize = parseInt(tempState[10])/MB_SCALE;
-	var tempChannels = JSON.parse(tempState[11]);
-	var tempForceHighChannels = JSON.parse(tempState[12]);
-	var samplesTaken = tempState[13];
-	var dataAvailable = tempState[14];
-	var newData = tempState[15];
+	var sampleRate = parseInt(tempState[0]);
+	var digitalInputs = tempState[2];
+	var calibration = tempState[3];
+	var fileFormat = tempState[4];
+	var tempFilename = tempState[5];
+	var maxFileSize = parseInt(tempState[6])/MB_SCALE;
+	var tempChannels = JSON.parse(tempState[7]);
+	var tempForceHighChannels = JSON.parse(tempState[8]);
+	var samplesTaken = tempState[9];
+	var dataAvailable = tempState[10];
+	var newData = tempState[11];
 	
 	// PARSE STATUS INFO
 	
@@ -558,7 +483,7 @@ function parseStatus(tempState) {
 		document.getElementById("dataAvailable").innerHTML = "";
 		if (plotEnabled == '1' && newData == "1") {
 			// handle data
-			dataReceived(tempState);
+			dataReceived(tempState.slice(12));
 			
 			// re-update
 			update();
@@ -586,10 +511,10 @@ function resetData() {
 function dataReceived (tempState) {
 	
 	// extract information
-	var tempTScale = tempState[16];
-	currentTime = parseInt(tempState[17]);
-	var bufferCount = parseInt(tempState[18]);
-	var bufferSize = parseInt(tempState[19]);
+	var tempTScale = tempState[0];
+	currentTime = parseInt(tempState[1]);
+	var bufferCount = parseInt(tempState[2]);
+	var bufferSize = parseInt(tempState[3]);
 	
 	if (tempTScale != tScale) {
 		resetData();
@@ -611,7 +536,7 @@ function dataReceived (tempState) {
 		}
 		
 		for (var i = 0; i < bufferCount * bufferSize; i++) {
-			var tempData = JSON.parse(tempState[20 + i]);
+			var tempData = JSON.parse(tempState[4 + i]);
 			var k = 0;
 			for (var j = 0; j < NUM_PLOT_CHANNELS; j++) {
 				if(plotChannels[j]) {
@@ -1480,8 +1405,10 @@ $(function() {
 		
 		document.addEventListener('keydown', function(event) {
 			
-			switch (event.target.tagName) {  
-				case "INPUT": case "SELECT": case "TEXTAREA": return;  
+			// filter writes to file-name form
+			eventId = event.target.id;
+			if(eventId == "filename") {
+				return;
 			}
 			
 			// start/stop
