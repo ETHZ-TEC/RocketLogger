@@ -67,10 +67,6 @@ int main(int argc, char* argv[]) {
 			rl_stop();
 			exit(EXIT_SUCCESS);
 		
-		case CALIBRATE:
-			rl_log(ERROR, "no calibration implemented");
-			exit(EXIT_FAILURE);
-		
 		case SET_DEFAULT:
 			write_default_config(&conf);
 			if(rl_get_status() == RL_RUNNING) {

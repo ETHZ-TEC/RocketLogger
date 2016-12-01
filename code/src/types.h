@@ -108,7 +108,6 @@ typedef enum mode {
 	METER,
 	STATUS,
 	STOPPED,
-	CALIBRATE,
 	SET_DEFAULT,
 	PRINT_DEFAULT,
 	HELP,

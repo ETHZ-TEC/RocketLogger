@@ -77,8 +77,6 @@ rl_mode get_mode(char* mode) {
 		return METER;
 	} else if(strcmp(mode, "status") == 0) {
 		return STATUS;
-	} else if(strcmp(mode, "calibrate") == 0) {
-		return CALIBRATE;
 	} else if(strcmp(mode, "stop") == 0) {
 		return STOPPED;
 	} else if(strcmp(mode, "set") == 0) {
