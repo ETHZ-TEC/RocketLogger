@@ -78,7 +78,7 @@ var isActive = true;
 
 // configuration
 var filename = "data.rld";
-var loadDefault = false;
+var loadDefault = true;
 var freeSpace;
 
 
@@ -174,6 +174,18 @@ function getStatus() {
 				freeSpace = tempState[2];
 				document.getElementById("free_space").innerHTML = (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
 				
+				// calibration time
+				var calibrationTime = parseInt(tempState[3]);
+				if(calibrationTime != 0) {
+					var d = new Date(calibrationTime * MS_SCALE);
+					var datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
+					document.getElementById("calibration").innerHTML = datestring;
+					document.getElementById("calibration").style.color = "";
+				} else {
+					document.getElementById("calibration").innerHTML = "No Calibration File!";
+					document.getElementById("calibration").style.color = "red";
+				}
+	
 				// left sampling time 
 				if($("#enable_storing:checked").length > 0) {
 					showSamplingTime();
@@ -250,6 +262,87 @@ function getStatus() {
 	}
 }
 
+/*function statusReceived(tempState) {
+	state = tempState[0];
+				
+	// free disk space
+	freeSpace = tempState[1];
+	document.getElementById("free_space").innerHTML = (parseInt(freeSpace)/GB_SCALE).toFixed(3) + 'GB';
+	
+	// calibration time
+	var calibrationTime = parseInt(tempState[2]);
+	if(calibrationTime != 0) {
+		var d = new Date(calibrationTime * MS_SCALE);
+		var datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
+		document.getElementById("calibration").innerHTML = datestring;
+		document.getElementById("calibration").style.color = "";
+	} else {
+		document.getElementById("calibration").innerHTML = "No Calibration File!";
+		document.getElementById("calibration").style.color = "red";
+	}
+
+	// left sampling time 
+	if($("#enable_storing:checked").length > 0) {
+		showSamplingTime();
+	} else {
+		document.getElementById("time_left").innerHTML = "∞";
+	}
+	
+	// display status on page
+	if (state == RL_RUNNING) {
+		// parse status and data
+		clearTimeout(startTimeOut);
+		starting = false;
+		error = false;
+		
+		// color buttons
+		document.getElementById("stop").className = "btn btn-danger";
+		document.getElementById("start").className = "btn btn-default";
+		
+		if(stopping == true) {
+			document.getElementById("status").innerHTML = 'Status: STOPPING';
+		} else {
+			document.getElementById("status").innerHTML = 'Status: RUNNING';
+		}
+		parseStatus(tempState.slice(3));
+		
+	} else {
+		
+		// color buttons
+		document.getElementById("stop").className = "btn btn-default";
+		document.getElementById("start").className = "btn btn-success";
+		
+		if(state == RL_ERROR || error == true) {
+			document.getElementById("status").innerHTML = 'Status: ERROR';
+		} else if (starting == true) {
+			document.getElementById("status").innerHTML = 'Status: STARTING';
+		} else if(state == RL_OFF) {
+			document.getElementById("status").innerHTML = 'Status: IDLE';
+			stopping = false;
+		} else {
+			document.getElementById("status").innerHTML = 'Status: UNKNOWN';
+		}
+		
+		// reset displays
+		document.getElementById("dataAvailable").innerHTML = "";
+		document.getElementById("samples_taken").innerHTML = "";
+		document.getElementById("samples_taken_val").innerHTML = "";
+		document.getElementById("time_sampled").innerHTML = "";
+		document.getElementById("time_sampled_val").innerHTML = "";
+		
+		// load default
+		if(loadDefault) {
+			parseStatus(tempState.slice(3));
+			loadDefault = false;
+		} else {
+			// set timer
+			timeOut = setTimeout(update, UPDATE_INTERVAL);
+		}
+	}
+	
+	enableDisableConf();
+}*/
+
 function showSamplingTime() {
 	
 	var e = document.getElementById("file_format");
@@ -297,10 +390,9 @@ function showSamplingTime() {
 function parseStatus(tempState) {
 	
 	// EXTRACT STATUS INFO
-	var sampleRate = parseInt(tempState[3]);
-	var digitalInputs = tempState[5];
-	var calibration = tempState[6];
-	var calibrationTime = parseInt(tempState[7]);
+	var sampleRate = parseInt(tempState[4]);
+	var digitalInputs = tempState[6];
+	var calibration = tempState[7];
 	var fileFormat = tempState[8];
 	var tempFilename = tempState[9];
 	var maxFileSize = parseInt(tempState[10])/MB_SCALE;
@@ -366,20 +458,6 @@ function parseStatus(tempState) {
 	} else {
 		document.getElementById("ignore_calibration").checked = true;
 	}
-	if(state == RL_RUNNING) {
-		if(calibrationTime != 0) {
-			var d = new Date(calibrationTime * MS_SCALE);
-			var datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
-			document.getElementById("calibration").innerHTML = datestring;
-			document.getElementById("calibration").style.color = "";
-		} else {
-			document.getElementById("calibration").innerHTML = "No Calibration File!";
-			document.getElementById("calibration").style.color = "red";
-		}
-	} else {
-		document.getElementById("calibration").innerHTML = "?";
-	}
-	
 	
 	// file format
 	var e = document.getElementById("file_format");
@@ -1401,6 +1479,11 @@ $(function() {
 		
 		
 		document.addEventListener('keydown', function(event) {
+			
+			switch (event.target.tagName) {  
+				case "INPUT": case "SELECT": case "TEXTAREA": return;  
+			}
+			
 			// start/stop
 			if(event.keyCode == KEY_S) {
 				if(state == RL_RUNNING) {
