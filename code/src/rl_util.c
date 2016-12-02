@@ -83,7 +83,7 @@ rl_mode get_mode(char* mode) {
 		return SET_DEFAULT;
 	} else if(strcmp(mode, "conf") == 0) {
 		return PRINT_DEFAULT;
-	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0) {
+	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0 || strcmp(mode, "--help") == 0) {
 		return HELP;
 	}
 	
@@ -422,9 +422,9 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
  */
 void print_usage() {
 	printf("\nUsage:\n");
-	printf("  rocketlogger [mode] -[option] [value]\n\n");
+	printf("  rocketlogger mode -[option value]\n\n");
 	printf("  Modes:\n");
-	printf("    sample [number]    Acquires [number] of samples.\n");
+	printf("    sample number      Acquires number of samples.\n");
 	printf("    cont               Continuously acquires samples.\n");
 	printf("    meter              Starts RocketLogger Meter.\n");
 	printf("    status             Get status of RocketLogger.\n");
@@ -434,29 +434,30 @@ void print_usage() {
 	printf("    conf               Print default configuration of RocketLogger.\n");
 	
 	printf("\n  Options:\n");
-	printf("    -r [number]        Acquisition rate selection.\n");
+	printf("    -r rate	           Acquisition rate selection.\n");
 	printf("                         Possible rates: 1, 10, 100, 1k, 2k, 4k, 8k, 16k, 32k, 64k\n");
-	printf("    -u [number]        Data update rate selection.\n");
+	printf("    -u update_rate     Data update rate selection.\n");
 	printf("                         Possible update rates: 1, 2, 5, 10 (in Hz)\n");
-	printf("    -ch [number1,...]  Channel selection.\n");
+	printf("    -ch ch1,ch2,...    Channel selection.\n");
 	printf("                       Possible channels ('-ch all' to enable all):\n");
 	printf("                         0: I1H\t\t4: I2H\n");
 	printf("                         1: I1L\t\t5: I2L\n");
 	printf("                         2: V1 \t\t6: V3\n");
 	printf("                         3: V2 \t\t7: V4\n");
-	printf("    -fhr [0,1,2]       Force high-range.\n");
+	printf("    -fhr ch1,ch2       Force high-range.\n");
 	printf("                         0: no channel, 1: I1, 2: I2\n");
 	printf("    -c                 Use calibration, if existing.\n");
 	printf("                         '-c 0' to ignore calibration.\n");
-	printf("    -f [file]          Stores data to specified file.\n");
+	printf("    -f file            Stores data to specified file.\n");
 	printf("                         '-f 0' will disable file storing.\n");
 	printf("    -d                 Log digital inputs.\n");
 	printf("                         Use '-d 0' to disable digital input logging.\n");
-	printf("    -format [format]   Select file format: csv, bin.\n");
-	printf("    -size   [number]   Select max file size (k, m, g can be used).\n");
+	printf("    -format format     Select file format: csv, bin.\n");
+	printf("    -size   file_size  Select max file size (k, m, g can be used).\n");
 	printf("    -w                 Enable webserver plotting.\n");
 	printf("                         Use '-w 0' to disable webserver plotting.\n");
 	printf("    -s                 Set configuration as default.\n");
+	printf("    -h                 Show this help.\n");
 	
 	printf("\n");
 }
