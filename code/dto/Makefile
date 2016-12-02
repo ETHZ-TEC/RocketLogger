@@ -2,8 +2,9 @@
 
 # files
 TARGET = ROCKETLOGGER-00A0.dtbo
-SRC = ROCKETLOGGER.dts
+SRC = ROCKETLOGGER-v1.dts
 TMP = $(SRC).tmp
+# INC_DIRS = /usr/src/linux-headers-`uname -r`/include
 
 # install
 INSTALL_DIR = /lib/firmware

@@ -5,10 +5,8 @@
 /dts-v1/;
 /plugin/;
 
-#include <dt-bindings/pinctrl/am33xx.h>
-#include <dt-bindings/pwm/pwm.h>
-
 #include "am335x-bbw-bbb-base.h"
+#include "linux-dt-backports.h"
 
 / {
   compatible = "ti,beaglebone", "ti,beaglebone-green", "ti,beaglebone-black";
@@ -234,4 +232,3 @@
     };
   };
 };
-
