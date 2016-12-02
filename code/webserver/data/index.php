@@ -1,9 +1,12 @@
+<?php
+  $hostname = php_uname('n');
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>RocketLogger</title>
+	<title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
 	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
 	<link rel="stylesheet" href="rl.css">
 	<script type="text/javascript" src="jquery.js"></script>
@@ -32,7 +35,7 @@
 			<div class="page-header">
 				<div class="row">
 					<div class="col-xs-10">
-						<h1 style="color:black">RocketLogger Remote Control</h1>
+						<h1 style="color:black">RocketLogger Remote Control<?php if ($hostname) echo " ($hostname)"; ?></h1>
 					</div>
 					<div class="col-xs-2" align="right">
 						<h1 class="glyphicon glyphicon-question-sign" data-toggle="tooltip_help" title="RocketLogger Hotkeys:
