@@ -57,9 +57,6 @@ classdef rl_cal < handle
                 filename = 'calibration.dat';
             end
             
-            % get UNIX time
-            obj.time = posixtime(datetime('now','TimeZone','UTC'));
-            
             file = fopen(filename,'w');
             fwrite(file,obj.time,'int64');
             fwrite(file,obj.offsets,'int32');
@@ -131,6 +128,10 @@ classdef rl_cal < handle
 
             v = v_rld.get_data({'V1','V2','V3','V4'});
 
+            % get earliest time
+            time = min([i1l_rld.header.start_time(1), i1h_rld.header.start_time(1), ...
+                i2l_rld.header.start_time(1), i2h_rld.header.start_time(1), v_rld.header.start_time(1)]);
+            
             % Undo the scaling that was done while reading the file
             v   = v   / rl_cal.FILE_SCALE_V;
             ih(:,1) = i1h / rl_cal.FILE_SCALE_IH;
@@ -232,7 +233,7 @@ classdef rl_cal < handle
             offsets = offsets ./ scales;
             
             % TODO: set time
-            obj = rl_cal(offsets, scales, 0);
+            obj = rl_cal(offsets, scales, time);
         end
         
         function [ values ] = gen_dual_sweep_values( start, stop, step )

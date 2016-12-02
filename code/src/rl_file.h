@@ -29,11 +29,11 @@
 
 // Constants
 
-/// File header magic number (ascii %RLB)
-#define RL_FILE_MAGIC 0x25524C42 //const uint32_t RL_FILE_MAGIC = 0x25524C42;
+/// File header magic number (ascii %RLD)
+#define RL_FILE_MAGIC 0x444C5225 //const uint32_t RL_FILE_MAGIC = 0x25524C42;
 
 /// File format version of current implementation
-#define RL_FILE_VERSION 0x01 //const uint8_t RL_FILE_VERSION = 0x01;
+#define RL_FILE_VERSION 0x02 //const uint8_t RL_FILE_VERSION = 0x01;
 
 /// Maximum channel description length
 #define RL_FILE_CHANNEL_NAME_LENGTH 16 //const uint8_t RL_FILE_CHANNEL_NAME_LENGTH = 16;
