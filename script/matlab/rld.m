@@ -64,31 +64,36 @@ classdef rld
 
                 % check magic number
                 [magic, bytes_read] = fread(file, 1, 'uint32');
-                assert(bytes_read > 0 && magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
+                assert(bytes_read > 0, 'Failed to read file');
 
                 % check file version
                 file_version = fread(file, 1, 'uint16');
+                switch file_version
+                    case 1
+                        % old magic number
+                        assert(magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
+                        warning('Old file version');
+                    case 2
+                        % new magic number
+                        assert(magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
+                    otherwise
+                        error(['Unknown file version ', num2str(file_version)]);
+                end
 
 
                 %% READ HEADER
                     
                 % lead-in
-                if file_version == 1
-
-                    header_length = fread(file, 1, 'uint16');
-                    data_block_size = fread(file, 1, 'uint32');
-                    data_block_count = fread(file, 1, 'uint32');
-                    sample_count = fread(file, 1, 'uint64');
-                    sample_rate = fread(file, 1, 'uint16');
-                    mac_address = fread(file, MAC_ADDRESS_LENGTH, 'uint8')';
-                    start_time = fread(file, 2, 'uint64');
-                    comment_length = fread(file, 1, 'uint32');
-                    channel_bin_count = fread(file, 1, 'uint16');
-                    channel_count = fread(file, 1, 'uint16');
-
-                else
-                   error(['Unknown file version ', num2str(file_version)]); 
-                end
+                header_length = fread(file, 1, 'uint16');
+                data_block_size = fread(file, 1, 'uint32');
+                data_block_count = fread(file, 1, 'uint32');
+                sample_count = fread(file, 1, 'uint64');
+                sample_rate = fread(file, 1, 'uint16');
+                mac_address = fread(file, MAC_ADDRESS_LENGTH, 'uint8')';
+                start_time = fread(file, 2, 'uint64');
+                comment_length = fread(file, 1, 'uint32');
+                channel_bin_count = fread(file, 1, 'uint16');
+                channel_count = fread(file, 1, 'uint16');
 
                 % comment
                 comment = fread(file, comment_length, 'int8=>char')';
