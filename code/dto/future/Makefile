@@ -2,9 +2,9 @@
 
 # files
 TARGET = ROCKETLOGGER-00A0.dtbo
-SRC = ROCKETLOGGER-v1.dts
+SRC = ROCKETLOGGER-v2.dts
 TMP = $(SRC).tmp
-# INC_DIRS = /usr/src/linux-headers-`uname -r`/include
+INC_DIRS = /usr/src/linux-headers-`uname -r`/include
 
 # install
 INSTALL_DIR = /lib/firmware
@@ -18,7 +18,7 @@ CP = cp -f
 
 # make rules
 $(TARGET): $(SRC)
-	$(CPP) -nostdinc -undef -x assembler-with-cpp -o $(TMP) $^
+	$(CPP) -nostdinc -undef -I $(INC_DIRS) -x assembler-with-cpp -o $(TMP) $^
 	$(DTC) --out-format dtb --out $@ $(TMP)
 	$(RM) $(TMP)
 
