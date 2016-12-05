@@ -351,9 +351,6 @@ void merge_currents(uint8_t* valid, int64_t* dest, int64_t* src, struct rl_conf*
 	}
 }
 
-/// Test variable to remove
-int test = 0;
-
 /**
  * Handle a data buffer, dependent on current configuration
  * @param data File pointer to data file
@@ -461,11 +458,7 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size, uin
 		for(j=0; j<NUM_CHANNELS; j++) {
 			if(conf->channels[j] == CHANNEL_ENABLED) {
 				if(sample_size == 4) {
-					if (TEST_MODE == 1) {
-						value = 1000*j + test++;
-					} else {
-						value = *( (int32_t *) (buffer_addr + sample_size*j) );
-					}
+					value = *( (int32_t *) (buffer_addr + sample_size*j) );
 				} else {
 					value = *( (int16_t *) (buffer_addr + sample_size*j) );
 				}

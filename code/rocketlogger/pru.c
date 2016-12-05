@@ -2,10 +2,6 @@
 
 #include "pru.h"
 
-#if TEST_MODE == 1
-	#warning "Test mode activated!"
-#endif
-
 // PRU TIMEOUT WRAPPER
 
 /// PRU access mutex
@@ -137,10 +133,6 @@ void pru_set_state(rl_pru_state state){
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int pru_init() {
-
-	#if TEST_MODE == 1
-		rl_log(WARNING, "PRU test mode activated!");
-	#endif
 	
 	// init PRU
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -465,19 +457,15 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 		}
 		
 		// Wait for event completion from PRU
-		if (TEST_MODE == 0) {
-			// only check for timout on first buffer (else it does not work!)
-			if (i == 0) {
-				if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
-					// timeout occured
-					rl_log(ERROR, "ADC not responding");
-					break;
-				}
-			} else {
-				prussdrv_pru_wait_event(PRU_EVTOUT_0);
+		// only check for timeout on first buffer (else it does not work!)
+		if (i == 0) {
+			if(pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
+				// timeout occurred
+				rl_log(ERROR, "ADC not responding");
+				break;
 			}
 		} else {
-			sleep(1);
+			prussdrv_pru_wait_event(PRU_EVTOUT_0);
 		}
 		
 		// clear event
@@ -485,13 +473,11 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 
 		
 		// check for overrun (compare buffer numbers)
-		if (TEST_MODE == 0) {
-			uint32_t buffer = *((uint32_t*) buffer_addr);
-			if (buffer != i) {
-				buffer_lost += (buffer - i);
-				rl_log(WARNING, "overrun: %d samples (%d buffer) lost (%d in total)", (buffer - i) * pru.buffer_size, buffer - i, buffer_lost);
-				i = buffer;
-			}
+		uint32_t buffer = *((uint32_t*) buffer_addr);
+		if (buffer != i) {
+			buffer_lost += (buffer - i);
+			rl_log(WARNING, "overrun: %d samples (%d buffer) lost (%d in total)", (buffer - i) * pru.buffer_size, buffer - i, buffer_lost);
+			i = buffer;
 		}
 		
 		// handle the buffer

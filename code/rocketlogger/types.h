@@ -1,9 +1,6 @@
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
-/// Test mode: for usage without RL cape
-#define TEST_MODE 0
-
 // INCLUDES
 
 // standard
