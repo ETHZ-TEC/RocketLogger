@@ -30,12 +30,12 @@ classdef rld
             end
             
             if exist('file_name', 'var')
-                obj = read_file(obj, file_name, decimation_factor );
+                obj = read_file(obj, file_name, decimation_factor);
             end
         end
         
         % file reading
-        function obj = read_file(obj, file_name, decimation_factor )
+        function obj = read_file(obj, file_name, decimation_factor)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          File name
@@ -339,16 +339,16 @@ classdef rld
         end 
         
         % plotting
-        function plot(obj, channel, time, pretty_plot )
+        function plot(obj, channel, absolute_time, pretty_plot)
             %PLOT Plots different channels of a RLD object
             %   Parameters:
-            %      - channel:      Cell with channel names to plot
-            %                      Also allowed: 'all', 'voltages',
-            %                                    'currents', 'digital'
-            %      - time:         Set to 1, if x-axis should be in
-            %                      absolute time
-            %      - pretty_plot:  Set to 1, if pretty plot should be
-            %                      applied
+            %      - channel:       Cell with channel names to plot
+            %                       Also allowed: 'all', 'voltages',
+            %                                     'currents', 'digital'
+            %      - absolute_time: Set to 1, if x-axis should be in
+            %                       absolute time
+            %      - pretty_plot:   Set to 1, if pretty plot should be
+            %                       applied
             
             % constants
             rl_types;
@@ -357,8 +357,8 @@ classdef rld
             if ~exist('pretty_plot', 'var')
                 pretty_plot = false;
             end
-            if ~exist('time', 'var')
-                time = false;
+            if ~exist('absolute_time', 'var')
+                absolute_time = false;
             end
             separate_axis = true;
             
@@ -430,14 +430,7 @@ classdef rld
             grid on;
             
             % time interpolation
-            if time
-                points = 0:obj.header.data_block_count;
-                temp_time = [obj.time; obj.time(end) + seconds(1)];
-                interp_points = (0:(obj.header.sample_count-1)) / obj.header.data_block_size;
-                t = interp1(points, temp_time, interp_points);
-            else
-                t = (1:obj.header.sample_count)/obj.header.sample_rate;
-            end
+            t = obj.get_time(absolute_time);
             
             colormap = [
                 0    0.4470    0.7410
@@ -541,6 +534,25 @@ classdef rld
                 else
                     error(['No channel ', channel{i}, ' found']);
                 end
+            end
+        end
+        
+        % get measurement timestamps
+        function timestamps = get_time(obj, absolute_time)
+            %GET_TIME Returns a matrix with the timestamps of the data of the RLD object
+            
+            if ~exist('absolute_time', 'var')
+                absolute_time = false;
+            end
+            
+            % time interpolation
+            if absolute_time
+                points = 0:obj.header.data_block_count;
+                temp_time = [obj.time; obj.time(end) + seconds(1)];
+                interp_points = (0:(obj.header.sample_count-1)) / obj.header.data_block_size;
+                timestamps = interp1(points, temp_time, interp_points)';
+            else
+                timestamps = (0:obj.header.sample_count-1)'/obj.header.sample_rate;
             end
         end
         
