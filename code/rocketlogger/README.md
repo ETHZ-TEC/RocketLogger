@@ -1,8 +1,6 @@
 RocketLogger Software Documentation
 ===================================
 
-**[TBD]**
-
 The RocketLogger software includes the three following binaries, which use de RocketLogger library (ToDo: link?).
 
 ### RocketLogger Binary
