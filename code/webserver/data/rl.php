@@ -108,7 +108,7 @@
 		}
 		if($_POST['fileName'] == '0') {
 			$command = $command . " -f 0";
-		} else if(preg_match("/^\w+\.[A-Za-z]{3}$/", $_POST['fileName']) == 1) {
+		} else if(preg_match("/^[\w-]+\.[A-Za-z]{3}$/", $_POST['fileName']) == 1) {
 			$command = $command . " -f /var/www/data/" . $_POST['fileName'];
 		} else {
 			return false;
