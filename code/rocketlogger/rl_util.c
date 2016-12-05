@@ -420,7 +420,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 /**
  * Print help for RocketLogger CLI on command line
  */
-void print_usage() {
+void print_usage(void) {
 	printf("\nUsage:\n");
 	printf("  rocketlogger mode -[option value]\n\n");
 	printf("  Modes:\n");

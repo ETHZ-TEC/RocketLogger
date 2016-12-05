@@ -9,7 +9,7 @@
  * Setup button GPIO
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int gpio_setup() {
+int gpio_setup(void) {
 	
 	int ret1 = gpio_export(GPIO_BUTTON);
 	int ret2 = gpio_dir(GPIO_BUTTON, IN);
@@ -47,12 +47,12 @@ void interrupt_handler(int value) {
 }
 
 /**
- * Main RocketLogger deamon program. Continuously waits on interrupt on button GPIO and starts/stops RocketLogger
+ * RocketLogger deamon program. Continuously waits on interrupt on button GPIO and starts/stops RocketLogger
  *
  * Arguments: none
  * @return standard Linux return codes
  */
-int main() {
+int main(void) {
 	
 	int timeout = -1; //infinite timeout
 	if(gpio_setup() == FAILURE) {

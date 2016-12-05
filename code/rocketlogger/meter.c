@@ -10,7 +10,7 @@ const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT,
 /**
  * Init meter window
  */
-void meter_init() {
+void meter_init(void) {
 	// init ncurses mode
 	initscr();
 	// hide cursor
@@ -23,7 +23,7 @@ void meter_init() {
 /**
  * Stop meter window
  */
-void meter_stop() {
+void meter_stop(void) {
 	endwin();
 }
 

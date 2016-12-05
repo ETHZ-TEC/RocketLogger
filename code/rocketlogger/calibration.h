@@ -11,6 +11,6 @@
 #include "log.h"
 
 
-void reset_offsets();
-void reset_scales();
+void reset_offsets(void);
+void reset_scales(void);
 void read_calibration(struct rl_conf* conf);

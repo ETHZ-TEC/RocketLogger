@@ -13,11 +13,11 @@
 #include "types.h"
 
 
-int create_sem();
+int create_sem(void);
 
 int remove_sem(int sem_id);
 
-int open_sem();
+int open_sem(void);
 
 int wait_sem(int sem_id, int sem_num, int time_out);
 

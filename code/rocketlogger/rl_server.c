@@ -3,11 +3,7 @@
 #include <stdint.h>
 #include <libgen.h>
 
-#include "sem.h"
-#include "types.h"
 #include "rl_lib.h"
-#include "web.h"
-#include "log.h"
 #include "rl_util.h"
 
 /// Number of input arguments required
@@ -99,7 +95,7 @@ void print_json_64(int64_t data[], int length) {
 /**
  * Print current status in JSON format
  */
-void print_status() {
+void print_status(void) {
 	// STATUS
 	printf("%d\n", status.state);
 	if(status.state != RL_RUNNING) {
@@ -134,7 +130,7 @@ void print_status() {
 /**
  * Print requested data in JSON format
  */
-void print_data() {
+void print_data(void) {
 	
 	// print data length
 	int buffer_count = (curr_time - last_time + TIME_MARGIN)/1000;
@@ -201,7 +197,8 @@ void print_data() {
 /**
  * RocketLogger server program. Returns status and current sampling data (if available) when running and default configuration otherwise
  *
- * Arguments:
+ * @param argc Number of input arguments
+ * @param argv Input argument string, consists of:
  *   - Request ID (can be used for client synchronisation)
  *   - Data requested (1 for yes, 0 for no)
  *   - Requested time scale (0: 100 samples/s, 1: 10 samples/s, 2: 1 sample/s)

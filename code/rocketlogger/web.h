@@ -68,8 +68,8 @@ struct web_shm {
 
 
 
-struct web_shm* create_web_shm();
-struct web_shm* open_web_shm();
+struct web_shm* create_web_shm(void);
+struct web_shm* open_web_shm(void);
 
 void reset_buffer(struct ringbuffer* buffer, int element_size, int length);
 

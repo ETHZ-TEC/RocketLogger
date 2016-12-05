@@ -8,7 +8,8 @@
 /**
  * Main RocketLogger binary, controls the sampling
  *
- * Arguments:
+ * @param argc Number of input arguments
+ * @param argv Input argument string, consists of:
  *   - Mode {@link rl_mode}
  *   - Options {@link rl_option} (+ value)
  * @return standard Linux return codes
@@ -23,7 +24,7 @@ int main(int argc, char* argv[]) {
 	
 	// parse arguments
 	if (parse_args(argc, argv, &conf, &set_as_default) == FAILURE) {
-		print_usage(&conf);
+		print_usage();
 		exit(EXIT_FAILURE);
 	}
 	
@@ -88,11 +89,11 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_SUCCESS);
 		
 		case HELP:
-			print_usage(&conf);
+			print_usage();
 			exit(EXIT_SUCCESS);
 		
 		default:
-			print_usage(&conf);
+			print_usage();
 			exit(EXIT_FAILURE);
 	}
 	

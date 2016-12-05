@@ -11,7 +11,7 @@ volatile uint16_t *pwmss1_regs;
  * Map PWM registers into user space (on {@link pwmss0_regs} and {@link pwmss1_regs} pointer)
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int pwm_setup() {
+int pwm_setup(void) {
 	
 	// open /dev/mem for memory mapping
     if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
@@ -41,7 +41,7 @@ int pwm_setup() {
 /**
  * Unmap PWM registers from user space
  */
-void pwm_close() {
+void pwm_close(void) {
 	
 	// unmap memory
 	munmap((void *)pwmss0_regs, PWM_SIZE);
@@ -77,7 +77,7 @@ void range_clock_setup(int sample_rate) {
 /**
  * Setup PWMSS0 for ADC master clock
  */
-void adc_clock_setup() {
+void adc_clock_setup(void) {
 	
 	// setup ehrpwm
 	pwmss0_regs[TBCTL] = TBCTL_DEFAULT;

@@ -68,7 +68,7 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 /**
  * Map PRU memory into user space
  */
-void* map_pru_memory() {
+void* map_pru_memory(void) {
 	
 	// get pru memory location and size
 	unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
@@ -132,7 +132,7 @@ void pru_set_state(rl_pru_state state){
  * PRU initiation
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_init() {
+int pru_init(void) {
 	
 	// init PRU
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -560,7 +560,7 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 /**
  * Stop and shut down PRU operation
  */
-void pru_stop() {
+void pru_stop(void) {
 	
 	// write OFF to PRU state (so PRU can clean up)
 	pru_set_state(PRU_OFF);
@@ -575,7 +575,7 @@ void pru_stop() {
 /**
  * Disable PRU
  */
-void pru_close() {
+void pru_close(void) {
 	
 	// Disable PRU and close memory mappings 
 	prussdrv_pru_disable(0);

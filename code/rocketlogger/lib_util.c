@@ -44,7 +44,7 @@ int check_update_rate(int update_rate) {
  * Get process ID (PID) of background sampling process
  * @return PID of background process
  */
-pid_t get_pid() {
+pid_t get_pid(void) {
 	
 	// open file
 	pid_t pid;

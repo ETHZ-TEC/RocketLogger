@@ -41,7 +41,7 @@ rl_mode get_mode(char* mode);
 rl_option get_option(char* option);
 int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default);
 
-void print_usage();
+void print_usage(void);
 
 void print_config(struct rl_conf* conf);
 void reset_config(struct rl_conf* conf);

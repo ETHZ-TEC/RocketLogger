@@ -66,8 +66,8 @@
 /// Action qualifier value for ADC clock (see AM335x_TR)
 #define ADC_AQ				0x0025	// clear on zero and period, set at 50%
 
-int pwm_setup();
-void pwm_close();
+int pwm_setup(void);
+void pwm_close(void);
 
 void range_clock_setup(int sample_rate); // sampling rate [Hz]
-void adc_clock_setup();
+void adc_clock_setup(void);

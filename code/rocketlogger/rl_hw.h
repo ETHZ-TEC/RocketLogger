@@ -14,6 +14,5 @@
 #define LED_ERROR_GPIO 44
 
 void hw_init(struct rl_conf* conf);
-void hw_close();
-
+void hw_close(struct rl_conf* conf);
 int hw_sample(struct rl_conf* conf);

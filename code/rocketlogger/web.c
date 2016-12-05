@@ -4,7 +4,7 @@
  * Create shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-struct web_shm* create_web_shm() {
+struct web_shm* create_web_shm(void) {
 
 	int shm_id = shmget(SHMEM_DATA_KEY, sizeof(struct web_shm), IPC_CREAT | SHMEM_PERMISSIONS);
 	if (shm_id == -1) {
@@ -25,7 +25,7 @@ struct web_shm* create_web_shm() {
  * Open existing shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-struct web_shm* open_web_shm() {
+struct web_shm* open_web_shm(void) {
 
 	int shm_id = shmget(SHMEM_DATA_KEY, sizeof(struct web_shm), SHMEM_PERMISSIONS);
 	if (shm_id == -1) {

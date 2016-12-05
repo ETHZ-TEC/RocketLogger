@@ -4,7 +4,7 @@
  * Get status of RocketLogger
  * @return current status {@link rl_state}
  */
-rl_state rl_get_status() {
+rl_state rl_get_status(void) {
 	
 	struct rl_status status;
 	
@@ -130,7 +130,7 @@ int rl_start(struct rl_conf* conf) {
  * RocketLogger stop function (to stop continuous mode)
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_stop() {
+int rl_stop(void) {
 	
 	// check if running
 	if(rl_get_status() != RL_RUNNING) {

@@ -4,7 +4,7 @@
 /**
  * Set all offsets to default state (0).
  */
-void reset_offsets() {
+void reset_offsets(void) {
 	int i;
 	for (i=0; i< NUM_CHANNELS; i++) {
 		calibration.offsets[i] = 0;
@@ -14,7 +14,7 @@ void reset_offsets() {
 /**
  * Set all scales to default state (1).
  */
-void reset_scales() {
+void reset_scales(void) {
 	int i;
 	for (i=0; i< NUM_CHANNELS; i++) {
 		calibration.scales[i] = 1;
