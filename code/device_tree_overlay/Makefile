@@ -19,7 +19,7 @@ CP = cp -f
 # make rules
 $(TARGET): $(SRC)
 	$(CPP) -nostdinc -undef -x assembler-with-cpp -o $(TMP) $^
-	$(DTC) --out-format dtb --out $@ $(TMP)
+	$(DTC) --out-format dtb --out $@ -@ $(TMP)
 	$(RM) $(TMP)
 
 all: $(TARGET)
