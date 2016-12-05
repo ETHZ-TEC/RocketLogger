@@ -295,7 +295,7 @@ function showSamplingTime() {
 			document.getElementById("time_left").innerHTML = "> 1Month";
 		} else {
 		
-			var day = date.getDate()-1;
+			var d = date.getDate()-1;
 			var h = date.getUTCHours();
 			var m = date.getUTCMinutes();
 			
@@ -303,8 +303,8 @@ function showSamplingTime() {
 			if(h>0) {
 				t = h + "h " + t;
 			}
-			if(day>0) {
-				t = day + "d " + t;
+			if(d>0) {
+				t = d + "d " + t;
 			}
 			document.getElementById("time_left").innerHTML = t;
 			
@@ -450,20 +450,23 @@ function parseStatus(tempState) {
 			document.getElementById("time_left").innerHTML = "> 1Month";
 		} else {
 		
-			var day = date.getDate()-1;
+			var t = "";
+			var d = date.getDate()-1;
 			var h = date.getUTCHours();
 			var m = date.getUTCMinutes();
 			var s = date.getUTCSeconds();
 			
-			var t = s + "s";
+			if(d == 0) {
+				t = s + "s";
+			}
 			if(m>0) {
 				t = m + "min " + t;
 			}
 			if(h>0) {
 				t = h + "h " + t;
 			}
-			if(day>0) {
-				t = day + "d " + t;
+			if(d>0) {
+				t = d + "d " + t;
 			}
 		}
 		
