@@ -11,7 +11,7 @@
 				
 				// return error if parse error
 				if($config != false) {
-					exec($command . $config);
+					exec($command . $config . " > /dev/null &");
 					echo json_encode("SUCCESS");
 				} else {
 					echo json_encode(["ERROR", "Argument parse errror"]);
