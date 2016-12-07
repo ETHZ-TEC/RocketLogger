@@ -627,7 +627,7 @@ classdef rld
         end
         
         % merges two channels to a new one
-        function merged = merge_channels(obj)
+        function merged_obj = merge_channels(obj)
             %MERGE_CHANNELS Merges current low/high ranges and returns new RLD object
             
             rl_types;
@@ -652,17 +652,17 @@ classdef rld
             end
             
             % return object
-            merged = rld();
-            merged.header = obj.header;
-            merged.time = obj.time;
+            merged_obj = rld();
+            merged_obj.header = obj.header;
+            merged_obj.time = obj.time;
             % initialize
-            merged.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
+            merged_obj.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
                     'valid_data_channel', 0, 'name',0, 'values', 0, 'valid', 0);
             num_new_channels = 0;
             num_new_bin_channels = 0;
             for i=1:obj.header.channel_bin_count + obj.header.channel_count
                 if isempty(find(channels_to_remove == i,1))
-                    merged.channels(num_new_channels+num_new_bin_channels+1) = obj.channels(i);
+                    merged_obj.channels(num_new_channels+num_new_bin_channels+1) = obj.channels(i);
                     if obj.channels(i).unit == RL_UNIT_BINARY || obj.channels(i).unit == RL_UNIT_RANGE_VALID
                         num_new_bin_channels = num_new_bin_channels+1;
                     else
@@ -687,14 +687,14 @@ classdef rld
                     range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
 
                     % set properties
-                    new_channel_ind = length(merged.channels) + 1;
+                    new_channel_ind = length(merged_obj.channels) + 1;
                     unit = RL_UNIT_AMPERE;
                     unit_text = UNIT_NAMES(unit+1);
                     channel_scale = 0; % TODO
                     data_size = 0; % TODO
                     valid_data_channel = NO_VALID_CHANNEL;
                     name = [merged_name{i}];
-                    if channel_index(merged, name) > 0
+                    if channel_index(merged_obj, name) > 0
                         error(['Channel name ', name, ' already used']);
                     end
                     valid = 0;
@@ -704,13 +704,13 @@ classdef rld
 
 
                     % add new channel
-                    merged.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
+                    merged_obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
                         'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
                     num_new_channels = num_new_channels  + 1;
                 end
             end
-            merged.header.channel_bin_count = num_new_bin_channels;
-            merged.header.channel_count = num_new_channels;
+            merged_obj.header.channel_bin_count = num_new_bin_channels;
+            merged_obj.header.channel_count = num_new_channels;
         end
         
         
