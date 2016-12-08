@@ -1261,14 +1261,24 @@ function plotsCollapsed() {
 		} else {
 			plotCollapseEnabled = false;
 		}
-		plotEnabled = '0';
-		document.getElementById("plotting").checked = false;
+		disablePlot();
 	} else {
 		if(plotCollapseEnabled == true) {
-			plotEnabled = '1';
-			document.getElementById("plotting").checked = true;
+			enablePlot();
 		}
 	}
+}
+
+function enablePlot() {
+	plotEnabled = '1';
+	document.getElementById("time_scale").disabled = false;
+	document.getElementById("plotting").checked = true;
+}
+
+function disablePlot() {
+	plotEnabled = '0';
+	document.getElementById("time_scale").disabled = true;
+	document.getElementById("plotting").checked = false;
 }
 
 
@@ -1301,43 +1311,17 @@ $(function() {
 		// enable checkbox
 		$("#plotting").change(function () {
 			if ($("#plotting:checked").length > 0) {
-				plotEnabled = '1';
+				enablePlot();
 			} else {
-				plotEnabled = '0';
+				disablePlot();
 			}
 		});
-		
-		//  update plot when range changed
-		$("#voltage_range").change(function () {
-			updatePlot();
-		});
-		$("#current_range").change(function () {
-			updatePlot();
-		});
-		
-		
-		
 		
 		// BUTTONS
 		
 		// load conf button
 		$("#load_default").click(function () {
 			loadDefault = true;
-		});
-		
-		// start button
-		$("#start").click(function () {
-			start();
-		});
-
-		// stop button
-		$("#stop").click(function () {
-			stop();
-		});
-		
-		// set default button
-		$("#set_default").click(function () {
-			setDefault();
 		});
 		
 		// deselect button
@@ -1376,7 +1360,13 @@ $(function() {
 			$("#filename").val(filename);
 		});
 		
-		
+		// time scale
+		$("#time_scale").change(function () {
+			if ($("#plotting:checked").length <= 0) {
+				document.getElementById("time_scale").selectedIndex = tScale;
+				alert("Time scale change is not possible with deactivated plot update!");
+			}
+		});
 		
 		
 		// FILE HANDLING
@@ -1435,11 +1425,9 @@ $(function() {
 			// pause/unpause plot
 			} else if(event.keyCode == KEY_P) {
 				if(plotEnabled == '1') {
-					plotEnabled = '0';
-					document.getElementById("plotting").checked = false;
+					disablePlot();
 				} else {
-					plotEnabled = '1';
-					document.getElementById("plotting").checked = true;
+					enablePlot();
 				}
 			// time scale
 			} else if(event.keyCode == KEY_1 || event.keyCode == KEY_2 || event.keyCode == KEY_3) {

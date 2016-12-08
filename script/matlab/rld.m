@@ -1,10 +1,5 @@
 classdef rld
     %RLD Class to read in and handle RocketLogger data
-    %   Detailed explanation goes here
-    
-    properties (Constant)
-        % TODO: rl_types here?
-    end
     
     properties
         % RLD header (includes measurement information)
@@ -17,7 +12,7 @@ classdef rld
     
     methods
         % constructor
-        function obj = rld(file_name, decimation_factor)
+        function [ obj ] = rld(file_name, decimation_factor)
             %RLD Creates an RLD object from RocketLogger data file
             %   Parameters:
             %      - file_name:          File name
@@ -35,7 +30,7 @@ classdef rld
         end
         
         % file reading
-        function obj = read_file(obj, file_name, decimation_factor)
+        function [ obj ] = read_file(obj, file_name, decimation_factor)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          File name
@@ -360,6 +355,8 @@ classdef rld
             if ~exist('absolute_time', 'var')
                 absolute_time = false;
             end
+            
+            % separate voltage/current axis
             separate_axis = true;
             
             % all channels
@@ -504,7 +501,7 @@ classdef rld
         end
         
         % get channels
-        function names = get_channels(obj)
+        function [ names ] = get_channels(obj)
             %GET_CHANNELS Returns a cell including all channel names of the RLD object
             
             for i=1:length(obj.channels(1,:))
@@ -513,7 +510,7 @@ classdef rld
         end
         
         % get channel data
-        function values = get_data(obj, channel)
+        function [ values ] = get_data(obj, channel)
             %GET_DATA Returns a matrix with channel data
             %   Parameters:
             %      - channel:  Cell with channel names of selected channels
@@ -538,7 +535,7 @@ classdef rld
         end
         
         % get measurement timestamps
-        function timestamps = get_time(obj, absolute_time)
+        function [ timestamps ] = get_time(obj, absolute_time)
             %GET_TIME Returns a matrix with the timestamps of the data of the RLD object
             
             if ~exist('absolute_time', 'var')
@@ -611,7 +608,7 @@ classdef rld
         end
         
         % returns index of selected channel (0, if off)
-        function on = channel_index(obj, channel)
+        function [ on ] = channel_index(obj, channel)
             %CHANNEL_INDEX Returns channel index (position in channel array)
             %              (0 if not available)
             %   Parameters:
@@ -627,7 +624,7 @@ classdef rld
         end
         
         % merges two channels to a new one
-        function merged = merge_channels(obj)
+        function [ merged_obj ] = merge_channels(obj)
             %MERGE_CHANNELS Merges current low/high ranges and returns new RLD object
             
             rl_types;
@@ -652,17 +649,17 @@ classdef rld
             end
             
             % return object
-            merged = rld();
-            merged.header = obj.header;
-            merged.time = obj.time;
+            merged_obj = rld();
+            merged_obj.header = obj.header;
+            merged_obj.time = obj.time;
             % initialize
-            merged.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
+            merged_obj.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
                     'valid_data_channel', 0, 'name',0, 'values', 0, 'valid', 0);
             num_new_channels = 0;
             num_new_bin_channels = 0;
             for i=1:obj.header.channel_bin_count + obj.header.channel_count
                 if isempty(find(channels_to_remove == i,1))
-                    merged.channels(num_new_channels+num_new_bin_channels+1) = obj.channels(i);
+                    merged_obj.channels(num_new_channels+num_new_bin_channels+1) = obj.channels(i);
                     if obj.channels(i).unit == RL_UNIT_BINARY || obj.channels(i).unit == RL_UNIT_RANGE_VALID
                         num_new_bin_channels = num_new_bin_channels+1;
                     else
@@ -687,14 +684,14 @@ classdef rld
                     range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
 
                     % set properties
-                    new_channel_ind = length(merged.channels) + 1;
+                    new_channel_ind = length(merged_obj.channels) + 1;
                     unit = RL_UNIT_AMPERE;
                     unit_text = UNIT_NAMES(unit+1);
                     channel_scale = 0; % TODO
                     data_size = 0; % TODO
                     valid_data_channel = NO_VALID_CHANNEL;
                     name = [merged_name{i}];
-                    if channel_index(merged, name) > 0
+                    if channel_index(merged_obj, name) > 0
                         error(['Channel name ', name, ' already used']);
                     end
                     valid = 0;
@@ -704,13 +701,13 @@ classdef rld
 
 
                     % add new channel
-                    merged.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
+                    merged_obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
                         'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
                     num_new_channels = num_new_channels  + 1;
                 end
             end
-            merged.header.channel_bin_count = num_new_bin_channels;
-            merged.header.channel_count = num_new_channels;
+            merged_obj.header.channel_bin_count = num_new_bin_channels;
+            merged_obj.header.channel_count = num_new_channels;
         end
         
         
@@ -719,8 +716,7 @@ classdef rld
     methods(Static)
         
         % decimate functions
-        % TODO: test unfull buffer size
-        function decimated_values = decimate_bin(values, decimation_factor)
+        function [ decimated_values ] = decimate_bin(values, decimation_factor)
             %DECIMATE_BIN Decimates binary values (with threshold)
             %   Parameters:
             %      - values:            Values to decimate
@@ -732,7 +728,7 @@ classdef rld
             decimated_values = mean(M, 1)>0.5;
         end
         
-        function decimated_values = decimate_min(values, decimation_factor)
+        function [ decimated_values ] = decimate_min(values, decimation_factor)
             %DECIMATE_MIN Decimates valid values (only valid if all samples valid)
             %   Parameters:
             %      - values:            Values to decimate
@@ -744,7 +740,7 @@ classdef rld
             decimated_values = ~(mean(M, 1)<1);
         end
 
-        function decimated_values = decimate_mean(values, decimation_factor)
+        function [ decimated_values ] = decimate_mean(values, decimation_factor)
             %DECIMATE_MEAN Decimates analog values (with MEAN)
             %   Parameters:
             %      - values:            Values to decimate
