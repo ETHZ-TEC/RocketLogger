@@ -1,10 +1,5 @@
 classdef rld
     %RLD Class to read in and handle RocketLogger data
-    %   Detailed explanation goes here
-    
-    properties (Constant)
-        % TODO: rl_types here?
-    end
     
     properties
         % RLD header (includes measurement information)
@@ -17,7 +12,7 @@ classdef rld
     
     methods
         % constructor
-        function obj = rld(file_name, decimation_factor)
+        function [ obj ] = rld(file_name, decimation_factor)
             %RLD Creates an RLD object from RocketLogger data file
             %   Parameters:
             %      - file_name:          File name
@@ -35,7 +30,7 @@ classdef rld
         end
         
         % file reading
-        function obj = read_file(obj, file_name, decimation_factor)
+        function [ obj ] = read_file(obj, file_name, decimation_factor)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          File name
@@ -360,6 +355,8 @@ classdef rld
             if ~exist('absolute_time', 'var')
                 absolute_time = false;
             end
+            
+            % separate voltage/current axis
             separate_axis = true;
             
             % all channels
@@ -504,7 +501,7 @@ classdef rld
         end
         
         % get channels
-        function names = get_channels(obj)
+        function [ names ] = get_channels(obj)
             %GET_CHANNELS Returns a cell including all channel names of the RLD object
             
             for i=1:length(obj.channels(1,:))
@@ -513,7 +510,7 @@ classdef rld
         end
         
         % get channel data
-        function values = get_data(obj, channel)
+        function [ values ] = get_data(obj, channel)
             %GET_DATA Returns a matrix with channel data
             %   Parameters:
             %      - channel:  Cell with channel names of selected channels
@@ -538,7 +535,7 @@ classdef rld
         end
         
         % get measurement timestamps
-        function timestamps = get_time(obj, absolute_time)
+        function [ timestamps ] = get_time(obj, absolute_time)
             %GET_TIME Returns a matrix with the timestamps of the data of the RLD object
             
             if ~exist('absolute_time', 'var')
@@ -611,7 +608,7 @@ classdef rld
         end
         
         % returns index of selected channel (0, if off)
-        function on = channel_index(obj, channel)
+        function [ on ] = channel_index(obj, channel)
             %CHANNEL_INDEX Returns channel index (position in channel array)
             %              (0 if not available)
             %   Parameters:
@@ -627,7 +624,7 @@ classdef rld
         end
         
         % merges two channels to a new one
-        function merged_obj = merge_channels(obj)
+        function [ merged_obj ] = merge_channels(obj)
             %MERGE_CHANNELS Merges current low/high ranges and returns new RLD object
             
             rl_types;
@@ -719,8 +716,7 @@ classdef rld
     methods(Static)
         
         % decimate functions
-        % TODO: test unfull buffer size
-        function decimated_values = decimate_bin(values, decimation_factor)
+        function [ decimated_values ] = decimate_bin(values, decimation_factor)
             %DECIMATE_BIN Decimates binary values (with threshold)
             %   Parameters:
             %      - values:            Values to decimate
@@ -732,7 +728,7 @@ classdef rld
             decimated_values = mean(M, 1)>0.5;
         end
         
-        function decimated_values = decimate_min(values, decimation_factor)
+        function [ decimated_values ] = decimate_min(values, decimation_factor)
             %DECIMATE_MIN Decimates valid values (only valid if all samples valid)
             %   Parameters:
             %      - values:            Values to decimate
@@ -744,7 +740,7 @@ classdef rld
             decimated_values = ~(mean(M, 1)<1);
         end
 
-        function decimated_values = decimate_mean(values, decimation_factor)
+        function [ decimated_values ] = decimate_mean(values, decimation_factor)
             %DECIMATE_MEAN Decimates analog values (with MEAN)
             %   Parameters:
             %      - values:            Values to decimate
