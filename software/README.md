@@ -2,8 +2,8 @@ RocketLogger Software
 =====================
 
 The RocketLogger software includes the following parts:
-* Ambient: inclusion of ambient sensors
-* Debian: OS configuration files
-* Device Tree Overlay: device tree configuration files
-* RocketLogger: main binary (C code)
-* Webserver: webserver code for remote control
+* ambient-test: inclusion of ambient sensors
+* debian: OS configuration files
+* device_tree_overlay: device tree configuration files
+* rocketlogger: main binary (C code)
+* webserver: webserver code for remote control
