@@ -1,5 +1,10 @@
 classdef rld
     %RLD Class to read in and handle RocketLogger data
+    %   Parameters:
+    %      - file_name:          Data file name
+    %      - decimation_factor:  Decimation factor for values read
+    %                            (buffer size needs to be divisible
+    %                             by the decimation factor)
     
     properties
         % RLD header (includes measurement information)
@@ -33,7 +38,7 @@ classdef rld
         function [ obj ] = read_file(obj, file_name, decimation_factor)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
-            %      - file_name:          File name
+            %      - file_name:          Data file name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
