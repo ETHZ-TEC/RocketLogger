@@ -22,7 +22,7 @@ Project Organization
 --------------------
 The project consists of two parts
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
-* The [RocketLogger Software Stack](code) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
+* The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
 
 
 Prerequisites
