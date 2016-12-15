@@ -619,12 +619,13 @@ classdef rld
             %   Parameters:
             %      - channel:  Name of selected channel
             
-            for i=1:length(obj.channels(1,:))
+            on = 0;
+            
+            for i=1:size(obj.channels, 2)
                 if strcmp(channel, obj.channels(i).name) == 1
                     on = i;
                     break;
                 end
-                on = 0;
             end
         end
         
@@ -658,8 +659,8 @@ classdef rld
             merged_obj.header = obj.header;
             merged_obj.time = obj.time;
             % initialize
-            merged_obj.channels = struct('unit', 0, 'unit_text', 0, 'channel_scale', 0, 'data_size', 0, ...
-                    'valid_data_channel', 0, 'name',0, 'values', 0, 'valid', 0);
+            merged_obj.channels = struct('unit', {}, 'unit_text', {}, 'channel_scale', {}, 'data_size', {}, ...
+                    'valid_data_channel', {}, 'name', {}, 'values', {}, 'valid', {});
             num_new_channels = 0;
             num_new_bin_channels = 0;
             for i=1:obj.header.channel_bin_count + obj.header.channel_count
