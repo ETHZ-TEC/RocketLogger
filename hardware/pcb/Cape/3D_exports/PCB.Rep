@@ -1,0 +1,234 @@
+Export log for : PCB.Rep
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+AddingPadStyle (Default)
+AddingPadStyle EF22X18TOP1
+AddingPadStyle EF31X35TOP1
+AddingPadStyle EF24X24TOP1
+AddingPadStyle EF35X28TOP1
+AddingPadStyle EF26X35TOP1
+AddingPadStyle EF20X47TOP1
+AddingPadStyle EF20X63TOP1
+AddingPadStyle EF71X118TOP1
+AddingPadStyle EF20X20TOP1
+AddingPadStyle EF16X59TOP1
+AddingPadStyle P:EX55Y55D341
+AddingPadStyle P:SX55Y55D341
+AddingPadStyle EF31X31TOP1
+AddingPadStyle EF24X35TOP1
+AddingPadStyle EF16X45TOP1
+AddingPadStyle EF16X47TOP1
+AddingPadStyle EF10X24TOP1
+AddingPadStyle EF14X55TOP1
+AddingPadStyle EF156X59TOP1
+AddingPadStyle EF167X59TOP1
+AddingPadStyle EF156X59BOT1
+AddingPadStyle EF59X69TOP1
+AddingPadStyle EF12X33TOP1
+AddingPadStyle P:EX60Y60D401
+AddingPadStyle P:SX60Y60D401
+AddingPadStyle EF10X31TOP1
+AddingPadStyle EF96X96TOP1
+AddingPadStyle EF54X57TOP1
+AddingPadStyle EF30X10TOP1
+AddingPadStyle EF16X59TOP2
+AddingPadStyle EF82X39TOP1
+AddingPadStyle EF45X30TOP1
+AddingPadStyle EF102X37TOP1
+AddingPadStyle EF50X26TOP1
+AddingPadStyle EF40X26TOP1
+AddingPadStyle EF20X26TOP1
+AddingPadStyle EF16X26TOP1
+AddingPadStyle EF39X30TOP1
+AddingPadStyle EF24X75TOP1
+AddingPadStyle EF53X37TOP1
+AddingPadStyle EF22X31TOP1
+AddingPadStyle EF30X50TOP1
+AddingPadStyle EF51X51TOP1
+AddingPadStyle EF63X35TOP1
+AddingPadStyle EF10X61TOP1
+AddingPadStyle EF161X39TOP1
+AddingPadStyle EF150X39TOP1
+AddingPadStyle EF35X39TOP1
+AddingPadStyle EF39X20TOP1
+AddingPadStyle EF24X102TOP1
+AddingPadStyle EF14X24TOP1
+AddingPadStyle EF102X47TOP1
+AddingPadStyle EF24X59TOP1
+Adding ViaStyle (Default)
+Adding ViaStyle V:EX18Y18D81
+Adding ViaStyle V:EX24Y24D121
+Adding ViaStyle V:EX24Y24D81
+Adding TextStyle (Default)
+Adding TextStyle T:H60W10
+Adding TextStyle T:H39W8
+Adding TextStyle T:H30W6
+Adding TextStyle T:H24W5
+Adding TextStyle T:H10W2
+Adding TextStyle T:H16W3
+Adding TextStyle T:H31W6
+Adding TextStyle T:H14W3
+Adding TextStyle T:H20W4
+Adding TextStyle T:H14W2
+Adding TextStyle T:H14W31
+Adding TextStyle T:H10W21
+Adding TextStyle T:H12W2
+Adding TextStyle T:H28W6
+Adding TextStyle T:H16W4
+Adding TextStyle T:H20W5
+Adding TextStyle T:H24W51
+Adding TextStyle T:H79W10
+Adding TextStyle T:H16W2
+Adding TextStyle T:H12W21
+Adding TextStyle T:H40W7
+Adding TextStyle T:H60W6
+Adding PatternDef RESC0402(1005)_L_1
+Adding PatternDef INDC0603(1608)_L_1
+Adding PatternDef Pad-0.6mm_1
+Adding PatternDef CAPC0603(1608)100_L_1
+Adding PatternDef Z5+1_L_1
+Adding PatternDef SOT89_L_1
+Adding PatternDef CAPC0402(1005)60_L_1
+Adding PatternDef ADI-RM-8_L_1
+Adding PatternDef TSW-107-07-L-S_1
+Adding PatternDef 0603_A_1
+Adding PatternDef TI-DBV5_L_1
+Adding PatternDef DGK0008A_L_1
+Adding PatternDef DGK0008A_L_2
+Adding PatternDef DGK0008A_L_3
+Adding PatternDef PW0016A_L_1
+Adding PatternDef DCU0008A_L_1
+Adding PatternDef TSSOP-16_L_1
+Adding PatternDef 132322_1
+Adding PatternDef RESC0402(1005)_L_2
+Adding PatternDef DRB8-1750X1500TP_1
+Adding PatternDef BeagleBone Black_1
+Adding PatternDef LT-UF-24_L_1
+Adding PatternDef UDFN-MU8_1
+Adding PatternDef TSSOP-ST14_L_1
+Adding PatternDef TSSOP-ST14_L_2
+Adding PatternDef ADI-RM-8_L_2
+Adding PatternDef ADI-RM-8_L_3
+Adding PatternDef DRB8-1750X1500TP_2
+Adding PatternDef INDC2520X10L_1
+Adding PatternDef DIOD-SOD323-2_V_1
+Adding PatternDef CAPC1210(3225)280_L_1
+Adding PatternDef CAPC0603(1608)100_L_2
+Adding PatternDef PowerPAK_SO-8_V_1
+Adding PatternDef INF-PG-SOT-323_L_1
+Adding PatternDef DCK0005A_L_1
+Adding PatternDef DCK0006A_L_1
+Adding PatternDef WSK1206_1
+Adding PatternDef WSK1206_2
+Adding PatternDef M08A_L_1
+Adding PatternDef M08A_L_2
+Adding PatternDef RESC0603(1608)_L_1
+Adding PatternDef RESC0603(1608)_L_2
+Adding PatternDef CAPC0805(2012)145_L_1
+Adding PatternDef DBV0005A_L_1
+Adding PatternDef 416131160802_1
+Adding PatternDef 43W_1
+Adding PatternDef QFP50P1000X1000X120_HS-64L_1
+Adding PatternDef QFP50P1000X1000X120_HS-64L_2
+Adding PatternDef 132322_2
+Adding PatternDef 132322_3
+Adding PatternDef CAPC0402(1005)60_L_2
+Adding PatternDef BMI-S-208-F_1
+Adding PatternDef PowerPAK_SO-8_V_2
+Adding PatternDef KRM 2 Series_1
+Adding PatternDef ACH32C_1
+Adding PatternDef TI-DRL5_L_1
+Adding PatternDef CAPC1210(3225)200_L_1
+Adding PatternDef SOT-23-TT3_N_1
+Adding CompDef RESC0402(1005)_L_1
+Adding CompDef INDC0603(1608)_L_1
+Adding CompDef Pad-0.6mm_1
+Adding CompDef CAPC0603(1608)100_L_1
+Adding CompDef Z5+1_L_1
+Adding CompDef SOT89_L_1
+Adding CompDef CAPC0402(1005)60_L_1
+Adding CompDef ADI-RM-8_L_1
+Adding CompDef TSW-107-07-L-S_1
+Adding CompDef 0603_A_1
+Adding CompDef TI-DBV5_L_1
+Adding CompDef DGK0008A_L_1
+Adding CompDef DGK0008A_L_2
+Adding CompDef DGK0008A_L_3
+Adding CompDef PW0016A_L_1
+Adding CompDef DCU0008A_L_1
+Adding CompDef TSSOP-16_L_1
+Adding CompDef 132322_1
+Adding CompDef RESC0402(1005)_L_2
+Adding CompDef DRB8-1750X1500TP_1
+Adding CompDef BeagleBone Black_1
+Adding CompDef LT-UF-24_L_1
+Adding CompDef UDFN-MU8_1
+Adding CompDef TSSOP-ST14_L_1
+Adding CompDef TSSOP-ST14_L_2
+Adding CompDef ADI-RM-8_L_2
+Adding CompDef ADI-RM-8_L_3
+Adding CompDef DRB8-1750X1500TP_2
+Adding CompDef INDC2520X10L_1
+Adding CompDef DIOD-SOD323-2_V_1
+Adding CompDef CAPC1210(3225)280_L_1
+Adding CompDef CAPC0603(1608)100_L_2
+Adding CompDef PowerPAK_SO-8_V_1
+Adding CompDef INF-PG-SOT-323_L_1
+Adding CompDef DCK0005A_L_1
+Adding CompDef DCK0006A_L_1
+Adding CompDef WSK1206_1
+Adding CompDef WSK1206_2
+Adding CompDef M08A_L_1
+Adding CompDef M08A_L_2
+Adding CompDef RESC0603(1608)_L_1
+Adding CompDef RESC0603(1608)_L_2
+Adding CompDef CAPC0805(2012)145_L_1
+Adding CompDef DBV0005A_L_1
+Adding CompDef 416131160802_1
+Adding CompDef 43W_1
+Adding CompDef QFP50P1000X1000X120_HS-64L_1
+Adding CompDef QFP50P1000X1000X120_HS-64L_2
+Adding CompDef 132322_2
+Adding CompDef 132322_3
+Adding CompDef CAPC0402(1005)60_L_2
+Adding CompDef BMI-S-208-F_1
+Adding CompDef PowerPAK_SO-8_V_2
+Adding CompDef KRM 2 Series_1
+Adding CompDef ACH32C_1
+Adding CompDef TI-DRL5_L_1
+Adding CompDef CAPC1210(3225)200_L_1
+Adding CompDef SOT-23-TT3_N_1
+      Warning: Net -6.8V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net +6.8V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net VCCA- already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net VCCA+ already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net 5V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net -5V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net V_RAW already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net GND already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net 3.3V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net -2.5V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Net +2.5V already belongs to a NetClass and has not been added to NetClass AssemblyTP
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Unexpected Free Text Object Found On Layer BottomOverlay.   This may cause problems in PCAD PCB
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Unexpected Poly Region Object Found On Layer MidLayer2.
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Unexpected Poly Region Object Found On Layer MidLayer3.
+      Warning: Arcs In Polygon have been converted to Line Segments
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+ 
+EndLog
