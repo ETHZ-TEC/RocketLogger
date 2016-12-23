@@ -44,6 +44,9 @@
 /// Comment for file header
 #define RL_FILE_COMMENT "This is a comment"
 
+/// Comment alignment in bytes
+#define RL_FILE_COMMENT_ALIGNMENT_BYTES sizeof(uint32_t)
+
 
 // Types
 
