@@ -10,36 +10,29 @@ allow-hotplug eth0
 auto eth0
 iface eth0 inet dhcp
 # Example to keep MAC address between reboots
-#hwaddress ether 88:c2:55:8e:8c:9a
+#hwaddress ether DE:AD:BE:EF:CA:FE
 
 # The secondary network interface
 #auto eth1
 #iface eth1 inet dhcp
 
-# WiFi Example
-#auto wlan0
-#iface wlan0 inet dhcp
-#    wpa-ssid "public"
-#    wpa-psk  "password"
 
-# For access to ETH public network
-# open chromium with: chromium --temp-profile
-# login at: enter.ethz.ch
-
+# WiFi for access to ETH public network
+#     open chromium with: chromium --temp-profile
+#     login at: enter.ethz.ch
 #auto wlan0
 #allow-hotplug wlan0
 #iface wlan0 inet dhcp
 #    wireless-essid public
 
 
-# For access point
-
-allow-hotplug wlan2
-iface wlan2 inet static
+# WiFi access point
+allow-hotplug wlan0
+iface wlan0 inet static
      address 192.168.10.1
      netmask 255.255.255.0
 
-     # to start access point (needs to be done after wlan2 is up)
+     # to start access point (needs to be done after wlan0 is up)
      post-up hostapd /etc/hostapd/hostapd.conf &
      post-up service isc-dhcp-server restart
 
@@ -51,3 +44,4 @@ iface usb0 inet static
     netmask 255.255.255.252
     network 192.168.7.0
     gateway 192.168.7.1
+

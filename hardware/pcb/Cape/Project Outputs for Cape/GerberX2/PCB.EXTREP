@@ -1,0 +1,27 @@
+------------------------------------------------------------------------------------------
+Gerber File Extension Report For: PCB.GBR   04.11.2016  10:13:33
+------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------
+Layer Extension     Layer Description                      
+------------------------------------------------------------------------------------------
+.gbr                Component Side                          
+.gbr                GND                                     
+.gbr                Inner Layer 1                           
+.gbr                V+                                      
+.gbr                V-                                      
+.gbr                Bottom Side                             
+.gbr                Bottom Solder                           
+.gbr                Top Overlay                             
+.gbr                Top Solder                              
+.gbr                Bottom Paste                            
+.gbr                Bottom Overlay                          
+.gbr                Top Paste                               
+.gbr                Mechanical 4                            
+.gbr                Profile                                 
+.gbr                Non-plated through-hole drill file      
+.gbr                Plated through-hole drill file          
+.gbr                Drill Drawing                           
+.gbr                Drill Guide                             
+------------------------------------------------------------------------------------------

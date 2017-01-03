@@ -1,0 +1,468 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>RocketLogger</title>
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+	<link href="flot/examples/examples.css" rel="stylesheet" type="text/css">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+
+	<!--<script
+		src="http://code.jquery.com/jquery-2.2.4.js"
+		integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+		crossorigin="anonymous"></script>-->
+	<script language="javascript" type="text/javascript" src="jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
+	<script language="javascript" type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="rl.js"></script>
+<style>
+	.top-buffer{margin-top:20px}
+	.no-buffer{margin-top:-30px}
+	.analog-container {
+		box-sizing: border-box;
+		width: 850px;
+		height: 450px;
+		padding: 20px 15px 15px 15px;
+		margin: 15px auto 30px auto;
+		border: 1px solid #ddd;
+		background: #fff;
+		background: linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+		box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+		-o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+	}
+	.digital-container {
+		box-sizing: border-box;
+		width: 850px;
+		height: 450px;
+		padding: 20px 15px 15px 15px;
+		margin: 15px auto 30px auto;
+		border: 1px solid #ddd;
+		background: #fff;
+		background: linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+		background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+		box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+		-o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+		-webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+	}
+	
+</style>
+</head>
+<body>
+
+	<div class="container">
+		
+		<div class="page-header">
+			<h1>RocketLogger Remote Control</h1>
+		</div>
+
+		<div id="content">
+			<div class="row">
+				<div class="col-md-3">
+					<div id="status"> </div>
+				 </div>
+				 <div class="col-md-3">
+					<div id="webserver"> </div>
+				 </div>
+			 </div>
+		
+			<h2>Configuration</h2>
+			
+				<!-- Control Section -->
+				<p>Choose your configuration and press 'Start'.</p>
+				<div class="row">
+					<div class="col-md-1">
+						<button id="start" class="btn btn-default">Start</button>
+					</div>
+					<div class="col-md-1">
+						<button id="stop" class="btn btn-default">Stop</button>
+					</div>
+					<div class="col-md-1">
+					</div>
+					<div class="col-md-2">
+						<button id="calibrate" class="btn btn-default">Reset Calibration</button>
+					</div>
+					<div class="col-md-1">
+					</div>
+					<div class="col-md-6">
+						<div class="checkbox">
+							<label><input id="active" type="checkbox" checked="checked"></input>Always Active</label>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-2">
+						<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#configuration" aria-expanded="true" aria-controls="configuration">Show/Hide Configuration</button>
+					</div>
+				</div>
+				<div class="collapse in" id="configuration">
+					<div class="row top-buffer">
+						<div class="col-md-3">
+							<div class="checkbox">
+								<label><input id="set_default" type="checkbox" ></input>Set as Default</label>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<button id="load_default" class="btn btn-default">Load Default Configuration</button>
+						</div>
+						
+					</div>
+					
+					<!-- File Section -->
+					<div class="row top-buffer">
+						<div class="col-md-6">
+							<h3>File</h3>
+							<div class="row">
+								<div class="col-md-6">
+									<div class="checkbox">
+										<label><input id="enable_storing" type="checkbox" checked="checked"></input>Enable File Storing</label>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3">
+									File Format:
+								</div>
+								<div class="col-md-4">
+									<select class="form-control"  id="file_format">
+										<option value="bin">binary</option>
+										<option value="csv">csv</option>
+									</select>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3">
+									Filename:
+								</div>
+								<div class="col-md-7">
+									<input class="form-control" id="filename" placeholder=filename type="text" value="">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3">
+									Options:
+								</div>
+								<div class="col-md-3">
+									<button id="download" class="btn btn-default">Download</button>
+								</div>	
+								<div class="col-md-3">
+									<button id="delete" class="btn btn-default">Delete</button>
+								</div>
+							</div>
+							<div class="row top-buffer">
+								<div class="col-md-3">
+									Log File:
+								</div>
+								<div class="col-md-3">
+									<button id="download_log" class="btn btn-default">Log</button>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Channels Section -->
+						<div class="col-md-6">
+							<h3>Channels</h3>
+							<div class="row">
+								<div class="col-md-4">
+									<b>Voltage</b>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="v1" type="checkbox" checked="checked">V1</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="v2" type="checkbox" checked="checked">V2</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="v3" type="checkbox" checked="checked">V3</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="v4" type="checkbox" checked="checked">V4</label>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<b>Current 1</b>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="i1h" type="checkbox" checked="checked">I1H</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="i1l" type="checkbox" checked="checked">I1L</label>
+										</div>
+									</div>
+									<div class="row">
+										<p></p> 
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="fhr1" type="checkbox">Force High Range</label>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<b>Current 2</b>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="i2h" type="checkbox" checked="checked">I2H</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="i2l" type="checkbox" checked="checked">I2L</label>
+										</div>
+									</div>
+									<div class="row">
+										<p></p> 
+									</div>
+									<div class="row">
+										<div class="checkbox">
+											<label><input id="fhr2" type="checkbox">Force High Range</label>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-4">
+									<button id="select" class="btn btn-default">Select All</button>
+								</div>
+								<div class="col-md-4">
+									<button id="deselect" class="btn btn-default">Deselect All</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Rate Section -->
+					<div class="row">
+						<div class="col-md-6">
+							<h3>Rates</h3>
+							<div class="row">
+								<div class="col-md-3">
+									Samplerate:
+								</div>
+								<div class="col-md-4">
+									<select class="form-control"  id="sample_rate">
+										<option value="1">1kSps</option>
+										<option value="2">2kSps</option>
+										<option value="4">4kSps</option>
+										<option value="8">8kSps</option>
+										<option value="16">16kSps</option>
+										<option value="32">32kSps</option>
+										<option value="64">64kSps</option>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<h3>Digital Signals</h3>
+							<div class="row">
+								<div class="checkbox">
+									<label><input id="digital_inputs" type="checkbox" checked="checked">Log Digital Inputs</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			<!-- Debug Section
+			
+			<h2>Debug</h2>
+				<p id="test"> No debug message 1. </p> 
+			-->
+		
+			<!-- Plot Section -->
+			<div class="row">
+				<div class="col-md-3">
+					<h2>Plots</h2>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<div class="checkbox">
+						<label><input id="plotting" type="checkbox" checked="checked">Update Plot</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					Time Scale:
+				</div>
+				<div class="col-md-2">
+					<select class="form-control" id="time_scale">
+						<option value=0>1s/div</option>
+						<option value=1>10s/div</option>
+						<option value=2>100s/div</option>
+					</select>
+				</div>
+				<div class="col-md-2">
+					<div id="dataAvailable" class="text-danger"></div>
+				</div>
+			</div>
+				<div class="row">
+					<h3>Voltages:</h3>
+				</div>
+				<div class="row">
+					<div class="col-md-2">
+					</div>
+					<div class="col-md-2">
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_v1" type="checkbox"  checked="checked"></input>Plot V1</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_v2" type="checkbox"  checked="checked"></input>Plot V2</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_v3" type="checkbox"  checked="checked"></input>Plot V3</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_v4" type="checkbox"  checked="checked"></input>Plot V4</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						Voltage Range:
+					</div>
+					<div class="col-md-2">
+						<select class="form-control" id="voltage_range">
+							<option value=0>Auto</option>
+							<option value=0.1>100µV</option>
+							<option value=1>1mV</option>
+							<option value=10>10mV</option>
+							<option value=100>100mV</option>
+							<option value=1000>1V</option>
+							<option value=6000>6V</option>
+							<option value=10000>10V</option>
+						</select>
+					</div>
+				</div>
+				<div class="row">
+					<div id="v_plot" class="analog-container">
+						<div id="vPlaceholder" class="demo-placeholder"></div>
+					</div>
+				</div>
+				<div class="row">
+					<h3>Currents:</h3>
+				</div>
+				<div class="row">
+					<div class="col-md-2">
+					</div>
+					<div class="col-md-2">
+						<div class="checkbox">
+							<label><input id="plot_i1" type="checkbox"  checked="checked"></input>Plot I1</label>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="checkbox">
+							<label><input id="plot_i2" type="checkbox"  checked="checked"></input>Plot I2</label>
+						</div>
+					</div>
+					<div class="col-md-2">
+						Current Range:
+					</div>
+					<div class="col-md-2">
+						<select class="form-control" id="current_range">
+							<option value=0>Auto</option>
+							<option value=0.01>10nA</option>
+							<option value=0.1>100nA</option>
+							<option value=1>1µA</option>
+							<option value=10>10µA</option>
+							<option value=100>100µA</option>
+							<option value=1000>1mA</option>
+							<option value=10000>10mA</option>
+							<option value=100000>100mA</option>
+							<option value=1000000>1A</option>
+						</select>
+					</div>
+				</div>
+				<div class="row">
+					<div id="i_plot" class="analog-container">
+						<div id="iPlaceholder" class="demo-placeholder"></div>
+					</div>
+				</div>
+				<div class="row">
+					<h3>Digital Signals:</h3>
+				</div>
+				<div class="row">
+					<div class="col-md-2">
+					</div>
+					<div class="col-md-2">
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d1" type="checkbox"  checked="checked"></input>Plot DigIn1</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d2" type="checkbox"  checked="checked"></input>Plot DigIn2</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d3" type="checkbox"  checked="checked"></input>Plot DigIn3</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d4" type="checkbox"  checked="checked"></input>Plot DigIn4</label>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d5" type="checkbox"  checked="checked"></input>Plot DigIn5</label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="checkbox">
+								<label><input id="plot_d6" type="checkbox"  checked="checked"></input>Plot DigIn6</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div id="dig_plot" class="digital-container">
+						<div id="digPlaceholder" class="demo-placeholder"></div>
+					</div>
+				</div>
+		</div>
+
+		<div id="footer">
+			RocketLogger by Stefan Lippuner and Matthias Leubin - ETH Zürich - 2016
+		</div>
+	</div>
+</body>
+</html>
+
+
