@@ -95,5 +95,27 @@ cd "${SCRIPT_DIR}"
 
 
 ## done
-echo "Done. Please reboot to apply all changes."
+echo "Platform initialized. A reboot is required to apply all changes."
 
+# reboot now?
+REBOOT=-1
+while [ $REBOOT -lt 0 ]; do
+  read -p "Do you want to reboot now (recommended) [y/n]? " ANSWER
+  case "$ANSWER" in
+    y|yes)
+      REBOOT="1"
+      break;;
+    n|no)
+      REBOOT="0"
+      break;;
+    *) echo "invalid input!";;
+  esac
+done
+
+# reboot or done
+if [ $REBOOT -eq 1 ]; then
+  echo "Rebooting now..."
+  reboot
+else
+  echo "Done. Please reboot manually."
+fi
