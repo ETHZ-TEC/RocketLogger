@@ -91,7 +91,9 @@ int hw_sample(struct rl_conf* conf) {
 	}
 	
 	// read calibration
-	read_calibration(conf);
+	if(read_calibration(conf) == FAILURE) {
+		rl_log(WARNING, "no calibration file, returning uncalibrated values");
+	}
 	
 	
 	// SAMPLE
