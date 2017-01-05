@@ -18,8 +18,8 @@ classdef rl_cal < handle
         
         % Voltage/Current per ADC bit
         UNCAL_STEP_V = -1.22e-6;
-        UNCAL_STEP_IL = 351e-12;
-        UNCAL_STEP_IH = 63.6e-9;
+        UNCAL_STEP_IL = 1.755e-10;
+        UNCAL_STEP_IH = 3.18e-08;
         
         % Calibration sweep settings (dual sweep, 2450 SMU)
         CAL_NUM_POINTS = 201;
