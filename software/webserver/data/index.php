@@ -1,4 +1,5 @@
 <?php
+  include_once('./rl_version.php');
   $hostname = php_uname('n');
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -16,9 +17,7 @@
 	<script type="text/javascript" src="rl.js"></script>
 </head>
 <body>
-
 	<div class="container">
-	
 		<div class="row top-buffer">
 			<div class="col-md-4 col-xs-6">
 				<img class="img-responsive" src="images/eth_logo_small.png" alt="TIK Logo">
@@ -29,9 +28,8 @@
 				<img class="img-responsive" src="images/tik_logo_small.png" alt="TIK Logo" align="right">
 			</div>
 		</div>
-	
+
 		<div id="content">
-		
 			<div class="page-header">
 				<div class="row">
 					<div class="col-xs-10">
@@ -46,15 +44,15 @@
 	1-3:	Change Plot Time Scale">
 						</h1>
 					</div>
-					
+
 				</div>
 			</div>
-			
+
 			<div class="panel panel-default">
 				<h2 class="panel-heading" style="color:black">
 					Status & Control
 				</h2>
-			
+
 				<div class="panel-body">
 					<div class="row top-buffer">
 						<div class="col-md-3">
@@ -77,8 +75,6 @@
 									<div id="time_sampled_val"></div>
 								</div>
 							</div>
-							
-							
 						</div>
 						<div class="col-md-5">
 							<div class="row">
@@ -128,7 +124,7 @@
 					</div>
 				</div>
 			</div>
-						
+
 			<div class="panel-group" id="accordion" >
 				<div class="panel panel-default">
 					<div class="panel-heading">
@@ -146,7 +142,7 @@
 									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Restore default configuration">Restore Configuration</button>
 								</div>
 							</div>
-							
+
 							<!-- File Section -->
 							<div class="row top-buffer">
 								<div class="col-md-6">
@@ -217,11 +213,11 @@
 										</div>
 									</div>
 								</div>
-								
+
 								<!-- Channels Section -->
 								<div class="col-md-6">
 									<h3>Analog Channels</h3>
-									<div class="row">									
+									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox">
 												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="ignore_calibration" type="checkbox">Calibration Measurement (Ignore Calibration)</label>
@@ -285,7 +281,7 @@
 												</div>
 											</div>
 											<div class="row">
-												<p></p> 
+												<p></p>
 											</div>
 											<div class="row">
 												<div class="col-md-12">
@@ -316,7 +312,7 @@
 												</div>
 											</div>
 											<div class="row">
-												<p></p> 
+												<p></p>
 											</div>
 											<div class="row">
 												<div class="col-md-12">
@@ -337,7 +333,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<!-- Rate Section -->
 							<div class="row">
 								<div class="col-md-6">
@@ -376,7 +372,7 @@
 						</div>
 					</div>
 				</div>
-				
+
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse3" onclick="plotsCollapsed()">
@@ -572,10 +568,10 @@
 		</div>
 
 		<div id="footer">
-			&copy; <script type="text/javascript">document.write(new Date().getFullYear());</script>, ETH Zurich, Computer Engineering Group. <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a>
+            <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a><br />
+                &copy; <?php echo date("Y"); ?>, ETH Zurich, Computer Engineering Group.
+            </p>
 		</div>
 	</div>
 </body>
 </html>
-
-
