@@ -3,7 +3,7 @@
 /// Analog channel units
 char* channel_units[NUM_CHANNELS] = {"mA","uA","V","V","mA","uA","V","V"};
 /// Analog channel scales
-uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 1000000, 1000000,1000000, 100000, 1000000, 1000000};
+uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 100000000, 100000000,1000000, 100000, 100000000, 100000000};
 /// Digital input bit location in binary data
 const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
