@@ -1,20 +1,21 @@
-<?php
-  include_once('./rl_version.php');
-  $hostname = php_uname('n');
+?php
+    include_once('./rl_version.php');
+    $hostname = php_uname('n');
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
-	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-	<link rel="stylesheet" href="rl.css">
-	<script type="text/javascript" src="jquery.js"></script>
-	<script type="text/javascript" src="flot/jquery.flot.js"></script>
-	<script type="text/javascript" src="flot/jquery.flot.time.js"></script>
-	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="rl.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="rl.css">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="rl.js"></script>
 </head>
 <body>
 	<div class="container">
@@ -567,11 +568,11 @@
 			</div>
 		</div>
 
-		<div id="footer">
+        <footer id="footer">
             <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a><br />
                 &copy; <?php echo date("Y"); ?>, ETH Zurich, Computer Engineering Group.
             </p>
-		</div>
+        </footer>
 	</div>
 </body>
 </html>
