@@ -3,7 +3,7 @@ RocketLogger Python Library
 Importing and plotting of rld data files.
 """
 
-from datetime import datetime, timezone
+from datetime import timedelta, datetime, timezone
 from math import ceil
 from os.path import isfile, splitext
 
@@ -47,7 +47,7 @@ def _read_uint(file_handle, data_size):
     """
     Read an unsigned integer of defined data_size from file.
     file_handle:    The file handle to read from at current position.
-    data_size:      The data size in bytes of the integer to read.
+    data_size:     The width in bytes of the integer to read.
     return value:   The integer read and decoded.
     """
     return int.from_bytes(file_handle.read(data_size), byteorder='little', signed=False)
@@ -57,7 +57,7 @@ def _read_int(file_handle, data_size):
     """
     Read a signed integer of defined data_size from file.
     file_handle:    The file handle to read from at current position.
-    data_size:      The data size in bytes of the integer to read.
+    data_size:     The width in bytes of the integer to read.
     return value:   The integer read and decoded.
     """
     return int.from_bytes(file_handle.read(data_size), byteorder='little', signed=True)
@@ -67,11 +67,17 @@ def _read_str(file_handle, length):
     """
     Read a string of defined length from file.
     file_handle:    The file handle to read from at current position.
-    length:         The length of the string to read.
+    data_size:     The length of the string to read.
     return value:   The string read and decoded.
     """
     raw_bytes = file_handle.read(length)
-    return raw_bytes.split(b'\x00')[0].decode(encoding='ascii')
+    try:
+        text = raw_bytes.split(b'\x00')[0].decode(encoding='ascii')
+    except:
+        print('ERROR: failed decoding the string: {0}'.format(raw_bytes))
+        text = 'ERROR'
+
+    return text
 
 
 def _read_timestamp(file_handle):
@@ -82,7 +88,15 @@ def _read_timestamp(file_handle):
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
-    return datetime.fromtimestamp(seconds + 1e-9*nanoseconds, timezone.utc)
+
+    try:
+        timestamp = datetime.fromtimestamp(seconds + 1e-9*nanoseconds, timezone.utc)
+    except:
+        timestamp = datetime.min
+        print('ERROR: Timestamp conversion failed, using min. value.')
+        print('s={0} ({0:x}), ns={1} ({1:x})'.format(seconds, nanoseconds))
+
+    return timestamp
 
 
 class RocketLoggerData:
@@ -97,12 +111,9 @@ class RocketLoggerData:
         decimation_factor:  Decimation factor for values read
         """
         if filename and isfile(filename):
-            self.load_file(filename, decimation_factor)
+            self.read_file(filename, decimation_factor)
         else:
-            self._header = dict()
-            self._timstamps_realtime = list()
-            self._timestamps_monotonic = list()
-            self._data = np.zeros((0, 0))
+            self._channels = []
 
     def _read_file_header(self, file_handle):
         """
@@ -175,13 +186,8 @@ class RocketLoggerData:
         # generate data type to read from header info
         total_bin_bytes = 4 * ceil(file_header['channel_binary_count'] / 32)
 
-        if total_bin_bytes > 0:
-            type_names = ['bin']
-            type_formats = ['<u{0}'.format(total_bin_bytes)]
-        else:
-            type_names = []
-            type_formats = []
-
+        type_names = ['bin']
+        type_formats = ['<u{0}'.format(total_bin_bytes)]
         for channel in file_header['channels']:
             if not _CHANNEL_IS_BINARY[channel['unit_index']]:
                 type_names.append(channel['name'])
@@ -227,7 +233,7 @@ class RocketLoggerData:
 
             for analog_channel_index in range(file_header['channel_analog_count']):
                 channel_index = file_header['channel_binary_count'] + analog_channel_index
-                channel_name = type_names[analog_channel_index + (total_bin_bytes > 0)]
+                channel_name = type_names[analog_channel_index + 1]
                 data[data_index_start:data_index_end, channel_index] = \
                     10**file_header['channels'][channel_index]['scale'] * file_data[channel_name]
 
@@ -240,7 +246,7 @@ class RocketLoggerData:
 
         return timestamps_realtime, timestamps_monotonic, data
 
-    def load_file(self, filename, decimation_factor=1):
+    def read_file(self, filename, decimation_factor=1):
         """
         Read a RocketLogger Data file and return an RLD object.
         filename:           The filename of the file to import
@@ -292,60 +298,13 @@ class RocketLoggerData:
                 if file_number > 0:
                     self._timstamps_realtime.append(timestamps_realtime)
                     self._timstamps_monotonic.append(timestamps_monotonic)
-                    self._data = np.vstack((self._data, data))
+                    self._data = np.vstack(self._data, data)
                 else:
                     self._timstamps_realtime = timestamps_realtime
                     self._timstamps_monotonic = timestamps_monotonic
                     self._data = data
 
+            file_name = '{0}-p{1}.{2}'.format(file_basename, file_number, file_extension)
             file_number = file_number + 1
-            file_name = '{0}_p{1}{2}'.format(file_basename, file_number, file_extension)
 
         print('Read {0} file(s)'.format(file_number))
-
-    def get_channel_names(self):
-        """
-        Get the names of all the channels loaded from file
-        return value:   List of all channel names
-        """
-        channel_names = list()
-        for channel in self._header['channels']:
-            channel_names.append(channel['name'])
-
-        return channel_names
-
-    def get_channel_index(self, channel_name):
-        """
-        Get the index of the channel
-        channel_name:   Name of the channel
-        return value:   The index of the channel, None if not found
-        """
-
-        channel_names = [channel['name'] for channel in self._header['channels']]
-        try:
-            channel_index = channel_names.index(channel_name)
-        except ValueError:
-            channel_index = None
-
-        return channel_index
-
-    def get_data(self, channel_names=['all']):
-        """
-        Get the data of the specified channels, by default of all channels.
-        channel_names:  The names of the channels for which the data shall be returned
-        return value:   A numpy array containing the data requested
-        """
-        if isinstance(channel_names, str):
-            channel_names = [channel_names]
-
-        values = np.empty((self._data.shape[0], len(channel_names)))
-
-        for channel_name in channel_names:
-            data_index = self.get_channel_index(channel_name)
-
-            if data_index is not None:
-                values[:, channel_names.index(channel_name)] = self._data[:, data_index]
-            else:
-                print('Channel "{0}" not found. Data invalid for this entry'.format(channel_name))
-
-        return values
