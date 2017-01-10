@@ -1,4 +1,4 @@
-?php
+<?php
     include_once('./rl_version.php');
     $hostname = php_uname('n');
 ?>
