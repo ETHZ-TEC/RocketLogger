@@ -134,6 +134,7 @@ typedef enum mode {
 	STOPPED,      //!< Stop continuous sampling
 	SET_DEFAULT,  //!< Set default configuration
 	PRINT_DEFAULT,//!< Print default configuration
+	PRINT_VERSION,//!< Print the RocketLogger Software Stack version
 	HELP,         //!< Show help
 	NO_MODE       //!< No mode
 } rl_mode;

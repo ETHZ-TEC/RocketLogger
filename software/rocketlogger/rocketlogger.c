@@ -88,6 +88,10 @@ int main(int argc, char* argv[]) {
 			print_config(&conf);
 			exit(EXIT_SUCCESS);
 		
+		case PRINT_VERSION:
+			rl_print_version();
+			exit(EXIT_SUCCESS);
+		
 		case HELP:
 			print_usage();
 			exit(EXIT_SUCCESS);
@@ -101,5 +105,4 @@ int main(int argc, char* argv[]) {
 	rl_start(&conf);
 		
 	exit(EXIT_SUCCESS);
-	
 }
