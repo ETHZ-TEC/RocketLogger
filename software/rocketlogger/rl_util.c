@@ -1,3 +1,5 @@
+#include "rl_version.h"
+
 #include "rl_util.h"
 
 /**
@@ -62,6 +64,22 @@ void rl_print_status(struct rl_status* status) {
 	}
 }
 
+/**
+ * Print the RocketLogger software version on the command line.
+ */
+void rl_print_version(void) {
+	printf("RocketLogger Software Stack version " RL_VERSION "\n");
+}
+
+
+/**
+ * Get the the RocketLogger software version number string.
+ * @return The RocketLogger Sofware Stack's version number string.
+ */
+char* rl_get_version(void) {
+	return RL_VERSION;
+}
+
 // argument parsing
 /**
  * Get RocketLogger mode of provided command line argument
@@ -83,6 +101,8 @@ rl_mode get_mode(char* mode) {
 		return SET_DEFAULT;
 	} else if(strcmp(mode, "conf") == 0) {
 		return PRINT_DEFAULT;
+	} else if(strcmp(mode, "version") == 0 || strcmp(mode, "--version") == 0) {
+		return PRINT_VERSION;
 	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0 || strcmp(mode, "--help") == 0) {
 		return HELP;
 	}
