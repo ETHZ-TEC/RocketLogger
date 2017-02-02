@@ -5,7 +5,7 @@
 rm -f /etc/init.d/apache2
 
 # disable bonescript stuff
-systemctl disable bonescript.service              
+systemctl disable bonescript.service
 systemctl disable bonescript.socket
 systemctl disable bonescript-autorun.service
 
