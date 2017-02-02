@@ -11,6 +11,7 @@
     <title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="rl.css">
+    <link rel="icon" href="rl.png" sizes="64x64" type="image/png">
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" src="flot/jquery.flot.time.js"></script>

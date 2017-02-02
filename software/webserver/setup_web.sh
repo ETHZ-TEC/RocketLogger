@@ -18,15 +18,15 @@ cp -rf data/* /var/www/
 mkdir -p /var/www/data /var/www/log
 
 # download additional stuff (bootstrap, jquery, flot)
-wget http://www.flotcharts.org/downloads/flot-0.8.3.zip
-unzip flot-0.8.3.zip
+wget -N http://www.flotcharts.org/downloads/flot-0.8.3.zip
+unzip -o flot-0.8.3.zip
 cp -rf flot /var/www
 
-wget https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-dist.zip
-unzip bootstrap-3.3.7-dist.zip
+wget -N https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-dist.zip
+unzip -o bootstrap-3.3.7-dist.zip
 mkdir -p /var/www/bootstrap
 cp -rf bootstrap-3.3.7-dist/* /var/www/bootstrap
 
-wget http://code.jquery.com/jquery-2.2.4.js
-cp -f jquery-2.2.4.js /var/www/jquery.js
+wget -N https://code.jquery.com/jquery-3.1.1.min.js
+cp -f jquery-3.1.1.min.js /var/www/jquery.js
 
