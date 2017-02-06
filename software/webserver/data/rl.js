@@ -1340,23 +1340,35 @@ $(function() {
 		$("#date_to_filename").click(function () {
 			
 			// check filename for date
-			var patt = /\d{8}_/;
+			var patt = /\d{8}_\d{6}_/;
 			if (patt.test(filename)) {
-				filename = filename.slice(9);
+				filename = filename.slice(16);
 			}
 			
 			// add current date
 			var currentDate = new Date();
-			var d = currentDate.getDate().toString();
-			if(d<10) {
-				d="0" + d;
+			var year = currentDate.getUTCFullYear().toString();
+			var month = (currentDate.getUTCMonth()+1).toString();
+			if(month < 10) {
+				month = "0" + month;
 			}
-			var m = (currentDate.getMonth()+1).toString();
-			if(m<10) {
-				m = "0" + m;
+			var day = currentDate.getUTCDate().toString();
+			if(day < 10) {
+				day = "0" + day;
 			}
-			var y = currentDate.getFullYear().toString();
-			filename = y + m + d + "_" + filename;
+			var hour = currentDate.getUTCHours().toString();
+			if(hour < 10) {
+				hour = "0" + hour;
+			}
+			var minute = currentDate.getUTCMinutes().toString();
+			if(minute < 10) {
+				minute = "0" + minute;
+			}
+			var second = currentDate.getUTCSeconds().toString();
+			if(second < 10) {
+				second = "0" + second;
+			}
+			filename = year + month + day + "_" + hour + minute + second + "_" + filename;
 			$("#filename").val(filename);
 		});
 		
