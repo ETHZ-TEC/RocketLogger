@@ -17,13 +17,17 @@ The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.et
 
 Mailing list link: <https://lists.ee.ethz.ch/wws/info/rocketlogger>
 
+The documentation of all project components is found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
+
 
 Project Organization
 --------------------
 The project consists of three parts
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
 * The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
-* The [RocketLogger Matlab Code](script/matlab) that provides scripts to import and process RocketLogger Data (RLD) files in Matlab.
+* The [RocketLogger Scripts](script) that provides scripts to import and process RocketLogger Data (RLD) files and to generate the calibration data files.
+
+The detailed documentation of the project and its individual parts can be found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
 
 
 Prerequisites
@@ -32,7 +36,8 @@ Prerequisites
 ### Hardware Design
  * Altium Designer installation (version 16.1 was used for the PCB design)
 
-More details regarding the hardware design can be found on the [RocketLogger Hardware](#home#hardware) wiki page.
+More details regarding the hardware design can be found on the [RocketLogger Hardware Design Data](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/design-data) wiki page.
+
 
 ### Software Installation
  * To compile the RocketLogger software the following system components are required (install using `apt-get`):
@@ -57,4 +62,5 @@ lighttpd php5-cgi unzip
 hostapd isc-dhcp-server
 ```
 
-For further details regarding software installation and system configuration check the [RocketLogger Software Stack](#software) wiki page.
+For further details regarding software installation and system configuration check the [RocketLogger Software Installation](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/software) wiki page.
+
