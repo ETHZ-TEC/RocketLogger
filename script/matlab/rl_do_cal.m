@@ -22,6 +22,7 @@ rld_v = rld(sprintf('%scalibration_v.rld', file_prefix));
 rng(0);
 
 %% perform fitting
+fprintf('-----\n');
 cal = rl_cal.calibrate( ...
     rld_v, ...
     rld_il1, ...
@@ -31,10 +32,13 @@ cal = rl_cal.calibrate( ...
     create_plots);
 
 %% choose the correct sign if both channels are connected in series
+fprintf('-----\n');
 cal.fix_signs();
 
 %% write output file
+fprintf('-----\n');
 cal.write_file();
+fprintf('-----\n');
 
 % copy file with prefix
 copyfile('calibration.dat', sprintf('%scalibration.dat', file_prefix), 'f');
