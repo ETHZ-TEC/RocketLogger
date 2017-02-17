@@ -25,5 +25,4 @@ TIME_STAMP_SIZE = 4; % 4 * int64
 
 UNIT_NAMES = {'undefined', 'voltage', 'current', 'digital', 'valid', 'merged'};
 
-
 RANGE_MARGIN = 5;
