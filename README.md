@@ -13,15 +13,15 @@ The RocketLogger is a data logger that...
 Project Organization
 --------------------
 
-The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*.
+The official RocketLogger website can be found at <https://rocketlogger.ethz.ch>
 
-Mailing list link: <https://lists.ee.ethz.ch/wws/info/rocketlogger>
+The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updated here: <https://lists.ee.ethz.ch/wws/info/rocketlogger>
 
 The documentation of all project components is found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
 
 
-Project Organization
---------------------
+Project Structure
+-----------------
 The project consists of three parts
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
 * The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
@@ -33,13 +33,14 @@ The detailed documentation of the project and its individual parts can be found 
 Prerequisites
 -------------
 
-### Hardware Design
+#### Hardware Design
  * Altium Designer installation (version 16.1 was used for the PCB design)
 
 More details regarding the hardware design can be found on the [RocketLogger Hardware Design Data](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/design-data) wiki page.
 
 
-### Software Installation
+#### Software Installation
+
  * To compile the RocketLogger software the following system components are required (install using `apt-get`):
    `ntp gcc libncurses5-dev libi2c-dev clang`
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
@@ -62,5 +63,41 @@ lighttpd php5-cgi unzip
 hostapd isc-dhcp-server
 ```
 
-For further details regarding software installation and system configuration check the [RocketLogger Software Installation](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/software) wiki page.
+If you follow the installation guide on the [RocketLogger Software Installation](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/software) wiki page, all necessary dependencies are installed during that process.
+
+
+License
+-------
+
+The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause). For more details please refer the the [LICENSE](LICENSE) file.
+
+
+Contributors (alphabetical order)
+---------------------------------
+
+
+Andres Gomez
+
+Matthias Leubin
+
+Stefan Lippuner
+
+Roman Lim
+
+Lukas Sigrist
+
+
+#### Case Design
+
+Dominic Bernath
+
+
+#### RocketLogger Logo
+
+Ivanna Gomez
+
+
+#### Contact
+
+Lukas Sigrist *lukas.sigrist* (at) *tik.ee.ethz.ch*
 
