@@ -44,7 +44,7 @@ classdef rl_cal < handle
             %      - offests:       Offsets [ADC LSBs]
             %      - scales:        Linear scaling factor
             %      - time:          Date/time of the calibration measurements
-            %      - error_offsets: Calibration offset errors (default: empty)
+            %      - error_offsets: Calibration offset errors in SI units (default: empty)
             %      - error_scales:  Calibration scale errors (default: empty)
             assert(length(offsets) == obj.CHANNEL_COUNT, 'Invalid size of offsets');
             assert(length(scales) == obj.CHANNEL_COUNT, 'Invalid size of scales');
@@ -197,8 +197,6 @@ classdef rl_cal < handle
             error_scales = zeros(rl_cal.CHANNEL_COUNT, 1);
             error_offsets = zeros(rl_cal.CHANNEL_COUNT, 1);
             
-            zero_index = (rl_cal.CAL_NUM_POINTS - 1) / 4 + 1;
-            
             %% Voltages
             
             % ideal values
@@ -214,15 +212,11 @@ classdef rl_cal < handle
                 fprintf('Voltage Channel: %i\n', i);
                 avg_points_v(i, :) = rl_aux_average_points(v(:, i), ...
                     rl_cal.CAL_NUM_POINTS, v_step_uncal, rl_cal.CAL_MIN_STABLE_SAMPLES);
-                [scales(index), offsets(index), residuals(index, :)] = ...
+                [scales(index), offsets(index), residuals(index, :), ...
+                    error_scales(index), error_offsets(index)] = ...
                     rl_aux_lin_fit(avg_points_v(i, :), v_ideal);
-                
-                zero_offset = residuals(index, zero_index);
-                error_offsets(index) = abs(zero_offset * rl_cal.FILE_SCALE_V);
-                
-                non_zero = (abs(v_ideal) > 1e-9);
-                error_compensated = residuals(index, :) - zero_offset;
-                error_scales(index) = max(abs(error_compensated(non_zero) ./ v_ideal(non_zero)));
+                % scale errors
+                error_offsets(index) = error_offsets(index) * rl_cal.FILE_SCALE_V;
             end
             
             if plotPareto ~= 0
@@ -247,15 +241,11 @@ classdef rl_cal < handle
                 
                 avg_points_il(i,:) = rl_aux_average_points(il(:,i), ...
                     rl_cal.CAL_NUM_POINTS, il_step_uncal, rl_cal.CAL_MIN_STABLE_SAMPLES);
-                [scales(index), offsets(index), residuals(index, :)] = ...
+                [scales(index), offsets(index), residuals(index, :), ...
+                    error_scales(index), error_offsets(index)] = ...
                     rl_aux_lin_fit(avg_points_il(i, :), il_ideal);
-                
-                zero_offset = residuals(index, zero_index);
-                error_offsets(index) = abs(zero_offset * rl_cal.FILE_SCALE_IL);
-                
-                non_zero = (abs(il_ideal) > 1e-9);
-                error_compensated = residuals(index, :) - zero_offset;
-                error_scales(index) = max(abs(error_compensated(non_zero) ./ il_ideal(non_zero)));
+                % scale errors
+                error_offsets(index) = error_offsets(index) * rl_cal.FILE_SCALE_IL;
             end
             
             if plotPareto ~= 0
@@ -278,15 +268,11 @@ classdef rl_cal < handle
                 index = rl_cal.IH_INDEX(i);
                 fprintf('Current Channel %i (high)\n', i);
                 avg_points_ih(i, :) = rl_aux_average_points(ih(:, i), rl_cal.CAL_NUM_POINTS, ih_step_uncal, rl_cal.CAL_MIN_STABLE_SAMPLES);
-                [scales(index), offsets(index), residuals(index, :)] = ...
+                [scales(index), offsets(index), residuals(index, :), ...
+                    error_scales(index), error_offsets(index)] = ...
                     rl_aux_lin_fit(avg_points_ih(i, :), ih_ideal);
-                
-                zero_offset = residuals(index, zero_index);
-                error_offsets(index) = abs(zero_offset * rl_cal.FILE_SCALE_IH);
-                
-                non_zero = (abs(ih_ideal) > 1e-9);
-                error_compensated = residuals(index, :) - zero_offset;
-                error_scales(index) = max(abs(error_compensated(non_zero) ./ ih_ideal(non_zero)));
+                % scale errors
+                error_offsets(index) = error_offsets(index) * rl_cal.FILE_SCALE_IH;
             end
             
             if plotPareto ~= 0
@@ -297,7 +283,8 @@ classdef rl_cal < handle
             
             %% Finishing
             offsets = offsets ./ scales;
-            
+            error_scales = error_scales ./ 100;
+
             obj = rl_cal(offsets, scales, time, error_offsets, error_scales);
         end
         

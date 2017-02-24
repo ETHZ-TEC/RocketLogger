@@ -1,4 +1,5 @@
-function [ga_scale, ga_offset, res] = rl_aux_lin_fit(points, points_ideal)
+function [ga_scale, ga_offset, residual, error_scale, error_offset] = ...
+    rl_aux_lin_fit(points, points_ideal)
 %RL_AUX_LIN_FIT Calculates a linear fitting function from points to
 %points_ideal, with form: scale * points + offset = points_ideal
 %   The function first creates an LMS fit and then searches for pareto
@@ -10,7 +11,9 @@ function [ga_scale, ga_offset, res] = rl_aux_lin_fit(points, points_ideal)
 %   Return Values:
 %      - ga_scale:      The scaling factor for the selected fit
 %      - ga_offset:     The offset for the selected fit (to be added)
-%      - res:           Residual errors
+%      - residual:      Residual errors
+%      - error_scale:   The scale error in percent
+%      - error_offset:  The offset error in measurement units
 
 %% Create LMS fit
 p = polyfit(points, points_ideal, 1);
@@ -43,14 +46,17 @@ options = gaoptimset('PlotFcn', [], ... % @gaplotpareto , ...
 value =  (Fval(:, 1) ./ median(Fval(:, 1))) .^ 2 + ...
     (Fval(:, 2) ./ median(Fval(:, 2))) .^ 2 + (Fval(:, 3) ./ median(Fval(:, 3))) .^ 2;
 [~, best] = min(value);
+
 ga_offset = x(best, 1);
 ga_scale = x(best, 2);
+error_scale = Fval(best, 1);
+error_offset = Fval(best, 2);
 
 fprintf('Chose error points: scale %9.6f%% -- offset %9.3f units\n', ...
-    Fval(best, 1), Fval(best, 2));
+    error_scale, error_offset);
 
 % Calculate the residual error
-res = (points * ga_scale + ga_offset) - points_ideal;
+residual = (points * ga_scale + ga_offset) - points_ideal;
 
 end
 
