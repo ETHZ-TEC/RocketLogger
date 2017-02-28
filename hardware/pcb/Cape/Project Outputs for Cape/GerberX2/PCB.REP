@@ -92,9 +92,9 @@ Generating : GND
 
 
 Used DCodes :
-    D59
     D60
-    D66
+    D63
+    D67
     D73
     D74
     D75
@@ -113,7 +113,7 @@ Generating : Inner Layer 1
 
 
 Used DCodes :
-    D59
+    D60
     D73
     D74
     D75
@@ -132,8 +132,8 @@ Generating : V+
 
 
 Used DCodes :
-    D59
     D60
+    D63
     D64
     D73
     D74
@@ -153,10 +153,10 @@ Generating : V-
 
 
 Used DCodes :
-    D59
     D60
+    D63
     D64
-    D66
+    D67
     D73
     D74
     D75
@@ -180,8 +180,8 @@ Used DCodes :
     D12
     D13
     D14
-    D16
-    D20
+    D15
+    D17
     D21
     D37
     D38
@@ -189,11 +189,11 @@ Used DCodes :
     D49
     D59
     D60
-    D61
     D63
     D64
     D65
     D66
+    D67
     D73
     D74
     D75
@@ -300,7 +300,7 @@ Generating : Top Solder
 Used DCodes :
     D59
     D60
-    D61
+    D63
     D70
     D71
     D94
@@ -371,13 +371,12 @@ Generating : Bottom Paste
 
 
 Used DCodes :
-    D10
     D11
     D12
     D13
     D14
-    D16
-    D20
+    D15
+    D17
     D21
     D37
     D38
@@ -436,7 +435,6 @@ Generating : Top Paste
 
 
 Used DCodes :
-    D10
     D11
     D12
     D13
