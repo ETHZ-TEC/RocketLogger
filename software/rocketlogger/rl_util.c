@@ -53,7 +53,7 @@ void rl_print_status(struct rl_status* status) {
 	} else {
 		printf("\nRocketLogger Status: RUNNING\n");
 		rl_print_config(&(status->conf));
-		printf("  Samples taken:    %d\n", status->samples_taken);
+		printf("  Samples taken:    %llu\n", status->samples_taken);
 		time_t time = (time_t) status->calibration_time;
 		if(time > 0) {
 			printf("  Calibration time: %s\n", ctime(&time));

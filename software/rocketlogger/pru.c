@@ -520,9 +520,9 @@ int pru_sample(FILE* data, struct rl_conf* conf) {
 	// FILE FINISH (flush)
 	if (conf->file_format != NO_FILE && status.state != RL_ERROR) {
 		// print info
-		rl_log(INFO,  "stored %d samples to file", status.samples_taken);
+		rl_log(INFO,  "stored %llu samples to file", status.samples_taken);
 		
-		printf("Stored %d samples to file.\n", status.samples_taken);
+		printf("Stored %llu samples to file.\n", status.samples_taken);
 		
 		fflush(data);
 	}
