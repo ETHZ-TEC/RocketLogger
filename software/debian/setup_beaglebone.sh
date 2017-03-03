@@ -51,8 +51,8 @@ cp -f ssh/sshd_config /etc/ssh/
 # copy public keys for log in
 mkdir -p /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
-cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
-cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
+cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
 echo "RocketLogger v1.0" > /etc/issue.net
