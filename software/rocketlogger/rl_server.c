@@ -122,7 +122,7 @@ void print_status(void) {
 	printf("%llu\n", status.conf.max_file_size);
 	print_json_32(status.conf.channels, NUM_CHANNELS);
 	print_json_32(status.conf.force_high_channels, NUM_I_CHANNELS);
-	printf("%d\n", status.samples_taken);
+	printf("%llu\n", status.samples_taken);
 	printf("%d\n", status.conf.enable_web_server);
 		
 }
