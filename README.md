@@ -50,15 +50,15 @@ apt-get install linux-headers-$(uname -r)
 ```
  * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
    A PRU compiler and application loader library are required to compile and deploy this functionality.
-   The official BeagleBone image comes with these tools pre-installed (TODO: check if valid for PRUSSDRV).
+   The official BeagleBone image comes with these tools pre-installed.
    Otherwise the compiler can be downloaded at [PRU Code Generation Tools](http://software-dl.ti.com/codegen/non-esd/downloads/download.htm#PRU)
-   or install them as add-on for the [Code Composer Studio](http://processors.wiki.ti.com/index.php/Download_CCS).
+   or installed as add-on for the [Code Composer Studio](http://processors.wiki.ti.com/index.php/Download_CCS).
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
  * For using the remote web interface these additional system components will be needed:
 ```
 lighttpd php5-cgi unzip
 ```
- * For using the access point these additional system components are needed:
+ * For for hosting and access point to wirelessly access the RocketLogger remote interface these additional system components are needed:
 ```
 hostapd isc-dhcp-server
 ```
@@ -75,16 +75,17 @@ The RocketLogger Project is released under [3-clause BSD license](https://openso
 Contributors (alphabetical order)
 ---------------------------------
 
-
 Andres Gomez
 
 Matthias Leubin
 
-Stefan Lippuner
-
 Roman Lim
 
+Stefan Lippuner
+
 Lukas Sigrist
+
+Lothar Thiele
 
 
 #### Case Design
@@ -100,4 +101,3 @@ Ivanna Gomez
 #### Contact
 
 Lukas Sigrist *lukas.sigrist* (at) *tik.ee.ethz.ch*
-
