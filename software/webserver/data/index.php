@@ -25,12 +25,12 @@
 	<div class="container">
 		<div class="row top-buffer">
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="img/eth_logo_small.png" alt="TIK Logo">
+				<img class="img-responsive" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
 			</div>
 			<div class="col-md-4">
 			</div>
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="img/tik_logo_small.png" alt="TIK Logo" align="right">
+				<img class="img-responsive" src="img/tik_logo_small.png" alt="Logo TIK" align="right">
 			</div>
 		</div>
 
