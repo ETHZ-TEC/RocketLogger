@@ -2,4 +2,7 @@ RocketLogger Scripts
 ====================
 
 The RocketLogger scripts include the following parts:
-* matlab: scripts to import and process RocketLogger data (RLD) files
+* [Matlab](matlab): scripts to import and process RocketLogger data (RLD) files, as well as to generate the calibration data file from calibration measurements.
+
+See also the documentation in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
+

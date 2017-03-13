@@ -2,8 +2,10 @@ RocketLogger Hardware
 =====================
 
 The RocketLogger hardware includes the following parts:
-* case: Design Files for the RocketLogger 3D printed case and acrylic cover
-* pcb: RocketLogger PCB design data
-* probes: RocketLogger probe specifications
-* simulations: simulation data of different circuit parts of the RocketLogger
+* [RocketLogger Case](case): Design Files for the RocketLogger 3D printed case and acrylic cover
+* [PCB Design](pcb): RocketLogger PCB design data
+* [Measurement Probes](probes): RocketLogger probe specifications
+* [Circuit Simulation](simulations): Simulation data of different circuit parts of the RocketLogger
+
+See also the documentation in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
 
