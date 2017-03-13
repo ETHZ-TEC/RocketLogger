@@ -1,0 +1,6 @@
+Layer Setup: 
+    TOP - Inner 1 - Inner 2 - Inner 3 - Inner 4 - Bottom
+	
+The net antennae and exposed traces near the SMA connectors are desired.
+
+BeagleBone is shown in 3D render, but not part of the BOM

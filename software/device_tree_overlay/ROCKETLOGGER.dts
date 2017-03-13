@@ -1,0 +1,234 @@
+/**
+ * Device tree overlay for the RocketLogger BeagleBone Green/Black Cape.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "am335x-bbw-bbb-base.h"
+#include "linux-dt-backports.h"
+
+/ {
+  compatible = "ti,beaglebone", "ti,beaglebone-green", "ti,beaglebone-black";
+
+  /* board identification */
+  part-number = "ROCKETLOGGER";
+  version = "00A0";
+
+  /* ressources used by the rocketlogger cape */
+  exclusive-use =
+
+    /* GPIO pins used */
+    "P8.11", /* LED pins */
+    "P8.12",
+    "P8.14", /* Button pin */
+
+    "P9.13", /* Power enable pin */
+
+    "P8.27", /* Digital input pins */
+    "P8.28",
+    "P8.29",
+    "P8.39",
+    "P8.40",
+    "P8.41",
+    "P8.13", /* Digital input buffer disable pin */
+
+    "P9.11", /* nForce high range pins */
+    "P9.12",
+
+    "P9.24", /* PRU controlled pins */
+    "P9.25",
+    "P9.27",
+    "P9.28",
+    "P9.29",
+    "P9.30",
+    "P9.31",
+    "P8.15",
+    "P8.16",
+
+    "P9.14", /* PWM pins */
+    "P9.16",
+    "P9.22",
+
+    /* Hardware blocks used */
+    "pru0",     /* PRU for ADC control */
+    "pruss",
+    "ehrpwm0A", /* EHRPWM0 for ADC clock generation */
+    "ehrpwm1A", /* EHRPWM1 for Latch reset signal generation */
+    "ehrpwm1B";
+
+  /* Pin definitions */
+  fragemnt@0 {
+    target = <&am33xx_pinmux>;
+    __overlay__ {
+      rl_pwm0_pins: pinmux_rl_pwm0_pins {
+        pinctrl-single,pins = <
+          BONE_P9_22 (PIN_OUTPUT_PULLDOWN | MUX_MODE3) /* ADC clock pin, ehrpwm0A controlled */
+        >;
+      };
+
+      rl_pwm1_pins: pinmux_rl_pwm1_pins {
+        pinctrl-single,pins = <
+          BONE_P9_14 (PIN_OUTPUT_PULLDOWN | MUX_MODE6) /* Latch reset A pin, ehrpwm1A controlled */
+          BONE_P9_16 (PIN_OUTPUT_PULLDOWN | MUX_MODE6) /* Latch reset B pin, ehrpwm1B controlled */
+        >;
+      };
+
+      rl_pru0_pins: pinmux_rl_pru0_pins {
+        pinctrl-single,pins = <
+          BONE_P9_24 (PIN_INPUT_PULLDOWN | MUX_MODE6) /* MISO1 pin, PRU0 controlled */
+          BONE_P9_25 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* START pin, PRU0 controlled */
+          BONE_P9_27 (PIN_OUTPUT_PULLUP | MUX_MODE5) /* CS1 pin, PRU0 controlled */
+          BONE_P9_28 (PIN_OUTPUT_PULLUP | MUX_MODE5) /* CS0 pin, PRU0 controlled */
+          BONE_P9_29 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* MOSI pin, PRU0 controlled */
+          BONE_P9_30 (PIN_INPUT_PULLDOWN | MUX_MODE6) /* MISO0 pin, PRU0 controlled */
+          BONE_P9_31 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* SCLK pin, PRU0 controlled */
+          BONE_P8_15 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR1 pin, PRU0 controlled */
+          BONE_P8_16 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR0 pin, PRU0 controlled */
+        >;
+      };
+
+      rl_range_pins: pinmux_rl_range_pins {
+        pinctrl-single,pins = <
+          BONE_P9_11 (PIN_OUTPUT_PULLUP | MUX_MODE7) /* nForce high range 1 pin */
+          BONE_P9_12 (PIN_OUTPUT_PULLUP | MUX_MODE7) /* nForce high range 2 pin */
+        >;
+      };
+
+      rl_user_pins: pinmux_rl_user_pins {
+        pinctrl-single,pins = <
+          BONE_P8_11 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+          BONE_P8_12 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* Error LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+          BONE_P8_14 (PIN_INPUT_PULLUP | MUX_MODE7) /* User button pin */
+        >;
+      };
+
+      rl_power_pins: pinmux_rl_power_pins {
+        pinctrl-single,pins = <
+          BONE_P9_13 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* User button pin */
+        >;
+      };
+
+      rl_digital_pins: pinmux_rl_digital_pins {
+        pinctrl-single,pins = <
+          BONE_P8_27 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 3 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_28 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 4 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_29 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 5 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_39 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 6 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_40 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 1 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_41 (PIN_INPUT_PULLDOWN | MUX_MODE7) /* Digital input 2 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+          BONE_P8_13 (PIN_OUTPUT_PULLUP | MUX_MODE7) /* Digital input buffer disable pin */
+        >;
+      };
+    };
+  };
+
+  /* GPIO pin muxing */
+  fragment@10 {
+    target = <&ocp>;
+    __overlay__ {
+      rl_range_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_range_pins>;
+      };
+
+      rl_user_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_user_pins>;
+      };
+
+      rl_power_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_power_pins>;
+      };
+
+      rl_digital_pinmux {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_digital_pins>;
+      };
+    };
+  };
+
+
+  /* PRU hardware module */
+  fragment@20 {
+    target = <&pruss>;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pru0_pins>;
+    };  
+  }; 
+
+
+  /* PWM hardware modules */
+  fragment@30 {
+    target = <&epwmss0>;
+    __overlay__ {
+      status = "okay";
+    };
+  };
+
+  fragment@31 {
+    target = <&ehrpwm0>;
+    __overlay__ {
+      status = "okay";
+    };
+  };
+
+  fragment@32 {
+    target = <&epwmss1>;
+    __overlay__ {
+      status = "okay";
+    };
+  };
+
+  fragment@33 {
+    target = <&ehrpwm1>;
+    __overlay__ {
+      status = "okay";
+    };
+  };
+
+
+  /* PWM configuration */  
+  fragment@40 {
+    target = <&ocp>;
+    __overlay__ {
+      adc_clock {
+        compatible = "ti,am33xx-ehrpwm";
+        pwms = <&ehrpwm0 0 500000 PWM_POLARITY_INVERTED>;
+        pwm-names = "rl_pwm0";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_pwm0_pins>;
+        status = "okay";
+//        enabled = <1>;
+//        duty = <0>;
+      };
+    };
+  };
+
+  fragment@41 {
+    target = <&ocp>;
+    __overlay__ {
+      range_switch_clock {
+        compatible = "ti,am33xx-ehrpwm";
+        pwms = <&ehrpwm1 0 500000 PWM_POLARITY_INVERTED>;
+        pwm-names = "rl_pwm1";
+        pinctrl-names = "default";
+        pinctrl-0 = <&rl_pwm1_pins>;
+        status = "okay";
+//        enabled = <1>;
+//        duty = <0>;
+      };
+    };
+  };
+};
