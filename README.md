@@ -1,13 +1,12 @@
 RocketLogger
 ============
+<https://rocketlogger.ethz.ch>
 
-The RocketLogger is a data logger that...
-* is portable
-* has high dynamic-range current measurement
-* environmental logging
-* supports remote-control for long-term measurements
-* is easily extensible with new features
-* also provides much more...
+
+The RocketLogger is a mixed-signal data logger designed for measuring and validating energy harvesting based devices.
+It features the portability required for measurements in the field,
+accurate voltage and current measurements with a very high dynamic range,
+and simultaneously sampled digital inputs to track the state of the measured device.
 
 
 Project Organization
@@ -15,14 +14,15 @@ Project Organization
 
 The official RocketLogger website can be found at <https://rocketlogger.ethz.ch>
 
-The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updated here: <https://lists.ee.ethz.ch/wws/info/rocketlogger>
+The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updates at <https://lists.ee.ethz.ch/wws/info/rocketlogger>.
 
 The documentation of all project components is found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
 
 
 Project Structure
 -----------------
-The project consists of three parts
+
+The project consists of three parts:
 * The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
 * The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
 * The [RocketLogger Scripts](script) that provides scripts to import and process RocketLogger Data (RLD) files and to generate the calibration data files.
@@ -42,7 +42,9 @@ More details regarding the hardware design can be found on the [RocketLogger Har
 #### Software Installation
 
  * To compile the RocketLogger software the following system components are required (install using `apt-get`):
-   `ntp gcc libncurses5-dev libi2c-dev clang`
+```
+ntp gcc g++ libncurses5-dev libi2c-dev
+```
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
 ```
@@ -72,30 +74,30 @@ License
 The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause). For more details please refer the the [LICENSE](LICENSE) file.
 
 
-Contributors (alphabetical order)
----------------------------------
+Contributors
+------------
 
-Andres Gomez
+The RocketLogger was developed at the [Computer Engineering Group](http://www.tec.ethz.ch/) at [ETH Zurich](https://www.ethz.ch/en.html).
+The following people contributed to the design and implementation of this project:
 
-Matthias Leubin
+#### Core Team (alphabetical order)
 
-Roman Lim
-
-Stefan Lippuner
-
-Lukas Sigrist
-
-Lothar Thiele
+* [Andres Gomez](mailto:andres.gomez@tik.ee.ethz.ch)
+* Matthias Leubin
+* [Roman Lim](http://www.tik.ee.ethz.ch/~rlim/)
+* Stefan Lippuner
+* [Lukas Sigrist](mailto:lukas.sigrist@tik.ee.ethz.ch)
+* [Lothar Thiele](http://www.tik.ee.ethz.ch/~thiele/)
 
 
 #### Case Design
 
-Dominic Bernath
+* Dominic Bernath
 
 
 #### RocketLogger Logo
 
-Ivanna Gomez
+* Ivanna Gomez
 
 
 #### Contact
