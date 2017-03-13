@@ -86,7 +86,7 @@ apt-get update --assume-yes
 apt-get upgrade --assume-yes
 
 # install necessary dependencies
-apt-get install --assume-yes ntp gcc libncurses5-dev libi2c-dev clang linux-headers-$(uname -r) lighttpd php5-cgi unzip
+apt-get install --assume-yes ntp gcc g++ libncurses5-dev libi2c-dev linux-headers-$(uname -r) lighttpd php5-cgi unzip
 
 ## grow file system
 echo "> Grow file system size"
