@@ -1,5 +1,8 @@
 /**
  * Device tree overlay for the RocketLogger BeagleBone Green/Black Cape.
+ *
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ *
  */
 
 /dts-v1/;

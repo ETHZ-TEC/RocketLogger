@@ -1,5 +1,8 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
+#
+# Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+#
 
 # store current working directory
 SCRIPT_DIR=`pwd`

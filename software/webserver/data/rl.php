@@ -1,4 +1,7 @@
 <?php
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
 
     if (isset($_POST['command'])) {
 		switch($_POST['command']) {

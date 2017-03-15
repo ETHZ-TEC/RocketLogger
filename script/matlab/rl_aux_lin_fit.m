@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function [ga_scale, ga_offset, residual, error_scale, error_offset] = ...
     rl_aux_lin_fit(points, points_ideal)
 %RL_AUX_LIN_FIT Calculates a linear fitting function from points to

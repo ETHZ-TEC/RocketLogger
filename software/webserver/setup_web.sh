@@ -1,5 +1,8 @@
 #!/bin/bash
 # RocketLogger webserver setup script
+#
+# Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+#
 
 # disable apache server
 rm -f /etc/init.d/apache2

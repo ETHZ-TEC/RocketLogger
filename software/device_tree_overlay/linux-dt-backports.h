@@ -1,5 +1,8 @@
 /*
- * Backport of AM33XX pinctrl bindings used in Linux mainline kernel.
+ * Backport of AM33XX pinctrl and PWM header bindings used in Linux mainline kernel.
+ * 
+ * https://github.com/torvalds/linux/tree/master/include/dt-bindings
+ * 
  * http://kernel.org/
  */
 

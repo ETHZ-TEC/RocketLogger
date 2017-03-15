@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function [f_dec, data_db] = rl_aux_freq_resp(data, dcValue, fig)
 %RL_AUX_FREQ_RESP Plot the frequncy response for the measurement of a
 %logarithmic frequency sweep from 10 Hz to 100 kHz

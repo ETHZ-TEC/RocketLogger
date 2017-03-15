@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function cal = rl_do_cal(create_plots)
 %RL_DO_CAL Perform a calibration of the RocketLogger using predefined files
 %   Parameters:

@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 classdef rl_cal < handle
     %RL_CAL Class that handles the calibration of the RocketLogger
     %   Detailed explanation goes here

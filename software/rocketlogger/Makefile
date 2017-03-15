@@ -1,5 +1,6 @@
-##
 ## Makefile for RocketLogger
+##
+## Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 ##
 
 #####  DEFINITIONS  #####

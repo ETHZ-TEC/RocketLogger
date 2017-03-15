@@ -1,4 +1,7 @@
 <?php
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
     include_once('./rl_version.php');
     $hostname = php_uname('n');
 ?>

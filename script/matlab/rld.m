@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 classdef rld
     %RLD Class to read in and handle RocketLogger data
     %   Parameters:

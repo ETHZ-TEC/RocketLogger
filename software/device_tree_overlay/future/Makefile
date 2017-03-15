@@ -1,4 +1,7 @@
 ## Makefile for device tree overlay
+##
+## Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+##
 
 # files
 TARGET = ROCKETLOGGER-00A0.dtbo

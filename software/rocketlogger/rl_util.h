@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #ifndef RL_UTIL_H
 #define RL_UTIL_H
 

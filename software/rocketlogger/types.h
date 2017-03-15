@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 

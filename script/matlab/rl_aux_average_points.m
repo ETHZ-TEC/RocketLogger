@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function avg_points = rl_aux_average_points(data, num_points, ...
     expceted_step_size, min_stable_samples)
 %RL_AUX_AVERAGE_POINTS Find stable points in a measurement using

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #include "gpio.h"
 
 /// Linux GPIO number of start/stop button

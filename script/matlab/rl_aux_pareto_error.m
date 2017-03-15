@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function [offset_error, min_scale_error] = rl_aux_pareto_error(ideal, residual)
 %RL_AUX_PARETO_ERROR Creates a plot of the pareto optimal error figures
 %(offset error and scale error)

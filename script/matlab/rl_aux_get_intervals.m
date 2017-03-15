@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function [ intervals ] = rl_aux_get_intervals( data , num_points, ...
     expected_step_size, min_stable_samples)
 %RL_AUX_GET_INTERVALS Finds stable points in a measurement, and returns the

@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 function psd = rl_aux_plot_psd(samples, f_samp)
 %RL_AUX_PLOT_PSD Plot the spectrum of a measured signal (voltage/current)
 %   rl_aux_plot_psd(samples, f_samp)
