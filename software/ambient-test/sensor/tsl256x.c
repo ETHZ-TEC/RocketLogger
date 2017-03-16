@@ -1,3 +1,10 @@
+/**
+ * TSL256x light sensor interfacing using libi2c on linux.
+ *
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ *
+ */
+
 #include <errno.h>
 #include <math.h>
 #include <stdint.h>

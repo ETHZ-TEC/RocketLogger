@@ -1,33 +1,39 @@
 <?php
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
     include_once('./rl_version.php');
     $hostname = php_uname('n');
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="rl.css">
-    <link rel="icon" href="rl.png" sizes="64x64" type="image/png">
-    <script type="text/javascript" src="jquery.js"></script>
-    <script type="text/javascript" src="flot/jquery.flot.js"></script>
-    <script type="text/javascript" src="flot/jquery.flot.time.js"></script>
-    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="rl.js"></script>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+	<link rel="manifest" href="/manifest.json">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#f08018">
+	<meta name="apple-mobile-web-app-title" content="RocketLogger">
+	<meta name="application-name" content="RocketLogger">
+	<meta name="theme-color" content="#ff0000">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
 	<div class="container">
 		<div class="row top-buffer">
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="images/eth_logo_small.png" alt="TIK Logo">
+				<img class="img-responsive" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
 			</div>
 			<div class="col-md-4">
 			</div>
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="images/tik_logo_small.png" alt="TIK Logo" align="right">
+				<img class="img-responsive" src="img/tik_logo_small.png" alt="Logo TIK" align="right">
 			</div>
 		</div>
 
@@ -570,10 +576,17 @@
 		</div>
 
         <footer id="footer">
-            <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a><br />
+            <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
                 &copy; <?php echo date("Y"); ?>, ETH Zurich, Computer Engineering Group.
             </p>
         </footer>
+		
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.1.1.min.js"><\/script>')</script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+		<script src="js/vendor/jquery.flot.min.js"></script>
+		<script src="js/vendor/jquery.flot.time.min.js"></script>
+        <script src="js/main.js"></script>
 	</div>
 </body>
 </html>

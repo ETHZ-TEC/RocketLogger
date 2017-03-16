@@ -1,5 +1,6 @@
-##
 ## Makefile for RocketLogger
+##
+## Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 ##
 
 #####  DEFINITIONS  #####
@@ -41,8 +42,8 @@ TARGET_FIRMWARE = $(BIN_DIR)/$(FIRMWARE_NAME)
 ## program definitions
 TOOLCHAIN_PREFIX = #
 PASM = pasm
-CC = $(TOOLCHAIN_PREFIX)clang
-CXX = $(TOOLCHAIN_PREFIX)clang++
+CC = $(TOOLCHAIN_PREFIX)gcc
+CXX = $(TOOLCHAIN_PREFIX)g++
 MAKEDIR = mkdir -p
 COPY = cp -f
 REMOVE = rm -f

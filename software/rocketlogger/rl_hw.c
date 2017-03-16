@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #define _FILE_OFFSET_BITS 64
 
 #include "rl_hw.h"

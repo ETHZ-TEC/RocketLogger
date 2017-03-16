@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #ifndef RL_TYPES_H
 #define RL_TYPES_H
 
@@ -231,9 +235,9 @@ struct rl_status {
 	/// Sampling state
 	rl_sampling sampling;
 	/// Number of samples taken
-	int samples_taken;
+	uint64_t samples_taken;
 	/// Number of buffers taken
-	int buffer_number;
+	uint32_t buffer_number;
 	/// Current configuration
 	struct rl_conf conf;
 	/// Time stamp of last calibration run

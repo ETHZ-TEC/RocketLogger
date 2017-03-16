@@ -1,5 +1,8 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
+#
+# Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+#
 
 # store current working directory
 SCRIPT_DIR=`pwd`
@@ -51,8 +54,8 @@ cp -f ssh/sshd_config /etc/ssh/
 # copy public keys for log in
 mkdir -p /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
-cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
-cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
+cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
 echo "RocketLogger v1.0" > /etc/issue.net
@@ -86,7 +89,7 @@ apt-get update --assume-yes
 apt-get upgrade --assume-yes
 
 # install necessary dependencies
-apt-get install --assume-yes ntp gcc libncurses5-dev libi2c-dev clang linux-headers-$(uname -r) lighttpd php5-cgi unzip
+apt-get install --assume-yes ntp gcc g++ libncurses5-dev libi2c-dev linux-headers-$(uname -r) lighttpd php5-cgi unzip
 
 ## grow file system
 echo "> Grow file system size"

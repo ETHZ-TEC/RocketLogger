@@ -1,5 +1,8 @@
 #!/bin/bash
-## Flash the beagle bone image
+# Flash the beagle bone image
+#
+# Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+#
 
 # read command line arguments
 IMAGE_FILE=$1

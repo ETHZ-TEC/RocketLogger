@@ -1,3 +1,10 @@
+/**
+ * Header for TSL256x light sensor interfacing.
+ *
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ *
+ */
+
 #ifndef SENSOR_TSL256X_H_
 #define SENSOR_TSL256X_H_
 

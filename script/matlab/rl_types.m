@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 %% CONSTANTS FOR RL DATA
 
 % header
@@ -24,6 +28,5 @@ RL_FILE_SAMPLE_SIZE = 4; % sample size in byte
 TIME_STAMP_SIZE = 4; % 4 * int64
 
 UNIT_NAMES = {'undefined', 'voltage', 'current', 'digital', 'valid', 'merged'};
-
 
 RANGE_MARGIN = 5;
