@@ -1,6 +1,9 @@
 """
 RocketLogger Python Library
 Importing and plotting of rld data files.
+
+Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+
 """
 
 from datetime import datetime, timezone
