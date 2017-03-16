@@ -1,37 +1,43 @@
 <?php
-  $hostname = php_uname('n');
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+    include_once('./rl_version.php');
+    $hostname = php_uname('n');
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
+	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>RocketLogger<?php if ($hostname) echo " ($hostname)"; ?></title>
-	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-	<link rel="stylesheet" href="rl.css">
-	<script type="text/javascript" src="jquery.js"></script>
-	<script type="text/javascript" src="flot/jquery.flot.js"></script>
-	<script type="text/javascript" src="flot/jquery.flot.time.js"></script>
-	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="rl.js"></script>
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+	<link rel="manifest" href="/manifest.json">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#f08018">
+	<meta name="apple-mobile-web-app-title" content="RocketLogger">
+	<meta name="application-name" content="RocketLogger">
+	<meta name="theme-color" content="#ff0000">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-
 	<div class="container">
-	
 		<div class="row top-buffer">
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="images/eth_logo_small.png" alt="TIK Logo">
+				<img class="img-responsive" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
 			</div>
 			<div class="col-md-4">
 			</div>
 			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="images/tik_logo_small.png" alt="TIK Logo" align="right">
+				<img class="img-responsive" src="img/tik_logo_small.png" alt="Logo TIK" align="right">
 			</div>
 		</div>
-	
+
 		<div id="content">
-		
 			<div class="page-header">
 				<div class="row">
 					<div class="col-xs-10">
@@ -46,15 +52,15 @@
 	1-3:	Change Plot Time Scale">
 						</h1>
 					</div>
-					
+
 				</div>
 			</div>
-			
+
 			<div class="panel panel-default">
 				<h2 class="panel-heading" style="color:black">
 					Status & Control
 				</h2>
-			
+
 				<div class="panel-body">
 					<div class="row top-buffer">
 						<div class="col-md-3">
@@ -77,8 +83,6 @@
 									<div id="time_sampled_val"></div>
 								</div>
 							</div>
-							
-							
 						</div>
 						<div class="col-md-5">
 							<div class="row">
@@ -128,7 +132,7 @@
 					</div>
 				</div>
 			</div>
-						
+
 			<div class="panel-group" id="accordion" >
 				<div class="panel panel-default">
 					<div class="panel-heading">
@@ -146,7 +150,7 @@
 									<button id="load_default" class="btn btn-default" data-toggle="tooltip" title="Restore default configuration">Restore Configuration</button>
 								</div>
 							</div>
-							
+
 							<!-- File Section -->
 							<div class="row top-buffer">
 								<div class="col-md-6">
@@ -217,11 +221,11 @@
 										</div>
 									</div>
 								</div>
-								
+
 								<!-- Channels Section -->
 								<div class="col-md-6">
 									<h3>Analog Channels</h3>
-									<div class="row">									
+									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox">
 												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="ignore_calibration" type="checkbox">Calibration Measurement (Ignore Calibration)</label>
@@ -285,7 +289,7 @@
 												</div>
 											</div>
 											<div class="row">
-												<p></p> 
+												<p></p>
 											</div>
 											<div class="row">
 												<div class="col-md-12">
@@ -316,7 +320,7 @@
 												</div>
 											</div>
 											<div class="row">
-												<p></p> 
+												<p></p>
 											</div>
 											<div class="row">
 												<div class="col-md-12">
@@ -337,7 +341,7 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<!-- Rate Section -->
 							<div class="row">
 								<div class="col-md-6">
@@ -376,7 +380,7 @@
 						</div>
 					</div>
 				</div>
-				
+
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h2 class="accordion-toggle" data-toggle="collapse" href="#collapse3" onclick="plotsCollapsed()">
@@ -571,11 +575,18 @@
 			</div>
 		</div>
 
-		<div id="footer">
-			&copy; <script type="text/javascript">document.write(new Date().getFullYear());</script>, ETH Zurich, Computer Engineering Group. <a href="http://rocketlogger.ethz.ch/">http://rocketlogger.ethz.ch/</a>
-		</div>
+        <footer id="footer">
+            <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
+                &copy; <?php echo date("Y"); ?>, ETH Zurich, Computer Engineering Group.
+            </p>
+        </footer>
+		
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.1.1.min.js"><\/script>')</script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+		<script src="js/vendor/jquery.flot.min.js"></script>
+		<script src="js/vendor/jquery.flot.time.min.js"></script>
+        <script src="js/main.js"></script>
 	</div>
 </body>
 </html>
-
-

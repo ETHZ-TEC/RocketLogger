@@ -1,5 +1,8 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
+#
+# Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+#
 
 # store current working directory
 SCRIPT_DIR=`pwd`
@@ -51,8 +54,8 @@ cp -f ssh/sshd_config /etc/ssh/
 # copy public keys for log in
 mkdir -p /home/rocketlogger/.ssh/
 chmod 700 /home/rocketlogger/.ssh/
-cp -f user/rocketlogger@tik.ee.ethz.ch_rsa.pub /home/rocketlogger/.ssh/
-cat /home/rocketlogger/.ssh/rocketlogger@tik.ee.ethz.ch_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
+cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
 echo "RocketLogger v1.0" > /etc/issue.net
@@ -81,10 +84,12 @@ mkdir -p /etc/rocketlogger
 ## updates
 echo "> Updating system"
 
-# copy network interface configuration
+# update packages
 apt-get update --assume-yes
 apt-get upgrade --assume-yes
 
+# install necessary dependencies
+apt-get install --assume-yes ntp gcc g++ libncurses5-dev libi2c-dev linux-headers-$(uname -r) lighttpd php5-cgi unzip
 
 ## grow file system
 echo "> Grow file system size"
@@ -95,5 +100,27 @@ cd "${SCRIPT_DIR}"
 
 
 ## done
-echo "Done. Please reboot to apply all changes."
+echo "Platform initialized. A reboot is required to apply all changes."
 
+# reboot now?
+REBOOT=-1
+while [ $REBOOT -lt 0 ]; do
+  read -p "Do you want to reboot now (recommended) [y/n]? " ANSWER
+  case "$ANSWER" in
+    y|yes)
+      REBOOT="1"
+      break;;
+    n|no)
+      REBOOT="0"
+      break;;
+    *) echo "invalid input!";;
+  esac
+done
+
+# reboot or done
+if [ $REBOOT -eq 1 ]; then
+  echo "Rebooting now..."
+  reboot
+else
+  echo "Done. Please reboot manually."
+fi

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #ifndef RL_UTIL_H
 #define RL_UTIL_H
 
@@ -36,6 +40,9 @@ typedef enum option {
 
 void rl_print_config(struct rl_conf* conf);
 void rl_print_status(struct rl_status* status);
+void rl_print_version(void);
+char* rl_get_version(void);
+
 
 rl_mode get_mode(char* mode);
 rl_option get_option(char* option);

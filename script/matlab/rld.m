@@ -1,3 +1,7 @@
+%%
+%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%%
+
 classdef rld
     %RLD Class to read in and handle RocketLogger data
     %   Parameters:
@@ -49,7 +53,7 @@ classdef rld
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
             end
-
+            
             %% CHECK FILE
             % open file
             file = fopen(num2str(file_name));
@@ -61,11 +65,10 @@ classdef rld
             
             file_number = 1;
             while file_exists
-
                 % check magic number
                 [magic, bytes_read] = fread(file, 1, 'uint32');
                 assert(bytes_read > 0, 'Failed to read file');
-
+                
                 % check file version
                 file_version = fread(file, 1, 'uint16');
                 switch file_version
@@ -79,10 +82,9 @@ classdef rld
                     otherwise
                         error(['Unknown file version ', num2str(file_version)]);
                 end
-
-
+                
                 %% READ HEADER
-                    
+                
                 % lead-in
                 header_length = fread(file, 1, 'uint16');
                 data_block_size = fread(file, 1, 'uint32');
@@ -94,10 +96,10 @@ classdef rld
                 comment_length = fread(file, 1, 'uint32');
                 channel_bin_count = fread(file, 1, 'uint16');
                 channel_count = fread(file, 1, 'uint16');
-
+                
                 % comment
                 comment = fread(file, comment_length, 'int8=>char')';
-
+                
                 % channels
                 % initialize
                 
@@ -109,22 +111,21 @@ classdef rld
                 
                 % read
                 for i=1:channel_bin_count+channel_count
-
                     unit = fread(file, 1, 'uint32');
                     unit_text = UNIT_NAMES(unit+1);
                     channel_scale = fread(file, 1, 'int32');
                     data_size = fread(file, 1, 'uint16');
                     valid_data_channel = fread(file, 1, 'uint16');
                     name = cellstr(fread(file, RL_FILE_CHANNEL_NAME_LENGTH, 'int8=>char')');
-
+                    
                     % channel struct
                     if file_number == 1
                         obj.channels(i) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, 'data_size', data_size, ...
                             'valid_data_channel', valid_data_channel, 'name', name, 'values', 0, 'valid', 0);
                     end
-
+                    
                 end
-
+                
                 % header struct
                 if file_number == 1
                     obj.header = struct('header_length', header_length, 'data_block_size', data_block_size, ...
@@ -132,13 +133,13 @@ classdef rld
                         'mac_address', mac_address, 'start_time', start_time, 'comment_length', comment_length, ...
                         'channel_bin_count', channel_bin_count, 'channel_count', channel_count, 'comment', comment);
                 end
-
+                
                 %% PARSE HEADER
                 % sanity checks
                 if sample_count ~= data_block_count*data_block_size
                     warning('Inconsistency in number of samples taken');
                 end
-
+                
                 % digital inputs
                 digital_inputs_count = 0;
                 for i=1:channel_bin_count
@@ -146,7 +147,7 @@ classdef rld
                         digital_inputs_count = digital_inputs_count+1;
                     end
                 end
-
+                
                 % valid
                 range_valid_count = 0;
                 for i=1:channel_bin_count
@@ -154,81 +155,78 @@ classdef rld
                         range_valid_count = range_valid_count+1;
                     end
                 end
-
+                
                 % scales
                 channel_scales = ones(1, channel_count);
                 for i=1:channel_count
                     channel_scales(i) = obj.channels(channel_bin_count + i).channel_scale;
                 end
-
+                
                 % decimation
                 data_points_per_buffer = ceil(data_block_size/decimation_factor);
                 decimated_rate = sample_rate/data_block_size*data_points_per_buffer;
                 if data_points_per_buffer*decimation_factor ~= data_block_size
                     error('The buffer size needs to be divisible by the decimation factor');
                 end
-
+                
                 % update header for decimation
                 decimated_sample_count = floor(sample_count/decimation_factor);
-
+                
                 if file_number == 1
                     obj.header.sample_count = decimated_sample_count;
                     obj.header.data_block_size = data_points_per_buffer;
                     obj.header.sample_rate = decimated_rate;
-                else 
+                else
                     obj.header.sample_count = obj.header.sample_count + decimated_sample_count;
                     obj.header.data_block_count = obj.header.data_block_count + data_block_count;
                 end
-
-
+                
                 %% READ DATA
                 num_bin_vals = ceil(channel_bin_count / (RL_FILE_SAMPLE_SIZE * 8));
-
+                
                 % values
                 temp_time = nan(data_block_count, TIME_STAMP_SIZE);
                 digital_data = zeros(decimated_sample_count, digital_inputs_count);
                 valid_data = zeros(decimated_sample_count, range_valid_count);
                 vals = zeros(decimated_sample_count, channel_count);
-
+                
                 % read values
                 for i=0:data_block_count-1
-
                     % read time stamps
                     temp_time(i+1, :) = fread(file, TIME_STAMP_SIZE, 'uint64')';
-
+                    
                     % read values
                     if i == data_block_count-1 && mod(sample_count, data_block_size) ~= 0
                         input_buffer_size = mod(sample_count, data_points_per_buffer); % unfull buffer size
-                        buffer_size = mod(decimated_sample_count, data_points_per_buffer); 
+                        buffer_size = mod(decimated_sample_count, data_points_per_buffer);
                     else
                         input_buffer_size = data_block_size;
                         buffer_size = data_points_per_buffer;
                     end
-
+                    
                     buffer_values = fread(file, [num_bin_vals + channel_count, input_buffer_size], 'int32=>int32')';
-
+                    
                     % split data
                     % binary
                     bin_buffer_values = buffer_values(:,1:num_bin_vals);
-
+                    
                     digital_values = nan(input_buffer_size, digital_inputs_count);
                     valid_values = nan(input_buffer_size, range_valid_count);
-
+                    
                     % TODO: implement if num_bin_vals > 1
                     for j=1:digital_inputs_count % digital inputs
                         digital_values(:,j) = bitand(bin_buffer_values, 2^(j-1)) > 0;
                     end
-
+                    
                     k = 1;
                     for j=digital_inputs_count+1:channel_bin_count % valid data
                         valid_values(:,k) = bitand(bin_buffer_values, 2^(j-1)) > 0;
                         k = k + 1;
                     end
-
+                    
                     % other
                     buffer_values = buffer_values(:,num_bin_vals+1:end);
-
-
+                    
                     % decimation
                     if decimation_factor == 1
                         decimated_digital_values = digital_values;
@@ -245,7 +243,7 @@ classdef rld
                             decimated_values(:,j) = rld.decimate_mean(buffer_values(:,j), decimation_factor);
                         end
                     end
-
+                    
                     % merge buffers
                     if digital_inputs_count > 0
                         digital_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_digital_values;
@@ -254,9 +252,9 @@ classdef rld
                         valid_data(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_valid_values;
                     end
                     vals(i*data_points_per_buffer+1 : (i*data_points_per_buffer + buffer_size), :) = decimated_values;
-
+                    
                 end
-
+                
                 %% PROCESS TIMESTAMPS
                 if file_number == 1
                     obj.time = datetime(temp_time(:, 1) + temp_time(:, 2) .* 1e-9, 'ConvertFrom', 'posixTime');
@@ -264,7 +262,7 @@ classdef rld
                     obj.time = [obj.time; datetime(temp_time(:, 1) + temp_time(:, 2) .* 1e-9, 'ConvertFrom', 'posixTime')];
                 end
                 %% STORE BINARY DATA
-
+                
                 if file_number == 1
                     for i=1:digital_inputs_count
                         obj.channels(i).values = digital_data(:,i);
@@ -284,7 +282,7 @@ classdef rld
                         j = j + 1;
                     end
                 end
-
+                
                 %% PROCESS CHANNEL DATA
                 % scaling
                 vals = double(vals) .* repmat((10 .^ channel_scales), decimated_sample_count, 1);
@@ -317,10 +315,10 @@ classdef rld
                 if ~isempty(start_index)
                     file_exists = false;
                 else
-                     start_index = regexp(file_name, '\.');
-                     if isempty(start_index)
-                     	file_exists = false;
-                     else
+                    start_index = regexp(file_name, '\.');
+                    if isempty(start_index)
+                        file_exists = false;
+                    else
                         index = start_index(end);
                         before = file_name(1:index-1);
                         after = file_name(index+1:end);
@@ -331,12 +329,12 @@ classdef rld
                         else
                             file_exists = false;
                         end
-                     end
+                    end
                 end
             end
             
             disp(['Read ', num2str(file_number), ' file(s).']);
-        end 
+        end
         
         % plotting
         function plot(obj, channel, absolute_time, pretty_plot)
@@ -368,7 +366,7 @@ classdef rld
             if ~exist('channel', 'var') || sum(strcmp(channel, 'all')) == 1
                 num_channels = obj.header.channel_count;
                 plot_channels = (1:num_channels) + obj.header.channel_bin_count;
-            
+                
             % all voltages
             elseif sum(strcmp(channel, 'voltages')) == 1
                 num_channels = 0;
@@ -423,7 +421,7 @@ classdef rld
             
             % no valid channels
             if sum(plot_channels) == 0
-               error('No valid channel found'); 
+                error('No valid channel found');
             end
             
             % plotting
@@ -442,7 +440,7 @@ classdef rld
                 0.4660    0.6740    0.1880
                 0.3010    0.7450    0.9330
                 0.6350    0.0780    0.1840];
-
+            
             j1=1;
             j2=1;
             for i=1:num_channels
@@ -462,24 +460,24 @@ classdef rld
                         colormap(mod(i-1,size(colormap, 1))+1,:), 'Marker', 'none');%*scales_on(i));
                 end
             end
-
+            
             if separate_axis
                 yyaxis left;
                 axis_left = gca();
                 axis_left.YColor = 'black';
-                if pretty_plot 
-                    rl_aux_pretty_plot(fig) 
+                if pretty_plot
+                    rl_aux_pretty_plot(fig)
                 end
-
+                
                 yyaxis right;
                 axis_right = gca();
                 axis_right.YColor = 'black';
-                if pretty_plot 
-                    rl_aux_pretty_plot(fig) 
+                if pretty_plot
+                    rl_aux_pretty_plot(fig)
                 end
-
+                
             elseif pretty_plot
-                rl_aux_pretty_plot(fig)       
+                rl_aux_pretty_plot(fig)
             end
             
             % legend
@@ -601,7 +599,7 @@ classdef rld
                     values(:, ind) = obj.channels(c).values;
                     ind = ind + 1;
                 end
-            end    
+            end
             
             % header
             header(1) = obj.header.sample_count;
@@ -660,7 +658,7 @@ classdef rld
             merged_obj.time = obj.time;
             % initialize
             merged_obj.channels = struct('unit', {}, 'unit_text', {}, 'channel_scale', {}, 'data_size', {}, ...
-                    'valid_data_channel', {}, 'name', {}, 'values', {}, 'valid', {});
+                'valid_data_channel', {}, 'name', {}, 'values', {}, 'valid', {});
             num_new_channels = 0;
             num_new_bin_channels = 0;
             for i=1:obj.header.channel_bin_count + obj.header.channel_count
@@ -675,20 +673,19 @@ classdef rld
             end
             
             for i=1:num_channels_to_merge
-
                 if low_ind(i) < 1 || high_ind(i) < 1
                     warning(['Channel (', merged_name{i}, ') not valid']);
                 else
                     if obj.channels(low_ind(i)).valid_data_channel == NO_VALID_CHANNEL
                         error('Low range has no valid data');
                     end
-
+                    
                     % filter range valid data
                     filter_size = 2*RANGE_MARGIN + 1;
                     filter = ones(1, filter_size);
                     range_valid = ~(conv(double(~obj.channels(low_ind(i)).valid), filter) > 0);
                     range_valid = range_valid(RANGE_MARGIN+1:end-RANGE_MARGIN); % resize
-
+                    
                     % set properties
                     new_channel_ind = length(merged_obj.channels) + 1;
                     unit = RL_UNIT_AMPERE;
@@ -701,11 +698,10 @@ classdef rld
                         error(['Channel name ', name, ' already used']);
                     end
                     valid = 0;
-
+                    
                     % merge values
                     values = obj.channels(low_ind(i)).values .* range_valid + obj.channels(high_ind(i)).values .* ~range_valid;
-
-
+                    
                     % add new channel
                     merged_obj.channels(new_channel_ind) = struct('unit', unit, 'unit_text', unit_text, 'channel_scale', channel_scale, ...
                         'data_size', data_size, 'valid_data_channel', valid_data_channel, 'name', name, 'values', values, 'valid', valid);
@@ -717,7 +713,7 @@ classdef rld
         end
         
         
-    end 
+    end
     
     methods(Static)
         
@@ -745,7 +741,7 @@ classdef rld
             M = reshape(values(1:old_num), [decimation_factor, new_num]);
             decimated_values = ~(mean(M, 1)<1);
         end
-
+        
         function [ decimated_values ] = decimate_mean(values, decimation_factor)
             %DECIMATE_MEAN Decimates analog values (with MEAN)
             %   Parameters:
@@ -757,7 +753,7 @@ classdef rld
             M = reshape(values(1:old_num), [decimation_factor, new_num]);
             decimated_values = mean(M, 1);
         end
-
+        
     end
+    
 end
-

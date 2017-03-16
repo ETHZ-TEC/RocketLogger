@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,4 +17,4 @@
 
 void reset_offsets(void);
 void reset_scales(void);
-void read_calibration(struct rl_conf* conf);
+int read_calibration(struct rl_conf* conf);

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
 .origin 0                        // start of program in PRU memory
 .entrypoint START                // program entry point
  

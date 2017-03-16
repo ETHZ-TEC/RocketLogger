@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ */
+
+#include "rl_version.h"
+
 #include "rl_util.h"
 
 /**
@@ -51,7 +57,7 @@ void rl_print_status(struct rl_status* status) {
 	} else {
 		printf("\nRocketLogger Status: RUNNING\n");
 		rl_print_config(&(status->conf));
-		printf("  Samples taken:    %d\n", status->samples_taken);
+		printf("  Samples taken:    %llu\n", status->samples_taken);
 		time_t time = (time_t) status->calibration_time;
 		if(time > 0) {
 			printf("  Calibration time: %s\n", ctime(&time));
@@ -60,6 +66,22 @@ void rl_print_status(struct rl_status* status) {
 		}
 		printf("\n");
 	}
+}
+
+/**
+ * Print the RocketLogger software version on the command line.
+ */
+void rl_print_version(void) {
+	printf("RocketLogger Software Stack version " RL_VERSION "\n");
+}
+
+
+/**
+ * Get the the RocketLogger software version number string.
+ * @return The RocketLogger Sofware Stack's version number string.
+ */
+char* rl_get_version(void) {
+	return RL_VERSION;
 }
 
 // argument parsing
@@ -83,6 +105,8 @@ rl_mode get_mode(char* mode) {
 		return SET_DEFAULT;
 	} else if(strcmp(mode, "conf") == 0) {
 		return PRINT_DEFAULT;
+	} else if(strcmp(mode, "version") == 0 || strcmp(mode, "--version") == 0) {
+		return PRINT_VERSION;
 	} else if(strcmp(mode, "help") == 0 || strcmp(mode, "h") == 0 || strcmp(mode, "-h") == 0 || strcmp(mode, "--help") == 0) {
 		return HELP;
 	}
@@ -421,8 +445,10 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
  * Print help for RocketLogger CLI on command line
  */
 void print_usage(void) {
-	printf("\nUsage:\n");
-	printf("  rocketlogger mode -[option value]\n\n");
+	printf("\n");
+	printf("Usage:\n");
+	printf("  rocketlogger mode -[option value]\n");
+	printf("\n");
 	printf("  Modes:\n");
 	printf("    sample number      Acquires number of samples.\n");
 	printf("    cont               Continuously acquires samples.\n");
@@ -432,8 +458,8 @@ void print_usage(void) {
 	printf("    set                Set default configuration of RocketLogger (use normal options).\n");
 	printf("                         Use 'set 0' to reset the default configuration.\n");
 	printf("    conf               Print default configuration of RocketLogger.\n");
-	
-	printf("\n  Options:\n");
+	printf("\n");
+	printf("  Options:\n");
 	printf("    -r rate	           Acquisition rate selection.\n");
 	printf("                         Possible rates: 1, 10, 100, 1k, 2k, 4k, 8k, 16k, 32k, 64k\n");
 	printf("    -u update_rate     Data update rate selection.\n");
@@ -457,8 +483,10 @@ void print_usage(void) {
 	printf("    -w                 Enable webserver plotting.\n");
 	printf("                         Use '-w 0' to disable webserver plotting.\n");
 	printf("    -s                 Set configuration as default.\n");
-	printf("    -h                 Show this help.\n");
-	
+	printf("\n");
+	printf("  Help/Info:\n");
+	printf("    help, --help       Display this help message.\n");
+	printf("    version, --version Display the RocketLogger software version.\n");
 	printf("\n");
 }
 

@@ -1,3 +1,10 @@
+/**
+ * Main program to interface with TSL256x light sensor via i2c.
+ *
+ * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ *
+ */
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
