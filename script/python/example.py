@@ -6,9 +6,9 @@ Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 
 """
 
-from rocketlogger.rocketlogger import RocketLoggerData
+from rocketlogger.rocketlogger import RocketLoggerFile
 
 
 data_file = 'test_data/test.rld'
 
-r = RocketLoggerData(data_file)
+r = RocketLoggerFile(data_file)
