@@ -20,3 +20,12 @@ print(r1._data[0].shape)
 r2 = RocketLoggerFile(data_file, decimation_factor=2)
 print(r2._header)
 print(r2._data[0].shape)
+
+# with channel merging
+r3 = RocketLoggerFile(data_file)
+print(r3._header)
+print(r3._data[0].shape)
+r3.merge_channels(keep_channels=False)
+print(r3._header)
+print(r3._data[0].shape)
+

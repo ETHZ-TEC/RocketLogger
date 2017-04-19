@@ -54,6 +54,12 @@ _CHANNEL_IS_BINARY = [
     True,
     True,
 ]
+_CHANNEL_VALID_UNLINKED = 65535
+
+_CHANNEL_MERGE_CANDIDATES = [
+    {'low': 'I1L', 'high': 'I1H', 'merged': 'I1'},
+    {'low': 'I2L', 'high': 'I2H', 'merged': 'I2'},
+]
 
 
 def _decimate_binary(values, decimation_factor, threshold_value=0.5):
@@ -525,11 +531,14 @@ class RocketLoggerFile:
         """
         Get the timestamp of the data.
 
+        Using simple linear interpolation to generating the sample from the
+        block timestamps.
+
         time_reference: Which clock data is being used.
                         - 'local' The local oscillator clock (default)
                         - 'network' The network synchronized clock
         absolute_time:  Wether the returned timestamps are relative to the
-                        start time (default) or absolute timestamps
+                        start time in seconds (default) or absolute timestamps
         return value:   A numpy array containing the timestamps
         """
         # get timestamps from requested timer
@@ -543,9 +552,11 @@ class RocketLoggerFile:
 
         # transform value to absolute time if requested
         if absolute_time:
-            sample_points = np.arange(0, self._header['data_block_count'] + 1)
-
             # TODO: Interpolate absolute time
+            raise NotImplementedError('Abolute timestamp handling '
+                                      'currently unsupported')
+
+            sample_points = np.arange(0, self._header['data_block_count'] + 1)
 
             # MATLAB reference implementation
             # points = 0:obj.header.data_block_count;
@@ -553,8 +564,6 @@ class RocketLoggerFile:
             # interp_points = ((0:(obj.header.sample_count-1)) /
             #                  obj.header.data_block_size);
             # timestamps = interp1(points, temp_time, interp_points)';
-            timestamps = (np.arange(0, self._header['sample_count']) /
-                          self._header['sample_rate'])
         else:
             # TODO: Interpolate relative time
             timestamps = (np.arange(0, self._header['sample_count']) /
@@ -567,8 +576,69 @@ class RocketLoggerFile:
         Merge seemlessly switched current channels into one common channel.
 
         keep_channels:  Whether the that are merged are kept (default: False)
+        return value:   Reference to the class instance itself
         """
-        raise NotImplementedError()
+        merged_channels = False
+        for candidate in _CHANNEL_MERGE_CANDIDATES:
+            # check if inputs available and linked
+            low_index = self.get_channel_index(candidate['low'])
+            high_index = self.get_channel_index(candidate['high'])
+
+            # skip if one input unavailable
+            if (low_index is None) or (high_index is None):
+                continue
+
+            # error if merge target exists
+            if self.get_channel_index(candidate['merged']) is not None:
+                raise RocketLoggerFileError('Name of merged output channel '
+                                            '"{}" already in use.'.format(
+                                                candidate['merged']))
+
+            # check for channel valid link
+            low_channel = self._header['channels'][low_index]
+            high_channel = self._header['channels'][high_index]
+            low_valid_index = low_channel['valid_link'] - 1
+            if low_valid_index > len(self._header['channels']):
+                raise RocketLoggerFileError('Low range has no valid data')
+
+            # build merged channel info and data
+            merged_channel_info = {}
+            merged_channel_info['unit_index'] = low_channel['unit_index']
+            merged_channel_info['scale'] = low_channel['scale']
+            merged_channel_info['data_size'] = (low_channel['data_size'] +
+                                                high_channel['data_size'])
+            merged_channel_info['valid_link'] = _CHANNEL_VALID_UNLINKED
+            merged_channel_info['name'] = candidate['merged']
+
+            # add merged channel
+            merged_data = np.empty(self._data[low_index].shape, dtype=np.dtype(
+                '<i{}'.format(merged_channel_info['data_size'])))
+            merged_data = (self._data[low_valid_index] * self._data[low_index]
+                           + np.logical_not(self._data[low_valid_index]) *
+                           self._data[high_index] *
+                           10**(high_channel['scale'] - low_channel['scale']))
+            self._data.append(merged_data)
+            self._header['channels'].append(merged_channel_info)
+
+            # drop original channels if not kept
+            if not keep_channels:
+                del(self._data[low_valid_index])
+                del(self._header['channels'][low_valid_index])
+                low_index = self.get_channel_index(candidate['low'])
+                del(self._data[low_index])
+                del(self._header['channels'][low_index])
+                high_index = self.get_channel_index(candidate['high'])
+                del(self._data[high_index])
+                del(self._header['channels'][high_index])
+
+            print('Merged channels "{}" and "{}" to "{}".'.format(
+                candidate['low'], candidate['high'], candidate['merged']))
+            merged_channels = True
+
+        if not merged_channels:
+            print('WARNING: No channels found to merge.')
+
+        return self
 
     def plot(self, channel_names=['all']):
         """
@@ -579,4 +649,5 @@ class RocketLoggerFile:
                         all channels (default: 'all')
         return value:   Matplotlib figure handle of the plot
         """
-        raise NotImplementedError()
+        # TODO: implement plotting
+        raise NotImplementedError('Plotting currently unsupported')
