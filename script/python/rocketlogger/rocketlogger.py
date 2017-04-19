@@ -1,13 +1,14 @@
 """
-RocketLogger Python Library
-Importing and plotting of rld data files.
+RocketLogger Python Library.
+
+Importing and plotting of RocketLogger Data (rld) binary files.
 
 Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 
 """
 
 from datetime import datetime, timezone
-from math import ceil
+from math import ceil, floor
 from os.path import isfile, splitext
 
 import numpy as np
@@ -53,6 +54,70 @@ _CHANNEL_IS_BINARY = [
     True,
     True,
 ]
+
+
+def _decimate_binary(values, decimation_factor, threshold_value=0.5):
+    """
+    Decimate binary values, using a threshold value.
+
+    values:             Numpy vector of the values to decimate
+    decimation_factor:  The decimation factor
+    threshold_value:    The threshold value in [0, 1] to use for decimation
+                        (default: 0.5)
+    return value:       Numpy vector of the decimated values
+    """
+    count_new = floor(values.shape[0] / decimation_factor)
+    count_old = count_new * decimation_factor
+    aggregated_values = np.reshape(values[0:count_old],
+                                   (count_new, decimation_factor))
+    return np.logical_not(np.sum(aggregated_values, axis=1) <
+                          (threshold_value * decimation_factor))
+# return np.logical_not(np.mean(aggregated_values, axis=1) < threshold_value)
+
+
+def _decimate_min(values, decimation_factor):
+    """
+    Decimate binary values, forcing False if occuring.
+
+    values:             Numpy vector of the values to decimate
+    decimation_factor:  The decimation factor
+    return value:       Numpy vector of the decimated values
+    """
+    count_new = floor(values.shape[0] / decimation_factor)
+    count_old = count_new * decimation_factor
+    aggregated_values = np.reshape(values[0:count_old],
+                                   (count_new, decimation_factor))
+    return (np.sum(aggregated_values, axis=1) < decimation_factor)
+
+
+def _decimate_max(values, decimation_factor):
+    """
+    Decimate binary values, forcing True if occuring.
+
+    values:             Numpy vector of the values to decimate
+    decimation_factor:  The decimation factor
+    return value:       Numpy vector of the decimated values
+    """
+    count_new = floor(values.shape[0] / decimation_factor)
+    count_old = count_new * decimation_factor
+    aggregated_values = np.reshape(values[0:count_old],
+                                   (count_new, decimation_factor))
+    return (np.sum(aggregated_values, axis=1) > 0)
+
+
+def _decimate_mean(values, decimation_factor):
+    """
+    Decimate analog values, using averaging of values.
+
+    values:             Numpy vector of the values to decimate
+    decimation_factor:  The decimation factor
+    return value:       Numpy vector of the decimated values
+    """
+    count_new = floor(values.shape[0] / decimation_factor)
+    count_old = count_new * decimation_factor
+    aggregated_values = np.reshape(values[0:count_old],
+                                   (count_new, decimation_factor))
+    return np.mean(aggregated_values, axis=1)
 
 
 def _read_uint(file_handle, data_size):
@@ -221,7 +286,8 @@ class RocketLoggerFile:
         total_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * \
             ceil(file_header['channel_binary_count'] /
                  (_BINARY_CHANNEL_STUFF_BYTES * 8))
-
+        binary_channels_linked = [(channel['valid_link'] - 1) for
+                                  channel in file_header['channels']]
         analog_data_formats = []
         analog_data_names = []
         data_formats = []
@@ -250,66 +316,79 @@ class RocketLoggerFile:
 
         for binary_channel_index in range(file_header['channel_binary_count']):
             channel_index = binary_channel_index
-            data[channel_index] = np.empty((file_header['data_block_count'] *
-                                            file_header['data_block_size']),
+            data[channel_index] = np.empty(file_header['data_block_count'] *
+                                           round(file_header['data_block_size']
+                                                 / decimation_factor),
                                            dtype=np.dtype('b1'))
         for analog_channel_index in range(file_header['channel_analog_count']):
             channel_index = (file_header['channel_binary_count'] +
                              analog_channel_index)
-            data[channel_index] = np.empty((file_header['data_block_count'] *
-                                            file_header['data_block_size']),
+            data[channel_index] = np.empty(file_header['data_block_count'] *
+                                           round(file_header['data_block_size']
+                                                 / decimation_factor),
                                            dtype=np.dtype(
                                                analog_data_formats[
                                                    analog_channel_index]))
 
         # iterate over all data blocks
         for block_index in range(file_header['data_block_count']):
-            block_offset_bytes = (file_header['header_length'] +
-                                  block_index * (2 * _TIMESTAMP_BYTES +
-                                  file_header['data_block_size'] *
-                                  data_type.itemsize))
-            data_index_start = block_index * file_header['data_block_size']
-            data_index_end = data_index_start + file_header['data_block_size']
+            file_block_offset_bytes = (file_header['header_length'] +
+                                       block_index * (2 * _TIMESTAMP_BYTES +
+                                       file_header['data_block_size'] *
+                                       data_type.itemsize))
+            data_index_start = block_index * round(
+                file_header['data_block_size'] / decimation_factor)
+            data_index_end = data_index_start + round(
+                file_header['data_block_size'] / decimation_factor)
 
             # read block timestamp
-            file_handle.seek(block_offset_bytes)
+            file_handle.seek(file_block_offset_bytes)
             timestamps_realtime.append(_read_timestamp(file_handle))
             timestamps_monotonic.append(_read_timestamp(file_handle))
 
             # access file data memory mapped
-            # data_raw = np.fromfile(file_handle, dtype=data_type,
-            #                        count=file_header['data_block_size'])
             file_data = np.memmap(file_handle,
-                                  offset=block_offset_bytes +
+                                  offset=file_block_offset_bytes +
                                   2 * _TIMESTAMP_BYTES,
                                   mode='r',
                                   dtype=data_type,
                                   shape=file_header['data_block_size'])
 
             # extract binary channels
-            # binary_data_bool = np.unpackbits(file_data['bin']).reshape(
-            #     (file_header['data_block_size'], 8 * total_bin_bytes))
-
-            # TODO: map to data type used ot store binary value
             for binary_channel_index in range(
                     file_header['channel_binary_count']):
                 channel_index = binary_channel_index
-                data[channel_index][data_index_start:data_index_end] = \
-                    np.array(2**binary_channel_index & file_data['bin'],
-                             dtype=data[channel_index].dtype)
+                binary_values = np.array(2**binary_channel_index &
+                                         file_data['bin'],
+                                         dtype=data[channel_index].dtype)
+                # values decimation
+                if decimation_factor > 1:
+                    # decimate to zero for valid links, threshold otherwise
+                    if channel_index in binary_channels_linked:
+                        data[channel_index][data_index_start:data_index_end] =\
+                            _decimate_min(binary_values, decimation_factor)
+                    else:
+                        data[channel_index][data_index_start:data_index_end] =\
+                            _decimate_binary(binary_values, decimation_factor)
+                else:
+                    data[channel_index][data_index_start:data_index_end] =\
+                        binary_values
 
+            # extract analog channels
             for analog_channel_index in range(
                     file_header['channel_analog_count']):
                 channel_index = (file_header['channel_binary_count'] +
                                  analog_channel_index)
-                data[channel_index][data_index_start:data_index_end] = \
-                    file_data[analog_data_names[analog_channel_index]]
-
-            # decimate block data
-            # TODO: decimantion on import
-            if decimation_factor != 1:
-                raise NotImplementedError(
-                    'Decimation on import not implemented.')
+                analog_values = np.array(file_data[analog_data_names[
+                                         analog_channel_index]],
+                                         dtype=data[channel_index].dtype)
+                # values decimation
+                if decimation_factor > 1:
+                    data[channel_index][data_index_start:data_index_end] =\
+                        _decimate_mean(analog_values, decimation_factor)
+                else:
+                    data[channel_index][data_index_start:data_index_end] =\
+                        analog_values
 
         return timestamps_realtime, timestamps_monotonic, data
 
@@ -348,26 +427,20 @@ class RocketLoggerFile:
                         'Decimation factor needs to be divider of the buffer '
                         'size.')
 
-                header['sample_count'] = ceil(header['sample_count'] /
-                                              decimation_factor)
-                header['data_block_size'] = ceil(header['data_block_size'] /
-                                                 decimation_factor)
-                header['sample_rate'] = ceil(header['sample_rate'] /
-                                             decimation_factor)
-
                 # multi-file header
                 if file_number == 0:
                     self._header = header
                 else:
-                    self._header['sample_count'] = \
+                    self._header['sample_count'] =\
                         self._header['sample_count'] + header['sample_count']
-                    self._header['data_block_count'] = \
+                    self._header['data_block_count'] =\
                         (self._header['data_block_count'] +
                          header['data_block_count'])
 
                 # channels: read actual sampled data
-                timestamps_realtime, timestamps_monotonic, data = \
-                    self._read_file_data(file_handle, header)
+                timestamps_realtime, timestamps_monotonic, data =\
+                    self._read_file_data(file_handle, header,
+                                         decimation_factor=decimation_factor)
 
                 # create on first file, append on following
                 if file_number > 0:
@@ -382,6 +455,14 @@ class RocketLoggerFile:
             file_number = file_number + 1
             file_name = '{}_p{}{}'.format(file_basename, file_number,
                                           file_extension)
+
+        # adjust header files for decimation
+        header['sample_count'] = round(header['sample_count'] /
+                                       decimation_factor)
+        header['data_block_size'] = round(header['data_block_size'] /
+                                          decimation_factor)
+        header['sample_rate'] = round(header['sample_rate'] /
+                                      decimation_factor)
 
         print('Read {} file(s)'.format(file_number))
 
