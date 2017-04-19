@@ -90,13 +90,13 @@ Generating : GND
 
 
 Used DCodes :
-    D10
-    D60
-    D63
-    D67
+    D58
+    D59
+    D61
+    D64
     D72
+    D73
     D74
-    D75
     D76
 *************************************************************
 
@@ -110,11 +110,11 @@ Generating : Inner Layer 1
 
 
 Used DCodes :
-    D10
-    D60
+    D58
+    D61
     D72
+    D73
     D74
-    D75
     D76
 *************************************************************
 
@@ -128,12 +128,12 @@ Generating : V+
 
 
 Used DCodes :
-    D10
-    D60
+    D58
+    D59
+    D61
     D63
-    D64
-    D74
-    D75
+    D72
+    D73
     D76
 *************************************************************
 
@@ -147,13 +147,13 @@ Generating : V-
 
 
 Used DCodes :
-    D10
-    D60
+    D58
+    D59
+    D61
     D63
     D64
-    D67
-    D74
-    D75
+    D72
+    D73
     D76
 *************************************************************
 
@@ -169,23 +169,23 @@ Generating : Bottom Side
 Used DCodes :
     D10
     D11
-    D12
-    D13
-    D14
-    D15
     D17
-    D21
-    D37
-    D38
-    D41
-    D49
+    D18
+    D19
+    D23
+    D26
+    D28
+    D29
+    D40
+    D53
+    D58
     D59
     D60
+    D61
+    D62
     D63
     D64
-    D65
-    D66
-    D67
+    D69
     D72
     D73
     D74
@@ -216,9 +216,9 @@ Generating : Top Overlay
 
 
 Used DCodes :
-    D60
-    D65
-    D69
+    D61
+    D62
+    D66
     D70
     D92
     D93
@@ -244,6 +244,7 @@ Generating : Top Paste
 
 
 Used DCodes :
+    D10
     D11
     D12
     D13
@@ -291,7 +292,6 @@ Used DCodes :
     D55
     D56
     D57
-    D58
     D71
 *************************************************************
 
@@ -309,7 +309,7 @@ Generating : Top Solder
 Used DCodes :
     D59
     D60
-    D63
+    D61
     D70
     D102
     D103
@@ -381,16 +381,16 @@ Generating : Bottom Solder
 Used DCodes :
     D102
     D103
-    D104
-    D105
-    D106
-    D107
     D109
-    D113
-    D129
-    D130
-    D133
-    D141
+    D110
+    D111
+    D115
+    D118
+    D120
+    D121
+    D132
+    D145
+    D150
     D152
     D153
     D154
@@ -424,28 +424,28 @@ Generating : Bottom Paste
 
 
 Used DCodes :
+    D10
     D11
-    D12
-    D13
-    D14
-    D15
     D17
-    D21
-    D37
-    D38
-    D41
-    D49
+    D18
+    D19
+    D23
+    D26
+    D28
+    D29
+    D40
+    D53
     D77
     D78
     D79
     D80
+    D81
+    D82
     D83
     D84
     D85
     D86
     D87
-    D88
-    D89
     D90
     D91
     D171
@@ -462,12 +462,12 @@ Generating : Bottom Overlay
 
 
 Used DCodes :
-    D60
-    D65
-    D69
+    D61
+    D62
+    D66
     D70
-    D92
     D93
+    D95
     D96
     D97
     D98
@@ -484,7 +484,7 @@ Generating : Mechanical 4
 
 
 Used DCodes :
-    D68
+    D67
 *************************************************************
 
 *************************************************************
