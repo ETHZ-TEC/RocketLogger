@@ -12,7 +12,7 @@ from math import ceil, floor
 from os.path import isfile, splitext
 
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 _ROCKETLOGGER_FILE_MAGIC = 0x444C5225
@@ -188,6 +188,7 @@ class RocketLoggerFile:
     """
 
     _data = []
+    _filename = None
     _header = {}
     _timestamps_monotonic = []
     _timestamps_realtime = []
@@ -405,7 +406,7 @@ class RocketLoggerFile:
         filename:           The filename of the file to import
         decimation_factor:  Decimation factor for values read (default: 1)
         """
-        if len(self._header) > 0:
+        if self._filename is not None:
             raise RocketLoggerFileError('A data file is already loaded. Use '
                                         'separate instance for new file.')
 
@@ -470,6 +471,7 @@ class RocketLoggerFile:
         header['sample_rate'] = round(header['sample_rate'] /
                                       decimation_factor)
 
+        self._filename = filename
         print('Read {} file(s)'.format(file_number))
 
     def get_channel_names(self):
@@ -527,34 +529,33 @@ class RocketLoggerFile:
 
         return values
 
-    def get_time(self, time_reference='local', absolute_time=False):
+    def get_time(self, absolute_time=False, time_reference='local'):
         """
         Get the timestamp of the data.
 
         Using simple linear interpolation to generating the sample from the
         block timestamps.
 
-        time_reference: Which clock data is being used.
-                        - 'local' The local oscillator clock (default)
-                        - 'network' The network synchronized clock
         absolute_time:  Wether the returned timestamps are relative to the
                         start time in seconds (default) or absolute timestamps
+        time_reference: Which clock data is being used (absolute time only)
+                        - 'local' The local oscillator clock (default)
+                        - 'network' The network synchronized clock
         return value:   A numpy array containing the timestamps
         """
-        # get timestamps from requested timer
-        if time_reference is 'local':
-            timestamp_values = self._timestamps_monotonic
-        elif time_reference is 'network':
-            timestamp_values = self._timestamps_realtime
-        else:
-            raise KeyError('Time reference "{}" undefined.'.format(
-                           time_reference))
-
         # transform value to absolute time if requested
         if absolute_time:
-            # TODO: Interpolate absolute time
             raise NotImplementedError('Abolute timestamp handling '
                                       'currently unsupported')
+
+            # get timestamps from requested timer
+            if time_reference is 'local':
+                timestamp_values = self._timestamps_monotonic
+            elif time_reference is 'network':
+                timestamp_values = self._timestamps_realtime
+            else:
+                raise KeyError('Time reference "{}" undefined.'.format(
+                            time_reference))
 
             sample_points = np.arange(0, self._header['data_block_count'] + 1)
 
@@ -565,7 +566,6 @@ class RocketLoggerFile:
             #                  obj.header.data_block_size);
             # timestamps = interp1(points, temp_time, interp_points)';
         else:
-            # TODO: Interpolate relative time
             timestamps = (np.arange(0, self._header['sample_count']) /
                           self._header['sample_rate'])
 
@@ -603,6 +603,7 @@ class RocketLoggerFile:
 
             # build merged channel info and data
             merged_channel_info = {}
+            merged_channel_info['unit'] = low_channel['unit']
             merged_channel_info['unit_index'] = low_channel['unit_index']
             merged_channel_info['scale'] = low_channel['scale']
             merged_channel_info['data_size'] = (low_channel['data_size'] +
@@ -620,8 +621,11 @@ class RocketLoggerFile:
             self._data.append(merged_data)
             self._header['channels'].append(merged_channel_info)
 
-            # drop original channels if not kept
-            if not keep_channels:
+            # drop original channels if not kept, update header info
+            if keep_channels:
+                self._header['channel_analog_count'] =\
+                    self._header['channel_analog_count'] + 1
+            else:
                 del(self._data[low_valid_index])
                 del(self._header['channels'][low_valid_index])
                 low_index = self.get_channel_index(candidate['low'])
@@ -630,6 +634,10 @@ class RocketLoggerFile:
                 high_index = self.get_channel_index(candidate['high'])
                 del(self._data[high_index])
                 del(self._header['channels'][high_index])
+                self._header['channel_binary_count'] =\
+                    self._header['channel_binary_count'] - 1
+                self._header['channel_analog_count'] =\
+                    self._header['channel_analog_count'] - 1
 
             print('Merged channels "{}" and "{}" to "{}".'.format(
                 candidate['low'], candidate['high'], candidate['merged']))
@@ -645,9 +653,73 @@ class RocketLoggerFile:
         Plot the loaded RocketLogger data.
 
         channel_names:  The names of the channels for which the data shall
-                        be returned. List of channel names or 'all' to select
-                        all channels (default: 'all')
-        return value:   Matplotlib figure handle of the plot
+                        be returned. List of channel names (or combination of)
+                        'all' to select all channels, 'voltages' to select
+                        voltage, 'currents' to select current, and 'digital'
+                        to select digital channels (default: 'all')
         """
-        # TODO: implement plotting
-        raise NotImplementedError('Plotting currently unsupported')
+        channels_digital = self._header['channels'][0:self._header['channel_binary_count']]
+        channels_current = [channel for channel in self._header['channels']
+                            if channel['unit'] is 'Current']
+        channels_voltage = [channel for channel in self._header['channels']
+                            if channel['unit'] is 'Voltage']
+
+        plot_current_channels = []
+        plot_digital_channels = []
+        plot_voltage_channels = []
+
+        # get and group channels to plot
+        for channel_name in channel_names:
+            if channel_name is 'all':
+                plot_current_channels = channels_current
+                plot_digital_channels = channels_digital
+                plot_voltage_channels = channels_voltage
+                break
+            elif channel_name is 'voltages':
+                plot_voltage_channels = channels_voltage
+            elif channel_name is 'currents':
+                plot_current_channels = channels_current
+            elif channel_name is 'digital':
+                plot_digital_channels = channels_digital
+            else:
+                channel_index = self.get_channel_index(channel_name)
+                if channel_index is None:
+                    raise RocketLoggerFile('Channel {} not found'.format(
+                                           channel_name))
+                if channel_name is 'voltages':
+                    plot_voltage_channels.append(self._header['channels'][
+                                                 channel_index])
+                elif channel_name is 'currents':
+                    plot_current_channels.append(self._header['channels'][
+                                                 channel_index])
+                elif channel_name is 'digital':
+                    plot_digital_channels.append(self._header['channels'][
+                                                 channel_index])
+
+        # prepare plot groups
+        plot_groups = [plot_voltage_channels, plot_current_channels,
+                       plot_digital_channels]
+        plot_groups_axis_label = ['voltage [V]', 'current [A]', 'digital']
+        plot_time = self.get_time()
+
+        subplot_count = len([group for group in plot_groups if len(group) > 0])
+        fig, ax = plt.subplots(subplot_count, 1, sharex='col')
+        if subplot_count == 1:
+            ax = [ax]
+        plt.suptitle(self._filename)
+
+        # plot
+        subplot_index = 0
+        for i in range(len(plot_groups)):
+            plot_channels = plot_groups[i]
+            if len(plot_channels) == 0:
+                continue
+            plot_channel_names = [channel['name'] for channel in plot_channels]
+            plot_channel_data = self.get_data(plot_channel_names)
+            ax[subplot_index].plot(plot_time, plot_channel_data)
+            ax[subplot_index].set_ylabel(plot_groups_axis_label[i])
+            ax[subplot_index].legend(plot_channel_names)
+            subplot_index = subplot_index + 1
+
+        ax[subplot_count - 1].set_xlabel('time [s]')
+        plt.show(block=False)

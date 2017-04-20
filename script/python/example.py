@@ -12,20 +12,25 @@ from rocketlogger.rocketlogger import RocketLoggerFile
 data_file = 'test_data/test.rld'
 
 # minimal example
-r1 = RocketLoggerFile(data_file)
-print(r1._header)
-print(r1._data[0].shape)
+r = RocketLoggerFile(data_file)
 
 # with import decimation
-r2 = RocketLoggerFile(data_file, decimation_factor=2)
-print(r2._header)
-print(r2._data[0].shape)
+r = RocketLoggerFile(data_file, decimation_factor=2)
+print(r._header)
+print(r._data[0].shape)
 
 # with channel merging
-r3 = RocketLoggerFile(data_file)
-print(r3._header)
-print(r3._data[0].shape)
-r3.merge_channels(keep_channels=False)
-print(r3._header)
-print(r3._data[0].shape)
+r = RocketLoggerFile(data_file)
+print(r._header)
+print(r._data[0].shape)
+r.merge_channels(keep_channels=False)
+print(r._header)
+print(r._data[0].shape)
 
+# with plotting
+r = RocketLoggerFile(data_file)
+r.plot(['voltages', 'currents'])
+r.plot(['digital'])
+
+# straight loading, merging, plotting
+RocketLoggerFile(data_file).merge_channels().plot()
