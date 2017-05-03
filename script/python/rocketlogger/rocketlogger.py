@@ -615,9 +615,9 @@ class RocketLoggerFile:
             merged_data = np.empty(self._data[low_index].shape, dtype=np.dtype(
                 '<i{}'.format(merged_channel_info['data_size'])))
             merged_data = (self._data[low_valid_index] * self._data[low_index]
-                           + np.logical_not(self._data[low_valid_index]) *
+                           + ((np.logical_not(self._data[low_valid_index]) * 1.0) *
                            self._data[high_index] *
-                           10**(high_channel['scale'] - low_channel['scale']))
+                           10**(high_channel['scale'] - low_channel['scale'])))
             self._data.append(merged_data)
             self._header['channels'].append(merged_channel_info)
 
