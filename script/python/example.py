@@ -6,21 +6,21 @@ Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 
 """
 
-from rocketlogger.rocketlogger import RocketLoggerFile
+from rocketlogger.data import RocketLoggerData
 
 
-data_file = 'test_data/test.rld'
+data_file = 'rocketlogger/tests/data/test-full.rld'
 
 # minimal example
-r = RocketLoggerFile(data_file)
+r = RocketLoggerData(data_file)
 
 # with import decimation
-r = RocketLoggerFile(data_file, decimation_factor=2)
+r = RocketLoggerData(data_file, decimation_factor=2)
 print(r._header)
 print(r._data[0].shape)
 
 # with channel merging
-r = RocketLoggerFile(data_file)
+r = RocketLoggerData(data_file)
 print(r._header)
 print(r._data[0].shape)
 r.merge_channels(keep_channels=False)
@@ -28,9 +28,9 @@ print(r._header)
 print(r._data[0].shape)
 
 # with plotting
-r = RocketLoggerFile(data_file)
+r = RocketLoggerData(data_file)
 r.plot(['voltages', 'currents'])
 r.plot(['digital'])
 
 # straight loading, merging, plotting
-RocketLoggerFile(data_file).merge_channels().plot()
+RocketLoggerData(data_file).merge_channels().plot()
