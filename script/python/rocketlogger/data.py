@@ -746,7 +746,6 @@ class RocketLoggerData:
         Merge seemlessly switched current channels into a combined channel.
 
         keep_channels:  Whether the merged channels are kept (default: False)
-        return value:   Reference to the class instance itself
         """
         merged_channels = False
         for candidate in _CHANNEL_MERGE_CANDIDATES:
@@ -808,8 +807,6 @@ class RocketLoggerData:
         if not merged_channels:
             warnings.warn('No channels found to merge.',
                           RocketLoggerDataWarning)
-
-        return self
 
     def plot(self, channel_names=['all']):
         """

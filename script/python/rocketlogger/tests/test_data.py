@@ -19,7 +19,7 @@ _TEST_FILE_DIR = 'data'
 _TEST_FILE_PATH = os.path.join(os.path.dirname(__file__), _TEST_FILE_DIR)
 _FULL_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-full.rld')
 _ANALOG_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-analog-only.rld')
-_DIGITAL_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-digital-only.rld')
+_STEPS_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-steps.rld')
 _INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-unsupported.rld')
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-v3-only.rld')
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-split.rld')
@@ -173,7 +173,7 @@ class TestDataHandling(TestCase):
 class TestDataPlot(TestCase):
 
     def setUp(self):
-        self.data = RocketLoggerData(_FULL_TEST_FILE)
+        self.data = RocketLoggerData(_STEPS_TEST_FILE)
 
     def tearDown(self):
         del(self.data)
@@ -188,6 +188,10 @@ class TestDataPlot(TestCase):
         self.assertEqual(len(self.data._header['channels']), 16)
 
     def test_plot_all(self):
+        self.data.plot()
+
+    def test_plot_merged(self):
+        self.data.merge_channels()
         self.data.plot()
 
     def test_plot_invalid(self):
