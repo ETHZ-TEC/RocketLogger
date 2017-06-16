@@ -17,11 +17,11 @@
 #include "types.h"
 
 
-int create_sem(void);
+int create_sem(key_t key, int num_sems);
 
 int remove_sem(int sem_id);
 
-int open_sem(void);
+int open_sem(key_t key, int num_sems);
 
 int wait_sem(int sem_id, int sem_num, int time_out);
 

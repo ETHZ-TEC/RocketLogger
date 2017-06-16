@@ -38,6 +38,7 @@
 #include "file_handling.h"
 #include "sem.h"
 #include "web.h"
+#include "ambient.h"
 
 
 
@@ -168,7 +169,7 @@ void pru_set_state(rl_pru_state state);
 int pru_init(void);
 int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor);
 
-int pru_sample(FILE* data, struct rl_conf* conf);
+int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
 
 void pru_stop(void); // stop pru when in continuous mode (has to be done before close)
 void pru_close(void);

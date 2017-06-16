@@ -241,7 +241,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// open semaphore
-	sem_id = open_sem();
+	sem_id = open_sem(SEM_KEY, NUM_SEMS);
 	if(sem_id < 0) {
 		// error already logged
 		exit(EXIT_FAILURE);

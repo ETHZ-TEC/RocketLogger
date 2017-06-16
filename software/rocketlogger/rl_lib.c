@@ -101,7 +101,13 @@ int rl_start(struct rl_conf* conf) {
 		rl_log(WARNING, "webserver plot does not work with update rates >1. Disabling webserver ...");
 		conf->enable_web_server = 0;
 	}
-	
+
+	// check ambient configuration
+	if (conf->ambient.enabled == AMBIENT_ENABLED && conf->file_format == NO_FILE) {
+		rl_log(WARNING, "Ambient logging not possible without file. Disabling ambient ...");
+		conf->ambient.enabled = AMBIENT_DISABLED;
+	}
+
 	// store PID to file
 	pid_t pid = getpid();
 	set_pid(pid);
@@ -115,6 +121,14 @@ int rl_start(struct rl_conf* conf) {
 	// INITIATION
 	hw_init(conf);
 	
+	// ambient setup
+	if (conf->ambient.enabled == AMBIENT_ENABLED) {
+		conf->ambient.sensor_count = scan_sensors(conf->ambient.available_sensors);
+		if (conf->ambient.sensor_count == 0) {
+			// no sensor available
+			conf->ambient.enabled = AMBIENT_DISABLED;
+		}
+	}
 	rl_log(INFO, "sampling started");
 	
 	// SAMPLING

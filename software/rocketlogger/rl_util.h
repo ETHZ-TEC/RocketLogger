@@ -31,6 +31,7 @@ typedef enum option {
 	FHR,           //!< Channels to force to high range
 	WEB,           //!< En-/disable data averaging for web server
 	DIGITAL_INPUTS,//!< Sample digital inputs
+	AMBIENT,	   //!< Ambient sensor logging
 	DEF_CONF,      //!< Set configuration as default
 	CALIBRATION,   //!< Use/ignore existing calibration values
 	FILE_FORMAT,   //!< File format
