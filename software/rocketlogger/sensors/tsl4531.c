@@ -1,172 +1,224 @@
+#include <errno.h>
+
+#include "sensor.h"
+
 #include "tsl4531.h"
 
-/// I2C-Bus file descriptor
-int tsl4531_bus[NUM_STB_SENSORS];
-/// Integration time multiplier
-uint8_t multiplier[NUM_STB_SENSORS] = {TSL4531_MULT_200, TSL4531_MULT_200, TSL4531_MULT_200, TSL4531_MULT_200};
 
-/// Auto-range settings
-int range[NUM_STB_SENSORS] = {TSL4531_RANGE_AUTO, TSL4531_RANGE_AUTO, TSL4531_RANGE_AUTO, TSL4531_RANGE_AUTO};
-int auto_range[NUM_STB_SENSORS] = {TSL4531_RANGE_MEDIUM, TSL4531_RANGE_MEDIUM, TSL4531_RANGE_MEDIUM, TSL4531_RANGE_MEDIUM};
+uint8_t TSL4531_sensors[] = TSL4531_I2C_ADDRESSES;
 
-int stb_i2c_addresses[NUM_STB_SENSORS] = {0x28, 0x29, 0x2A, 0x2B};
+int TSL4531_bus[sizeof(TSL4531_sensors)] = { -1 };
+
+enum TSL4531_range TSL4531_range[sizeof(TSL4531_sensors)] = { TSL4531_RANGE_AUTO };
+enum TSL4531_range TSL4531_auto_range[sizeof(TSL4531_sensors)] = { TSL4531_RANGE_MEDIUM };
+uint8_t TSL4531_multiplier[sizeof(TSL4531_sensors)] = { TSL4531_MULT_200 };
+int32_t TSL4531_values[sizeof(TSL4531_sensors)] = { 0 };
+
 
 /**
  * Initialize the light sensor
- * @return return code
+ * @param sensor_address The I2C address of the sensor
+ * @return return Status code
  */
-int TSL4531_init(int sensor) {
+int TSL4531_init(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
+	TSL4531_bus[sensor_index] = Sensors_openBus();
 
-	tsl4531_bus[sensor] = open(I2C_BUS_FILENAME, O_RDWR);
-	if (tsl4531_bus[sensor] < 0) {
-		rl_log(ERROR, "failed to open the I2C bus");
+	if (TSL4531_bus[sensor_index] < 0) {
+		rl_log(ERROR, "TSL4531 I2C bus not initialized properly");
 		return FAILURE;
 	}
 
-	int result = TSL4531_initComm(tsl4531_bus[sensor], sensor);
+	int result = ioctl(TSL4531_bus[sensor_index], I2C_SLAVE, sensor_address);
 	if (result < 0) {
 		rl_log(ERROR, "TSL4531 I2C initialization failed");
 		return FAILURE;
 	}
 
-	uint8_t sensor_id = TSL4531_getID(sensor);
+	uint8_t sensor_id = TSL4531_readID(sensor_address);
 	if (sensor_id != TSL4531_ID) {
-		//rl_log(ERROR, "wrong sensor ID: %d", sensor_id);
+		rl_log(ERROR, "TSL4531 with wrong sensor ID: %d", sensor_id);
 		return FAILURE;
 	}
 
-	TSL4531_setParams(sensor);
+	TSL4531_setParams(sensor_address);
 
 	return SUCCESS;
 }
 
 /**
- * Close TSL sensor
+ * Close TSL sensor.
+ * @param sensor_address The I2C address of the sensor
  */
-void TSL4531_close(int sensor) {
-	close(tsl4531_bus[sensor]);
+void TSL4531_close(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
+	Sensors_closeBus(TSL4531_bus[sensor_index]);
+	TSL4531_bus[sensor_index] = -1;
+	(void)TSL4531_bus[sensor_index]; // suppress unused warning
 }
 
 /**
- * Read a value from sensor
- * @return Value in lux
+ * Read the sensor values.
+ * @param sensor_address The I2C address of the sensor
  */
-int32_t TSL4531_readValue(int sensor) {
+void TSL4531_read(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
 
-	uint8_t data_low = i2c_smbus_read_byte_data(tsl4531_bus[sensor],
-	TSL4531_COMMAND | TSL4531_REG_DATALOW);
-	uint8_t data_high = i2c_smbus_read_byte_data(tsl4531_bus[sensor],
-	TSL4531_COMMAND | TSL4531_REG_DATAHIGH);
+	uint8_t data_low = i2c_smbus_read_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_DATALOW);
+	uint8_t data_high = i2c_smbus_read_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_DATAHIGH);
 
-	int32_t value = multiplier[sensor]
-			* ((((int32_t) data_high) * 256) + (int32_t) data_low);
+	TSL4531_values[sensor_index] = TSL4531_multiplier[sensor_index] *
+			((((int32_t) data_high) << 8) | ((int32_t) data_low));
 
-	if (range[sensor] == TSL4531_RANGE_AUTO) {
+	if (TSL4531_range[sensor_index] == TSL4531_RANGE_AUTO) {
 		// Auto-Range
-		switch (auto_range[sensor]) {
+		switch (TSL4531_auto_range[sensor_index]) {
 		case TSL4531_RANGE_LOW:
-			if (value >= TSL4531_RANGE_LOW_MAX) {
-				TSL4531_sendRange(TSL4531_RANGE_MEDIUM, sensor);
-				auto_range[sensor] = TSL4531_RANGE_MEDIUM;
+			if (TSL4531_values[sensor_index] >= TSL4531_RANGE_LOW_MAX) {
+				TSL4531_sendRange(sensor_address, TSL4531_RANGE_MEDIUM);
+				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 			}
 			break;
 		case TSL4531_RANGE_MEDIUM:
-			if (value >= TSL4531_RANGE_MEDIUM_MAX) {
-				TSL4531_sendRange(TSL4531_RANGE_HIGH, sensor);
-				auto_range[sensor] = TSL4531_RANGE_HIGH;
-			} else if (value < TSL4531_RANGE_LOW_MAX - TSL4531_RANGE_HYSTERESIS) {
-				TSL4531_sendRange(TSL4531_RANGE_LOW, sensor);
-				auto_range[sensor] = TSL4531_RANGE_LOW;
+			if (TSL4531_values[sensor_index] >= TSL4531_RANGE_MEDIUM_MAX) {
+				TSL4531_sendRange(sensor_address, TSL4531_RANGE_HIGH);
+				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_HIGH;
+			} else if (TSL4531_values[sensor_index] < TSL4531_RANGE_LOW_MAX - TSL4531_RANGE_HYSTERESIS) {
+				TSL4531_sendRange(sensor_address, TSL4531_RANGE_LOW);
+				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_LOW;
 			}
 			break;
 		case TSL4531_RANGE_HIGH:
-			if (value < TSL4531_RANGE_MEDIUM_MAX - TSL4531_RANGE_HYSTERESIS) {
-				TSL4531_sendRange(TSL4531_RANGE_MEDIUM, sensor);
-				auto_range[sensor] = TSL4531_RANGE_MEDIUM;
+			if (TSL4531_values[sensor_index] < TSL4531_RANGE_MEDIUM_MAX - TSL4531_RANGE_HYSTERESIS) {
+				TSL4531_sendRange(sensor_address, TSL4531_RANGE_MEDIUM);
+				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 			}
 			break;
 		default:
 			break;
 		}
 	}
+}
 
-	return value;
+/**
+ * Get the values read from the sensor
+ * @param sensor_address The I2C address of the sensor
+ * @param channel The channel of the sensor to get
+ * @return Sensor value in lux
+ */
+int32_t TSL4531_getValue(uint8_t sensor_address, uint8_t channel) {
+	if (channel > 0) {
+		return 0;
+	}
 
+	int sensor_index = TSL4531_getIndex(sensor_address);
+
+	return TSL4531_values[sensor_index];
 }
 
 /**
  * Set range of light sensor
- * @param new_range The range {@link tsl4531_range} to set
+ * @param sensor_address The I2C address of the sensor
+ * @param range The range {@link TSL4531_range} to set
  */
-void TSL4531_setRange(int new_range, int sensor) {
-	TSL4531_sendRange(new_range, sensor);
-	range[sensor] = new_range;
+void TSL4531_setRange(uint8_t sensor_address, int range) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
+	TSL4531_sendRange(sensor_address, range);
+	TSL4531_range[sensor_index] = range;
 }
 
 /**
  * Get current range
- * @return current range {@link tsl4531_range}
+ * @param sensor_address The I2C address of the sensor
+ * @return current range {@link TSL4531_range}
  */
-int TSL4531_getRange(int sensor) {
-	if(range[sensor] == TSL4531_RANGE_AUTO) {
-		return auto_range[sensor];
-	} else {
-		return range[sensor];
-	}
-}
+int TSL4531_getRange(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
 
-/**
- * Initiate an I2C communication
- * @param i2c_bus The I2C bus for communication
- * @return Status code
- */
-int TSL4531_initComm(int i2c_bus, int sensor) {
-	return ioctl(i2c_bus, I2C_SLAVE, stb_i2c_addresses[sensor]);
+	if(TSL4531_range[sensor_index] == TSL4531_RANGE_AUTO) {
+		return TSL4531_auto_range[sensor_index];
+	} else {
+		return TSL4531_range[sensor_index];
+	}
 }
 
 /**
  * Get the device ID
- * @param id The device id read
+ * @param sensor_address The I2C address of the sensor
  * @return Status code
  */
-uint8_t TSL4531_getID(int sensor) {
+uint8_t TSL4531_readID(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
 
-	return (uint8_t) i2c_smbus_read_byte_data(tsl4531_bus[sensor],
-	TSL4531_COMMAND | TSL4531_REG_ID);
+	int read_result = i2c_smbus_read_byte_data(TSL4531_bus[sensor_index],
+		TSL4531_COMMAND | TSL4531_REG_ID);
+
+	if (read_result < 0) {
+		rl_log(ERROR, "TSL4531 I2C error reading ID of sensor");
+	}
+	return (uint8_t) read_result;
 }
 
-void TSL4531_setParams(int sensor) {
+/**
+ * Set the sensor parameter to default for continuous sensing.
+ * @param sensor_address The I2C address of the sensor
+ */
+void TSL4531_setParams(uint8_t sensor_address) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
 
-	i2c_smbus_write_byte_data(tsl4531_bus[sensor], TSL4531_COMMAND | TSL4531_REG_CONTROL,
-	TSL4531_SAMPLE_CONTINUOUS);
+	i2c_smbus_write_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_CONTROL,
+		TSL4531_SAMPLE_CONTINUOUS);
 
-	TSL4531_setRange(TSL4531_RANGE_AUTO, sensor);
+	TSL4531_setRange(sensor_address, TSL4531_RANGE_AUTO);
 }
 
-void TSL4531_sendRange(int new_range, int sensor) {
-	switch (new_range) {
+/**
+ * Configure the range of the sensor.
+ * @param sensor_address The I2C address of the sensor
+ * @param range The range {@link TSL4531_range} to set
+ */
+void TSL4531_sendRange(uint8_t sensor_address, int range) {
+	int sensor_index = TSL4531_getIndex(sensor_address);
+
+	switch (range) {
 	case TSL4531_RANGE_LOW:
-		i2c_smbus_write_byte_data(tsl4531_bus[sensor], TSL4531_COMMAND | TSL4531_REG_CONFIG,
-		TSL4531_INT_TIME_400 | TSL4531_LOW_POWER);
-		multiplier[sensor] = TSL4531_MULT_400;
+		i2c_smbus_write_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_CONFIG,
+			TSL4531_INT_TIME_400 | TSL4531_LOW_POWER);
+		TSL4531_multiplier[sensor_index] = TSL4531_MULT_400;
 		break;
 	case TSL4531_RANGE_MEDIUM:
-		i2c_smbus_write_byte_data(tsl4531_bus[sensor], TSL4531_COMMAND | TSL4531_REG_CONFIG,
-		TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
-		multiplier[sensor] = TSL4531_MULT_200;
+		i2c_smbus_write_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_CONFIG,
+			TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
+		TSL4531_multiplier[sensor_index] = TSL4531_MULT_200;
 		break;
 	case TSL4531_RANGE_HIGH:
-		i2c_smbus_write_byte_data(tsl4531_bus[sensor], TSL4531_COMMAND | TSL4531_REG_CONFIG,
-		TSL4531_INT_TIME_100 | TSL4531_LOW_POWER);
-		multiplier[sensor] = TSL4531_MULT_100;
+		i2c_smbus_write_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_CONFIG,
+			TSL4531_INT_TIME_100 | TSL4531_LOW_POWER);
+		TSL4531_multiplier[sensor_index] = TSL4531_MULT_100;
 		break;
 	case TSL4531_RANGE_AUTO:
-		i2c_smbus_write_byte_data(tsl4531_bus[sensor], TSL4531_COMMAND | TSL4531_REG_CONFIG,
-		TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
-		multiplier[sensor] = TSL4531_MULT_200;
-		auto_range[sensor] = TSL4531_RANGE_MEDIUM;
+		i2c_smbus_write_byte_data(TSL4531_bus[sensor_index], TSL4531_COMMAND | TSL4531_REG_CONFIG,
+			TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
+		TSL4531_multiplier[sensor_index] = TSL4531_MULT_200;
+		TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 		break;
 	default:
 		break;
 	}
+}
+
+/**
+ * Get the index of the sensor with specified address.
+ * @param sensor_address The sensor address used to look up the index
+ * @return The index of the sensor, or if not found -1
+ */
+int TSL4531_getIndex(uint8_t sensor_address) {
+	int index = 0;
+	while (index < sizeof(TSL4531_sensors)) {
+		if (sensor_address == TSL4531_sensors[index]) {
+			return index;
+		}
+		index++;
+	}
+	return -1;
 }

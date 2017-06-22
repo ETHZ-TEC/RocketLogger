@@ -20,15 +20,15 @@
 #include "../types.h"
 #include "../log.h"
 
-#define NUM_STB_SENSORS 4
-enum stb_sensors {
-	STB0 = 0,
-	STB1 = 1,
-	STB2 = 2,
-	STB3 = 3,
-};
+#define TSL4531_I2C_ADDRESS_LEFT 0x29
+#define TSL4531_I2C_ADDRESS_RIGHT 0x28
 
-//#define TSL4531_I2C_ADDRESS 0x29
+#define TSL4531_I2C_ADDRESSES { (TSL4531_I2C_ADDRESS_LEFT), (TSL4531_I2C_ADDRESS_RIGHT) }
+
+#define TSL4531_CHANNEL_DEFAULT 0
+
+
+// register definitions
 #define TSL4531_ID 162
 
 #define TSL4531_COMMAND 0x80
@@ -57,7 +57,7 @@ enum stb_sensors {
 /**
  * Ranges
  */
-enum tsl4531_range {
+enum TSL4531_range {
 	TSL4531_RANGE_LOW, TSL4531_RANGE_MEDIUM, TSL4531_RANGE_HIGH, TSL4531_RANGE_AUTO,
 };
 #define TSL4531_RANGE_LOW_MAX 65000
@@ -68,20 +68,21 @@ enum tsl4531_range {
 /*
  * API FUNCTIONS
  */
-int TSL4531_init(int sensor);
-void TSL4531_close(int sensor);
-int32_t TSL4531_readValue(int sensor);
-void TSL4531_setRange(int range, int sensor);
-int TSL4531_getRange(int sensor);
+int TSL4531_init(uint8_t);
+void TSL4531_close(uint8_t);
+void TSL4531_read(uint8_t);
+int32_t TSL4531_getValue(uint8_t, uint8_t);
+
+void TSL4531_setRange(uint8_t, int);
+int TSL4531_getRange(uint8_t);
 
 
 /*
  * Helper FUNCTIONS
  */
-int TSL4531_initComm(int i2c_bus, int sensor);
-uint8_t TSL4531_getID(int sensor);
-void TSL4531_setParams(int sensor);
-void TSL4531_sendRange(int new_range, int sensor);
-
+uint8_t TSL4531_readID(uint8_t);
+void TSL4531_setParams(uint8_t);
+void TSL4531_sendRange(uint8_t, int);
+int TSL4531_getIndex(uint8_t);
 
 #endif /* SENSOR_TSL4531_H_ */

@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#define _FILE_OFFSET_BITS 64
+#include "sensors/sensor.h"
 
 #include "rl_hw.h"
 
@@ -42,6 +42,12 @@ void hw_init(struct rl_conf* conf) {
 	// PRU
 	pru_init();
 
+	// SENSORS
+	if (conf->ambient.enabled == AMBIENT_ENABLED) {
+		Sensors_initSharedBus();
+		conf->ambient.sensor_count = Sensors_scan(conf->ambient.available_sensors);
+	}
+
 	// STATE
 	status.state = RL_RUNNING;
 	status.sampling = SAMPLING_OFF;
@@ -74,7 +80,10 @@ void hw_close(struct rl_conf* conf) {
 	pru_close();
 
 	// SENSORS
-	close_sensors(conf->ambient.available_sensors);
+	if (conf->ambient.enabled == AMBIENT_ENABLED) {
+		Sensors_close(conf->ambient.available_sensors);
+		Sensors_closeSharedBus();
+	}
 
 	// RESET SHARED MEM
 	status.samples_taken = 0;

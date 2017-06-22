@@ -1,63 +1,8 @@
+
+#include "sensors/sensor.h"
+
 #include "ambient.h"
 
-// Sensor Library
-// Add new sensors here
-struct rl_sensor sensors[LIB_SENSOR_COUNT] = {
-		{ "TSL4531_0", RL_UNIT_LUX, RL_SCALE_NONE, &STB0_init, &STB0_close, &STB0_readValue },
-		{ "TSL4531_1", RL_UNIT_LUX, RL_SCALE_NONE, &STB1_init, &STB1_close, &STB1_readValue },
-};
-
-
-
-// SENSORS //
-
-uint8_t scan_sensors(int available_sensors[LIB_SENSOR_COUNT]) {
-
-	// log message
-	char message[MAX_MESSAGE_LENGTH] = "Found ambient sensors:\n\t- ";
-
-	// Scan for available sensors //
-	uint8_t sensor_count = 0;
-	int i = 0;
-
-	// scan
-	for (i = 0; i < LIB_SENSOR_COUNT; i++) {
-		if ((*sensors[i].init)() == SUCCESS) {
-
-			// sensor available
-			sensor_count++;
-			available_sensors[i] = 1;
-
-			// message
-			strcat(message, sensors[i].name); strcat(message, "\n\t- ");
-
-		} else {
-
-			// sensor not available
-			available_sensors[i] = -1;
-		}
-	}
-
-
-	// message & return
-	if (sensor_count == 0) {
-		rl_log(WARNING, "no ambient sensor found...");
-	} else {
-		message[strlen(message) - 3] = 0;
-		rl_log(INFO, "%s", message);
-		printf("\n\n%s\n", message);
-	}
-	return sensor_count;
-}
-
-void close_sensors(int available_sensors[LIB_SENSOR_COUNT]) {
-	int i;
-	for (i = 0; i < LIB_SENSOR_COUNT; i++) {
-		if (available_sensors[i] > 0) {
-			(*sensors[i].close)();
-		}
-	}
-}
 
 void store_ambient_data(FILE* ambient_file, struct rl_conf* conf) {
 
@@ -81,16 +26,17 @@ void store_ambient_data(FILE* ambient_file, struct rl_conf* conf) {
 	int j = 0;
 	int32_t sensor_data[conf->ambient.sensor_count];
 
-	for (i = 0; i < LIB_SENSOR_COUNT; i++) {
+	for (i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
 		if (conf->ambient.available_sensors[i] > 0) {
-			sensor_data[j] = (*sensors[i].read_value)();
+			sensor_registry[i].read(sensor_registry[i].address);
+			sensor_data[j] = sensor_registry[i].getValue(sensor_registry[i].address,
+				sensor_registry[i].channel);
 			j++;
 		}
 	}
 
 	// WRITE VALUES //
 	fwrite(sensor_data, sizeof(int32_t), conf->ambient.sensor_count, ambient_file);
-
 }
 
 // FILE HEADER //
@@ -161,14 +107,14 @@ void setup_ambient_channels(struct rl_file_header* file_header,
 			total_channel_count * sizeof(struct rl_file_channel));
 
 	// write channels
-	for (i = 0; i < LIB_SENSOR_COUNT; i++) {
+	for (i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
 		if (conf->ambient.available_sensors[i] > 0) {
 
-			file_header->channel[j].unit = sensors[i].unit;
-			file_header->channel[j].channel_scale = sensors[i].scale;
+			file_header->channel[j].unit = sensor_registry[i].unit;
+			file_header->channel[j].channel_scale = sensor_registry[i].scale;
 			file_header->channel[j].valid_data_channel = NO_VALID_DATA;
 			file_header->channel[j].data_size = 4;
-			strcpy(file_header->channel[j].name, sensors[i].name);
+			strcpy(file_header->channel[j].name, sensor_registry[i].name);
 
 			j++;
 		}

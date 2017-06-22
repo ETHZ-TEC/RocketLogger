@@ -40,7 +40,6 @@
 #include <ncurses.h>
 
 
-
 // DEFINES
 
 // return codes
@@ -173,13 +172,13 @@ typedef enum log_type {
 
 
 // AMBIENT CONF //
-#define LIB_SENSOR_COUNT 8
+#define AMBIENT_MAX_SENSOR_COUNT 128
 #define AMBIENT_DISABLED 0
 #define AMBIENT_ENABLED 1
 struct rl_ambient {
 	uint8_t enabled;
 	uint8_t sensor_count;
-	int available_sensors[LIB_SENSOR_COUNT];
+	int8_t available_sensors[AMBIENT_MAX_SENSOR_COUNT];
 	char file_name[MAX_PATH_LENGTH];
 } ambient;
 

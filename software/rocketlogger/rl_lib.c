@@ -121,19 +121,16 @@ int rl_start(struct rl_conf* conf) {
 	// INITIATION
 	hw_init(conf);
 	
-	// ambient setup
-	if (conf->ambient.enabled == AMBIENT_ENABLED) {
-		conf->ambient.sensor_count = scan_sensors(conf->ambient.available_sensors);
-		if (conf->ambient.sensor_count == 0) {
-			// no sensor available
-			conf->ambient.enabled = AMBIENT_DISABLED;
-		}
+	// check ambient sensor available
+	if (conf->ambient.enabled == AMBIENT_ENABLED && conf->ambient.sensor_count == 0) {
+		conf->ambient.enabled = AMBIENT_DISABLED;
+		rl_log(WARNING, "No ambient sensor found. Disabling ambient ...");
 	}
-	rl_log(INFO, "sampling started");
-	
+
+
 	// SAMPLING
+	rl_log(INFO, "sampling start");
 	hw_sample(conf);
-	
 	rl_log(INFO, "sampling finished");
 	
 	// FINISH

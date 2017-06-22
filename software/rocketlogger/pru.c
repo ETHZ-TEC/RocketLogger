@@ -369,20 +369,23 @@ int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf) {
 	
 	// file header lead-in
 	struct rl_file_header ambient_file_header;
-	setup_ambient_lead_in(&(ambient_file_header.lead_in), conf);
-
 	// channel array
 	struct rl_file_channel ambient_file_channel[conf->ambient.sensor_count];
-	ambient_file_header.channel = ambient_file_channel;
 
-	// complete file header
-	setup_ambient_header(&ambient_file_header, conf);
-	
-	// store header
 	if(conf->ambient.enabled == AMBIENT_ENABLED) {
+
+		setup_ambient_lead_in(&(ambient_file_header.lead_in), conf);
+
+		// channel array
+		ambient_file_header.channel = ambient_file_channel;
+	
+		// complete file header
+		setup_ambient_header(&ambient_file_header, conf);
+
+		// store header
 		store_header_bin(ambient_file, &ambient_file_header);
 	}
-	
+
 	
 	// EXECUTION
 	
