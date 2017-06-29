@@ -8,8 +8,6 @@
 #include <stdint.h>
 
 #include "../rl_file.h"
-//#include "bme280.h"
-#include "tsl4531.h"
 
 
 #define MAX_MESSAGE_LENGTH 1000
@@ -19,7 +17,7 @@
 #endif
 
 /// Number of sensor registred
-#define SENSOR_REGISTRY_SIZE 2
+#define SENSOR_REGISTRY_SIZE 5
 
 #define SENSOR_NAME_LENGTH (RL_FILE_CHANNEL_NAME_LENGTH)
 
@@ -34,7 +32,7 @@ struct rl_sensor {
 	int32_t scale;
 	int (*init)(uint8_t);
 	void (*close)(uint8_t);
-	void (*read)(uint8_t);
+	int (*read)(uint8_t);
 	int32_t (*getValue)(uint8_t, uint8_t);
 };
 

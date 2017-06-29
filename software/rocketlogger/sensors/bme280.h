@@ -21,7 +21,7 @@
 #include "../log.h"
 
 
-#define BME280_I2C_ADDRESS_LEFT 0x29
+#define BME280_I2C_ADDRESS_LEFT 0x76
 
 #define BME280_I2C_ADDRESSES { (BME280_I2C_ADDRESS_LEFT) }
 
@@ -33,10 +33,10 @@
 // register definitions
 #define BME280_ID 0x60
 
-#define BME280_COMMAND 0x80
-
+#define BME280_REG_CALIBRATION_BLOCK1 0x88
 #define BME280_REG_ID 0xD0
 #define BME280_REG_RESET 0xE0
+#define BME280_REG_CALIBRATION_BLOCK2 0xE1
 #define BME280_REG_CONTROL_HUMIDITY 0xF2
 #define BME280_REG_STATUS 0xF3
 #define BME280_REG_CONTROL_MEASURE 0xF4
@@ -49,6 +49,11 @@
 #define BME280_REG_TEMPERATURE_XLSB 0xFC
 #define BME280_REG_HUMIDITY_MSB 0xFD
 #define BME280_REG_HUMIDITY_LSB 0xFE
+
+#define BME280_CALIBRATION_BLOCK1_SIZE 26
+#define BME280_CALIBRATION_BLOCK2_SIZE 16
+
+#define BME280_DATA_BLOCK_SIZE 8
 
 #define BME280_RESET_VALUE 0xB6
 
@@ -93,31 +98,28 @@
 #define BME280_FILTER_16 0x10
 #define BME280_SPI_EN 0x01
 
-#define BME280_HUMIDITY_MAX 419430400
-
-#define BME280_TEMPERATURE_OFFSET 76800
-#define BME280_TEMPERATURE_MAX 419430400
-
-#define BME280_PREASURE_OFFSET 1048576
-#define BME280_PREASURE_MAX 419430400
-
 
 /*
  * API FUNCTIONS
  */
 int BME280_init(uint8_t);
 void BME280_close(uint8_t);
-void BME280_read(uint8_t);
+int BME280_read(uint8_t);
 int32_t BME280_getValue(uint8_t, uint8_t);
 
 
 /*
  * Helper FUNCTIONS
  */
-int BME280_initComm(int, uint8_t);
-uint8_t BME280_getID(uint8_t);
-void BME280_setParams(uint8_t);
+uint8_t BME280_getID(void);
+int BME280_readCalibration(uint8_t);
+int BME280_setParameters(uint8_t);
 int BME280_getIndex(uint8_t);
+
+int32_t BME280_compensate_temperature_fine(uint8_t, int32_t);
+int32_t BME280_compensate_temperature(uint8_t, int32_t);
+uint32_t BME280_compensate_preasure(uint8_t, int32_t, int32_t);
+uint32_t BME280_compensate_humidity(uint8_t, int32_t, int32_t);
 
 
 #endif /* SENSOR_BME280_H_ */

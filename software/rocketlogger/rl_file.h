@@ -58,14 +58,16 @@
  * Data unit definition
  */
 typedef enum unit {
-	RL_UNIT_UNITLESS = 0,  //!< Unitless
-	RL_UNIT_VOLT = 1,       //!< Voltage
-	RL_UNIT_AMPERE = 2,     //!< Current
-	RL_UNIT_BINARY = 3,     //!< Binary signal
-	RL_UNIT_RANGE_VALID = 4,//!< Range valid information
-	RL_UNIT_LUX = 5,  		  //!< Lux
-	RL_UNIT_DEG_C = 6,		  //!< Degree celcius
-	RL_UNIT_INTEGER = 7,	  //!< Integer channel
+	RL_UNIT_UNITLESS = 0,  		//!< Unitless
+	RL_UNIT_VOLT = 1,       	//!< Voltage (electric)
+	RL_UNIT_AMPERE = 2,     	//!< Current (electric)
+	RL_UNIT_BINARY = 3,     	//!< Binary signal
+	RL_UNIT_RANGE_VALID = 4,	//!< Range valid information
+	RL_UNIT_LUX = 5,  		  	//!< Lux (illuminance)
+	RL_UNIT_DEG_C = 6,		  	//!< Degree celcius (temperature)
+	RL_UNIT_INTEGER = 7,	  	//!< Integer channel (numeric)
+	RL_UNIT_PERCENT = 8,	  	//!< Percent (numeric, humidity)
+	RL_UNIT_PASCAL = 9,		  	//!< Pascal (preasure)
 	RL_UNIT_UNDEFINED = 0xffffffff,  //!< Undefined unit
 } rl_unit;
 
@@ -78,8 +80,6 @@ struct time_stamp {
 	/// Nanoseconds
 	int64_t nsec;
 };
-
-
 
 
 /**

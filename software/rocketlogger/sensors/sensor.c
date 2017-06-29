@@ -8,6 +8,9 @@
 
 #include "../log.h"
 
+#include "bme280.h"
+#include "tsl4531.h"
+
 #include "sensor.h"
 
 
@@ -37,6 +40,39 @@ struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
 		&TSL4531_close,
 		&TSL4531_read,
 		&TSL4531_getValue,
+	},
+	{ 
+		"BME280_temp",
+		BME280_I2C_ADDRESS_LEFT,
+		BME280_CHANNEL_TEMPERATURE,
+		RL_UNIT_DEG_C,
+		RL_SCALE_MILLI,
+		&BME280_init,
+		&BME280_close,
+		&BME280_read,
+		&BME280_getValue,
+	},
+	{ 
+		"BME280_rh",
+		BME280_I2C_ADDRESS_LEFT,
+		BME280_CHANNEL_HUMIDITY,
+		RL_UNIT_PERCENT,
+		RL_SCALE_MILLI,
+		&BME280_init,
+		&BME280_close,
+		&BME280_read,
+		&BME280_getValue,
+	},
+	{ 
+		"BME280_preas",
+		BME280_I2C_ADDRESS_LEFT,
+		BME280_CHANNEL_PREASURE,
+		RL_UNIT_PASCAL,
+		RL_SCALE_MILLI,
+		&BME280_init,
+		&BME280_close,
+		&BME280_read,
+		&BME280_getValue,
 	},
 };
 
@@ -116,11 +152,20 @@ uint8_t Sensors_scan(int8_t sensors_available[]) {
 	uint8_t sensor_count = 0;
 	
 	// scan
+	uint8_t mutli_channel_initialized = 0xff;
 	for (unsigned int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
-		int result = sensor_registry[i].init(sensor_registry[i].address);
+		// do not initialize multi channel sensors more than once
+		int result = 0;
+		if (sensor_registry[i].address != mutli_channel_initialized) {
+			result = sensor_registry[i].init(sensor_registry[i].address);
+		} else {
+			result = SUCCESS;
+		}
+
 		if (result == SUCCESS) {
 			// sensor available
 			sensors_available[i] = (int8_t)sensor_registry[i].address;
+			mutli_channel_initialized = (int8_t)sensor_registry[i].address;
 			sensor_count++;
 
 			// message
@@ -129,6 +174,7 @@ uint8_t Sensors_scan(int8_t sensors_available[]) {
 		} else {
 			// sensor not available
 			sensors_available[i] = -1;
+			mutli_channel_initialized = 0xff;
 		}
 	}
 

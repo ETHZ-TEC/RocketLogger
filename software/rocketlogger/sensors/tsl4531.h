@@ -70,19 +70,19 @@ enum TSL4531_range {
  */
 int TSL4531_init(uint8_t);
 void TSL4531_close(uint8_t);
-void TSL4531_read(uint8_t);
+int TSL4531_read(uint8_t);
 int32_t TSL4531_getValue(uint8_t, uint8_t);
 
-void TSL4531_setRange(uint8_t, int);
+int TSL4531_setRange(uint8_t, int);
 int TSL4531_getRange(uint8_t);
 
 
 /*
  * Helper FUNCTIONS
  */
-uint8_t TSL4531_readID(uint8_t);
-void TSL4531_setParams(uint8_t);
-void TSL4531_sendRange(uint8_t, int);
+uint8_t TSL4531_getID(void);
+int TSL4531_setParameters(uint8_t);
+int TSL4531_sendRange(uint8_t, int);
 int TSL4531_getIndex(uint8_t);
 
 #endif /* SENSOR_TSL4531_H_ */
