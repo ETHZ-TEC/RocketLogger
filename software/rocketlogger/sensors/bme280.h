@@ -51,7 +51,7 @@
 #define BME280_REG_HUMIDITY_LSB 0xFE
 
 #define BME280_CALIBRATION_BLOCK1_SIZE 26
-#define BME280_CALIBRATION_BLOCK2_SIZE 16
+#define BME280_CALIBRATION_BLOCK2_SIZE 7
 
 #define BME280_DATA_BLOCK_SIZE 8
 
@@ -97,6 +97,36 @@
 #define BME280_FILTER_8 0x0C
 #define BME280_FILTER_16 0x10
 #define BME280_SPI_EN 0x01
+
+
+/*
+ * Data Structures
+ */
+struct BME280_calibration_t {
+    // temperature
+    uint16_t T1;
+    int16_t T2;
+    int16_t T3;
+
+    // preasure
+    uint16_t P1;
+    int16_t P2;
+    int16_t P3;
+    int16_t P4;
+    int16_t P5;
+    int16_t P6;
+    int16_t P7;
+    int16_t P8;
+    int16_t P9;
+
+    // humidity
+    uint8_t H1;
+    int16_t H2;
+    uint8_t H3;
+    int16_t H4;
+    int16_t H5;
+    int8_t H6;
+};
 
 
 /*

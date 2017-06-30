@@ -60,50 +60,60 @@ void TSL4531_close(uint8_t sensor_address) {
 /**
  * Read the sensor values.
  * @param sensor_address The I2C address of the sensor
- * @TODO communication error handling
+ * @return return Status code
  */
 int TSL4531_read(uint8_t sensor_address) {
 	int sensor_index = TSL4531_getIndex(sensor_address);
 	int sensor_bus = Sensors_getSharedBus();
 
-	int result = Sensors_initSharedComm(sensor_address);
+	int result;
+
+	result = Sensors_initSharedComm(sensor_address);
 	if (result < 0) {
 		rl_log(ERROR, "TSL4531 I2C communication failed");
 		return FAILURE;
 	}
 
-	uint8_t data_low = i2c_smbus_read_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_DATALOW);
-	uint8_t data_high = i2c_smbus_read_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_DATAHIGH);
+	// read sensor data word
+	int32_t data = i2c_smbus_read_word_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_DATALOW);
+	if (data < 0) {
+		rl_log(ERROR, "TSL4531 reading data word failed");
+		return FAILURE;
+	}
 
-	TSL4531_values[sensor_index] = TSL4531_multiplier[sensor_index] *
-			((((int32_t) data_high) << 8) | ((int32_t) data_low));
+	TSL4531_values[sensor_index] = data & 0xffff;
 
 	if (TSL4531_range[sensor_index] == TSL4531_RANGE_AUTO) {
 		// Auto-Range
-		switch (TSL4531_auto_range[sensor_index]) {
+		enum TSL4531_range range_set = TSL4531_auto_range[sensor_index];
+		switch (range_set) {
 		case TSL4531_RANGE_LOW:
 			if (TSL4531_values[sensor_index] >= TSL4531_RANGE_LOW_MAX) {
-				TSL4531_sendRange(sensor_address, TSL4531_RANGE_MEDIUM);
 				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 			}
 			break;
 		case TSL4531_RANGE_MEDIUM:
 			if (TSL4531_values[sensor_index] >= TSL4531_RANGE_MEDIUM_MAX) {
-				TSL4531_sendRange(sensor_address, TSL4531_RANGE_HIGH);
 				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_HIGH;
 			} else if (TSL4531_values[sensor_index] < TSL4531_RANGE_LOW_MAX - TSL4531_RANGE_HYSTERESIS) {
-				TSL4531_sendRange(sensor_address, TSL4531_RANGE_LOW);
 				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_LOW;
 			}
 			break;
 		case TSL4531_RANGE_HIGH:
 			if (TSL4531_values[sensor_index] < TSL4531_RANGE_MEDIUM_MAX - TSL4531_RANGE_HYSTERESIS) {
-				TSL4531_sendRange(sensor_address, TSL4531_RANGE_MEDIUM);
 				TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 			}
 			break;
 		default:
-			break;
+			rl_log(ERROR, "TSL4531 auto range logic failure");
+			return FAILURE;
+		}
+
+		int result = TSL4531_sendRange(sensor_address, TSL4531_auto_range[sensor_index]);
+		if (result < 0) {
+			TSL4531_auto_range[sensor_index] = range_set;
+			rl_log(ERROR, "TSL4531 auto range update failed");
+			return FAILURE;
 		}
 	}
 
@@ -131,11 +141,16 @@ int32_t TSL4531_getValue(uint8_t sensor_address, uint8_t channel) {
  * @param sensor_address The I2C address of the sensor
  * @param range The range {@link TSL4531_range} to set
  * @return Status code
- * @TODO communication error handling
  */
 int TSL4531_setRange(uint8_t sensor_address, int range) {
 	int sensor_index = TSL4531_getIndex(sensor_address);
-	TSL4531_sendRange(sensor_address, range);
+
+	int result = TSL4531_sendRange(sensor_address, range);
+	if (result < 0) {
+		rl_log(ERROR, "TSL4531 auto range update failed");
+		return FAILURE;
+	}
+
 	TSL4531_range[sensor_index] = range;
 
 	return SUCCESS;
@@ -177,15 +192,24 @@ uint8_t TSL4531_getID(void) {
  * Set the sensor parameter to default for continuous sensing.
  * @param sensor_address The I2C address of the sensor
  * @return Status code
- * @TODO communication error handling
  */
 int TSL4531_setParameters(uint8_t sensor_address) {
 	int sensor_bus = Sensors_getSharedBus();
 
-	i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONTROL,
-		TSL4531_SAMPLE_CONTINUOUS);
+	int result;
 
-	TSL4531_setRange(sensor_address, TSL4531_RANGE_AUTO);
+	result = i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONTROL,
+		TSL4531_SAMPLE_CONTINUOUS);
+	if (result < 0) {
+		rl_log(ERROR, "TSL4531 writing control register failed");
+		return FAILURE;
+	}
+
+	result = TSL4531_setRange(sensor_address, TSL4531_RANGE_AUTO);
+	if (result < 0) {
+		rl_log(ERROR, "TSL4531 setting range failed");
+		return FAILURE;
+	}
 
 	return SUCCESS;
 }
@@ -201,30 +225,49 @@ int TSL4531_sendRange(uint8_t sensor_address, int range) {
 	int sensor_index = TSL4531_getIndex(sensor_address);
 	int sensor_bus = Sensors_getSharedBus();
 
+	int result;
+
 	switch (range) {
 	case TSL4531_RANGE_LOW:
-		i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
+		result = i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
 			TSL4531_INT_TIME_400 | TSL4531_LOW_POWER);
+		if (result < 0) {
+			rl_log(ERROR, "TSL4531 writing new range configuration failed");
+			return FAILURE;
+		}
 		TSL4531_multiplier[sensor_index] = TSL4531_MULT_400;
 		break;
 	case TSL4531_RANGE_MEDIUM:
-		i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
+		result = i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
 			TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
+		if (result < 0) {
+			rl_log(ERROR, "TSL4531 writing new range configuration failed");
+			return FAILURE;
+		}
 		TSL4531_multiplier[sensor_index] = TSL4531_MULT_200;
 		break;
 	case TSL4531_RANGE_HIGH:
-		i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
+		result = i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
 			TSL4531_INT_TIME_100 | TSL4531_LOW_POWER);
+		if (result < 0) {
+			rl_log(ERROR, "TSL4531 writing new range configuration failed");
+			return FAILURE;
+		}
 		TSL4531_multiplier[sensor_index] = TSL4531_MULT_100;
 		break;
 	case TSL4531_RANGE_AUTO:
-		i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
+		result = i2c_smbus_write_byte_data(sensor_bus, TSL4531_COMMAND | TSL4531_REG_CONFIG,
 			TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
+		if (result < 0) {
+			rl_log(ERROR, "TSL4531 writing new range configuration failed");
+			return FAILURE;
+		}
 		TSL4531_multiplier[sensor_index] = TSL4531_MULT_200;
 		TSL4531_auto_range[sensor_index] = TSL4531_RANGE_MEDIUM;
 		break;
 	default:
-		break;
+		rl_log(ERROR, "TSL4531 invalid range");
+		return FAILURE;
 	}
 
 	return SUCCESS;

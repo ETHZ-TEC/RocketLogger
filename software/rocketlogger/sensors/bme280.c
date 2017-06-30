@@ -9,9 +9,7 @@ int32_t BME280_temperature[sizeof(BME280_sensors)] = { 0 };
 int32_t BME280_humidity[sizeof(BME280_sensors)] = { 0 };
 int32_t BME280_preasure[sizeof(BME280_sensors)] = { 0 };
 
-int16_t BME280_calibration_temperature[sizeof(BME280_sensors)][3] = { {0} };
-int16_t BME280_calibration_humidity[sizeof(BME280_sensors)][6] = { {0} };
-int16_t BME280_calibration_preasure[sizeof(BME280_sensors)][9] = { {0} };
+struct BME280_calibration_t BME280_calibration[sizeof(BME280_sensors)];
 
 
 /**
@@ -26,7 +24,7 @@ int BME280_init(uint8_t sensor_address) {
 		return FAILURE;
 	}
 
-	int result = 0;
+	int result;
 
 	result = Sensors_initSharedComm(sensor_address);
 	if (result < 0) {
@@ -153,21 +151,21 @@ int BME280_readCalibration(uint8_t sensor_address) {
 		return FAILURE;
 	}
 
-	BME280_calibration_temperature[sensor_index][0] = ((int16_t)data[1] << 8) | ((int16_t)data[0]);
-	BME280_calibration_temperature[sensor_index][1] = ((int16_t)data[3] << 8) | ((int16_t)data[2]);
-	BME280_calibration_temperature[sensor_index][2] = ((int16_t)data[5] << 8) | ((int16_t)data[4]);
+	BME280_calibration[sensor_index].T1 = ((uint16_t)data[1] << 8) | ((uint16_t)data[0]);
+	BME280_calibration[sensor_index].T2 = ((int16_t)data[3] << 8) | ((int16_t)data[2]);
+	BME280_calibration[sensor_index].T3 = ((int16_t)data[5] << 8) | ((int16_t)data[4]);
 
-	BME280_calibration_preasure[sensor_index][0] = ((int16_t)data[7] << 8) | ((int16_t)data[6]);
-	BME280_calibration_preasure[sensor_index][1] = ((int16_t)data[9] << 8) | ((int16_t)data[8]);
-	BME280_calibration_preasure[sensor_index][2] = ((int16_t)data[11] << 8) | ((int16_t)data[10]);
-	BME280_calibration_preasure[sensor_index][3] = ((int16_t)data[13] << 8) | ((int16_t)data[12]);
-	BME280_calibration_preasure[sensor_index][4] = ((int16_t)data[15] << 8) | ((int16_t)data[14]);
-	BME280_calibration_preasure[sensor_index][5] = ((int16_t)data[17] << 8) | ((int16_t)data[16]);
-	BME280_calibration_preasure[sensor_index][6] = ((int16_t)data[19] << 8) | ((int16_t)data[18]);
-	BME280_calibration_preasure[sensor_index][7] = ((int16_t)data[21] << 8) | ((int16_t)data[20]);
-	BME280_calibration_preasure[sensor_index][8] = ((int16_t)data[23] << 8) | ((int16_t)data[22]);
+	BME280_calibration[sensor_index].P1 = ((uint16_t)data[7] << 8) | ((uint16_t)data[6]);
+	BME280_calibration[sensor_index].P2 = ((int16_t)data[9] << 8) | ((int16_t)data[8]);
+	BME280_calibration[sensor_index].P3 = ((int16_t)data[11] << 8) | ((int16_t)data[10]);
+	BME280_calibration[sensor_index].P4 = ((int16_t)data[13] << 8) | ((int16_t)data[12]);
+	BME280_calibration[sensor_index].P5 = ((int16_t)data[15] << 8) | ((int16_t)data[14]);
+	BME280_calibration[sensor_index].P6 = ((int16_t)data[17] << 8) | ((int16_t)data[16]);
+	BME280_calibration[sensor_index].P7 = ((int16_t)data[19] << 8) | ((int16_t)data[18]);
+	BME280_calibration[sensor_index].P8 = ((int16_t)data[21] << 8) | ((int16_t)data[20]);
+	BME280_calibration[sensor_index].P9 = ((int16_t)data[23] << 8) | ((int16_t)data[22]);
 
-	BME280_calibration_humidity[sensor_index][0] = (int16_t)data[25];
+	BME280_calibration[sensor_index].H1 = (uint8_t)data[25];
 
 	// second calibration data block (0xE1...0xE7 [0xF0], 7 [16] values)
 	int data_size2 = i2c_smbus_read_i2c_block_data(sensor_bus, BME280_REG_CALIBRATION_BLOCK2, BME280_CALIBRATION_BLOCK2_SIZE, data);
@@ -176,11 +174,11 @@ int BME280_readCalibration(uint8_t sensor_address) {
 		return FAILURE;
 	}
 
-	BME280_calibration_humidity[sensor_index][1] = ((int16_t)data[1] << 8) | ((int16_t)data[0]);
-	BME280_calibration_humidity[sensor_index][2] = (int16_t)data[2];
-	BME280_calibration_humidity[sensor_index][3] = ((int16_t)data[3] << 4) | ((int16_t)data[4] & 0x0f);
-	BME280_calibration_humidity[sensor_index][4] = ((int16_t)data[5] << 4) | ((int16_t)data[4] >> 4);
-	BME280_calibration_humidity[sensor_index][5] = (int16_t)data[6];
+	BME280_calibration[sensor_index].H2 = ((int16_t)data[1] << 8) | ((int16_t)data[0]);
+	BME280_calibration[sensor_index].H3 = (uint8_t)data[2];
+	BME280_calibration[sensor_index].H4 = ((int16_t)data[3] << 4) | ((int16_t)data[4] & 0x0f);
+	BME280_calibration[sensor_index].H5 = ((int16_t)data[5] << 4) | ((int16_t)data[4] >> 4);
+	BME280_calibration[sensor_index].H6 = (int8_t)data[6];
 
 	return SUCCESS;
 }
@@ -193,7 +191,7 @@ int BME280_setParameters(uint8_t sensor_address) {
 	(void)sensor_address; // suppress unsued variable warning
 	int sensor_bus = Sensors_getSharedBus();
 
-	int result = 0;
+	int result;
 
 	// config: standby 250ms, filter off, no SPI, continuous measurement
 	result = i2c_smbus_write_byte_data(sensor_bus, BME280_REG_CONFIG,
@@ -249,11 +247,11 @@ int32_t BME280_compensate_temperature_fine(uint8_t sensor_address, int32_t tempe
 	int sensor_index = BME280_getIndex(sensor_address);
 
 	int32_t var1, var2, temperature_fine;
-	var1 = ((((temperature_raw >> 3) - ((int32_t)BME280_calibration_temperature[sensor_index][0] << 1))) *
-			((int32_t)((int16_t)BME280_calibration_temperature[sensor_index][1]))) >> 11;
-	var2 = (((((temperature_raw >> 4) - ((int32_t)BME280_calibration_temperature[sensor_index][0])) *
-			((temperature_raw >> 4) - ((int32_t)BME280_calibration_temperature[sensor_index][0]))) >> 12) *
-			((int32_t)((int16_t)BME280_calibration_temperature[sensor_index][2]))) >> 14;
+	var1 = ((((temperature_raw >> 3) - ((int32_t)BME280_calibration[sensor_index].T1 << 1))) *
+			((int32_t)((int16_t)BME280_calibration[sensor_index].T2))) >> 11;
+	var2 = (((((temperature_raw >> 4) - ((int32_t)BME280_calibration[sensor_index].T1)) *
+			((temperature_raw >> 4) - ((int32_t)BME280_calibration[sensor_index].T1))) >> 12) *
+			((int32_t)((int16_t)BME280_calibration[sensor_index].T3))) >> 14;
 	temperature_fine = var1 + var2;
 
 	return temperature_fine;
@@ -284,20 +282,20 @@ uint32_t BME280_compensate_preasure(uint8_t sensor_address, int32_t preasure_raw
 
 	int64_t temperature_fine = BME280_compensate_temperature_fine(sensor_address, temperature_raw);
 	var1 = temperature_fine - 128000;
-	var2 = var1 * var1 * (int64_t)BME280_calibration_preasure[sensor_index][5] +
-		   ((var1 * (int64_t)BME280_calibration_preasure[sensor_index][4]) << 17) +
-		   (((int64_t)BME280_calibration_preasure[sensor_index][3]) << 35);
-	var1 = ((var1 * var1 * (int64_t)BME280_calibration_preasure[sensor_index][2]) >> 8) + 
-		   ((var1 * (int64_t)BME280_calibration_preasure[sensor_index][1]) << 12);
-	var1 = (((((int64_t)1) << 47) + var1) * ((int64_t)BME280_calibration_preasure[sensor_index][0])) >> 33;
+	var2 = var1 * var1 * (int64_t)BME280_calibration[sensor_index].P6 +
+		   ((var1 * (int64_t)BME280_calibration[sensor_index].P5) << 17) +
+		   (((int64_t)BME280_calibration[sensor_index].P4) << 35);
+	var1 = ((var1 * var1 * (int64_t)BME280_calibration[sensor_index].P3) >> 8) + 
+		   ((var1 * (int64_t)BME280_calibration[sensor_index].P2) << 12);
+	var1 = (((((int64_t)1) << 47) + var1) * ((int64_t)BME280_calibration[sensor_index].P1)) >> 33;
 	if (var1 == 0) {
 		return 0; // avoid exception caused by division by zero
 	}
 	preasure = 1048576 - preasure_raw;
 	preasure = (((preasure << 31) - var2) * 3125) / var1;
-	var1 = (((int64_t)BME280_calibration_preasure[sensor_index][8]) * (preasure >> 13) * (preasure >> 13)) >> 25;
-	var2 = (((int64_t)BME280_calibration_preasure[sensor_index][7]) * preasure) >> 19;
-	preasure = ((preasure + var1 + var2) >> 8) + (((int64_t)BME280_calibration_preasure[sensor_index][6]) << 4);
+	var1 = (((int64_t)BME280_calibration[sensor_index].P9) * (preasure >> 13) * (preasure >> 13)) >> 25;
+	var2 = (((int64_t)BME280_calibration[sensor_index].P8) * preasure) >> 19;
+	preasure = ((preasure + var1 + var2) >> 8) + (((int64_t)BME280_calibration[sensor_index].P7) << 4);
 
 	// Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
 	// Output value of '24674867' represents 24674867/256 = 96386.2 Pa = 963.862 hPa
@@ -308,11 +306,11 @@ uint32_t BME280_compensate_preasure(uint8_t sensor_address, int32_t preasure_raw
 }
 
 /**
- * Get the compensated temperature in milli degree centigrade. grained temperature compensation value for further processing.
+ * Get the compensated relative humidity in micros (0.0001 percents).
  * @param sensor_address The I2C address of the sensor
  * @param humidity_raw The raw humidity reading
  * @param temperature_raw The raw temperature reading
- * @return The compensated humidity in 0.001 percent
+ * @return The compensated humidity in micros (0.0001 percents)
  */
 uint32_t BME280_compensate_humidity(uint8_t sensor_address, int32_t humidity_raw, int32_t temperature_raw) {
 	int sensor_index = BME280_getIndex(sensor_address);
@@ -321,12 +319,12 @@ uint32_t BME280_compensate_humidity(uint8_t sensor_address, int32_t humidity_raw
 
 	/// TODO: offset calibration indexes by 1, check signs
 	int32_t humidity = (temperature_fine - ((int32_t)76800));
-	humidity = ((((humidity_raw << 14) - (((int32_t)BME280_calibration_humidity[sensor_index][3]) << 20) -
-				(((int32_t)BME280_calibration_humidity[sensor_index][4]) * humidity)) +	((int32_t)16384)) >> 15) *
-			   (((((((humidity * ((int32_t)BME280_calibration_humidity[sensor_index][5])) >> 10) *
-				(((humidity * ((int32_t)BME280_calibration_humidity[sensor_index][2])) >> 11) + ((int32_t)32768))) >> 10) +
-				((int32_t)2097152)) * ((int32_t)BME280_calibration_humidity[sensor_index][1]) + 8192) >> 14);
-	humidity = (humidity - (((((humidity >> 15) * (humidity >> 15)) >> 7) * ((int32_t)BME280_calibration_humidity[sensor_index][0])) >> 4));
+	humidity = ((((humidity_raw << 14) - (((int32_t)BME280_calibration[sensor_index].H4) << 20) -
+				(((int32_t)BME280_calibration[sensor_index].H5) * humidity)) +	((int32_t)16384)) >> 15) *
+			   (((((((humidity * ((int32_t)BME280_calibration[sensor_index].H6)) >> 10) *
+				(((humidity * ((int32_t)BME280_calibration[sensor_index].H3)) >> 11) + ((int32_t)32768))) >> 10) +
+				((int32_t)2097152)) * ((int32_t)BME280_calibration[sensor_index].H2) + 8192) >> 14);
+	humidity = (humidity - (((((humidity >> 15) * (humidity >> 15)) >> 7) * ((int32_t)BME280_calibration[sensor_index].H1)) >> 4));
 	if (humidity < 0) {
 		humidity = 0;
 	} else if (humidity > 419430400) {
@@ -337,6 +335,6 @@ uint32_t BME280_compensate_humidity(uint8_t sensor_address, int32_t humidity_raw
 	// Output value of '47445' represents 47445/1024 = 46.333 %RH
 	// return (uint32_t)(humidity >> 12);
 
-	uint32_t humidity_rebased = (uint32_t)((1000 * humidity) >> 22);
+	uint32_t humidity_rebased = (((uint64_t)10000 * humidity) >> 22);
 	return humidity_rebased;
 }

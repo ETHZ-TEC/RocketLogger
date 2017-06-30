@@ -16,8 +16,14 @@
 
 int sensor_bus = -1;
 
-// Sensor Registry
-// Add sensors connected to this list
+/**
+ * The sensor registry structure.
+ *
+ * Register your sensor (channels) here. Multiple channels from the same
+ * sensor should be added as consecutive entries.
+ *
+ * @note The SENSOR_REGISTRY_SIZE needs to be adjusted accordingly.
+ */
 struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
 	{ 
 		"TSL4531_left",
@@ -56,8 +62,8 @@ struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
 		"BME280_rh",
 		BME280_I2C_ADDRESS_LEFT,
 		BME280_CHANNEL_HUMIDITY,
-		RL_UNIT_PERCENT,
-		RL_SCALE_MILLI,
+		RL_UNIT_INTEGER,
+		RL_SCALE_MICRO,
 		&BME280_init,
 		&BME280_close,
 		&BME280_read,
