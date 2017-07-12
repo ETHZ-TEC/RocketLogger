@@ -12,32 +12,49 @@
  */
 void rl_print_config(struct rl_conf* conf) {
 
-	char file_format_names[3][10] = {"no file", "csv", "binary"};
+	char file_format_names[3][8] = {"no file", "csv", "binary"};
+	char data_aggregation_names[3][10] = {"none", "downsample", "average"};
 
-	if(conf->sample_rate >= KSPS) {		printf("  Sampling rate:    %dkSps\n", conf->sample_rate/KSPS);
-	} else {							printf("  Sampling rate:    %dSps\n", conf->sample_rate);}
-										printf("  Update rate:      %dHz\n", conf->update_rate);
-	if(conf->enable_web_server == 1)	printf("  Webserver:        enabled\n");
-	else								printf("  Webserver:        disabled\n");
-	if(conf->digital_inputs == 1)		printf("  Digital inputs:   enabled\n");
-	else								printf("  Digital inputs:   disabled\n");
-										printf("  File format:      %s\n", file_format_names[conf->file_format]);
-	if(conf->file_format != NO_FILE)	printf("  File name:        %s\n", conf->file_name);
-	if(conf->max_file_size != 0) {		printf("  Max file size:    %lluMB\n", conf->max_file_size/1000000);}
-	if(conf->calibration == CAL_IGNORE){printf("  Calibration:      ignored\n");}
-										printf("  Channels:         ");
-	int i;
-	for(i=0; i<NUM_CHANNELS; i++) {
+	if(conf->sample_rate >= KSPS) {
+		printf("  Sampling rate:    %dkSps\n", conf->sample_rate/KSPS);
+	} else {
+		printf("  Sampling rate:    %dSps\n", conf->sample_rate);
+	}
+	printf("  Data aggregation: %s\n", data_aggregation_names[conf->aggregation]);
+
+	printf("  Update rate:      %dHz\n", conf->update_rate);
+	if(conf->enable_web_server == 1){
+		printf("  Webserver:        enabled\n");
+	} else {
+		printf("  Webserver:        disabled\n");
+	}
+	if(conf->digital_inputs == 1) {
+		printf("  Digital inputs:   enabled\n");
+	} else {
+		printf("  Digital inputs:   disabled\n");
+	}
+	printf("  File format:      %s\n", file_format_names[conf->file_format]);
+	if(conf->file_format != NO_FILE) {
+		printf("  File name:        %s\n", conf->file_name);
+	}
+	if(conf->max_file_size != 0) {
+		printf("  Max file size:    %lluMB\n", conf->max_file_size/1e6);
+	}
+	if(conf->calibration == CAL_IGNORE) {
+		printf("  Calibration:      ignored\n");
+	}
+	printf("  Channels:         ");
+	for(int i = 0; i < NUM_CHANNELS; i++) {
 		if (conf->channels[i] == CHANNEL_ENABLED) {
 			printf("%d,", i);
 		}
 	}
 	printf("\n");
 	if (conf->force_high_channels[0] == CHANNEL_ENABLED || conf->force_high_channels[1] == CHANNEL_ENABLED) {
-										printf("  Forced channels:  ");
-		for(i=0; i<NUM_I_CHANNELS; i++) {
+		printf("  Forced channels:  ");
+		for(int i = 0; i < NUM_I_CHANNELS; i++) {
 			if (conf->force_high_channels[i] == CHANNEL_ENABLED) {
-				printf("%d,", i+1);
+				printf("%d,", i + 1);
 			}
 		}
 		printf("\n");
@@ -398,21 +415,21 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf, int* set_as_default
 						switch(argv[i][strlen(argv[i])-1]) {
 							case 'k':
 							case 'K':
-								conf->max_file_size *= 1000;
+								conf->max_file_size *= 1e3;
 								break;
 							case 'm':
 							case 'M':
-								conf->max_file_size *= 1000000;
+								conf->max_file_size *= 1e6;
 								break;
 							case 'g':
 							case 'G':
-								conf->max_file_size *= 1000000000;
+								conf->max_file_size *= 1e9;
 								break;
 							default:
 								break;
 						}
 						// check file size
-						if(conf->max_file_size != 0 && conf->max_file_size < 5000000) {
+						if(conf->max_file_size != 0 && conf->max_file_size < 5e6) {
 							rl_log(ERROR, "too small file size (min: 5m)");
 							return FAILURE;
 						}
@@ -510,6 +527,7 @@ void print_config(struct rl_conf* conf) {
 void reset_config(struct rl_conf* conf) {
 	conf->mode = CONTINUOUS;
 	conf->sample_rate = 1000;
+	conf->aggregation = AGGREGATE_NONE;
 	conf->update_rate = 1;
 	conf->sample_limit = 0;
 	conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
