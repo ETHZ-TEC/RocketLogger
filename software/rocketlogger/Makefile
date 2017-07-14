@@ -125,15 +125,15 @@ uninstall:
 $(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rl_deamon.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_DEAMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_deamon.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_FIRMWARE): $(FIRMWARE_SRC)
 	@$(MAKEDIR) $(@D)
 	$(PASM) -b $< $(@:.bin=)
@@ -166,10 +166,13 @@ $(BIN_DIR):
 
 
 ## phony targets
-.PHONY: clean
+.PHONY: clean code-format
 
 clean:
 	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d
+
+code-format:
+	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
 
 
 #####  INCLUDE DEPENDENCIES  #####
