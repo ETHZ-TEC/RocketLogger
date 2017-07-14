@@ -2,11 +2,11 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#include "gpio.h"
+#include "pru.h"
+#include "pwm.h"
 #include "types.h"
 #include "util.h"
-#include "gpio.h"
-#include "pwm.h"
-#include "pru.h"
 
 /// Linux GPIO number for forcing I1 high
 #define FHR1_GPIO 30

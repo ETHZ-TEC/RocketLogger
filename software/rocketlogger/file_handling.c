@@ -469,8 +469,8 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size,
         samples_buffer / BUFFER100_SIZE};
     int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
     uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
-    uint8_t avg_valid[WEB_RING_BUFFER_COUNT][NUM_I_CHANNELS] = {
-        {1, 1}, {1, 1}, {1, 1}};
+    uint8_t avg_valid[WEB_RING_BUFFER_COUNT]
+                     [NUM_I_CHANNELS] = {{1, 1}, {1, 1}, {1, 1}};
 
     memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
     memset(bin_avg_data, 0,
@@ -574,11 +574,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size,
 
                 // merge_currents (for web)
                 if (conf->enable_web_server == 1) {
-                    merge_currents(
-                        avg_valid[BUF1_INDEX],
-                        &web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]]
-                                 [num_bin_channels],
-                        avg_data[BUF1_INDEX], conf);
+                    merge_currents(avg_valid[BUF1_INDEX],
+                                   &web_data[BUF1_INDEX]
+                                            [i / avg_length[BUF1_INDEX]]
+                                            [num_bin_channels],
+                                   avg_data[BUF1_INDEX], conf);
                 }
                 // average bin channels
                 for (j = 0; j < num_bin_channels; j++) {
@@ -678,11 +678,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size,
 
                 // merge_currents (for web)
                 if (conf->enable_web_server == 1) {
-                    merge_currents(
-                        avg_valid[BUF10_INDEX],
-                        &web_data[BUF10_INDEX][i / avg_length[BUF10_INDEX]]
-                                 [num_bin_channels],
-                        avg_data[BUF10_INDEX], conf);
+                    merge_currents(avg_valid[BUF10_INDEX],
+                                   &web_data[BUF10_INDEX]
+                                            [i / avg_length[BUF10_INDEX]]
+                                            [num_bin_channels],
+                                   avg_data[BUF10_INDEX], conf);
                 }
 
                 // average bin channels
@@ -784,11 +784,11 @@ void handle_data_buffer(FILE* data, void* buffer_addr, uint32_t sample_size,
 
                 // merge_currents (for web)
                 if (conf->enable_web_server == 1) {
-                    merge_currents(
-                        avg_valid[BUF100_INDEX],
-                        &web_data[BUF100_INDEX][i / avg_length[BUF100_INDEX]]
-                                 [num_bin_channels],
-                        avg_data[BUF100_INDEX], conf);
+                    merge_currents(avg_valid[BUF100_INDEX],
+                                   &web_data[BUF100_INDEX]
+                                            [i / avg_length[BUF100_INDEX]]
+                                            [num_bin_channels],
+                                   avg_data[BUF100_INDEX], conf);
                 }
 
                 // store bin channels for web

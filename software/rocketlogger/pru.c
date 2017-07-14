@@ -16,9 +16,9 @@ pthread_cond_t done = PTHREAD_COND_INITIALIZER;
  * Wait on PRU event
  * @param voidEvent PRU event to wait on
  */
-void *pru_wait_event(void *voidEvent) {
+void* pru_wait_event(void* voidEvent) {
 
-    unsigned int event = *((unsigned int *)voidEvent);
+    unsigned int event = *((unsigned int*)voidEvent);
 
     // allow the thread to be killed at any time
     int oldtype;
@@ -51,7 +51,7 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
     clock_gettime(CLOCK_REALTIME, &abs_time);
     abs_time.tv_sec += timeout;
 
-    pthread_create(&tid, NULL, pru_wait_event, (void *)&event);
+    pthread_create(&tid, NULL, pru_wait_event, (void*)&event);
 
     err = pthread_cond_timedwait(&done, &waiting, &abs_time);
 
@@ -66,7 +66,7 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
 /**
  * Map PRU memory into user space
  */
-void *map_pru_memory(void) {
+void* map_pru_memory(void) {
 
     // get pru memory location and size
     unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
@@ -80,10 +80,10 @@ void *map_pru_memory(void) {
     }
 
     // map shared memory into userspace
-    void *pru_mmap = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+    void* pru_mmap = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
                           (off_t)pru_memory);
 
-    if (pru_mmap == (void *)-1) {
+    if (pru_mmap == (void*)-1) {
         rl_log(ERROR, "failed to map base address");
         return NULL;
     }
@@ -98,7 +98,7 @@ void *map_pru_memory(void) {
  * @param pru_mmap Pointer to mapped memory
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int unmap_pru_memory(void *pru_mmap) {
+int unmap_pru_memory(void* pru_mmap) {
 
     // get pru memory size
     unsigned int size = read_file_value(MMAP_FILE "size");
@@ -119,7 +119,7 @@ int unmap_pru_memory(void *pru_mmap) {
  */
 void pru_set_state(rl_pru_state state) {
 
-    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int *)&state,
+    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&state,
                               sizeof(int));
 }
 
@@ -149,7 +149,7 @@ int pru_init(void) {
  * rate
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_data_setup(struct pru_data_struct *pru, struct rl_conf *conf,
+int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
                    uint32_t avg_factor) {
 
     uint32_t pru_sample_rate;
@@ -254,7 +254,7 @@ int pru_data_setup(struct pru_data_struct *pru, struct rl_conf *conf,
  * @param conf Pointer to current {@link rl_conf} configuration
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE *data, struct rl_conf *conf) {
+int pru_sample(FILE* data, struct rl_conf* conf) {
 
     // average (for low rates)
     uint32_t avg_factor = 1;
@@ -269,7 +269,7 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
 
     // WEBSERVER
     int sem_id = -1;
-    struct web_shm *web_data = (struct web_shm *)-1;
+    struct web_shm* web_data = (struct web_shm*)-1;
 
     if (conf->enable_web_server == 1) {
         // semaphores
@@ -333,8 +333,8 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
     }
 
     // map PRU memory into userspace
-    void *buffer0 = map_pru_memory();
-    void *buffer1 = buffer0 + buffer_size_bytes;
+    void* buffer0 = map_pru_memory();
+    void* buffer1 = buffer0 + buffer_size_bytes;
 
     // FILE STORING
 
@@ -361,7 +361,7 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
     // EXECUTION
 
     // write configuration to PRU memory
-    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int *)&pru,
+    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&pru,
                               sizeof(struct pru_data_struct));
 
     // run SPI on PRU0
@@ -382,7 +382,7 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
 
     unsigned int i;
     uint32_t buffer_lost = 0;
-    void *buffer_addr;
+    void* buffer_addr;
     uint32_t samples_buffer; // number of samples per buffer
     uint32_t num_files = 1;  // number of files stored
 
@@ -416,7 +416,7 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
 
                 // search for last .
                 char target = '.';
-                char *file_ending = file_name;
+                char* file_ending = file_name;
                 while (strchr(file_ending, target) != NULL) {
                     file_ending = strchr(file_ending, target);
                     file_ending++; // Increment file_ending, otherwise we'll
@@ -478,7 +478,7 @@ int pru_sample(FILE *data, struct rl_conf *conf) {
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
         // check for overrun (compare buffer numbers)
-        uint32_t buffer = *((uint32_t *)buffer_addr);
+        uint32_t buffer = *((uint32_t*)buffer_addr);
         if (buffer != i) {
             buffer_lost += (buffer - i);
             rl_log(WARNING,
