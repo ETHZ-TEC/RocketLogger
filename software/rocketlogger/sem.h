@@ -4,18 +4,17 @@
 
 #define _GNU_SOURCE
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/types.h>
 
 #include "log.h"
 #include "types.h"
-
 
 int create_sem(void);
 
