@@ -5,44 +5,43 @@
 #ifndef ROCKETLOGGER_H
 #define ROCKETLOGGER_H
 
+// ---------------------------------------------- Includes
+// ----------------------------------------------------------//
 
-// ---------------------------------------------- Includes ----------------------------------------------------------//
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <ctype.h>
-#include <termios.h>
 #include <math.h>
-#include <time.h> 
+#include <pruss_intc_mapping.h>
+#include <prussdrv.h>
 #include <pthread.h>
-#include <sys/types.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
 #include <sys/mman.h>
+#include <sys/select.h>
+#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/select.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <prussdrv.h>
-#include <pruss_intc_mapping.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
-#include "log.h"
-#include "util.h"
-#include "types.h"
-#include "calibration.h"
-#include "meter.h"
-#include "file_handling.h"
-#include "sem.h"
-#include "web.h"
 #include "ambient.h"
+#include "calibration.h"
+#include "file_handling.h"
+#include "log.h"
+#include "meter.h"
+#include "sem.h"
+#include "types.h"
+#include "util.h"
+#include "web.h"
 
-
-
-// ---------------------------------------------- ADC DEFINES -------------------------------------------------------//
+// ---------------------------------------------- ADC DEFINES
+// -------------------------------------------------------//
 
 /**
  * ADS131E08S command (extended to 32 bits for PRU use) definitions
@@ -51,7 +50,7 @@
 #define STANDBY 0x04000000
 #define RESET 0x06000000
 #define START 0x08000000
-#define STOP  0x0A000000
+#define STOP 0x0A000000
 #define OFFSETCAL 0x1A000000
 #define RDATAC 0x10000000
 #define SDATAC 0x11000000
@@ -100,17 +99,20 @@
 #define CONFIG2DEFAULT 0xE000
 #define CONFIG3DEFAULT 0xE800
 
-// ---------------------------------------------- FILES ------------------------------------------------------------//
+// ---------------------------------------------- FILES
+// ------------------------------------------------------------//
 
 /// Memory map file
-#define MMAP_FILE			"/sys/class/uio/uio0/maps/map1/"
+#define MMAP_FILE "/sys/class/uio/uio0/maps/map1/"
 /// PRU binary file location
-#define PRU_CODE			"/lib/firmware/rocketlogger_spi.bin"
+#define PRU_CODE "/lib/firmware/rocketlogger_spi.bin"
 
-// ---------------------------------------------- PRU DEFINES ---------------------------------------------------//
+// ---------------------------------------------- PRU DEFINES
+// ---------------------------------------------------//
 
 /**
- * ADS131E08S precision defines({@link PRECISION_HIGH} for low sampling rates, {@link PRECISION_LOW} for high ones)
+ * ADS131E08S precision defines({@link PRECISION_HIGH} for low sampling rates,
+ * {@link PRECISION_LOW} for high ones)
  */
 #define PRECISION_HIGH 24
 #define PRECISION_LOW 16
@@ -128,9 +130,9 @@
  * PRU state definition
  */
 typedef enum pru_state {
-	PRU_OFF = 0,      //!< PRU off
-	PRU_LIMIT = 1,    //!< Limited sampling mode
-	PRU_CONTINUOUS = 3//!< Continuous sampling mode
+    PRU_OFF = 0,       //!< PRU off
+    PRU_LIMIT = 1,     //!< Limited sampling mode
+    PRU_CONTINUOUS = 3 //!< Continuous sampling mode
 } rl_pru_state;
 
 /// Number of ADC commands
@@ -140,39 +142,41 @@ typedef enum pru_state {
  * Struct for data exchange with PRU
  */
 struct pru_data_struct {
-	/// Current PRU state
-	rl_pru_state state;
-	/// ADC precision (in bit)
-	uint32_t precision;
-	/// Sample size in shared memory
-	uint32_t sample_size;
-	/// Pointer to shared buffer 0
-	uint32_t buffer0_location;
-	/// Pointer to shared buffer 1
-	uint32_t buffer1_location;
-	/// Shared buffer size
-	uint32_t buffer_size;
-	/// Samples to take (0 for continuous)
-	uint32_t sample_limit;
-	/// Number of ADC commands to send
-	uint32_t number_commands;
-	/// ADC commands to send
-	uint32_t commands[NUMBER_ADC_COMMANDS];
+    /// Current PRU state
+    rl_pru_state state;
+    /// ADC precision (in bit)
+    uint32_t precision;
+    /// Sample size in shared memory
+    uint32_t sample_size;
+    /// Pointer to shared buffer 0
+    uint32_t buffer0_location;
+    /// Pointer to shared buffer 1
+    uint32_t buffer1_location;
+    /// Shared buffer size
+    uint32_t buffer_size;
+    /// Samples to take (0 for continuous)
+    uint32_t sample_limit;
+    /// Number of ADC commands to send
+    uint32_t number_commands;
+    /// ADC commands to send
+    uint32_t commands[NUMBER_ADC_COMMANDS];
 };
 
-// ----------------------------------------------  FUNCTIONS ------------------------------------------------//
+// ----------------------------------------------  FUNCTIONS
+// ------------------------------------------------//
 
-void *pru_wait_event(void* voidEvent);
+void* pru_wait_event(void* voidEvent);
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
 void pru_set_state(rl_pru_state state);
 int pru_init(void);
-int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf, uint32_t avg_factor);
+int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
+                   uint32_t avg_factor);
 
 int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
 
-void pru_stop(void); // stop pru when in continuous mode (has to be done before close)
+void pru_stop(
+    void); // stop pru when in continuous mode (has to be done before close)
 void pru_close(void);
-
 
 #endif

@@ -9,11 +9,10 @@
 
 #include "../rl_file.h"
 
-
 #define MAX_MESSAGE_LENGTH 1000
 
 #ifndef I2C_BUS_FILENAME
-# define I2C_BUS_FILENAME "/dev/i2c-1"
+#define I2C_BUS_FILENAME "/dev/i2c-1"
 #endif
 
 /// Number of sensor registred
@@ -25,19 +24,18 @@
  * Standardized RL sensor interface definition
  */
 struct rl_sensor {
-	char name[SENSOR_NAME_LENGTH];
-	uint8_t address;
-	uint8_t channel;
-	rl_unit unit;
-	int32_t scale;
-	int (*init)(uint8_t);
-	void (*close)(uint8_t);
-	int (*read)(uint8_t);
-	int32_t (*getValue)(uint8_t, uint8_t);
+    char name[SENSOR_NAME_LENGTH];
+    uint8_t address;
+    uint8_t channel;
+    rl_unit unit;
+    int32_t scale;
+    int (*init)(uint8_t);
+    void (*close)(uint8_t);
+    int (*read)(uint8_t);
+    int32_t (*getValue)(uint8_t, uint8_t);
 };
 
 extern struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE];
-
 
 int Sensors_initSharedBus(void);
 void Sensors_closeSharedBus(void);

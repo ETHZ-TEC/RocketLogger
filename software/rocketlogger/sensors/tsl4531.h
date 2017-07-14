@@ -5,11 +5,11 @@
 #ifndef SENSOR_TSL4531_H_
 #define SENSOR_TSL4531_H_
 
-#include <stdint.h>
-#include <unistd.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
@@ -17,16 +17,16 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "../types.h"
 #include "../log.h"
+#include "../types.h"
 
 #define TSL4531_I2C_ADDRESS_LEFT 0x29
 #define TSL4531_I2C_ADDRESS_RIGHT 0x28
 
-#define TSL4531_I2C_ADDRESSES { (TSL4531_I2C_ADDRESS_LEFT), (TSL4531_I2C_ADDRESS_RIGHT) }
+#define TSL4531_I2C_ADDRESSES                                                  \
+    { (TSL4531_I2C_ADDRESS_LEFT), (TSL4531_I2C_ADDRESS_RIGHT) }
 
 #define TSL4531_CHANNEL_DEFAULT 0
-
 
 // register definitions
 #define TSL4531_ID 162
@@ -58,12 +58,14 @@
  * Ranges
  */
 enum TSL4531_range {
-	TSL4531_RANGE_LOW, TSL4531_RANGE_MEDIUM, TSL4531_RANGE_HIGH, TSL4531_RANGE_AUTO,
+    TSL4531_RANGE_LOW,
+    TSL4531_RANGE_MEDIUM,
+    TSL4531_RANGE_HIGH,
+    TSL4531_RANGE_AUTO,
 };
 #define TSL4531_RANGE_LOW_MAX 65000
 #define TSL4531_RANGE_MEDIUM_MAX 130000
 #define TSL4531_RANGE_HYSTERESIS 5000
-
 
 /*
  * API FUNCTIONS
@@ -75,7 +77,6 @@ int32_t TSL4531_getValue(uint8_t, uint8_t);
 
 int TSL4531_setRange(uint8_t, int);
 int TSL4531_getRange(uint8_t);
-
 
 /*
  * Helper FUNCTIONS

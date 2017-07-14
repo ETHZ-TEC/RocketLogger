@@ -2,38 +2,37 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <poll.h>
 
-#include "types.h"
 #include "log.h"
+#include "types.h"
 
 /// Path to linux GPIO device files
 #define GPIO_PATH "/sys/class/gpio/"
 /// Minimal time a button needs to be pressed (in µs)
 #define MIN_BUTTON_TIME 100000
 
-
 /**
  * GPIO direction definition
  */
 typedef enum direction {
-	IN,//!< GPIO read mode
-	OUT//!< GPIO write mode
+    IN, //!< GPIO read mode
+    OUT //!< GPIO write mode
 } rl_direction;
 
 /**
  * GPIO interrupt edge definition
  */
 typedef enum edge {
-	NONE,   //!< No interrupt
-	RISING, //!< Interrupt on rising edge
-	FALLING,//!< Interrupt on falling edge
-	BOTH    //!< Interrupt on both edges
+    NONE,    //!< No interrupt
+    RISING,  //!< Interrupt on rising edge
+    FALLING, //!< Interrupt on falling edge
+    BOTH     //!< Interrupt on both edges
 } rl_edge;
 
 // gpio unexport
@@ -52,4 +51,3 @@ int gpio_get_value(int num);
 // interrupt
 int gpio_interrupt(int num, rl_edge e);
 int gpio_wait_interrupt(int num, int timeout); // timout<0 -> infinite
-

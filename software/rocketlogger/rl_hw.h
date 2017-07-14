@@ -4,8 +4,8 @@
 
 #include "ambient.h"
 #include "gpio.h"
-#include "pwm.h"
 #include "pru.h"
+#include "pwm.h"
 #include "types.h"
 #include "util.h"
 

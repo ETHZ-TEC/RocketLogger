@@ -5,11 +5,11 @@
 #ifndef SENSOR_BME280_H_
 #define SENSOR_BME280_H_
 
-#include <stdint.h>
-#include <unistd.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
@@ -17,18 +17,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "../types.h"
 #include "../log.h"
-
+#include "../types.h"
 
 #define BME280_I2C_ADDRESS_LEFT 0x76
 
-#define BME280_I2C_ADDRESSES { (BME280_I2C_ADDRESS_LEFT) }
+#define BME280_I2C_ADDRESSES                                                   \
+    { (BME280_I2C_ADDRESS_LEFT) }
 
 #define BME280_CHANNEL_TEMPERATURE 0
 #define BME280_CHANNEL_HUMIDITY 1
 #define BME280_CHANNEL_PREASURE 2
-
 
 // register definitions
 #define BME280_ID 0x60
@@ -98,7 +97,6 @@
 #define BME280_FILTER_16 0x10
 #define BME280_SPI_EN 0x01
 
-
 /*
  * Data Structures
  */
@@ -128,7 +126,6 @@ struct BME280_calibration_t {
     int8_t H6;
 };
 
-
 /*
  * API FUNCTIONS
  */
@@ -136,7 +133,6 @@ int BME280_init(uint8_t);
 void BME280_close(uint8_t);
 int BME280_read(uint8_t);
 int32_t BME280_getValue(uint8_t, uint8_t);
-
 
 /*
  * Helper FUNCTIONS
@@ -150,6 +146,5 @@ int32_t BME280_compensate_temperature_fine(uint8_t, int32_t);
 int32_t BME280_compensate_temperature(uint8_t, int32_t);
 uint32_t BME280_compensate_preasure(uint8_t, int32_t, int32_t);
 uint32_t BME280_compensate_humidity(uint8_t, int32_t, int32_t);
-
 
 #endif /* SENSOR_BME280_H_ */

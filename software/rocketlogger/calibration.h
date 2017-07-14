@@ -2,18 +2,17 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#include <sys/time.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <sys/mman.h>
-#include <stdint.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 
-#include "types.h"
 #include "log.h"
-
+#include "types.h"
 
 void reset_offsets(void);
 void reset_scales(void);
