@@ -2,6 +2,29 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#include <errno.h>
+#include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#include <sys/shm.h>
+#include <sys/time.h>
+
+// #include <fcntl.h>
+// #include <stdarg.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <sys/mman.h>
+// #include <sys/shm.h>
+// #include <sys/stat.h>
+// #include <syslog.h>
+// #include <time.h>
+// #include <unistd.h>
+
+
+#include "log.h"
+#include "types.h"
+
 #include "util.h"
 
 // channel functions
@@ -38,9 +61,8 @@ int is_low_current(int index) {
  * @return the number of sampled channels.
  */
 int count_channels(int channels[NUM_CHANNELS]) {
-    int i = 0;
     int c = 0;
-    for (i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
         if (channels[i] == CHANNEL_ENABLED) {
             c++;
         }
@@ -176,4 +198,46 @@ int read_file_value(char filename[]) {
     }
     fclose(fp);
     return value;
+}
+
+/**
+ * Create time stamps (real and monotonic)
+ * @param timestamp_realtime Pointer to {@link time_stamp} struct
+ * @param timestamp_monotonic Pointer to {@link time_stamp} struct
+ */
+void create_time_stamp(struct time_stamp* timestamp_realtime,
+                       struct time_stamp* timestamp_monotonic) {
+
+    struct timespec spec_real;
+    struct timespec spec_monotonic;
+
+    // get time stamp of real-time and monotonic clock
+    int ret1 = clock_gettime(CLOCK_REALTIME, &spec_real);
+    int ret2 = clock_gettime(CLOCK_MONOTONIC_RAW, &spec_monotonic);
+
+    if (ret1 < 0 || ret2 < 0) {
+        rl_log(ERROR, "failed to get time");
+    }
+
+    // convert to own time stamp
+    timestamp_realtime->sec = (int64_t)spec_real.tv_sec;
+    timestamp_realtime->nsec = (int64_t)spec_real.tv_nsec;
+    timestamp_monotonic->sec = (int64_t)spec_monotonic.tv_sec;
+    timestamp_monotonic->nsec = (int64_t)spec_monotonic.tv_nsec;
+}
+
+/**
+ * Get MAC address of device
+ * @param mac_address Empty array with size {@link MAC_ADDRESS_LENGTH}
+ */
+void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
+
+    FILE* fp = fopen(MAC_ADDRESS_FILE, "r");
+
+    int i = 0;
+    fscanf(fp, "%x", &mac_address[i]);
+    for (i = 1; i < MAC_ADDRESS_LENGTH; i++) {
+        fscanf(fp, ":%x", &mac_address[i]);
+    }
+    fclose(fp);
 }

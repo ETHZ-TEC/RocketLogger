@@ -39,7 +39,7 @@ void rl_print_config(struct rl_conf* conf) {
         printf("  File name:        %s\n", conf->file_name);
     }
     if (conf->max_file_size != 0) {
-        printf("  Max file size:    %lluMB\n", conf->max_file_size / 1e6);
+        printf("  Max file size:    %lluMB\n", conf->max_file_size / (uint64_t)1e6);
     }
     if (conf->calibration == CAL_IGNORE) {
         printf("  Calibration:      ignored\n");

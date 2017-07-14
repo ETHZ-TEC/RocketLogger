@@ -8,11 +8,9 @@
 #include <stdint.h>
 
 #include "types.h"
+#include "util.h"
 
 // Defines
-
-/// MAC address length in bytes
-#define MAC_ADDRESS_LENGTH 6
 
 /**
  * Channel scaling definitions
@@ -62,16 +60,6 @@ typedef enum unit {
     RL_UNIT_BINARY = 3,      //!< Binary signal
     RL_UNIT_RANGE_VALID = 4, //!< Range valid information
 } rl_unit;
-
-/**
- * Time stamp definition (UNIX time, UTC)
- */
-struct time_stamp {
-    /// Seconds in UNIX time (UTC)
-    int64_t sec;
-    /// Nanoseconds
-    int64_t nsec;
-};
 
 /**
  * File header lead in (constant size) definition for the binary file.

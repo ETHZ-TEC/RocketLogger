@@ -9,6 +9,8 @@
 
 #include "rl_lib.h"
 #include "rl_util.h"
+#include "sem.h"
+#include "web.h"
 
 /// Number of input arguments required
 #define ARG_COUNT 4
@@ -177,7 +179,7 @@ void print_data(void) {
     for (i = 0; i < buffer_count; i++) {
 
         // read data buffer
-        int64_t* shm_data = buffer_get(&web_data->buffer[t_scale], i);
+        int64_t* shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
         if (web_data->buffer[t_scale].element_size > sizeof(data)) {
             rl_log(ERROR,
                    "In print_data: memcpy is trying to copy to much data.");
@@ -249,7 +251,7 @@ int main(int argc, char* argv[]) {
     }
 
     // open shared memory
-    web_data = open_web_shm();
+    web_data = web_open_shm();
 
     // fetch data
     uint8_t data_read = 0;
