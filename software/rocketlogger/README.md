@@ -1,7 +1,7 @@
 RocketLogger Software Documentation
 ===================================
 
-The RocketLogger software includes the three following binaries, which use de RocketLogger library (ToDo: link?).
+The RocketLogger software includes the three following binaries, which use de RocketLogger library.
 
 ### RocketLogger Binary
 

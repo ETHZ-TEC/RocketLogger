@@ -9,6 +9,6 @@
 
 #include "types.h"
 
-void rl_log(rl_log_type type, const char* format, ... );
+void rl_log(rl_log_type type, const char* format, ...);
 
 #endif
