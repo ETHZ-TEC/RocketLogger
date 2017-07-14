@@ -20,10 +20,8 @@
 #include <unistd.h>
 
 #include "log.h"
+#include "rl_file.h"
 #include "types.h"
-
-/// Permissions for shared memory
-#define SHMEM_PERMISSIONS 0666
 
 int is_current(int index);
 int is_low_current(int index);
@@ -37,5 +35,9 @@ int ceil_div(int n, int d);
 void sig_handler(int signo);
 
 int read_file_value(char filename[]);
+
+void create_time_stamp(struct time_stamp* time_real,
+                       struct time_stamp* time_monotonic);
+void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
 
 #endif

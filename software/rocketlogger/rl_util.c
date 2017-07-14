@@ -28,6 +28,10 @@ void rl_print_config(struct rl_conf* conf) {
         printf("  Digital inputs:   enabled\n");
     else
         printf("  Digital inputs:   disabled\n");
+    if (conf->ambient.enabled == 1)
+        printf("  Ambient logging:  enabled\n");
+    else
+        printf("  Ambient logging:  disabled\n");
     printf("  File format:      %s\n", file_format_names[conf->file_format]);
     if (conf->file_format != NO_FILE)
         printf("  File name:        %s\n", conf->file_name);
@@ -148,6 +152,8 @@ rl_option get_option(char* option) {
         return WEB;
     } else if (strcmp(option, "d") == 0) {
         return DIGITAL_INPUTS;
+    } else if (strcmp(option, "a") == 0) {
+        return AMBIENT;
     } else if (strcmp(option, "s") == 0) {
         return DEF_CONF;
     } else if (strcmp(option, "c") == 0) {
@@ -383,6 +389,16 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                 }
                 break;
 
+            case AMBIENT:
+                if (argc > i + 1 && isdigit(argv[i + 1][0]) &&
+                    atoi(argv[i + 1]) == 0) {
+                    i++;
+                    conf->ambient.enabled = AMBIENT_DISABLED;
+                } else {
+                    conf->ambient.enabled = AMBIENT_ENABLED;
+                }
+                break;
+
             case DEF_CONF:
                 *set_as_default = 1;
                 break;
@@ -463,6 +479,12 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
         }
     }
 
+    // ambient file name
+    if (conf->file_format != NO_FILE &&
+        conf->ambient.enabled == AMBIENT_ENABLED) {
+        set_ambient_file_name(conf);
+    }
+
     return SUCCESS;
 }
 
@@ -509,8 +531,11 @@ void print_usage(void) {
     printf("    -f file            Stores data to specified file.\n");
     printf("                         '-f 0' will disable file storing.\n");
     printf("    -d                 Log digital inputs.\n");
-    printf("                         Use '-d 0' to disable digital input "
-           "logging.\n");
+    printf(
+        "                         '-d 0' to disable digital input logging.\n");
+    printf("    -a                 Log ambient sensors, if available.\n");
+    printf(
+        "                         '-a 0' to disable ambient sensor logging.\n");
     printf("    -format format     Select file format: csv, bin.\n");
     printf(
         "    -size   file_size  Select max file size (k, m, g can be used).\n");
@@ -559,6 +584,9 @@ void reset_config(struct rl_conf* conf) {
         conf->channels[i] = CHANNEL_ENABLED;
     }
     memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
+
+    conf->ambient.enabled = AMBIENT_DISABLED;
+    strcpy(conf->ambient.file_name, "/var/www/data/data-ambient.rld");
 }
 
 /**

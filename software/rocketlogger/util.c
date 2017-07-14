@@ -177,3 +177,48 @@ int read_file_value(char filename[]) {
     fclose(fp);
     return value;
 }
+
+/**
+ * Create time stamps (real and monotonic)
+ * @param time_real Pointer to {@link time_stamp} struct
+ * @param time_monotonic  Pointer to {@link time_stamp} struct
+ */
+void create_time_stamp(struct time_stamp* time_real,
+                       struct time_stamp* time_monotonic) {
+
+    struct timespec spec_real;
+    struct timespec spec_monotonic;
+
+    // get time stamp of real-time and monotonic clock
+    int ret1 = clock_gettime(CLOCK_REALTIME, &spec_real);
+    int ret2 = clock_gettime(CLOCK_MONOTONIC_RAW, &spec_monotonic);
+
+    if (ret1 < 0 || ret2 < 0) {
+        rl_log(ERROR, "failed to get time");
+    }
+
+    // convert to own time stamp
+    time_real->sec = (int64_t)spec_real.tv_sec;
+    time_real->nsec = (int64_t)spec_real.tv_nsec;
+    time_monotonic->sec = (int64_t)spec_monotonic.tv_sec;
+    time_monotonic->nsec = (int64_t)spec_monotonic.tv_nsec;
+}
+
+/**
+ * Get MAC address of device
+ * @param mac_address Empty array with size {@link MAC_ADDRESS_LENGTH}
+ */
+void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
+
+    FILE* fp = fopen(MAC_ADDRESS_FILE, "r");
+
+    int i = 0;
+    uint32_t temp;
+    fscanf(fp, "%x", &temp);
+    mac_address[i] = (uint8_t)temp;
+    for (i = 1; i < MAC_ADDRESS_LENGTH; i++) {
+        fscanf(fp, ":%x", &temp);
+        mac_address[i] = (uint8_t)temp;
+    }
+    fclose(fp);
+}

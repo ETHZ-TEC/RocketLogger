@@ -67,6 +67,8 @@
 #define SHMEM_STATUS_KEY 1111
 /// Key for web shared memory (used for creation)
 #define SHMEM_DATA_KEY 4443
+/// Permissions for shared memory
+#define SHMEM_PERMISSIONS 0666
 
 // constants
 /// Maximum path length in characters
@@ -164,6 +166,17 @@ typedef enum log_type {
     INFO     //!< Information
 } rl_log_type;
 
+// AMBIENT CONF //
+#define AMBIENT_MAX_SENSOR_COUNT 128
+#define AMBIENT_DISABLED 0
+#define AMBIENT_ENABLED 1
+struct rl_ambient {
+    uint8_t enabled;
+    uint8_t sensor_count;
+    int8_t available_sensors[AMBIENT_MAX_SENSOR_COUNT];
+    char file_name[MAX_PATH_LENGTH];
+} ambient;
+
 // channel properties
 /// Channel sampling disabled
 #define CHANNEL_DISABLED 0
@@ -217,6 +230,8 @@ struct rl_conf {
     uint64_t max_file_size;
     /// Data file name
     char file_name[MAX_PATH_LENGTH];
+    /// Ambient conf
+    struct rl_ambient ambient;
 };
 
 /**

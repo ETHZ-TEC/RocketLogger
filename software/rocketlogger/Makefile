@@ -1,4 +1,4 @@
-## Makefile for RocketLogger
+## Makefile for RocketLogger Binaries
 ##
 ## Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 ##
@@ -11,6 +11,7 @@ LIB_DIR = lib
 OBJ_DIR = obj
 DEP_DIR = $(OBJ_DIR)/.dep
 SRC_DIR = .
+SENSOR_DIR = $(SRC_DIR)/sensors
 
 ## install directories
 INSTALL_BIN_DIR = /bin
@@ -25,6 +26,7 @@ FIRMWARE_NAME = rocketlogger_spi.bin
 ## source files
 SRC = $(wildcard  $(SRC_DIR)/*.c)
 SRC += $(wildcard  $(SRC_DIR)/*.cpp)
+SRC += $(wildcard  $(SENSOR_DIR)/*.c)
 FIRMWARE_SRC = SPI.p
 
 ## object files
@@ -144,7 +146,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.c
+	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
+$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
+	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	
 ## directories
 $(OBJ_DIR):
 	$(MAKEDIR) $(OBJ_DIR)

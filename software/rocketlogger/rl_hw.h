@@ -2,6 +2,7 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#include "ambient.h"
 #include "gpio.h"
 #include "pru.h"
 #include "pwm.h"
