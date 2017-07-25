@@ -205,6 +205,7 @@ void file_store_header_bin(FILE* data_file,
     // write channel information
     fwrite(file_header->channel, sizeof(struct rl_file_channel),
            total_channel_count, data_file);
+    fflush(data_file);
 }
 
 /**
@@ -229,7 +230,7 @@ void file_store_header_csv(FILE* data_file,
     fprintf(data_file, "MAC Address,%02x",
             (uint32_t)file_header->lead_in.mac_address[0]);
 
-    for (int i = 0; i < MAC_ADDRESS_LENGTH; i++) {
+    for (int i = 1; i < MAC_ADDRESS_LENGTH; i++) {
         fprintf(data_file, ":%02x",
                 (uint32_t)file_header->lead_in.mac_address[i]);
     }
@@ -276,6 +277,7 @@ void file_store_header_csv(FILE* data_file,
         }
     }
     fprintf(data_file, "\n");
+    fflush(data_file);
 }
 
 /**
@@ -291,6 +293,7 @@ void file_update_header_bin(FILE* data_file,
     rewind(data_file);
     fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1,
            data_file);
+    fflush(data_file);
     fseek(data_file, 0, SEEK_END);
 }
 
@@ -312,6 +315,7 @@ void file_update_header_csv(FILE* data_file,
             (uint32_t)file_header->lead_in.data_block_count);
     fprintf(data_file, "Sample Count,%-20llu\n",
             (uint64_t)file_header->lead_in.sample_count);
+    fflush(data_file);
     fseek(data_file, 0, SEEK_END);
 }
 
@@ -345,6 +349,11 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
     }
 
     int num_channels = count_channels(conf->channels);
+
+    // aggregation
+    int32_t aggregate_count = MIN_ADC_RATE / conf->sample_rate;
+    int32_t aggregate_channel_data[NUM_CHANNELS] = {0};
+    uint32_t aggregate_bin_data = 0xffffffff;
 
     // HANDLE BUFFER //
     for (uint32_t i = 0; i < samples_count; i++) {
@@ -407,304 +416,67 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         // handle data aggregation for low sampling rates
         // @TODO implement data aggregation
         if (conf->sample_rate < MIN_ADC_RATE) {
-            rl_log(INFO,
-                   "Data aggregation for file storing not supported yet.");
-        }
 
-        // // HANDLE AVERAGE DATA //
+            switch (conf->aggregation) {
+                case AGGREGATE_NONE):
+                    rl_log(ERROR, "Low sampling rates not supported without "
+                                  "data aggregation.");
+                    exit(ERROR);
+                    break;
 
-        // if (conf->sample_rate < MIN_ADC_RATE) {
+                case AGGREGATE_AVERAGE:
+                    // accumulate intermediate samples only (skip writing)
+                    if ((i + 1) % aggregate_count > 0) {
+                        for (int i = 0; i < num_channels; i++) {
+                            aggregate_channel_data[i] += channel_data[i];
+                        }
+                        aggregate_bin_data = aggregate_bin_data & bin_data;
+                        continue;
+                    }
 
-        //     // buffer 1
-        //     if ((i + 1) % avg_length[BUF1_INDEX] == 0) {
+                    // calculate average for writing to file
+                    for (int i = 0; i < num_channels; i++) {
+                        channel_data[i] =
+                            aggregate_channel_data[i] / aggregate_count;
+                        aggregate_channel_data[i] = 0;
+                    }
 
-        //         // average
-        //         for (j = 0; j < num_channels; j++) {
-        //             avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
-        //             avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
-        //         }
+                    bin_data = aggregate_bin_data;
+                    aggregate_bin_data = 0xffffffff;
+                    break;
 
-        //         // average bin channels
-        //         for (j = 0; j < num_bin_channels; j++) {
-        //             bin_avg_data[BUF10_INDEX][j] +=
-        //             bin_avg_data[BUF1_INDEX][j];
-        //         }
-
-        //         // write data to file
-        //         if (conf->sample_rate == 100) {
-        //             // binary data
-        //             if (bin_channel_pos > 0) {
-        //                 if (conf->file_format == BIN) {
-        //                     uint32_t temp_bin = 0;
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         temp_bin =
-        //                             temp_bin | ((bin_avg_data[BUF1_INDEX][j]
-        //                             >=
-        //                                          (avg_length[BUF1_INDEX] /
-        //                                          2))
-        //                                         << j);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF1_INDEX][0] << j++);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF1_INDEX][1] << j++);
-        //                     }
-
-        //                     fwrite(&temp_bin, sizeof(uint32_t), 1,
-        //                     data_file);
-
-        //                 } else if (conf->file_format == CSV) {
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         sprintf(value_char, ", %d",
-        //                                 (bin_avg_data[BUF1_INDEX][j] >=
-        //                                  (avg_length[BUF1_INDEX] / 2)));
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF1_INDEX][0]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF1_INDEX][1]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                 }
-        //             }
-
-        //             // channel data
-        //             if (conf->file_format == BIN) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     int32_t tmp = (int32_t)avg_data[BUF1_INDEX][j];
-        //                     fwrite(&tmp, sizeof(int32_t), 1, data_file);
-        //                 }
-        //             } else if (conf->file_format == CSV) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     sprintf(value_char, ",%d",
-        //                             (int32_t)avg_data[BUF1_INDEX][j]);
-        //                     strcat(channel_data_char, value_char);
-        //                 }
-        //                 strcat(channel_data_char, "\n");
-        //                 fprintf(data_file, "%s", channel_data_char);
-        //             }
-        //         }
-
-        //         // reset values
-        //         memset(avg_data[BUF1_INDEX], 0, sizeof(int64_t) *
-        //         num_channels);
-        //         memset(bin_avg_data[BUF1_INDEX], 0,
-        //                sizeof(uint32_t) * num_bin_channels);
-        //         avg_valid[BUF1_INDEX][0] = 1;
-        //         avg_valid[BUF1_INDEX][1] = 1;
-        //     }
-
-        //     // buffer 10
-        //     if ((i + 1) % avg_length[BUF10_INDEX] == 0) {
-
-        //         // average
-        //         for (j = 0; j < num_channels; j++) {
-        //             avg_data[BUF10_INDEX][j] /=
-        //                 (avg_length[BUF10_INDEX] / avg_length[BUF1_INDEX]);
-        //             avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
-        //         }
-
-        //         // average bin channels
-        //         for (j = 0; j < num_bin_channels; j++) {
-
-        //             bin_avg_data[BUF100_INDEX][j] +=
-        //                 bin_avg_data[BUF10_INDEX][j];
-        //         }
-
-        //         // write data to file
-        //         if (conf->sample_rate == 10) {
-        //             // binary data
-        //             if (bin_channel_pos > 0) {
-        //                 if (conf->file_format == BIN) {
-        //                     uint32_t temp_bin = 0;
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         temp_bin =
-        //                             temp_bin | ((bin_avg_data[BUF10_INDEX][j]
-        //                             >=
-        //                                          (avg_length[BUF10_INDEX] /
-        //                                          2))
-        //                                         << j);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF10_INDEX][0] <<
-        //                                    j++);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF10_INDEX][1] <<
-        //                                    j++);
-        //                     }
-
-        //                     fwrite(&temp_bin, sizeof(uint32_t), 1,
-        //                     data_file);
-
-        //                 } else if (conf->file_format == CSV) {
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         sprintf(value_char, ", %d",
-        //                                 (bin_avg_data[BUF10_INDEX][j] >=
-        //                                  (avg_length[BUF10_INDEX] / 2)));
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF10_INDEX][0]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF10_INDEX][1]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                 }
-        //             }
-
-        //             // channel data
-        //             if (conf->file_format == BIN) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     int32_t tmp = (int32_t)avg_data[BUF10_INDEX][j];
-        //                     fwrite(&tmp, sizeof(int32_t), 1, data_file);
-        //                 }
-        //             } else if (conf->file_format == CSV) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     sprintf(value_char, ",%d",
-        //                             (int32_t)avg_data[BUF10_INDEX][j]);
-        //                     strcat(channel_data_char, value_char);
-        //                 }
-        //                 strcat(channel_data_char, "\n");
-        //                 fprintf(data_file, "%s", channel_data_char);
-        //             }
-        //         }
-
-        //         // reset values
-        //         memset(avg_data[BUF10_INDEX], 0,
-        //                sizeof(int64_t) * num_channels);
-        //         memset(bin_avg_data[BUF10_INDEX], 0,
-        //                sizeof(uint32_t) * num_bin_channels);
-        //         avg_valid[BUF10_INDEX][0] = 1;
-        //         avg_valid[BUF10_INDEX][1] = 1;
-        //     }
-
-        //     // buffer 100
-        //     if ((i + 1) % avg_length[BUF100_INDEX] == 0) {
-
-        //         // average
-        //         for (j = 0; j < num_channels; j++) {
-        //             avg_data[BUF100_INDEX][j] /=
-        //                 (avg_length[BUF100_INDEX] / avg_length[BUF10_INDEX]);
-        //         }
-
-        //         // write data to file
-        //         if (conf->sample_rate == 1) {
-        //             // binary data
-        //             if (bin_channel_pos > 0) {
-        //                 if (conf->file_format == BIN) {
-        //                     uint32_t temp_bin = 0;
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         temp_bin = temp_bin |
-        //                                    ((bin_avg_data[BUF100_INDEX][j] >=
-        //                                      (avg_length[BUF100_INDEX] / 2))
-        //                                     << j);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF100_INDEX][0] <<
-        //                                    j++);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         temp_bin = temp_bin |
-        //                                    (avg_valid[BUF100_INDEX][1] <<
-        //                                    j++);
-        //                     }
-
-        //                     fwrite(&temp_bin, sizeof(uint32_t), 1,
-        //                     data_file);
-
-        //                 } else if (conf->file_format == CSV) {
-        //                     for (j = 0; j < num_bin_channels; j++) {
-        //                         sprintf(value_char, ", %d",
-        //                                 (bin_avg_data[BUF100_INDEX][j] >=
-        //                                  (avg_length[BUF100_INDEX] / 2)));
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF100_INDEX][0]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED)
-        //                     {
-        //                         sprintf(value_char, ", %d",
-        //                                 avg_valid[BUF100_INDEX][1]);
-        //                         strcat(channel_data_char, value_char);
-        //                     }
-        //                 }
-        //             }
-
-        //             // channel data
-        //             if (conf->file_format == BIN) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     int32_t tmp = (int32_t)avg_data[BUF100_INDEX][j];
-        //                     fwrite(&tmp, sizeof(int32_t), 1, data_file);
-        //                 }
-        //             } else if (conf->file_format == CSV) {
-        //                 for (j = 0; j < num_channels; j++) {
-        //                     sprintf(value_char, ",%d",
-        //                             (int32_t)avg_data[BUF100_INDEX][j]);
-        //                     strcat(channel_data_char, value_char);
-        //                 }
-        //                 strcat(channel_data_char, "\n");
-        //                 fprintf(data_file, "%s", channel_data_char);
-        //             }
-        //         }
-        //     }
-        // }
-
-        // WRITE FILE IF HIGH RATE //
-
-        if (conf->sample_rate >= MIN_ADC_RATE) {
-            // write binary channels
-            if (bin_channel_pos > 0) {
-                if (conf->file_format == BIN) {
-                    fwrite(&bin_data, sizeof(uint32_t), 1, data_file);
-                } else if (conf->file_format == CSV) {
-                    uint32_t MASK = 0x01;
-                    for (int j = 0; j < bin_channel_pos; j++) {
-                        fprintf(data_file, (CSV_DELIMITER "%i"),
-                                (bin_data & MASK) > 0);
-                        MASK = MASK << 1;
+                case AGGREGATE_DOWNSAMPLE:
+                    // drop intermediate samples (skip writing to file)
+                    if (i % aggregate_count > 0) {
+                        continue;
                     }
                 }
-            }
+        }
 
-            // write analog channels
+        // write data to file
+
+        // write binary channels if enabled
+        if (bin_channel_pos > 0) {
             if (conf->file_format == BIN) {
-                fwrite(channel_data, sizeof(int32_t), num_channels, data_file);
+                fwrite(&bin_data, sizeof(uint32_t), 1, data_file);
             } else if (conf->file_format == CSV) {
-                for (int j = 0; j < num_channels; j++) {
-                    fprintf(data_file, (CSV_DELIMITER "%d"), channel_data[j]);
+                uint32_t MASK = 0x01;
+                for (int j = 0; j < bin_channel_pos; j++) {
+                    fprintf(data_file, (CSV_DELIMITER "%i"),
+                            (bin_data & MASK) > 0);
+                    MASK = MASK << 1;
                 }
-                fprintf(data_file, "\n");
             }
+        }
+
+        // write analog channels
+        if (conf->file_format == BIN) {
+            fwrite(channel_data, sizeof(int32_t), num_channels, data_file);
+        } else if (conf->file_format == CSV) {
+            for (int j = 0; j < num_channels; j++) {
+                fprintf(data_file, (CSV_DELIMITER "%d"), channel_data[j]);
+            }
+            fprintf(data_file, "\n");
         }
     }
 
