@@ -42,5 +42,4 @@ void create_time_stamp(struct time_stamp* time_real,
                        struct time_stamp* time_monotonic);
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
 
-
 #endif

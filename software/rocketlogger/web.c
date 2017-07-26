@@ -389,7 +389,8 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
     } else {
 
         // write time
-        web_data_ptr->time = timestamp_realtime->sec * 1000 + timestamp_realtime->nsec / 1000000;
+        web_data_ptr->time =
+            timestamp_realtime->sec * 1000 + timestamp_realtime->nsec / 1000000;
 
         // write data to ring buffer
         web_buffer_add(&web_data_ptr->buffer[BUF1_INDEX],

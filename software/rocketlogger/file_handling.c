@@ -413,39 +413,39 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         if (conf->sample_rate < MIN_ADC_RATE) {
 
             switch (conf->aggregation) {
-                case AGGREGATE_NONE:
-                    rl_log(ERROR, "Low sampling rates not supported without "
-                                  "data aggregation.");
-                    exit(ERROR);
-                    break;
+            case AGGREGATE_NONE:
+                rl_log(ERROR, "Low sampling rates not supported without "
+                              "data aggregation.");
+                exit(ERROR);
+                break;
 
-                case AGGREGATE_AVERAGE:
-                    // accumulate intermediate samples only (skip writing)
-                    if ((i + 1) % aggregate_count > 0) {
-                        for (int i = 0; i < num_channels; i++) {
-                            aggregate_channel_data[i] += channel_data[i];
-                        }
-                        aggregate_bin_data = aggregate_bin_data & bin_data;
-                        continue;
-                    }
-
-                    // calculate average for writing to file
+            case AGGREGATE_AVERAGE:
+                // accumulate intermediate samples only (skip writing)
+                if ((i + 1) % aggregate_count > 0) {
                     for (int i = 0; i < num_channels; i++) {
-                        channel_data[i] =
-                            aggregate_channel_data[i] / aggregate_count;
-                        aggregate_channel_data[i] = 0;
+                        aggregate_channel_data[i] += channel_data[i];
                     }
-
-                    bin_data = aggregate_bin_data;
-                    aggregate_bin_data = 0xffffffff;
-                    break;
-
-                case AGGREGATE_DOWNSAMPLE:
-                    // drop intermediate samples (skip writing to file)
-                    if (i % aggregate_count > 0) {
-                        continue;
-                    }
+                    aggregate_bin_data = aggregate_bin_data & bin_data;
+                    continue;
                 }
+
+                // calculate average for writing to file
+                for (int i = 0; i < num_channels; i++) {
+                    channel_data[i] =
+                        aggregate_channel_data[i] / aggregate_count;
+                    aggregate_channel_data[i] = 0;
+                }
+
+                bin_data = aggregate_bin_data;
+                aggregate_bin_data = 0xffffffff;
+                break;
+
+            case AGGREGATE_DOWNSAMPLE:
+                // drop intermediate samples (skip writing to file)
+                if (i % aggregate_count > 0) {
+                    continue;
+                }
+            }
         }
 
         // write data to file
