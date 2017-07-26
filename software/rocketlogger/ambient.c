@@ -1,5 +1,5 @@
 
-#include "sensors/sensor.h"
+#include "sensor/sensor.h"
 
 #include "ambient.h"
 

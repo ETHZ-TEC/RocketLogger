@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef ROCKETLOGGER_H
-#define ROCKETLOGGER_H
+#ifndef PRU_H_
+#define PRU_H_
 
 #include <ctype.h>
 #include <errno.h>
@@ -176,4 +176,4 @@ int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
 void pru_stop(void);
 void pru_close(void);
 
-#endif
+#endif /* PRU_H_ */

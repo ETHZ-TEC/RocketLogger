@@ -2,6 +2,9 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#ifndef FILE_HANDLING_H_
+#define FILE_HANDLING_H_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,3 +32,5 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
                       struct time_stamp* timestamp_realtime,
                       struct time_stamp* timestamp_monotonic,
                       struct rl_conf* conf);
+
+#endif /* FILE_HANDLING_H_ */

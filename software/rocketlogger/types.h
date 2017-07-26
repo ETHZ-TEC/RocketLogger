@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef RL_TYPES_H
-#define RL_TYPES_H
+#ifndef TYPES_H_
+#define TYPES_H_
 
 // INCLUDES
 
@@ -308,4 +308,4 @@ extern const char* digital_input_names[NUM_DIGITAL_INPUTS];
 /// Range valid information names
 extern const char* valid_info_names[NUM_I_CHANNELS];
 
-#endif
+#endif /* TYPES_H_ */

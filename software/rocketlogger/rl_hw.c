@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#include "sensors/sensor.h"
+#include "sensor/sensor.h"
 
 #include "rl_hw.h"
 

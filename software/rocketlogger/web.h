@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef IPC_H
-#define IPC_H
+#ifndef WEB_H_
+#define WEB_H_
 
 #include <stdint.h>
 
@@ -89,4 +89,4 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                      struct time_stamp* timestamp_realtime,
                      struct rl_conf* conf);
 
-#endif
+#endif /* WEB_H_ */

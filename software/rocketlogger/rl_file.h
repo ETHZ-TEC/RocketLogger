@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef RL_FILE_H
-#define RL_FILE_H
+#ifndef RL_FILE_H_
+#define RL_FILE_H_
 
 #include <stdint.h>
 
@@ -144,4 +144,4 @@ struct rl_file_header {
     struct rl_file_channel* channel; // = NULL;
 };
 
-#endif /* RL_FILE_H */
+#endif /* RL_FILE_H_ */

@@ -1,6 +1,8 @@
 /**
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
+#ifndef PWM_H_
+#define PWM_H_
 
 #include <errno.h>
 #include <fcntl.h>
@@ -76,3 +78,5 @@ void pwm_close(void);
 
 void pwm_setup_range_clock(int sample_rate);
 void pwm_setup_adc_clock(void);
+
+#endif /* PWM_H_ */

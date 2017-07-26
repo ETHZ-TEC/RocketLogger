@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL_H_
+#define UTIL_H_
 
 #include <stdint.h>
 
@@ -39,4 +39,4 @@ void create_time_stamp(struct time_stamp* time_real,
                        struct time_stamp* time_monotonic);
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
 
-#endif
+#endif /* UTIL_H_ */

@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef LIB_UTIL_H
-#define LIB_UTIL_H
+#ifndef LIB_UTIL_H_
+#define LIB_UTIL_H_
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -17,4 +17,4 @@ int check_update_rate(int update_rate);
 pid_t get_pid(void);
 int set_pid(pid_t pid);
 
-#endif
+#endif /* LIB_UTIL_H_ */
