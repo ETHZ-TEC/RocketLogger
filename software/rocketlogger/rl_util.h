@@ -32,6 +32,7 @@ typedef enum option {
     WEB,            //!< En-/disable data averaging for web server
     DIGITAL_INPUTS, //!< Sample digital inputs
     AMBIENT,        //!< Ambient sensor logging
+    AGGREGATION,    //!< Sample aggregation
     DEF_CONF,       //!< Set configuration as default
     CALIBRATION,    //!< Use/ignore existing calibration values
     FILE_FORMAT,    //!< File format

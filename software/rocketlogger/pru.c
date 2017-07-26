@@ -4,6 +4,10 @@
 
 #include <stdint.h>
 
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
+
 #include "file_handling.h"
 #include "util.h"
 #include "web.h"
@@ -373,16 +377,16 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
 
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
 
-        setup_ambient_lead_in(&(ambient_file_header.lead_in), conf);
+        ambient_setup_lead_in(&(ambient_file_header.lead_in), conf);
 
         // channel array
         ambient_file_header.channel = ambient_file_channel;
 
         // complete file header
-        setup_ambient_header(&ambient_file_header, conf);
+        ambient_setup_header(&ambient_file_header, conf);
 
         // store header
-        store_header_bin(ambient_file, &ambient_file_header);
+        file_store_header_bin(ambient_file, &ambient_file_header);
     }
 
     // EXECUTION
@@ -505,7 +509,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
                     ambient_file_header.lead_in.sample_count = 0;
 
                     // store header
-                    store_header_bin(ambient_file, &ambient_file_header);
+                    file_store_header_bin(ambient_file, &ambient_file_header);
 
                     rl_log(INFO, "new ambient-file: %s", file_name);
                 }
@@ -594,13 +598,14 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
             if (conf->ambient.enabled == AMBIENT_ENABLED) {
 
                 // fetch and write data
-                store_ambient_data(ambient_file, conf);
+                ambient_store_data(ambient_file, &timestamp_realtime,
+                                   &timestamp_monotonic, conf);
 
                 // update and write header
                 ambient_file_header.lead_in.data_block_count += 1;
                 ambient_file_header.lead_in.sample_count +=
                     AMBIENT_DATA_BLOCK_SIZE;
-                update_header_bin(ambient_file, &ambient_file_header);
+                file_update_header_bin(ambient_file, &ambient_file_header);
             }
             skipped_buffers = 0;
         } else {

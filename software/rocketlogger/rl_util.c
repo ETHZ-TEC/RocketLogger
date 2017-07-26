@@ -157,6 +157,8 @@ rl_option get_option(char* option) {
         return DIGITAL_INPUTS;
     } else if (strcmp(option, "a") == 0) {
         return AMBIENT;
+    } else if (strcmp(option, "g") == 0) {
+        return AGGREGATION;
     } else if (strcmp(option, "s") == 0) {
         return DEF_CONF;
     } else if (strcmp(option, "c") == 0) {
@@ -402,6 +404,31 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                 }
                 break;
 
+            case AGGREGATION:
+                if (argc > ++i) {
+                    if (isdigit(argv[i][0]) && atoi(argv[i]) == 0) {
+                        conf->aggregation = AGGREGATE_NONE;
+                    } else if (no_file == 0) {
+                        // ignore format, when no file is written
+                        if (strcmp(argv[i], "none") == 0) {
+                            conf->aggregation = AGGREGATE_NONE;
+                        } else if (strcmp(argv[i], "average") == 0) {
+                            conf->aggregation = AGGREGATE_AVERAGE;
+                        } else if (strcmp(argv[i], "downsample") == 0) {
+                            conf->aggregation = AGGREGATE_DOWNSAMPLE;
+                        } else {
+                            rl_log(ERROR, "wrong file format");
+                            return FAILURE;
+                        }
+                    } else {
+                        rl_log(INFO, "aggregation type ignored");
+                    }
+                } else {
+                    rl_log(ERROR, "no aggregation type");
+                    return FAILURE;
+                }
+                break;
+
             case DEF_CONF:
                 *set_as_default = 1;
                 break;
@@ -418,8 +445,8 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
 
             case FILE_FORMAT:
                 if (argc > ++i) {
-                    if (no_file ==
-                        0) { // ignore format, when no file is written
+                    // ignore format, when no file is written
+                    if (no_file == 0) {
                         if (strcmp(argv[i], "csv") == 0) {
                             conf->file_format = CSV;
                         } else if (strcmp(argv[i], "bin") == 0) {
@@ -485,7 +512,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
     // ambient file name
     if (conf->file_format != NO_FILE &&
         conf->ambient.enabled == AMBIENT_ENABLED) {
-        set_ambient_file_name(conf);
+        ambient_set_file_name(conf);
     }
 
     return SUCCESS;
@@ -534,23 +561,29 @@ void print_usage(void) {
     printf("    -f file            Stores data to specified file.\n");
     printf("                         '-f 0' will disable file storing.\n");
     printf("    -d                 Log digital inputs.\n");
-    printf(
-        "                         '-d 0' to disable digital input logging.\n");
+    printf("                         '-d 0' to disable digital input "
+           "logging.\n");
     printf("    -a                 Log ambient sensors, if available.\n");
-    printf(
-        "                         '-a 0' to disable ambient sensor logging.\n");
+    printf("                         '-a 0' to disable ambient sensor "
+           "logging.\n");
+    printf("    -g                 Data aggregation mode for low sample "
+           "rates.\n");
+    printf("                         Existing modes: 'average', "
+           "'downsample'.");
+    printf("                         '-g 0' to disable aggregation/low sample "
+           "rates.\n");
     printf("    -format format     Select file format: csv, bin.\n");
-    printf(
-        "    -size   file_size  Select max file size (k, m, g can be used).\n");
+    printf("    -size   file_size  Select max file size (k, m, g can be "
+           "used).\n");
     printf("    -w                 Enable webserver plotting.\n");
-    printf(
-        "                         Use '-w 0' to disable webserver plotting.\n");
+    printf("                         Use '-w 0' to disable webserver "
+           "plotting.\n");
     printf("    -s                 Set configuration as default.\n");
     printf("\n");
     printf("  Help/Info:\n");
     printf("    help, --help       Display this help message.\n");
-    printf(
-        "    version, --version Display the RocketLogger software version.\n");
+    printf("    version, --version Display the RocketLogger software "
+           "version.\n");
     printf("\n");
 }
 

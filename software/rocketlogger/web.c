@@ -9,6 +9,7 @@
 
 #include "pru.h"
 #include "sem.h"
+#include "types.h"
 
 #include "web.h"
 

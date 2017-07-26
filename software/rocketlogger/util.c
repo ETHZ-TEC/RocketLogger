@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/time.h>
 

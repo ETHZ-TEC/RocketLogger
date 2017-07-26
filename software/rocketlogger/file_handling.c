@@ -325,6 +325,8 @@ void file_update_header_csv(FILE* data_file,
  * @param buffer_addr Pointer to buffer to handle
  * @param sample_data_size Data size of the samples in bytes
  * @param samples_count Number of samples to read
+ * @param timestamp_realtime {@link time_stamp} with realtime clock value
+ * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
  * @param conf Current {@link rl_conf} configuration.
  */
 void file_handle_data(FILE* data_file, void* buffer_addr,

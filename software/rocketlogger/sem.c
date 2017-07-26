@@ -2,6 +2,14 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#define _GNU_SOURCE
+
+#include <fcntl.h>
+
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
+
 #include "sem.h"
 
 /**
