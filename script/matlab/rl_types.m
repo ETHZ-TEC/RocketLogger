@@ -27,6 +27,7 @@ RL_FILE_SAMPLE_SIZE = 4; % sample size in byte
 % time stamp
 TIME_STAMP_SIZE = 4; % 4 * int64
 
-UNIT_NAMES = {'undefined', 'voltage', 'current', 'digital', 'valid', 'merged'};
+UNIT_NAMES = {'unitless', 'voltage', 'current', 'digital', 'valid', ...
+    'illuminance', 'temerature', 'integer', 'percent', 'preasure'};
 
 RANGE_MARGIN = 5;
