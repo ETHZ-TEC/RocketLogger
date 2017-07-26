@@ -12,38 +12,41 @@
  */
 void rl_print_config(struct rl_conf* conf) {
 
-    char file_format_names[3][10] = {"no file", "csv", "binary"};
+    char file_format_names[3][8] = {"no file", "csv", "binary"};
+    char data_aggregation_names[3][10] = {"none", "downsample", "average"};
 
     if (conf->sample_rate >= KSPS) {
         printf("  Sampling rate:    %dkSps\n", conf->sample_rate / KSPS);
     } else {
         printf("  Sampling rate:    %dSps\n", conf->sample_rate);
     }
+    printf("  Data aggregation: %s\n",
+           data_aggregation_names[conf->aggregation]);
+
     printf("  Update rate:      %dHz\n", conf->update_rate);
-    if (conf->enable_web_server == 1)
+    if (conf->enable_web_server == 1) {
         printf("  Webserver:        enabled\n");
-    else
+    } else {
         printf("  Webserver:        disabled\n");
-    if (conf->digital_inputs == 1)
+    }
+    if (conf->digital_inputs == 1) {
         printf("  Digital inputs:   enabled\n");
-    else
+    } else {
         printf("  Digital inputs:   disabled\n");
-    if (conf->ambient.enabled == 1)
-        printf("  Ambient logging:  enabled\n");
-    else
-        printf("  Ambient logging:  disabled\n");
+    }
     printf("  File format:      %s\n", file_format_names[conf->file_format]);
-    if (conf->file_format != NO_FILE)
+    if (conf->file_format != NO_FILE) {
         printf("  File name:        %s\n", conf->file_name);
+    }
     if (conf->max_file_size != 0) {
-        printf("  Max file size:    %lluMB\n", conf->max_file_size / 1000000);
+        printf("  Max file size:    %lluMB\n",
+               conf->max_file_size / (uint64_t)1e6);
     }
     if (conf->calibration == CAL_IGNORE) {
         printf("  Calibration:      ignored\n");
     }
     printf("  Channels:         ");
-    int i;
-    for (i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
         if (conf->channels[i] == CHANNEL_ENABLED) {
             printf("%d,", i);
         }
@@ -52,7 +55,7 @@ void rl_print_config(struct rl_conf* conf) {
     if (conf->force_high_channels[0] == CHANNEL_ENABLED ||
         conf->force_high_channels[1] == CHANNEL_ENABLED) {
         printf("  Forced channels:  ");
-        for (i = 0; i < NUM_I_CHANNELS; i++) {
+        for (int i = 0; i < NUM_I_CHANNELS; i++) {
             if (conf->force_high_channels[i] == CHANNEL_ENABLED) {
                 printf("%d,", i + 1);
             }
@@ -154,6 +157,8 @@ rl_option get_option(char* option) {
         return DIGITAL_INPUTS;
     } else if (strcmp(option, "a") == 0) {
         return AMBIENT;
+    } else if (strcmp(option, "g") == 0) {
+        return AGGREGATION;
     } else if (strcmp(option, "s") == 0) {
         return DEF_CONF;
     } else if (strcmp(option, "c") == 0) {
@@ -399,6 +404,31 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                 }
                 break;
 
+            case AGGREGATION:
+                if (argc > ++i) {
+                    if (isdigit(argv[i][0]) && atoi(argv[i]) == 0) {
+                        conf->aggregation = AGGREGATE_NONE;
+                    } else if (no_file == 0) {
+                        // ignore format, when no file is written
+                        if (strcmp(argv[i], "none") == 0) {
+                            conf->aggregation = AGGREGATE_NONE;
+                        } else if (strcmp(argv[i], "average") == 0) {
+                            conf->aggregation = AGGREGATE_AVERAGE;
+                        } else if (strcmp(argv[i], "downsample") == 0) {
+                            conf->aggregation = AGGREGATE_DOWNSAMPLE;
+                        } else {
+                            rl_log(ERROR, "wrong file format");
+                            return FAILURE;
+                        }
+                    } else {
+                        rl_log(INFO, "aggregation type ignored");
+                    }
+                } else {
+                    rl_log(ERROR, "no aggregation type");
+                    return FAILURE;
+                }
+                break;
+
             case DEF_CONF:
                 *set_as_default = 1;
                 break;
@@ -415,8 +445,8 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
 
             case FILE_FORMAT:
                 if (argc > ++i) {
-                    if (no_file ==
-                        0) { // ignore format, when no file is written
+                    // ignore format, when no file is written
+                    if (no_file == 0) {
                         if (strcmp(argv[i], "csv") == 0) {
                             conf->file_format = CSV;
                         } else if (strcmp(argv[i], "bin") == 0) {
@@ -482,7 +512,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
     // ambient file name
     if (conf->file_format != NO_FILE &&
         conf->ambient.enabled == AMBIENT_ENABLED) {
-        set_ambient_file_name(conf);
+        ambient_set_file_name(conf);
     }
 
     return SUCCESS;
@@ -531,23 +561,29 @@ void print_usage(void) {
     printf("    -f file            Stores data to specified file.\n");
     printf("                         '-f 0' will disable file storing.\n");
     printf("    -d                 Log digital inputs.\n");
-    printf(
-        "                         '-d 0' to disable digital input logging.\n");
+    printf("                         '-d 0' to disable digital input "
+           "logging.\n");
     printf("    -a                 Log ambient sensors, if available.\n");
-    printf(
-        "                         '-a 0' to disable ambient sensor logging.\n");
+    printf("                         '-a 0' to disable ambient sensor "
+           "logging.\n");
+    printf("    -g                 Data aggregation mode for low sample "
+           "rates.\n");
+    printf("                         Existing modes: 'average', "
+           "'downsample'.");
+    printf("                         '-g 0' to disable aggregation/low sample "
+           "rates.\n");
     printf("    -format format     Select file format: csv, bin.\n");
-    printf(
-        "    -size   file_size  Select max file size (k, m, g can be used).\n");
+    printf("    -size   file_size  Select max file size (k, m, g can be "
+           "used).\n");
     printf("    -w                 Enable webserver plotting.\n");
-    printf(
-        "                         Use '-w 0' to disable webserver plotting.\n");
+    printf("                         Use '-w 0' to disable webserver "
+           "plotting.\n");
     printf("    -s                 Set configuration as default.\n");
     printf("\n");
     printf("  Help/Info:\n");
     printf("    help, --help       Display this help message.\n");
-    printf(
-        "    version, --version Display the RocketLogger software version.\n");
+    printf("    version, --version Display the RocketLogger software "
+           "version.\n");
     printf("\n");
 }
 
@@ -569,6 +605,7 @@ void print_config(struct rl_conf* conf) {
 void reset_config(struct rl_conf* conf) {
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
+    conf->aggregation = AGGREGATE_DOWNSAMPLE;
     conf->update_rate = 1;
     conf->sample_limit = 0;
     conf->digital_inputs = DIGITAL_INPUTS_ENABLED;

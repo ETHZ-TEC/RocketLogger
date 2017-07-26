@@ -5,6 +5,8 @@
 #ifndef IPC_H
 #define IPC_H
 
+#include <stdint.h>
+
 #include "log.h"
 #include "types.h"
 #include "util.h"
@@ -41,6 +43,9 @@ enum time_scale {
 /// Number of time divisions in web plot
 #define NUM_WEB_DIVS 10
 
+/// Current high-low scale difference
+#define H_L_SCALE 100
+
 /**
  * Ring buffer for data exchange to web server
  */
@@ -69,13 +74,19 @@ struct web_shm {
     struct ringbuffer buffer[WEB_RING_BUFFER_COUNT];
 };
 
-struct web_shm* create_web_shm(void);
-struct web_shm* open_web_shm(void);
+struct web_shm* web_create_shm(void);
+struct web_shm* web_open_shm(void);
 
-void reset_buffer(struct ringbuffer* buffer, int element_size, int length);
+void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length);
 
-void buffer_add(struct ringbuffer* buffer, int64_t* data);
+void web_buffer_add(struct ringbuffer* buffer, int64_t* data);
 
-int64_t* buffer_get(struct ringbuffer* buffer, int num);
+int64_t* web_buffer_get(struct ringbuffer* buffer, int num);
+
+void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
+                     void* buffer_addr, uint32_t sample_data_size,
+                     uint32_t samples_count,
+                     struct time_stamp* timestamp_realtime,
+                     struct rl_conf* conf);
 
 #endif

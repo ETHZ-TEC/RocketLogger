@@ -15,11 +15,11 @@ void hw_init(struct rl_conf* conf) {
     // PWM
     pwm_setup();
     if (conf->sample_rate < MIN_ADC_RATE) {
-        range_clock_setup(MIN_ADC_RATE);
+        pwm_setup_range_clock(MIN_ADC_RATE);
     } else {
-        range_clock_setup(conf->sample_rate);
+        pwm_setup_range_clock(conf->sample_rate);
     }
-    adc_clock_setup();
+    pwm_setup_adc_clock();
 
     // GPIO
     // force high range

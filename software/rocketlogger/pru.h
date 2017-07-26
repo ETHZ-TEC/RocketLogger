@@ -5,9 +5,6 @@
 #ifndef ROCKETLOGGER_H
 #define ROCKETLOGGER_H
 
-// ---------------------------------------------- Includes
-// ----------------------------------------------------------//
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -40,8 +37,7 @@
 #include "util.h"
 #include "web.h"
 
-// ---------------------------------------------- ADC DEFINES
-// -------------------------------------------------------//
+// ------  ADC DEFINITIONS  ------ //
 
 /**
  * ADS131E08S command (extended to 32 bits for PRU use) definitions
@@ -99,16 +95,14 @@
 #define CONFIG2DEFAULT 0xE000
 #define CONFIG3DEFAULT 0xE800
 
-// ---------------------------------------------- FILES
-// ------------------------------------------------------------//
+// ------  FILES  ------ //
 
 /// Memory map file
 #define MMAP_FILE "/sys/class/uio/uio0/maps/map1/"
 /// PRU binary file location
 #define PRU_CODE "/lib/firmware/rocketlogger_spi.bin"
 
-// ---------------------------------------------- PRU DEFINES
-// ---------------------------------------------------//
+// ------  PRU DEFINES  ------ //
 
 /**
  * ADS131E08S precision defines({@link PRECISION_HIGH} for low sampling rates,
@@ -122,6 +116,11 @@
  */
 #define SIZE_HIGH 4
 #define SIZE_LOW 2
+
+/// Mask for valid bit read from PRU
+#define VALID_MASK 0x1
+/// Mask for binary inputs read from PRU
+#define BINARY_MASK 0xE
 
 /// PRU time out in seconds
 #define PRU_TIMEOUT 3
@@ -162,8 +161,7 @@ struct pru_data_struct {
     uint32_t commands[NUMBER_ADC_COMMANDS];
 };
 
-// ----------------------------------------------  FUNCTIONS
-// ------------------------------------------------//
+// ------  FUNCTIONS  ------ //
 
 void* pru_wait_event(void* voidEvent);
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
@@ -175,8 +173,7 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
 
 int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
 
-void pru_stop(
-    void); // stop pru when in continuous mode (has to be done before close)
+void pru_stop(void);
 void pru_close(void);
 
 #endif

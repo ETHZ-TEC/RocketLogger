@@ -113,7 +113,7 @@
 typedef enum state {
     RL_OFF = 0,     //!< Idle
     RL_RUNNING = 1, //!< Running
-    RL_ERROR = -1   //!< Error
+    RL_ERROR = -1,  //!< Error
 } rl_state;
 
 /**
@@ -121,7 +121,7 @@ typedef enum state {
  */
 typedef enum sampling {
     SAMPLING_OFF = 0, //!< Not sampling
-    SAMPLING_ON = 1   //!< Sampling
+    SAMPLING_ON = 1,  //!< Sampling
 } rl_sampling;
 
 /**
@@ -139,6 +139,15 @@ typedef enum mode {
     HELP,          //!< Show help
     NO_MODE        //!< No mode
 } rl_mode;
+
+/**
+ * RocketLogger data aggregation mode definition
+ */
+typedef enum aggregation {
+    AGGREGATE_NONE = 0,       //!< No aggregation
+    AGGREGATE_DOWNSAMPLE = 1, //!< Aggregate using downsampling
+    AGGREGATE_AVERAGE = 2     //!< Aggregate by averaging data
+} rl_aggregation;
 
 /**
  * RocketLogger file format definition
@@ -210,6 +219,8 @@ struct rl_conf {
     rl_mode mode;
     /// Sampling rate
     int sample_rate;
+    /// Aggregation mode (for sampling rates below lowest native one)
+    rl_aggregation aggregation;
     /// Data update rate
     int update_rate;
     /// Sample limit (0 for continuous)
