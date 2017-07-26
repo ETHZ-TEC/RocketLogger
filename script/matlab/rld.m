@@ -76,7 +76,7 @@ classdef rld
                         % old magic number
                         assert(magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
                         warning('Old file version');
-                    case 2
+                    case {2, 3}
                         % new magic number
                         assert(magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
                     otherwise

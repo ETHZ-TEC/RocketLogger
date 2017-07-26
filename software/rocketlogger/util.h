@@ -9,9 +9,6 @@
 
 #include "types.h"
 
-/// Permissions for shared memory
-#define SHMEM_PERMISSIONS 0666
-
 /// MAC address length in bytes
 #define MAC_ADDRESS_LENGTH 6
 

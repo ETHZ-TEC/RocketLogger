@@ -104,6 +104,15 @@ int rl_start(struct rl_conf* conf) {
         conf->enable_web_server = 0;
     }
 
+    // check ambient configuration
+    if (conf->ambient.enabled == AMBIENT_ENABLED &&
+        conf->file_format == NO_FILE) {
+        rl_log(
+            WARNING,
+            "Ambient logging not possible without file. Disabling ambient ...");
+        conf->ambient.enabled = AMBIENT_DISABLED;
+    }
+
     // store PID to file
     pid_t pid = getpid();
     set_pid(pid);
@@ -118,11 +127,16 @@ int rl_start(struct rl_conf* conf) {
     // INITIATION
     hw_init(conf);
 
-    rl_log(INFO, "sampling started");
+    // check ambient sensor available
+    if (conf->ambient.enabled == AMBIENT_ENABLED &&
+        conf->ambient.sensor_count == 0) {
+        conf->ambient.enabled = AMBIENT_DISABLED;
+        rl_log(WARNING, "No ambient sensor found. Disabling ambient ...");
+    }
 
     // SAMPLING
+    rl_log(INFO, "sampling start");
     hw_sample(conf);
-
     rl_log(INFO, "sampling finished");
 
     // FINISH

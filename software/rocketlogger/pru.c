@@ -256,11 +256,12 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
 
 /**
  * Main PRU sampling function
- * @param data File pointer to data file
+ * @param data_file File pointer to data file
+ * @param ambient_file File pointer to ambient file
  * @param conf Pointer to current {@link rl_conf} configuration
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE* data_file, struct rl_conf* conf) {
+int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
 
     // average (for low rates)
     uint32_t avg_factor = 1;
@@ -279,7 +280,7 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
 
     if (conf->enable_web_server == 1) {
         // semaphores
-        sem_id = create_sem();
+        sem_id = create_sem(SEM_KEY, NUM_SEMS);
         set_sem(sem_id, DATA_SEM, 1);
 
         // shared memory
@@ -341,7 +342,7 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
     void* buffer0 = pru_map_memory();
     void* buffer1 = buffer0 + buffer_size_bytes;
 
-    // FILE STORING
+    // DATA FILE STORING
 
     // file header lead-in
     struct rl_file_header file_header;
@@ -362,6 +363,28 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
     } else if (conf->file_format == CSV) {
         file_store_header_csv(data_file, &file_header);
     }
+
+    // AMBIENT FILE STORING
+
+    // file header lead-in
+    struct rl_file_header ambient_file_header;
+    // channel array
+    struct rl_file_channel ambient_file_channel[conf->ambient.sensor_count];
+
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+
+        setup_ambient_lead_in(&(ambient_file_header.lead_in), conf);
+
+        // channel array
+        ambient_file_header.channel = ambient_file_channel;
+
+        // complete file header
+        setup_ambient_header(&ambient_file_header, conf);
+
+        // store header
+        store_header_bin(ambient_file, &ambient_file_header);
+    }
+
     // EXECUTION
 
     // write configuration to PRU memory
@@ -390,6 +413,7 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
     uint32_t buffers_lost = 0;
     uint32_t buffer_samples_count; // number of samples per buffer
     uint32_t num_files = 1;        // number of files stored
+    uint8_t skipped_buffers = 0;   // skipped buffers for ambient reading
 
     // sampling started
     status.sampling = SAMPLING_ON;
@@ -431,7 +455,7 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
                 file_ending--;
 
                 // add file number
-                sprintf(new_file_ending, "_p%d", num_files++);
+                sprintf(new_file_ending, "_p%d", num_files);
                 strcat(new_file_ending, file_ending);
                 strcpy(file_ending, new_file_ending);
 
@@ -450,6 +474,43 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
                 }
 
                 rl_log(INFO, "new datafile: %s", file_name);
+
+                // AMBIENT FILE
+                if (conf->ambient.enabled == AMBIENT_ENABLED) {
+                    // close old ambient file
+                    fclose(ambient_file);
+
+                    // determine new file name
+                    strcpy(file_name, conf->ambient.file_name);
+
+                    // search for last .
+                    file_ending = file_name;
+                    while (strchr(file_ending, target) != NULL) {
+                        file_ending = strchr(file_ending, target);
+                        file_ending++; // Increment file_ending, otherwise we'll
+                                       // find target at the same location
+                    }
+                    file_ending--;
+
+                    // add file number
+                    sprintf(new_file_ending, "_p%d", num_files);
+                    strcat(new_file_ending, file_ending);
+                    strcpy(file_ending, new_file_ending);
+
+                    // open new ambient file
+                    ambient_file = fopen(file_name, "w+");
+
+                    // update header for new file
+                    ambient_file_header.lead_in.data_block_count = 0;
+                    ambient_file_header.lead_in.sample_count = 0;
+
+                    // store header
+                    store_header_bin(ambient_file, &ambient_file_header);
+
+                    rl_log(INFO, "new ambient-file: %s", file_name);
+                }
+
+                num_files++;
             }
         }
 
@@ -526,6 +587,24 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
             } else if (conf->file_format == CSV) {
                 file_update_header_csv(data_file, &file_header);
             }
+        }
+
+        // handle ambient data
+        if (skipped_buffers + 1 >= conf->update_rate) { // always 1 Sps
+            if (conf->ambient.enabled == AMBIENT_ENABLED) {
+
+                // fetch and write data
+                store_ambient_data(ambient_file, conf);
+
+                // update and write header
+                ambient_file_header.lead_in.data_block_count += 1;
+                ambient_file_header.lead_in.sample_count +=
+                    AMBIENT_DATA_BLOCK_SIZE;
+                update_header_bin(ambient_file, &ambient_file_header);
+            }
+            skipped_buffers = 0;
+        } else {
+            skipped_buffers++;
         }
 
         // update and write state

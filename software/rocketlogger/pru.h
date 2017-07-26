@@ -5,8 +5,6 @@
 #ifndef ROCKETLOGGER_H
 #define ROCKETLOGGER_H
 
-// ---------------------------------------------- Includes
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -29,6 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "ambient.h"
 #include "calibration.h"
 #include "file_handling.h"
 #include "log.h"
@@ -172,7 +171,7 @@ int pru_init(void);
 int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
                    uint32_t avg_factor);
 
-int pru_sample(FILE* data, struct rl_conf* conf);
+int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
 
 void pru_stop(void);
 void pru_close(void);
