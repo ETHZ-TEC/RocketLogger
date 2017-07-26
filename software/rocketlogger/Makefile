@@ -11,7 +11,7 @@ LIB_DIR = lib
 OBJ_DIR = obj
 DEP_DIR = $(OBJ_DIR)/.dep
 SRC_DIR = .
-SENSOR_DIR = $(SRC_DIR)/sensors
+SENSOR_DIR = $(SRC_DIR)/sensor
 
 ## install directories
 INSTALL_BIN_DIR = /bin
