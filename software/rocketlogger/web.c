@@ -168,48 +168,21 @@ void web_merge_currents(uint8_t* valid, int64_t* dest, int64_t* src,
  * @param sample_data_size Size of samples to read
  * @param samples_count Number of samples to read
  * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
  * @param conf Current {@link rl_conf} configuration.
  */
 void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                      void* buffer_addr, uint32_t sample_data_size,
                      uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
-                     struct time_stamp* timestamp_monotonic,
                      struct rl_conf* conf) {
 
-    // INIT //
-
-    uint32_t i;
-    uint32_t j;
-    uint32_t k;
-
-    // bin channels
-    uint32_t num_bin_channels;
+    // count channels
+    int num_bin_channels = 0;
     if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
         num_bin_channels = NUM_DIGITAL_INPUTS;
-    } else {
-        num_bin_channels = 0;
     }
 
-    // channels
-    uint32_t num_channels = count_channels(conf->channels);
-
-    // binary data (for samples)
-    uint32_t bin_data;
-    int32_t channel_data[num_channels];
-    int32_t value = 0;
-
-    // TIMESTAMP //
-
-    // create timestamp
-    struct time_stamp time_real;
-    struct time_stamp time_monotonic;
-    create_time_stamp(&time_real, &time_monotonic);
-
-    // adjust time with buffer latency
-    time_real.sec -= 1 / conf->update_rate;
-    time_monotonic.sec -= 1 / conf->update_rate;
+    int num_channels = count_channels(conf->channels);
 
     // AVERAGE DATA //
 
@@ -217,8 +190,8 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
     uint32_t avg_length[WEB_RING_BUFFER_COUNT] = {
         samples_count / BUFFER1_SIZE, samples_count / BUFFER10_SIZE,
         samples_count / BUFFER100_SIZE};
-    int64_t avg_data[WEB_RING_BUFFER_COUNT][num_channels];
-    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][num_bin_channels];
+    int64_t avg_data[WEB_RING_BUFFER_COUNT][NUM_CHANNELS];
+    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][NUM_DIGITAL_INPUTS];
     uint8_t avg_valid[WEB_RING_BUFFER_COUNT]
                      [NUM_I_CHANNELS] = {{1, 1}, {1, 1}, {1, 1}};
 
@@ -233,13 +206,10 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                     [web_data_ptr->num_channels];
 
     // HANDLE BUFFER //
-    for (i = 0; i < samples_count; i++) {
+    for (uint32_t i = 0; i < samples_count; i++) {
 
-        // READ //
-
-        // reset values
-        k = 0;
-        bin_data = 0;
+        // channel data variables
+        uint32_t bin_data;
 
         // read binary channels
         uint8_t bin_adc1 = (*((int8_t*)(buffer_addr)));
@@ -248,17 +218,24 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         buffer_addr += PRU_DIG_SIZE;
 
         // read and scale values (if channel selected)
-        for (j = 0; j < NUM_CHANNELS; j++) {
+        int ch = 0;
+        for (int j = 0; j < NUM_CHANNELS; j++) {
             if (conf->channels[j] == CHANNEL_ENABLED) {
+                int32_t adc_value;
                 if (sample_data_size == 4) {
-                    value = *((int32_t*)(buffer_addr + sample_data_size * j));
+                    adc_value =
+                        *((int32_t*)(buffer_addr + sample_data_size * j));
                 } else {
-                    value = *((int16_t*)(buffer_addr + sample_data_size * j));
+                    adc_value =
+                        *((int16_t*)(buffer_addr + sample_data_size * j));
                 }
-                channel_data[k] = (int32_t)((value + calibration.offsets[j]) *
-                                            calibration.scales[j]);
-                avg_data[BUF1_INDEX][k] += channel_data[k];
-                k++;
+
+                int32_t channel_value =
+                    (int32_t)((adc_value + calibration.offsets[j]) *
+                              calibration.scales[j]);
+                avg_data[BUF1_INDEX][ch] += channel_value;
+
+                ch++;
             }
         }
         buffer_addr += NUM_CHANNELS * sample_data_size;
@@ -266,21 +243,11 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         // BINARY CHANNELS //
 
         // mask and combine digital inputs, if requestet
-        uint32_t bin_channel_pos;
+        int bin_channel_pos;
         if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
             bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
                        ((bin_adc2 & BINARY_MASK) << 2);
             bin_channel_pos = NUM_DIGITAL_INPUTS;
-
-            // average digital inputs
-            int32_t MASK = 1;
-            for (j = 0; j < num_bin_channels; j++) {
-                if ((bin_data & MASK) > 0) {
-                    bin_avg_data[BUF1_INDEX][j] += 1;
-                }
-                MASK = MASK << 1;
-            }
-
         } else {
             bin_channel_pos = 0;
         }
@@ -299,30 +266,30 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         }
 
         // average valid info
-        for (j = 0; j <= BUF100_INDEX; j++) {
+        for (int j = 0; j <= BUF100_INDEX; j++) {
             avg_valid[j][0] = avg_valid[j][0] & valid1;
             avg_valid[j][1] = avg_valid[j][1] & valid2;
         }
 
         // HANDLE AVERAGE DATA //
 
-        // buffer 1
+        // buffer 1s/div
         if ((i + 1) % avg_length[BUF1_INDEX] == 0) {
 
-            // average
-            for (j = 0; j < num_channels; j++) {
+            // average channel data
+            for (int j = 0; j < num_channels; j++) {
                 avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
                 avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
             }
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF1_INDEX],
-                           &web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]]
-                                    [num_bin_channels],
-                           avg_data[BUF1_INDEX], conf);
+                               &web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]]
+                                        [num_bin_channels],
+                               avg_data[BUF1_INDEX], conf);
 
             // average bin channels
-            for (j = 0; j < num_bin_channels; j++) {
+            for (int j = 0; j < num_bin_channels; j++) {
 
                 bin_avg_data[BUF10_INDEX][j] += bin_avg_data[BUF1_INDEX][j];
 
@@ -347,7 +314,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         if ((i + 1) % avg_length[BUF10_INDEX] == 0) {
 
             // average
-            for (j = 0; j < num_channels; j++) {
+            for (int j = 0; j < num_channels; j++) {
                 avg_data[BUF10_INDEX][j] /=
                     (avg_length[BUF10_INDEX] / avg_length[BUF1_INDEX]);
                 avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
@@ -355,12 +322,13 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF10_INDEX],
-                           &web_data[BUF10_INDEX][i / avg_length[BUF10_INDEX]]
-                                    [num_bin_channels],
-                           avg_data[BUF10_INDEX], conf);
+                               &web_data[BUF10_INDEX]
+                                        [i / avg_length[BUF10_INDEX]]
+                                        [num_bin_channels],
+                               avg_data[BUF10_INDEX], conf);
 
             // average bin channels
-            for (j = 0; j < num_bin_channels; j++) {
+            for (int j = 0; j < num_bin_channels; j++) {
 
                 bin_avg_data[BUF100_INDEX][j] += bin_avg_data[BUF10_INDEX][j];
 
@@ -385,19 +353,20 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         if ((i + 1) % avg_length[BUF100_INDEX] == 0) {
 
             // average
-            for (j = 0; j < num_channels; j++) {
+            for (int j = 0; j < num_channels; j++) {
                 avg_data[BUF100_INDEX][j] /=
                     (avg_length[BUF100_INDEX] / avg_length[BUF10_INDEX]);
             }
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF100_INDEX],
-                           &web_data[BUF100_INDEX][i / avg_length[BUF100_INDEX]]
-                                    [num_bin_channels],
-                           avg_data[BUF100_INDEX], conf);
+                               &web_data[BUF100_INDEX]
+                                        [i / avg_length[BUF100_INDEX]]
+                                        [num_bin_channels],
+                               avg_data[BUF100_INDEX], conf);
 
             // store bin channels for web
-            for (j = 0; j < num_bin_channels; j++) {
+            for (int j = 0; j < num_bin_channels; j++) {
 
                 if (bin_avg_data[BUF100_INDEX][j] >=
                     (avg_length[BUF100_INDEX] / 2)) {
@@ -420,7 +389,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
     } else {
 
         // write time
-        web_data_ptr->time = time_real.sec * 1000 + time_real.nsec / 1000000;
+        web_data_ptr->time = timestamp_realtime->sec * 1000 + timestamp_realtime->nsec / 1000000;
 
         // write data to ring buffer
         web_buffer_add(&web_data_ptr->buffer[BUF1_INDEX],

@@ -343,11 +343,6 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
     }
 
     // count channels
-    int num_bin_channels = 0;
-    if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-        num_bin_channels = NUM_DIGITAL_INPUTS;
-    }
-
     int num_channels = count_channels(conf->channels);
 
     // aggregation
@@ -418,7 +413,7 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         if (conf->sample_rate < MIN_ADC_RATE) {
 
             switch (conf->aggregation) {
-                case AGGREGATE_NONE):
+                case AGGREGATE_NONE:
                     rl_log(ERROR, "Low sampling rates not supported without "
                                   "data aggregation.");
                     exit(ERROR);

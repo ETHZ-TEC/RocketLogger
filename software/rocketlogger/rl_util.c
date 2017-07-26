@@ -39,7 +39,8 @@ void rl_print_config(struct rl_conf* conf) {
         printf("  File name:        %s\n", conf->file_name);
     }
     if (conf->max_file_size != 0) {
-        printf("  Max file size:    %lluMB\n", conf->max_file_size / (uint64_t)1e6);
+        printf("  Max file size:    %lluMB\n",
+               conf->max_file_size / (uint64_t)1e6);
     }
     if (conf->calibration == CAL_IGNORE) {
         printf("  Calibration:      ignored\n");
@@ -549,7 +550,7 @@ void print_config(struct rl_conf* conf) {
 void reset_config(struct rl_conf* conf) {
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
-    conf->aggregation = AGGREGATE_NONE;
+    conf->aggregation = AGGREGATE_DOWNSAMPLE;
     conf->update_rate = 1;
     conf->sample_limit = 0;
     conf->digital_inputs = DIGITAL_INPUTS_ENABLED;

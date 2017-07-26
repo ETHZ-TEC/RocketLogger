@@ -43,6 +43,9 @@ enum time_scale {
 /// Number of time divisions in web plot
 #define NUM_WEB_DIVS 10
 
+/// Current high-low scale difference
+#define H_L_SCALE 100
+
 /**
  * Ring buffer for data exchange to web server
  */
@@ -84,7 +87,6 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                      void* buffer_addr, uint32_t sample_data_size,
                      uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
-                     struct time_stamp* timestamp_monotonic,
                      struct rl_conf* conf);
 
 #endif

@@ -13,9 +13,6 @@
 #include "types.h"
 #include "util.h"
 
-/// Current high-low scale difference
-#define H_L_SCALE 100
-
 /// CSV value delimiter character
 #define CSV_DELIMITER ","
 

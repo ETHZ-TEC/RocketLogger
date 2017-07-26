@@ -506,13 +506,12 @@ int pru_sample(FILE* data_file, struct rl_conf* conf) {
         // handle the buffer
         file_handle_data(data_file, buffer_addr + 4, pru.sample_size,
                          buffer_samples_count, &timestamp_realtime,
-                         &timestamp_realtime, conf);
+                         &timestamp_monotonic, conf);
 
         // process data for web when enabled
         if (conf->enable_web_server == 1) {
             web_handle_data(web_data, sem_id, buffer_addr + 4, pru.sample_size,
-                            buffer_samples_count, &timestamp_realtime,
-                            &timestamp_realtime, conf);
+                            buffer_samples_count, &timestamp_realtime, conf);
         }
 
         // update and write header

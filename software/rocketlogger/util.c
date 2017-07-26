@@ -10,24 +10,13 @@
 #include <sys/shm.h>
 #include <sys/time.h>
 
-// #include <fcntl.h>
-// #include <stdarg.h>
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <sys/mman.h>
-// #include <sys/shm.h>
-// #include <sys/stat.h>
-// #include <syslog.h>
-// #include <time.h>
-// #include <unistd.h>
-
-
 #include "log.h"
 #include "types.h"
 
 #include "util.h"
 
-// channel functions
+// -----  CHANNEL FUNCTIONS  ----- //
+
 /**
  * Checks if channel is a current channel.
  * @param index Index of channel in array.
@@ -152,8 +141,7 @@ int ceil_div(int n, int d) {
     }
 }
 
-// ------------------------------ SIGNAL HANDLER ------------------------------
-// //
+// -----  SIGNAL HANDLER  ----- //
 
 /**
  * Signal handler to catch stop signals.
@@ -176,8 +164,7 @@ void sig_handler(int signo) {
 }
 // TODO: allow forced Ctrl+C
 
-// ------------------------------ FILE READING/WRITING
-// ------------------------------ //
+// -----  FILE READING/WRITING  ----- //
 
 /**
  * Read a single integer from file.
@@ -231,13 +218,14 @@ void create_time_stamp(struct time_stamp* timestamp_realtime,
  * @param mac_address Empty array with size {@link MAC_ADDRESS_LENGTH}
  */
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
-
     FILE* fp = fopen(MAC_ADDRESS_FILE, "r");
 
-    int i = 0;
-    fscanf(fp, "%x", &mac_address[i]);
-    for (i = 1; i < MAC_ADDRESS_LENGTH; i++) {
-        fscanf(fp, ":%x", &mac_address[i]);
+    unsigned int temp;
+    fscanf(fp, "%x", &temp);
+    mac_address[0] = (uint8_t)temp;
+    for (int i = 1; i < MAC_ADDRESS_LENGTH; i++) {
+        fscanf(fp, ":%x", &temp);
+        mac_address[i] = (uint8_t)temp;
     }
     fclose(fp);
 }
