@@ -2,28 +2,25 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL_H_
+#define UTIL_H_
 
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <syslog.h>
-#include <time.h>
-#include <unistd.h>
+#include <stdint.h>
 
-#include "log.h"
 #include "types.h"
 
-/// Permissions for shared memory
-#define SHMEM_PERMISSIONS 0666
+/// MAC address length in bytes
+#define MAC_ADDRESS_LENGTH 6
+
+/**
+ * Time stamp definition (UNIX time, UTC)
+ */
+struct time_stamp {
+    /// Seconds in UNIX time (UTC)
+    int64_t sec;
+    /// Nanoseconds
+    int64_t nsec;
+};
 
 int is_current(int index);
 int is_low_current(int index);
@@ -38,4 +35,8 @@ void sig_handler(int signo);
 
 int read_file_value(char filename[]);
 
-#endif
+void create_time_stamp(struct time_stamp* time_real,
+                       struct time_stamp* time_monotonic);
+void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
+
+#endif /* UTIL_H_ */

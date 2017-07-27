@@ -2,8 +2,9 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef RL_LIB_H
-#define RL_LIB_H
+#ifndef RL_LIB_H_
+#define RL_LIB_H_
+
 
 #include "lib_util.h"
 #include "rl_hw.h"
@@ -21,4 +22,4 @@ int rl_start(struct rl_conf* conf);
 
 int rl_stop(void);
 
-#endif
+#endif /* RL_LIB_H_ */

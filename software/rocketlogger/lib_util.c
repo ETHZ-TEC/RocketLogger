@@ -21,8 +21,7 @@ int possible_update_rates[NUMBER_UPDATE_RATES] = {1, 2, 5, 10};
  * @return {@link SUCCESS} if possible, {@link FAILURE} otherwise
  */
 int check_sample_rate(int sample_rate) {
-    int i;
-    for (i = 0; i < NUMBER_SAMPLE_RATES; i++) {
+    for (int i = 0; i < NUMBER_SAMPLE_RATES; i++) {
         if (possible_sample_rates[i] == sample_rate) {
             return SUCCESS;
         }
@@ -36,8 +35,7 @@ int check_sample_rate(int sample_rate) {
  * @return {@link SUCCESS} if possible, {@link FAILURE} otherwise
  */
 int check_update_rate(int update_rate) {
-    int i;
-    for (i = 0; i < NUMBER_UPDATE_RATES; i++) {
+    for (int i = 0; i < NUMBER_UPDATE_RATES; i++) {
         if (possible_update_rates[i] == update_rate) {
             return SUCCESS;
         }

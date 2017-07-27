@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef RL_UTIL_H
-#define RL_UTIL_H
+#ifndef RL_UTIL_H_
+#define RL_UTIL_H_
 
 #include <errno.h>
 #include <fcntl.h>
@@ -31,6 +31,8 @@ typedef enum option {
     FHR,            //!< Channels to force to high range
     WEB,            //!< En-/disable data averaging for web server
     DIGITAL_INPUTS, //!< Sample digital inputs
+    AMBIENT,        //!< Ambient sensor logging
+    AGGREGATION,    //!< Sample aggregation
     DEF_CONF,       //!< Set configuration as default
     CALIBRATION,    //!< Use/ignore existing calibration values
     FILE_FORMAT,    //!< File format
@@ -55,4 +57,4 @@ void reset_config(struct rl_conf* conf);
 int read_default_config(struct rl_conf* conf);
 int write_default_config(struct rl_conf* conf);
 
-#endif
+#endif /* RL_UTIL_H_ */

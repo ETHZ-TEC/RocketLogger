@@ -2,6 +2,9 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#ifndef CALIBRATION_H_
+#define CALIBRATION_H_
+
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,3 +20,5 @@
 void reset_offsets(void);
 void reset_scales(void);
 int read_calibration(struct rl_conf* conf);
+
+#endif /* CALIBRATION_H_ */

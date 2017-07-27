@@ -76,7 +76,7 @@ classdef rld
                         % old magic number
                         assert(magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
                         warning('Old file version');
-                    case 2
+                    case {2, 3}
                         % new magic number
                         assert(magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
                     otherwise
@@ -112,7 +112,11 @@ classdef rld
                 % read
                 for i=1:channel_bin_count+channel_count
                     unit = fread(file, 1, 'uint32');
-                    unit_text = UNIT_NAMES(unit+1);
+                    try
+                        unit_text = UNIT_NAMES(unit+1);
+                    catch
+                        unit_text = 'undefined';
+                    end
                     channel_scale = fread(file, 1, 'int32');
                     data_size = fread(file, 1, 'uint16');
                     valid_data_channel = fread(file, 1, 'uint16');

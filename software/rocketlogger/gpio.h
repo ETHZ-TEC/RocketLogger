@@ -2,6 +2,9 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#ifndef GPIO_H_
+#define GPIO_H_
+
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
@@ -51,3 +54,5 @@ int gpio_get_value(int num);
 // interrupt
 int gpio_interrupt(int num, rl_edge e);
 int gpio_wait_interrupt(int num, int timeout); // timout<0 -> infinite
+
+#endif /* GPIO_H_ */

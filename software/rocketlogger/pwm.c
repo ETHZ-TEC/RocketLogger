@@ -64,7 +64,7 @@ void pwm_close(void) {
  * Setup PWMSS1 for range latch reset clock
  * @param sample_rate ADC sampling rate in Sps
  */
-void range_clock_setup(int sample_rate) {
+void pwm_setup_range_clock(int sample_rate) {
 
     int period = PWM_PERIOD_SCALE / sample_rate;
 
@@ -85,7 +85,7 @@ void range_clock_setup(int sample_rate) {
 /**
  * Setup PWMSS0 for ADC master clock
  */
-void adc_clock_setup(void) {
+void pwm_setup_adc_clock(void) {
 
     // setup ehrpwm
     pwmss0_regs[TBCTL] = TBCTL_DEFAULT;

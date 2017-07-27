@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#define _FILE_OFFSET_BITS 64
+#include "sensor/sensor.h"
 
 #include "rl_hw.h"
 
@@ -15,11 +15,11 @@ void hw_init(struct rl_conf* conf) {
     // PWM
     pwm_setup();
     if (conf->sample_rate < MIN_ADC_RATE) {
-        range_clock_setup(MIN_ADC_RATE);
+        pwm_setup_range_clock(MIN_ADC_RATE);
     } else {
-        range_clock_setup(conf->sample_rate);
+        pwm_setup_range_clock(conf->sample_rate);
     }
-    adc_clock_setup();
+    pwm_setup_adc_clock();
 
     // GPIO
     // force high range
@@ -41,6 +41,13 @@ void hw_init(struct rl_conf* conf) {
 
     // PRU
     pru_init();
+
+    // SENSORS
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+        Sensors_initSharedBus();
+        conf->ambient.sensor_count =
+            Sensors_scan(conf->ambient.available_sensors);
+    }
 
     // STATE
     status.state = RL_RUNNING;
@@ -73,6 +80,12 @@ void hw_close(struct rl_conf* conf) {
     }
     pru_close();
 
+    // SENSORS
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+        Sensors_close(conf->ambient.available_sensors);
+        Sensors_closeSharedBus();
+    }
+
     // RESET SHARED MEM
     status.samples_taken = 0;
     status.buffer_number = 0;
@@ -96,13 +109,23 @@ int hw_sample(struct rl_conf* conf) {
         }
     }
 
+    // open ambient file
+    FILE* ambient_file = (FILE*)-1;
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+        ambient_file = fopen(conf->ambient.file_name, "w+");
+        if (data == NULL) {
+            rl_log(ERROR, "failed to open ambient-file");
+            return FAILURE;
+        }
+    }
+
     // read calibration
     if (read_calibration(conf) == FAILURE) {
         rl_log(WARNING, "no calibration file, returning uncalibrated values");
     }
 
     // SAMPLE
-    if (pru_sample(data, conf) == FAILURE) {
+    if (pru_sample(data, ambient_file, conf) == FAILURE) {
         // error ocurred
         gpio_set_value(LED_ERROR_GPIO, 1);
     }
@@ -110,6 +133,9 @@ int hw_sample(struct rl_conf* conf) {
     // close data file
     if (conf->file_format != NO_FILE) {
         fclose(data);
+    }
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+        fclose(ambient_file);
     }
 
     return SUCCESS;

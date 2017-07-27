@@ -2,14 +2,22 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#define _GNU_SOURCE
+
+#include <fcntl.h>
+
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
+
 #include "sem.h"
 
 /**
  * Create RocketLogger semaphore set
  * @return ID of created set
  */
-int create_sem(void) {
-    int sem_id = semget(SEM_KEY, NUM_SEMS, IPC_CREAT | S_IRWXU);
+int create_sem(key_t key, int num_sems) {
+    int sem_id = semget(key, num_sems, IPC_CREAT | S_IRWXU);
     if (sem_id < 0) {
         rl_log(ERROR, "failed to create semaphores. Errno = %d", errno);
     }
@@ -23,7 +31,7 @@ int create_sem(void) {
  */
 int remove_sem(int sem_id) {
     // remove semaphores
-    if (semctl(sem_id, DATA_SEM, IPC_RMID) < 0) {
+    if (semctl(sem_id, 0, IPC_RMID) < 0) {
         rl_log(ERROR, "failed to remove semaphores. Errno = %d", errno);
         return FAILURE;
     }
@@ -34,8 +42,8 @@ int remove_sem(int sem_id) {
  * Open existing RocketLogger semaphore set
  * @return ID of opened set
  */
-int open_sem(void) {
-    int sem_id = semget(SEM_KEY, NUM_SEMS, S_IRWXU);
+int open_sem(key_t key, int num_sems) {
+    int sem_id = semget(key, num_sems, S_IRWXU);
     if (sem_id < 0) {
         rl_log(ERROR, "failed to open semaphores. Errno = %d", errno);
     }

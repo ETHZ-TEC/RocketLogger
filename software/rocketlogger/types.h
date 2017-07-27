@@ -2,8 +2,8 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
-#ifndef RL_TYPES_H
-#define RL_TYPES_H
+#ifndef TYPES_H_
+#define TYPES_H_
 
 // INCLUDES
 
@@ -67,6 +67,8 @@
 #define SHMEM_STATUS_KEY 1111
 /// Key for web shared memory (used for creation)
 #define SHMEM_DATA_KEY 4443
+/// Permissions for shared memory
+#define SHMEM_PERMISSIONS 0666
 
 // constants
 /// Maximum path length in characters
@@ -111,7 +113,7 @@
 typedef enum state {
     RL_OFF = 0,     //!< Idle
     RL_RUNNING = 1, //!< Running
-    RL_ERROR = -1   //!< Error
+    RL_ERROR = -1,  //!< Error
 } rl_state;
 
 /**
@@ -119,7 +121,7 @@ typedef enum state {
  */
 typedef enum sampling {
     SAMPLING_OFF = 0, //!< Not sampling
-    SAMPLING_ON = 1   //!< Sampling
+    SAMPLING_ON = 1,  //!< Sampling
 } rl_sampling;
 
 /**
@@ -137,6 +139,15 @@ typedef enum mode {
     HELP,          //!< Show help
     NO_MODE        //!< No mode
 } rl_mode;
+
+/**
+ * RocketLogger data aggregation mode definition
+ */
+typedef enum aggregation {
+    AGGREGATE_NONE = 0,       //!< No aggregation
+    AGGREGATE_DOWNSAMPLE = 1, //!< Aggregate using downsampling
+    AGGREGATE_AVERAGE = 2     //!< Aggregate by averaging data
+} rl_aggregation;
 
 /**
  * RocketLogger file format definition
@@ -163,6 +174,17 @@ typedef enum log_type {
     WARNING, //!< Warning
     INFO     //!< Information
 } rl_log_type;
+
+// AMBIENT CONF //
+#define AMBIENT_MAX_SENSOR_COUNT 128
+#define AMBIENT_DISABLED 0
+#define AMBIENT_ENABLED 1
+struct rl_ambient {
+    uint8_t enabled;
+    uint8_t sensor_count;
+    int8_t available_sensors[AMBIENT_MAX_SENSOR_COUNT];
+    char file_name[MAX_PATH_LENGTH];
+} ambient;
 
 // channel properties
 /// Channel sampling disabled
@@ -197,6 +219,8 @@ struct rl_conf {
     rl_mode mode;
     /// Sampling rate
     int sample_rate;
+    /// Aggregation mode (for sampling rates below lowest native one)
+    rl_aggregation aggregation;
     /// Data update rate
     int update_rate;
     /// Sample limit (0 for continuous)
@@ -217,6 +241,8 @@ struct rl_conf {
     uint64_t max_file_size;
     /// Data file name
     char file_name[MAX_PATH_LENGTH];
+    /// Ambient conf
+    struct rl_ambient ambient;
 };
 
 /**
@@ -282,4 +308,4 @@ extern const char* digital_input_names[NUM_DIGITAL_INPUTS];
 /// Range valid information names
 extern const char* valid_info_names[NUM_I_CHANNELS];
 
-#endif
+#endif /* TYPES_H_ */

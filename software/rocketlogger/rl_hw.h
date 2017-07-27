@@ -2,6 +2,10 @@
  * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
  */
 
+#ifndef RL_HW_H_
+#define RL_HW_H_
+
+#include "ambient.h"
 #include "gpio.h"
 #include "pru.h"
 #include "pwm.h"
@@ -20,3 +24,5 @@
 void hw_init(struct rl_conf* conf);
 void hw_close(struct rl_conf* conf);
 int hw_sample(struct rl_conf* conf);
+
+#endif /* RL_HW_H_ */
