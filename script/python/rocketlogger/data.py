@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 
 _ROCKETLOGGER_FILE_MAGIC = 0x444C5225
 
+_SUPPORTED_FILE_VERSIONS = [1, 2, 3]
+
 _BINARY_CHANNEL_STUFF_BYTES = 4
 _TIMESTAMP_SECONDS_BYTES = 8
 _TIMESTAMP_NANOSECONDS_BYTES = 8
@@ -42,11 +44,17 @@ _CHANNEL_VALID_LINK_BYTES = 2
 _CHANNEL_NAME_BYTES = 16
 
 _CHANNEL_UNIT_NAMES = {
-    0: 'Undefined',
-    1: 'Voltage',
-    2: 'Current',
-    3: 'Binary',
-    4: 'Range Valid (binary)',
+    0: 'unitless',
+    1: 'voltage',
+    2: 'current',
+    3: 'binary',
+    4: 'range valid (binary)',
+    5: 'illuminance',
+    6: 'temerature',
+    7: 'integer',
+    8: 'percent',
+    9: 'preasure',
+    0xffffffff: 'undefined',
 }
 _CHANNEL_IS_BINARY = {
     0: False,
@@ -54,6 +62,12 @@ _CHANNEL_IS_BINARY = {
     2: False,
     3: True,
     4: True,
+    5: False,
+    6: False,
+    7: False,
+    8: False,
+    9: False,
+    0xffffffff: False,
 }
 _CHANNEL_VALID_UNLINKED = 65535
 
@@ -249,6 +263,11 @@ class RocketLoggerData:
 
         header['file_magic'] = _read_uint(file_handle, _FILE_MAGIC_BYTES)
         header['file_version'] = _read_uint(file_handle, _FILE_VERSION_BYTES)
+
+        if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
+            raise RocketLoggerFileError(
+                'RocketLogger file version {} is not supported!'
+                .format(header['file_version']))
 
         # file consistency check
         if header['file_magic'] != _ROCKETLOGGER_FILE_MAGIC:
@@ -824,9 +843,9 @@ class RocketLoggerData:
         channels_digital = self._header['channels'][0:self._header[
             'channel_binary_count']]
         channels_current = [channel for channel in self._header['channels']
-                            if channel['unit'] is 'Current']
+                            if channel['unit'] is 'current']
         channels_voltage = [channel for channel in self._header['channels']
-                            if channel['unit'] is 'Voltage']
+                            if channel['unit'] is 'voltage']
 
         plot_current_channels = []
         plot_digital_channels = []
