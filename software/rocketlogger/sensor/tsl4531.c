@@ -224,7 +224,6 @@ int TSL4531_setParameters(uint8_t sensor_address) {
  * @param sensor_address The I2C address of the sensor
  * @param range The range {@link TSL4531_range} to set
  * @return Status code
- * @TODO communication error handling
  */
 int TSL4531_sendRange(uint8_t sensor_address, int range) {
     int sensor_index = TSL4531_getIndex(sensor_address);

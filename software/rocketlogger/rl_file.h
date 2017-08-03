@@ -33,7 +33,7 @@
 #define RL_FILE_MAGIC 0x444C5225 // const uint32_t RL_FILE_MAGIC = 0x25524C42;
 
 /// File format version of current implementation
-#define RL_FILE_VERSION 0x02 // const uint8_t RL_FILE_VERSION = 0x01;
+#define RL_FILE_VERSION 0x03 // const uint8_t RL_FILE_VERSION = 0x01;
 
 /// Maximum channel description length
 #define RL_FILE_CHANNEL_NAME_LENGTH                                            \
