@@ -367,7 +367,6 @@ uint32_t BME280_compensate_humidity(uint8_t sensor_address,
     int32_t temperature_fine =
         BME280_compensate_temperature_fine(sensor_address, temperature_raw);
 
-    /// TODO: offset calibration indexes by 1, check signs
     int32_t humidity = (temperature_fine - ((int32_t)76800));
     humidity =
         ((((humidity_raw << 14) -

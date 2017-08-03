@@ -411,7 +411,6 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         }
 
         // handle data aggregation for low sampling rates
-        // @TODO implement data aggregation
         if (conf->sample_rate < MIN_ADC_RATE) {
 
             switch (conf->aggregation) {
