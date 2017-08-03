@@ -66,7 +66,7 @@ classdef rld
             file_number = 1;
             while file_exists
                 % check magic number
-                [magic, bytes_read] = fread(file, 1, 'uint32');
+                [file_magic, bytes_read] = fread(file, 1, 'uint32');
                 assert(bytes_read > 0, 'Failed to read file');
                 
                 % check file version
@@ -74,13 +74,13 @@ classdef rld
                 switch file_version
                     case 1
                         % old magic number
-                        assert(magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
+                        assert(file_magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
                         warning('Old file version');
                     case {2, 3}
                         % new magic number
-                        assert(magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
+                        assert(file_magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
                     otherwise
-                        error(['Unknown file version ', num2str(file_version)]);
+                        error(['Unsupported file version ', num2str(file_version)]);
                 end
                 
                 %% READ HEADER
@@ -132,10 +132,11 @@ classdef rld
                 
                 % header struct
                 if file_number == 1
-                    obj.header = struct('header_length', header_length, 'data_block_size', data_block_size, ...
-                        'data_block_count', data_block_count, 'sample_count', sample_count, 'sample_rate', sample_rate, ...
-                        'mac_address', mac_address, 'start_time', start_time, 'comment_length', comment_length, ...
-                        'channel_bin_count', channel_bin_count, 'channel_count', channel_count, 'comment', comment);
+                    obj.header = struct('file_magic', file_magic, 'file_version', file_version, 'header_length', header_length, ...
+                        'data_block_size', data_block_size, 'data_block_count', data_block_count, 'sample_count', sample_count, ...
+                        'sample_rate', sample_rate, 'mac_address', mac_address, 'start_time', start_time, ...
+                        'comment_length', comment_length, 'channel_bin_count', channel_bin_count, 'channel_count', channel_count, ...
+                        'comment', comment);
                 end
                 
                 %% PARSE HEADER
@@ -296,7 +297,12 @@ classdef rld
                         obj.channels(channel_bin_count+i).values = vals(:,i);
                         if obj.channels(channel_bin_count+i).valid_data_channel ~= NO_VALID_CHANNEL
                             % add range info
-                            obj.channels(channel_bin_count+i).valid = obj.channels(obj.channels(channel_bin_count+i).valid_data_channel).values;
+                            valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel + 1;
+                            % fix one-based channel link indexes for file version <= 2
+                            if file_version <= 2
+                                valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel;
+                            end
+                            obj.channels(channel_bin_count+i).valid = obj.channels(valid_channel_index).values;
                         end
                     end
                 else
@@ -304,7 +310,12 @@ classdef rld
                         obj.channels(channel_bin_count+i).values = [obj.channels(channel_bin_count+i).values; vals(:,i)];
                         if obj.channels(channel_bin_count+i).valid_data_channel ~= NO_VALID_CHANNEL
                             % add range info
-                            obj.channels(channel_bin_count+i).valid = obj.channels(obj.channels(channel_bin_count+i).valid_data_channel).values;
+                            valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel + 1;
+                            % fix one-based channel link indexes for file version <= 2
+                            if file_version <= 2
+                                valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel;
+                            end
+                            obj.channels(channel_bin_count+i).valid = obj.channels(valid_channel_index).values;
                         end
                     end
                 end

@@ -40,10 +40,10 @@ void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
         channel_bin_count = NUM_DIGITAL_INPUTS;
     }
     if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
-        i1l_valid_channel = ++channel_bin_count;
+        i1l_valid_channel = channel_bin_count++;
     }
     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
-        i2l_valid_channel = ++channel_bin_count;
+        i2l_valid_channel = channel_bin_count++;
     }
     // comment length
     uint32_t comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
