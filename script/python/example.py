@@ -9,7 +9,7 @@ Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 from rocketlogger.data import RocketLoggerData
 
 
-data_file = 'rocketlogger/tests/data/test-full.rld'
+data_file = 'data/test-full.rld'
 
 # minimal example
 r = RocketLoggerData(data_file)
@@ -33,4 +33,5 @@ r.plot(['voltages', 'currents'])
 r.plot(['digital'])
 
 # straight loading, merging, plotting
-RocketLoggerData(data_file).merge_channels().plot()
+rld_merged = RocketLoggerData(data_file).merge_channels()
+rld_merged.plot()

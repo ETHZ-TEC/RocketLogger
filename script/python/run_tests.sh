@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
 #
+
 nosetests \
   --verbosity=2 \
   --with-coverage \
@@ -10,4 +11,4 @@ nosetests \
   --cover-inclusive \
   --cover-branches \
   --cover-html \
-  --cover-html-dir="doc/htmlcov"
+  --cover-html-dir="docs/htmlcov"

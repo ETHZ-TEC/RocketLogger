@@ -16,13 +16,12 @@ from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
 
 
 _TEST_FILE_DIR = 'data'
-_TEST_FILE_PATH = os.path.join(os.path.dirname(__file__), _TEST_FILE_DIR)
-_FULL_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-full.rld')
-_ANALOG_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-analog-only.rld')
-_STEPS_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-steps.rld')
-_INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-unsupported.rld')
-_SINGLE_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-v3-only.rld')
-_SPLIT_TEST_FILE = os.path.join(_TEST_FILE_PATH, 'test-split.rld')
+_FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-full.rld')
+_ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-analog-only.rld')
+_STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-steps.rld')
+_INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-unsupported.rld')
+_SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-v3-only.rld')
+_SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-split.rld')
 
 
 class TestDecimation(TestCase):
