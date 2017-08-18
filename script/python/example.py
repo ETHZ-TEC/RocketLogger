@@ -33,5 +33,6 @@ r.plot(['voltages', 'currents'])
 r.plot(['digital'])
 
 # straight loading, merging, plotting
-rld_merged = RocketLoggerData(data_file).merge_channels()
-rld_merged.plot()
+data = RocketLoggerData(data_file)
+data.merge_channels()
+data.plot()
