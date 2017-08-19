@@ -11,9 +11,8 @@ dist/
 *.egg-info/
 *.egg
 
-# documentation and coverage test
+# coverage test files
 .coverage
-docs/
 
 # editor settings
 .vscode/
