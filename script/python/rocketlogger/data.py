@@ -82,9 +82,12 @@ def _decimate_binary(values, decimation_factor, threshold_value=0.5):
     Decimate binary values, using a threshold value.
 
     values:             Numpy vector of the values to decimate
+
     decimation_factor:  The decimation factor
+
     threshold_value:    The threshold value in [0, 1] to use for decimation
                         (default: 0.5)
+
     return value:       Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
@@ -101,7 +104,9 @@ def _decimate_min(values, decimation_factor):
     Decimate binary values, forcing False if occuring.
 
     values:             Numpy vector of the values to decimate
+
     decimation_factor:  The decimation factor
+
     return value:       Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
@@ -116,7 +121,9 @@ def _decimate_max(values, decimation_factor):
     Decimate binary values, forcing True if occuring.
 
     values:             Numpy vector of the values to decimate
+
     decimation_factor:  The decimation factor
+
     return value:       Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
@@ -131,7 +138,9 @@ def _decimate_mean(values, decimation_factor):
     Decimate analog values, using averaging of values.
 
     values:             Numpy vector of the values to decimate
+
     decimation_factor:  The decimation factor
+
     return value:       Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
@@ -146,7 +155,9 @@ def _read_uint(file_handle, data_size):
     Read an unsigned integer of defined data_size from file.
 
     file_handle:    The file handle to read from at current position.
+
     data_size:      The data size in bytes of the integer to read.
+
     return value:   The integer read and decoded.
     """
     return int.from_bytes(file_handle.read(data_size),
@@ -158,7 +169,9 @@ def _read_int(file_handle, data_size):
     Read a signed integer of defined data_size from file.
 
     file_handle:    The file handle to read from at current position.
+
     data_size:      The data size in bytes of the integer to read.
+
     return value:   The integer read and decoded.
     """
     return int.from_bytes(file_handle.read(data_size),
@@ -170,7 +183,9 @@ def _read_str(file_handle, length):
     Read an ASCII string of defined length from file.
 
     file_handle:    The file handle to read from at current position.
+
     length:         The length of the string to read.
+
     return value:   The string read and decoded.
     """
     raw_bytes = file_handle.read(length)
@@ -182,11 +197,12 @@ def _read_timestamp(file_handle):
     Read a timestamp from the file and convert to datetime object.
 
     file_handle:    The file handle to read from at current position.
+
     return value:   The read date and time as datetime object.
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
-    return datetime.fromtimestamp(seconds + 1e-9*nanoseconds, timezone.utc)
+    return datetime.fromtimestamp(seconds + 1e-9 * nanoseconds, timezone.utc)
 
 
 def _read_timestamp_datetime64(file_handle):
@@ -194,6 +210,7 @@ def _read_timestamp_datetime64(file_handle):
     Read a timestamp from the file as nano second datetime64 (numpy).
 
     file_handle:    The file handle to read from at current position.
+
     return value:   The read date and time as datetime object.
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
@@ -240,6 +257,7 @@ class RocketLoggerData:
         Constructor to create a RockerLoggerData object form data file.
 
         filename:           The filename of the file to import
+
         decimation_factor:  Decimation factor for values read (default: 1)
         """
         if filename is None:
@@ -257,6 +275,7 @@ class RocketLoggerData:
 
         file_handle:    The file handle to read from, with pointer positioned
                         at file start
+
         return value:   Named struct containing the read file header data.
         """
         header = {}
@@ -346,8 +365,11 @@ class RocketLoggerData:
 
         file_handle:        The file handle to read from, with pointer
                             positioned at the begining of the block
+
         file_header:        The file's header with the data alignment details.
+
         decimation_factor:  Decimation factor for values read (default: 1)
+
         return value:       Tuple of the realtime timestamp, monotonic
                             timestamp datetime64 arrays and the list of
                             arrays containing the read sample data.
@@ -405,9 +427,10 @@ class RocketLoggerData:
         # iterate over all data blocks
         for block_index in range(file_header['data_block_count']):
             file_block_offset_bytes = (file_header['header_length'] +
-                                       block_index * (2 * _TIMESTAMP_BYTES +
-                                       file_header['data_block_size'] *
-                                       data_type.itemsize))
+                                       block_index *
+                                       (2 * _TIMESTAMP_BYTES +
+                                        file_header['data_block_size'] *
+                                        data_type.itemsize))
             data_index_start = block_index * round(
                 file_header['data_block_size'] / decimation_factor)
             data_index_end = data_index_start + round(
@@ -472,6 +495,7 @@ class RocketLoggerData:
         Get the index of a data channel.
 
         channel_name:   Name of the channel
+
         return value:   The index of the channel, None if not found
         """
         channel_names = [channel['name'] for channel in
@@ -488,6 +512,7 @@ class RocketLoggerData:
         Get the names of a list of channel indexes.
 
         channel_indexes:    The index of the channel
+
         return value:       The channel name or a list multiple channel names.
         """
         if isinstance(channel_indexes, list):
@@ -508,6 +533,7 @@ class RocketLoggerData:
         channel has to be added first.
 
         channel_info:   Channel info structure of the channel to add
+
         channel_data:   The actual channel data to add, numpy array
         """
         if not isinstance(channel_info, dict):
@@ -608,6 +634,7 @@ class RocketLoggerData:
         Read a RocketLogger data file and return an RLD object.
 
         filename:           The filename of the file to import
+
         decimation_factor:  Decimation factor for values read (default: 1)
         """
         if self._filename is not None:
@@ -699,6 +726,7 @@ class RocketLoggerData:
         channel_names:  The names of the channels for which the data shall
                         be returned. List of channel names or 'all' to select
                         all channels (default: 'all')
+
         return value:   A numpy array containing the channel's data vectors
         """
         if not isinstance(channel_names, list):
@@ -728,9 +756,11 @@ class RocketLoggerData:
 
         absolute_time:  Wether the returned timestamps are relative to the
                         start time in seconds (default) or absolute timestamps
+
         time_reference: Which clock data is being used (absolute time only)
                         - 'local' The local oscillator clock (default)
                         - 'network' The network synchronized clock
+
         return value:   A numpy array containing the timestamps
         """
         # transform value to absolute time if requested
@@ -765,6 +795,7 @@ class RocketLoggerData:
         Merge seemlessly switched current channels into a combined channel.
 
         keep_channels:  Whether the merged channels are kept (default: False)
+
         return value:   Self reference to data object
         """
         merged_channels = False
@@ -827,10 +858,10 @@ class RocketLoggerData:
         if not merged_channels:
             warnings.warn('No channels found to merge.',
                           RocketLoggerDataWarning)
-        
+
         return self
 
-    def plot(self, channel_names=['all']):
+    def plot(self, channel_names=['all'], show=True):
         """
         Plot the loaded RocketLogger data.
 
@@ -839,6 +870,10 @@ class RocketLoggerData:
                         'all' to select all channels, 'voltages' to select
                         voltage, 'currents' to select current, and 'digital'
                         to select digital channels (default: 'all')
+
+        show:           Whether to show the plot window or not (default: True)
+
+        return value:   The matplotlib plot object used for plotting
         """
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
@@ -908,4 +943,8 @@ class RocketLoggerData:
             subplot_index = subplot_index + 1
 
         ax[subplot_count - 1].set_xlabel('time [s]')
-        plt.show(block=False)
+
+        if show:
+            plt.show(block=False)
+
+        return plt
