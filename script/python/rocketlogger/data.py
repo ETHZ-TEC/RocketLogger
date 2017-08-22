@@ -81,14 +81,13 @@ def _decimate_binary(values, decimation_factor, threshold_value=0.5):
     """
     Decimate binary values, using a threshold value.
 
-    values:             Numpy vector of the values to decimate
+    :param values: Numpy vector of the values to decimate
 
-    decimation_factor:  The decimation factor
+    :param decimation_factor: The decimation factor
 
-    threshold_value:    The threshold value in [0, 1] to use for decimation
-                        (default: 0.5)
+    :param threshold_value: The threshold value in [0, 1] to use for decimation
 
-    return value:       Numpy vector of the decimated values
+    :returns: Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
@@ -96,18 +95,17 @@ def _decimate_binary(values, decimation_factor, threshold_value=0.5):
                                    (count_new, decimation_factor))
     return np.logical_not(np.sum(aggregated_values, axis=1) <
                           (threshold_value * decimation_factor))
-# return np.logical_not(np.mean(aggregated_values, axis=1) < threshold_value)
 
 
 def _decimate_min(values, decimation_factor):
     """
     Decimate binary values, forcing False if occuring.
 
-    values:             Numpy vector of the values to decimate
+    :param values: Numpy vector of the values to decimate
 
-    decimation_factor:  The decimation factor
+    :param decimation_factor: The decimation factor
 
-    return value:       Numpy vector of the decimated values
+    :returns: Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
@@ -120,11 +118,11 @@ def _decimate_max(values, decimation_factor):
     """
     Decimate binary values, forcing True if occuring.
 
-    values:             Numpy vector of the values to decimate
+    :param values: Numpy vector of the values to decimate
 
-    decimation_factor:  The decimation factor
+    :param decimation_factor: The decimation factor
 
-    return value:       Numpy vector of the decimated values
+    :returns: Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
@@ -137,11 +135,11 @@ def _decimate_mean(values, decimation_factor):
     """
     Decimate analog values, using averaging of values.
 
-    values:             Numpy vector of the values to decimate
+    :param values: Numpy vector of the values to decimate
 
-    decimation_factor:  The decimation factor
+    :param decimation_factor: The decimation factor
 
-    return value:       Numpy vector of the decimated values
+    :returns: Numpy vector of the decimated values
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
@@ -154,11 +152,11 @@ def _read_uint(file_handle, data_size):
     """
     Read an unsigned integer of defined data_size from file.
 
-    file_handle:    The file handle to read from at current position.
+    :param file_handle: The file handle to read from at current position
 
-    data_size:      The data size in bytes of the integer to read.
+    :param data_size: The data size in bytes of the integer to read
 
-    return value:   The integer read and decoded.
+    :returns: The integer read and decoded
     """
     return int.from_bytes(file_handle.read(data_size),
                           byteorder='little', signed=False)
@@ -168,11 +166,11 @@ def _read_int(file_handle, data_size):
     """
     Read a signed integer of defined data_size from file.
 
-    file_handle:    The file handle to read from at current position.
+    :param file_handle: The file handle to read from at current position
 
-    data_size:      The data size in bytes of the integer to read.
+    :param data_size: The data size in bytes of the integer to read
 
-    return value:   The integer read and decoded.
+    :returns: The integer read and decoded
     """
     return int.from_bytes(file_handle.read(data_size),
                           byteorder='little', signed=True)
@@ -182,11 +180,11 @@ def _read_str(file_handle, length):
     """
     Read an ASCII string of defined length from file.
 
-    file_handle:    The file handle to read from at current position.
+    :param file_handle: The file handle to read from at current position
 
-    length:         The length of the string to read.
+    :param length: The length of the string to read
 
-    return value:   The string read and decoded.
+    :returns: The string read and decoded
     """
     raw_bytes = file_handle.read(length)
     return raw_bytes.split(b'\x00')[0].decode(encoding='ascii')
@@ -196,9 +194,9 @@ def _read_timestamp(file_handle):
     """
     Read a timestamp from the file and convert to datetime object.
 
-    file_handle:    The file handle to read from at current position.
+    :param file_handle: The file handle to read from at current position
 
-    return value:   The read date and time as datetime object.
+    :returns: The read date and time as datetime object
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
@@ -207,11 +205,11 @@ def _read_timestamp(file_handle):
 
 def _read_timestamp_datetime64(file_handle):
     """
-    Read a timestamp from the file as nano second datetime64 (numpy).
+    Read a timestamp from the file as nano second datetime64 (numpy)
 
-    file_handle:    The file handle to read from at current position.
+    :param file_handle: The file handle to read from at current position
 
-    return value:   The read date and time as datetime object.
+    :returns: The read date and time as datetime object
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
@@ -256,9 +254,9 @@ class RocketLoggerData:
         """
         Constructor to create a RockerLoggerData object form data file.
 
-        filename:           The filename of the file to import
+        :param filename: The filename of the file to import
 
-        decimation_factor:  Decimation factor for values read (default: 1)
+        :param decimation_factor: Decimation factor for values read
         """
         if filename is None:
             raise NotImplementedError('RocketLogger data file creation '
@@ -273,10 +271,10 @@ class RocketLoggerData:
         """
         Read a RocketLogger data file's header, including comment and channels.
 
-        file_handle:    The file handle to read from, with pointer positioned
-                        at file start
+        :param file_handle: The file handle to read from, with pointer
+            positioned at file start
 
-        return value:   Named struct containing the read file header data.
+        :returns: Named struct containing the read file header data.
         """
         header = {}
 
@@ -363,16 +361,16 @@ class RocketLoggerData:
         """
         Read data block at the current position in the RocketLogger data file.
 
-        file_handle:        The file handle to read from, with pointer
-                            positioned at the begining of the block
+        :param file_handle: The file handle to read from, with pointer
+            positioned at the begining of the block
 
-        file_header:        The file's header with the data alignment details.
+        :param file_header: The file's header with the data alignment details.
 
-        decimation_factor:  Decimation factor for values read (default: 1)
+        :param decimation_factor: Decimation factor for values read
 
-        return value:       Tuple of the realtime timestamp, monotonic
-                            timestamp datetime64 arrays and the list of
-                            arrays containing the read sample data.
+        :returns: Tuple of realtime, monotonic clock based numpy datetime64
+            arrays, and the list of numpy arrays containing the read channel
+            data
         """
         # generate data type to read from header info
         total_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * \
@@ -494,9 +492,9 @@ class RocketLoggerData:
         """
         Get the index of a data channel.
 
-        channel_name:   Name of the channel
+        :param channel_name: Name of the channel
 
-        return value:   The index of the channel, None if not found
+        :returns: The index of the channel, None if not found
         """
         channel_names = [channel['name'] for channel in
                          self._header['channels']]
@@ -511,9 +509,9 @@ class RocketLoggerData:
         """
         Get the names of a list of channel indexes.
 
-        channel_indexes:    The index of the channel
+        :param channel_indexes: List or single index of channel(s)
 
-        return value:       The channel name or a list multiple channel names.
+        :returns: The channel name or a list multiple channel names
         """
         if isinstance(channel_indexes, list):
             channel_names = []
@@ -529,12 +527,14 @@ class RocketLoggerData:
         """
         Add a new data channel to the RocketLogger data structure.
 
-        Note: If a valid channel is linked to the channel being added, that
-        channel has to be added first.
+        .. note::
 
-        channel_info:   Channel info structure of the channel to add
+            If a valid channel is linked to the channel being added, that
+            channel has to be added first.
 
-        channel_data:   The actual channel data to add, numpy array
+        :param channel_info: Channel info structure of the channel to add
+
+        :param channel_data: The actual channel data to add, numpy array
         """
         if not isinstance(channel_info, dict):
             raise RocketLoggerDataError('Channel info structure is expected '
@@ -600,11 +600,12 @@ class RocketLoggerData:
         """
         Remove a data channel from the RocketLogger data structure.
 
-        Note: Linked valid channels are not automatically removed. If they
-        shall be removed as well, call this function first on the linked
-        channel.
+        .. note::
 
-        channel_name:   Name of the channel
+            Linked valid channels are not automatically removed. If they shall
+            be removed as well, call this function first on the linked channel.
+
+        :param channel_name: Name of the channel
         """
         channel_index = self._get_channel_index(channel_name)
         if channel_index is None:
@@ -633,9 +634,11 @@ class RocketLoggerData:
         """
         Read a RocketLogger data file and return an RLD object.
 
-        filename:           The filename of the file to import
+        :param filename: The filename of the file to import. If numbered files
+            following the "<filename>_p#.rld" convention are found, all files
+            are loaded and joined.
 
-        decimation_factor:  Decimation factor for values read (default: 1)
+        :param decimation_factor: Decimation factor for values read
         """
         if self._filename is not None:
             raise RocketLoggerDataError('A data file is already loaded. Use '
@@ -712,7 +715,7 @@ class RocketLoggerData:
         """
         Get the names of all the channels loaded from file.
 
-        return value:   List of channel names sorted by name.
+        :returns: List of channel names sorted by name
         """
         channel_names = []
         for channel in self._header['channels']:
@@ -723,11 +726,11 @@ class RocketLoggerData:
         """
         Get the data of the specified channels, by default of all channels.
 
-        channel_names:  The names of the channels for which the data shall
-                        be returned. List of channel names or 'all' to select
-                        all channels (default: 'all')
+        :param channel_names: The names of the channels for which the data
+            shall be returned. List of channel names or 'all' to select all
+            channels.
 
-        return value:   A numpy array containing the channel's data vectors
+        :returns: A numpy array containing the channel's data vectors
         """
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
@@ -754,14 +757,16 @@ class RocketLoggerData:
         Using simple linear interpolation to generating the sample from the
         block timestamps.
 
-        absolute_time:  Wether the returned timestamps are relative to the
-                        start time in seconds (default) or absolute timestamps
+        :param absolute_time: Wether the returned timestamps are relative to
+            the start time in seconds (default) or absolute timestamps
 
-        time_reference: Which clock data is being used (absolute time only)
-                        - 'local' The local oscillator clock (default)
-                        - 'network' The network synchronized clock
+        :param time_reference: Which clock data to get (for absolute time only,
+            i.e. when `absolute_time=True`)
 
-        return value:   A numpy array containing the timestamps
+            - 'local' The local oscillator clock (default)
+            - 'network' The network synchronized clock
+
+        :returns: A numpy array containing the timestamps
         """
         # transform value to absolute time if requested
         if absolute_time:
@@ -794,9 +799,9 @@ class RocketLoggerData:
         """
         Merge seemlessly switched current channels into a combined channel.
 
-        keep_channels:  Whether the merged channels are kept (default: False)
+        :param keep_channels: Whether the merged channels are kept
 
-        return value:   Self reference to data object
+        :returns: Self reference to data object
         """
         merged_channels = False
         for candidate in _CHANNEL_MERGE_CANDIDATES:
@@ -865,15 +870,17 @@ class RocketLoggerData:
         """
         Plot the loaded RocketLogger data.
 
-        channel_names:  The names of the channels for which the data shall
-                        be returned. List of channel names (or combination of)
-                        'all' to select all channels, 'voltages' to select
-                        voltage, 'currents' to select current, and 'digital'
-                        to select digital channels (default: 'all')
+        :param channel_names: The names of the channels for which the
+            data shall be returned. List of channel names (or combination of):
 
-        show:           Whether to show the plot window or not (default: True)
+            - 'all' to select all channels,
+            - 'voltages' to select voltag channels,
+            - 'currents' to select current channels,
+            - 'digital' to select digital channels.
 
-        return value:   The matplotlib plot object used for plotting
+        :param show: Whether to show the plot window or not
+
+        :returns: The matplotlib plot object used for plotting
         """
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
