@@ -396,95 +396,73 @@ class RocketLoggerData:
                 data_names.append(channel['name'])
 
         # read raw data from file
-        data_type = np.dtype({'names': data_names, 'formats': data_formats})
+        data_dtype = np.dtype({'names': data_names, 'formats': data_formats})
+        block_dtype = np.dtype([
+            ('realtime_sec', '<m{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('realtime_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
+            ('monotonic_sec', '<m{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('monotonic_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
+            ('data', (data_dtype, file_header['data_block_size']))])
+
+        # access file data memory mapped
+        file_data = np.memmap(file_handle,
+                              offset=file_header['header_length'],
+                              mode='r',
+                              dtype=block_dtype,
+                              shape=file_header['data_block_count'])
+        file_data = file_data.squeeze()
+
+        # extract timestamps from file
+        timestamps_realtime =\
+            np.full(file_header['data_block_count'],
+                    np.datetime64('1970-01-01T00:00:00', 'ns')) +\
+            file_data['realtime_sec'] + file_data['realtime_ns']
+        timestamps_monotonic =\
+            np.full(file_header['data_block_count'],
+                    np.datetime64('1970-01-01T00:00:00', 'ns')) +\
+            file_data['monotonic_sec'] + file_data['monotonic_ns']
 
         # allocate the data
-        timestamps_realtime = np.empty(file_header['data_block_count'],
-                                       dtype=np.dtype('<M8[ns]'))
-        timestamps_monotonic = np.empty(file_header['data_block_count'],
-                                        dtype=np.dtype('<M8[ns]'))
         data = [None] * (file_header['channel_binary_count'] +
                          file_header['channel_analog_count'])
 
+        # copy if loading memory mapped, otherwise just reference
+        # block_data = np.array(file_data['data'], copy=memory_mapped)
+        block_data = np.array(file_data['data'], copy=False)
+
+        # extract binary channels
         for binary_channel_index in range(file_header['channel_binary_count']):
             channel_index = binary_channel_index
-            data[channel_index] = np.empty(
-                file_header['data_block_count'] *
-                round(file_header['data_block_size'] / decimation_factor),
-                dtype=np.dtype('b1')
-            )
+            data[channel_index] = np.array(2**binary_channel_index &
+                                           block_data['bin'],
+                                           dtype=np.dtype('b1'))
+            data[channel_index] = data[channel_index].reshape(
+                file_header['sample_count'])
+
+            # values decimation
+            if decimation_factor > 1:
+                # decimate to zero for valid links, threshold otherwise
+                if channel_index in binary_channels_linked:
+                    data[channel_index] = _decimate_min(
+                        data[channel_index], decimation_factor)
+                else:
+                    data[channel_index] = _decimate_binary(
+                        data[channel_index], decimation_factor)
+
+        # extract analog channels
         for analog_channel_index in range(file_header['channel_analog_count']):
             channel_index = (file_header['channel_binary_count'] +
                              analog_channel_index)
-            data[channel_index] = np.empty(
-                file_header['data_block_count'] *
-                round(file_header['data_block_size'] / decimation_factor),
-                dtype=np.dtype(analog_data_formats[analog_channel_index])
-            )
+            data[channel_index] = np.array(
+                block_data[analog_data_names[analog_channel_index]],
+                dtype=np.dtype(analog_data_formats[analog_channel_index]))
+            data[channel_index] = data[channel_index].reshape(
+                file_header['sample_count'])
 
-        # iterate over all data blocks
-        for block_index in range(file_header['data_block_count']):
-            file_block_offset_bytes = (file_header['header_length'] +
-                                       block_index *
-                                       (2 * _TIMESTAMP_BYTES +
-                                        file_header['data_block_size'] *
-                                        data_type.itemsize))
-            data_index_start = block_index * round(
-                file_header['data_block_size'] / decimation_factor)
-            data_index_end = data_index_start + round(
-                file_header['data_block_size'] / decimation_factor)
-
-            # read block timestamp
-            file_handle.seek(file_block_offset_bytes)
-
-            timestamps_realtime[block_index] =\
-                _read_timestamp_datetime64(file_handle)
-            timestamps_monotonic[block_index] =\
-                _read_timestamp_datetime64(file_handle)
-
-            # access file data memory mapped
-            file_data = np.memmap(file_handle,
-                                  offset=file_block_offset_bytes +
-                                  2 * _TIMESTAMP_BYTES,
-                                  mode='r',
-                                  dtype=data_type,
-                                  shape=file_header['data_block_size'])
-
-            # extract binary channels
-            for binary_channel_index in range(
-                    file_header['channel_binary_count']):
-                channel_index = binary_channel_index
-                binary_values = np.array(2**binary_channel_index &
-                                         file_data['bin'],
-                                         dtype=data[channel_index].dtype)
-                # values decimation
-                if decimation_factor > 1:
-                    # decimate to zero for valid links, threshold otherwise
-                    if channel_index in binary_channels_linked:
-                        data[channel_index][data_index_start:data_index_end] =\
-                            _decimate_min(binary_values, decimation_factor)
-                    else:
-                        data[channel_index][data_index_start:data_index_end] =\
-                            _decimate_binary(binary_values, decimation_factor)
-                else:
-                    data[channel_index][data_index_start:data_index_end] =\
-                        binary_values
-
-            # extract analog channels
-            for analog_channel_index in range(
-                    file_header['channel_analog_count']):
-                channel_index = (file_header['channel_binary_count'] +
-                                 analog_channel_index)
-                analog_values = np.array(file_data[analog_data_names[
-                                         analog_channel_index]],
-                                         dtype=data[channel_index].dtype)
-                # values decimation
-                if decimation_factor > 1:
-                    data[channel_index][data_index_start:data_index_end] =\
-                        _decimate_mean(analog_values, decimation_factor)
-                else:
-                    data[channel_index][data_index_start:data_index_end] =\
-                        analog_values
+            # values decimation
+            if decimation_factor > 1:
+                data[channel_index] =\
+                    _decimate_mean(data[channel_index], decimation_factor)
 
         return timestamps_realtime, timestamps_monotonic, data
 
