@@ -250,19 +250,25 @@ class RocketLoggerData:
     _timestamps_monotonic = []
     _timestamps_realtime = []
 
-    def __init__(self, filename=None, decimation_factor=1):
+    def __init__(self, filename=None, decimation_factor=1,
+                 memory_mapped=True):
         """
         Constructor to create a RockerLoggerData object form data file.
 
         :param filename: The filename of the file to import
 
         :param decimation_factor: Decimation factor for values read
+
+        :param memory_mapped: Set False to fall back to read entire file to
+            memory at once, instead of using memory mapped reading. Might
+            increase file read performance for many smaller files and/or
+            some system configurations.
         """
         if filename is None:
             raise NotImplementedError('RocketLogger data file creation '
                                       'currently unsupported.')
         if isfile(filename):
-            self.load_file(filename, decimation_factor)
+            self.load_file(filename, decimation_factor, memory_mapped)
         else:
             raise FileNotFoundError('File "{}" does not exist.'.format(
                                     filename))
@@ -357,7 +363,8 @@ class RocketLoggerData:
 
         return header
 
-    def _read_file_data(self, file_handle, file_header, decimation_factor=1):
+    def _read_file_data(self, file_handle, file_header, decimation_factor=1,
+                        memory_mapped=True):
         """
         Read data block at the current position in the RocketLogger data file.
 
@@ -367,6 +374,11 @@ class RocketLoggerData:
         :param file_header: The file's header with the data alignment details.
 
         :param decimation_factor: Decimation factor for values read
+
+        :param memory_mapped: Set False to fall back to read entire file to
+            memory at once, instead of using memory mapped reading. Might
+            increase file read performance for many smaller files and/or
+            some system configurations.
 
         :returns: Tuple of realtime, monotonic clock based numpy datetime64
             arrays, and the list of numpy arrays containing the read channel
@@ -403,16 +415,26 @@ class RocketLoggerData:
             ('monotonic_sec', '<m{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
             ('monotonic_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
             ('data', (data_dtype, file_header['data_block_size']))])
+        # file_dtype = np.dtype((block_dtype, file_header['data_block_count']))
 
-        # access file data memory mapped
-        file_data = np.memmap(file_handle,
-                              offset=file_header['header_length'],
-                              mode='r',
-                              dtype=block_dtype,
-                              shape=file_header['data_block_count'])
+        # access file data, either memory mapped or direct read to memory
+        if memory_mapped:
+            file_data = np.memmap(file_handle,
+                                  offset=file_header['header_length'],
+                                  mode='r',
+                                  dtype=block_dtype,
+                                  shape=file_header['data_block_count'])
+        else:
+            file_data = np.fromfile(file_handle,
+                                    dtype=block_dtype,
+                                    count=file_header['data_block_count'],
+                                    sep='')
         file_data = file_data.squeeze()
 
-        # extract timestamps from file
+        # reference for data blocks speeds up access time
+        block_data = np.array(file_data['data'], copy=False)
+
+        # extract timestamps
         timestamps_realtime =\
             np.full(file_header['data_block_count'],
                     np.datetime64('1970-01-01T00:00:00', 'ns')) +\
@@ -422,13 +444,9 @@ class RocketLoggerData:
                     np.datetime64('1970-01-01T00:00:00', 'ns')) +\
             file_data['monotonic_sec'] + file_data['monotonic_ns']
 
-        # allocate the data
+        # allocate the channel data
         data = [None] * (file_header['channel_binary_count'] +
                          file_header['channel_analog_count'])
-
-        # copy if loading memory mapped, otherwise just reference
-        # block_data = np.array(file_data['data'], copy=memory_mapped)
-        block_data = np.array(file_data['data'], copy=False)
 
         # extract binary channels
         for binary_channel_index in range(file_header['channel_binary_count']):
@@ -608,7 +626,7 @@ class RocketLoggerData:
             self._header['channel_analog_count'] =\
                 self._header['channel_analog_count'] - 1
 
-    def load_file(self, filename, decimation_factor=1):
+    def load_file(self, filename, decimation_factor=1, memory_mapped=True):
         """
         Read a RocketLogger data file and return an RLD object.
 
@@ -617,6 +635,11 @@ class RocketLoggerData:
             are loaded and joined.
 
         :param decimation_factor: Decimation factor for values read
+
+        :param memory_mapped: Set False to fall back to read entire file to
+            memory at once, instead of using memory mapped reading. Might
+            increase file read performance for many smaller files and/or
+            some system configurations.
         """
         if self._filename is not None:
             raise RocketLoggerDataError('A data file is already loaded. Use '
@@ -659,7 +682,8 @@ class RocketLoggerData:
                 # channels: read actual sampled data
                 timestamps_realtime, timestamps_monotonic, data =\
                     self._read_file_data(file_handle, header,
-                                         decimation_factor=decimation_factor)
+                                         decimation_factor=decimation_factor,
+                                         memory_mapped=memory_mapped)
 
                 # create on first file, append on following
                 if file_number > 0:

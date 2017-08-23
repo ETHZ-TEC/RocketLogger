@@ -60,6 +60,10 @@ class TestDecimation(TestCase):
 
 class TestFileImport(TestCase):
 
+    def test_normal(self):
+        data = RocketLoggerData(_FULL_TEST_FILE)
+        self.assertEqual(data.get_data('V1').shape, (5000, 1))
+
     def test_no_file(self):
         with self.assertRaises(NotImplementedError):
             self.data = RocketLoggerData()
@@ -79,6 +83,25 @@ class TestFileImport(TestCase):
     def test_with_invalid_decimation(self):
         with self.assertRaises(RocketLoggerDataError):
             RocketLoggerData(_FULL_TEST_FILE, decimation_factor=3)
+
+    def test_direct_import(self):
+        data = RocketLoggerData(_FULL_TEST_FILE, memory_mapped=False)
+        self.assertEqual(data.get_data('V1').shape, (5000, 1))
+
+    def test_direct_import_with_decimation(self):
+        data = RocketLoggerData(_FULL_TEST_FILE, memory_mapped=False,
+                                decimation_factor=10)
+        self.assertEqual(data._header['data_block_size'], 100)
+        self.assertEqual(data.get_data('V1').shape, (500, 1))
+
+    def test_direct_vs_memory_mapped(self):
+        data_mm = RocketLoggerData(_FULL_TEST_FILE, memory_mapped=True)
+        data_ff = RocketLoggerData(_FULL_TEST_FILE, memory_mapped=False)
+        self.assertEqual(data_mm._header, data_ff._header)
+        self.assertEqual(len(data_mm._data), len(data_ff._data))
+        for i in range(len(data_mm._data)):
+            arrays_equal = np.array_equal(data_mm._data[i], data_ff._data[i])
+            self.assertTrue(arrays_equal)
 
 
 class TestChannelMerge(TestCase):
