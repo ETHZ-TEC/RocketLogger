@@ -550,7 +550,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
         create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
 
         // adjust time with buffer latency
-        timestamp_realtime.nsec -= (uint64_t)1e9 / conf->update_rate
+        timestamp_realtime.nsec -= (uint64_t)1e9 / conf->update_rate;
         if (timestamp_realtime.nsec < 0) {
             timestamp_realtime.sec -= 1;
             timestamp_realtime.nsec += (uint64_t)1e9;
