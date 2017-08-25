@@ -410,12 +410,11 @@ class RocketLoggerData:
         # read raw data from file
         data_dtype = np.dtype({'names': data_names, 'formats': data_formats})
         block_dtype = np.dtype([
-            ('realtime_sec', '<m{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('realtime_sec', '<M{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
             ('realtime_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
-            ('monotonic_sec', '<m{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('monotonic_sec', '<M{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
             ('monotonic_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
             ('data', (data_dtype, file_header['data_block_size']))])
-        # file_dtype = np.dtype((block_dtype, file_header['data_block_count']))
 
         # access file data, either memory mapped or direct read to memory
         if memory_mapped:
@@ -435,16 +434,12 @@ class RocketLoggerData:
         block_data = np.array(file_data['data'], copy=False)
 
         # extract timestamps
-        timestamps_realtime =\
-            np.full(file_header['data_block_count'],
-                    np.datetime64('1970-01-01T00:00:00', 'ns')) +\
-            file_data['realtime_sec'] + file_data['realtime_ns']
-        timestamps_monotonic =\
-            np.full(file_header['data_block_count'],
-                    np.datetime64('1970-01-01T00:00:00', 'ns')) +\
-            file_data['monotonic_sec'] + file_data['monotonic_ns']
+        timestamps_realtime = (file_data['realtime_sec'] +
+                               file_data['realtime_ns'])
+        timestamps_monotonic = (file_data['monotonic_sec'] +
+                                file_data['monotonic_ns'])
 
-        # allocate the channel data
+        # allocate empty list of channel data
         data = [None] * (file_header['channel_binary_count'] +
                          file_header['channel_analog_count'])
 
