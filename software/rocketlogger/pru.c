@@ -550,9 +550,16 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
         create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
 
         // adjust time with buffer latency
-        // @TODO: check calculation
-        timestamp_realtime.sec -= 1 / conf->update_rate;
-        timestamp_monotonic.sec -= 1 / conf->update_rate;
+        timestamp_realtime.nsec = (uint64_t)1e9 / conf->update_rate
+        if (timestamp_realtime.nsec < 0) {
+            timestamp_realtime.sec -= 1;
+            timestamp_realtime.nsec += (uint64_t)1e9;
+        }
+        timestamp_monotonic.nsec -= (uint64_t)1e9 / conf->update_rate;
+        if (timestamp_monotonic.nsec < 0) {
+            timestamp_monotonic.sec -= 1;
+            timestamp_monotonic.nsec += (uint64_t)1e9;
+        }
 
         // clear event
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);

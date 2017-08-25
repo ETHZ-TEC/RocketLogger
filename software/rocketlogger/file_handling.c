@@ -337,8 +337,8 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
 
     // write timestamp to file
     if (conf->file_format == BIN) {
-        fwrite(&timestamp_realtime, sizeof(struct time_stamp), 1, data_file);
-        fwrite(&timestamp_monotonic, sizeof(struct time_stamp), 1, data_file);
+        fwrite(timestamp_realtime, sizeof(struct time_stamp), 1, data_file);
+        fwrite(timestamp_monotonic, sizeof(struct time_stamp), 1, data_file);
     } else if (conf->file_format == CSV) {
         fprintf(data_file, "%lli.%09lli", timestamp_realtime->sec,
                 timestamp_realtime->nsec);
