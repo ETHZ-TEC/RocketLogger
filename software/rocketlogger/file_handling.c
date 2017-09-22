@@ -476,6 +476,8 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         }
     }
 
-    // flush processed data
-    fflush(data_file);
+    // flush processed data if data is stored
+    if (conf->file_format != NO_FILE && data_file != NULL) {
+        fflush(data_file);
+    }
 }
