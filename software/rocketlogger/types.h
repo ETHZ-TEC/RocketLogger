@@ -72,7 +72,7 @@
 
 // constants
 /// Maximum path length in characters
-#define MAX_PATH_LENGTH 100
+#define MAX_PATH_LENGTH 256
 /// Maximum number of RocketLogger channels
 #define NUM_CHANNELS 8
 /// Maximum number of RocketLogger current channels
@@ -175,6 +175,9 @@ typedef enum log_type {
     INFO     //!< Information
 } rl_log_type;
 
+/// RocketLogger configuration structure version number
+#define RL_CONF_VERSION 0x01
+
 // AMBIENT CONF //
 #define AMBIENT_MAX_SENSOR_COUNT 128
 #define AMBIENT_DISABLED 0
@@ -215,6 +218,8 @@ struct rl_ambient {
  * RocketLogger sampling configuration
  */
 struct rl_conf {
+    /// Configuration structure version
+    int version;
     /// Sampling mode
     rl_mode mode;
     /// Sampling rate

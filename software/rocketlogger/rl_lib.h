@@ -5,7 +5,6 @@
 #ifndef RL_LIB_H_
 #define RL_LIB_H_
 
-
 #include "lib_util.h"
 #include "rl_hw.h"
 #include "types.h"

@@ -286,11 +286,14 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                         atoi(argv[i]) == 0) { // no file write
                         no_file = 1;
                         conf->file_format = NO_FILE;
+                    } else if (strlen(argv[i]) >= MAX_PATH_LENGTH) {
+                        rl_log(ERROR, "file name too long");
+                        return FAILURE;
                     } else {
                         strcpy(conf->file_name, argv[i]);
                     }
                 } else {
-                    rl_log(ERROR, "no file nam");
+                    rl_log(ERROR, "no file name given");
                     return FAILURE;
                 }
                 break;
@@ -541,12 +544,13 @@ void print_usage(void) {
            "RocketLogger.\n");
     printf("\n");
     printf("  Options:\n");
-    printf("    -r rate	           Acquisition rate selection.\n");
-    printf("                         Possible rates: 1, 10, 100, 1k, 2k, 4k, "
-           "8k, 16k, 32k, 64k\n");
-    printf("    -u update_rate     Data update rate selection.\n");
-    printf("                         Possible update rates: 1, 2, 5, 10 (in "
-           "Hz)\n");
+    printf("    -r rate            Acquisition rate selection. Supported "
+           "rates:\n");
+    printf(
+        "                         1, 10, 100, 1k, 2k, 4k, 8k, 16k, 32k, 64k\n");
+    printf("    -u update_rate     Data update rate selection. Supported "
+           "rates:\n");
+    printf("                         1, 2, 5, 10 (in Hz)\n");
     printf("    -ch ch1,ch2,...    Channel selection.\n");
     printf("                       Possible channels ('-ch all' to enable "
            "all):\n");
@@ -569,7 +573,7 @@ void print_usage(void) {
     printf("    -g                 Data aggregation mode for low sample "
            "rates.\n");
     printf("                         Existing modes: 'average', "
-           "'downsample'.");
+           "'downsample'.\n");
     printf("                         '-g 0' to disable aggregation/low sample "
            "rates.\n");
     printf("    -format format     Select file format: csv, bin.\n");
@@ -603,6 +607,7 @@ void print_config(struct rl_conf* conf) {
  * @param conf Pointer to {@link rl_conf} configuration
  */
 void reset_config(struct rl_conf* conf) {
+    conf->version = RL_CONF_VERSION;
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
     conf->aggregation = AGGREGATE_DOWNSAMPLE;
@@ -648,11 +653,20 @@ int read_default_config(struct rl_conf* conf) {
     // read values
     fread(conf, sizeof(struct rl_conf), 1, file);
 
+    // close file
+    fclose(file);
+
+    // check version
+    if (conf->version != RL_CONF_VERSION) {
+        rl_log(WARNING, "Old or invalid configration file. Using default "
+                        "config as fallback.");
+        reset_config(conf);
+        return UNDEFINED;
+    }
+
     // reset mode
     conf->mode = CONTINUOUS;
 
-    // close file
-    fclose(file);
     return SUCCESS;
 }
 

@@ -183,7 +183,7 @@
 											Filename:
 										</div>
 										<div class="col-md-7">
-											<input class="form-control" id="filename" placeholder=filename type="text" value="">
+											<input class="form-control" id="filename" placeholder=filename type="text" value="" maxlength="100">
 										</div>
 									</div>
 									<div class="row small-top-buffer">
