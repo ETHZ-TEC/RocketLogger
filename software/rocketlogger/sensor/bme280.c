@@ -69,7 +69,6 @@ int BME280_read(int sensor_identifier) {
     int sensor_bus = Sensors_getSharedBus();
     int sensor_index = BME280_getIndex(sensor_identifier);
     uint8_t data[BME280_DATA_BLOCK_SIZE];
-    
 
     // select sensor
     uint8_t device_address = (uint8_t)sensor_identifier;

@@ -66,7 +66,7 @@ void TSL4531_close(int sensor_identifier) {
 int TSL4531_read(int sensor_identifier) {
     int sensor_index = TSL4531_getIndex(sensor_identifier);
     int sensor_bus = Sensors_getSharedBus();
-    
+
     int result;
 
     uint8_t device_address = (uint8_t)sensor_identifier;
@@ -114,8 +114,8 @@ int TSL4531_read(int sensor_identifier) {
             return FAILURE;
         }
 
-        int result =
-            TSL4531_sendRange(sensor_identifier, TSL4531_auto_range[sensor_index]);
+        int result = TSL4531_sendRange(sensor_identifier,
+                                       TSL4531_auto_range[sensor_index]);
         if (result < 0) {
             TSL4531_auto_range[sensor_index] = range_set;
             rl_log(ERROR, "TSL4531 auto range update failed");
