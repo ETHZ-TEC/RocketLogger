@@ -183,9 +183,9 @@ typedef enum log_type {
 #define AMBIENT_DISABLED 0
 #define AMBIENT_ENABLED 1
 struct rl_ambient {
-    uint8_t enabled;
-    uint8_t sensor_count;
-    int8_t available_sensors[AMBIENT_MAX_SENSOR_COUNT];
+    int enabled;
+    int sensor_count;
+    int available_sensors[AMBIENT_MAX_SENSOR_COUNT];
     char file_name[MAX_PATH_LENGTH];
 } ambient;
 

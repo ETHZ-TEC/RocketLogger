@@ -137,7 +137,7 @@ int32_t BME280_getValue(int, int);
 /*
  * Helper FUNCTIONS
  */
-uint8_t BME280_getID(void);
+int BME280_getID(void);
 int BME280_readCalibration(int);
 int BME280_setParameters(int);
 int BME280_getIndex(int);

@@ -23,17 +23,17 @@ void ambient_store_data(FILE* ambient_file,
     int32_t sensor_data[conf->ambient.sensor_count];
 
     int ch = 0;
-    uint8_t mutli_channel_read = 0xff;
+    int mutli_channel_read = -1;
     for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // only read registered sensors
         if (conf->ambient.available_sensors[i] > 0) {
             // read multi-channel sensor data only once
-            if (sensor_registry[i].address != mutli_channel_read) {
-                sensor_registry[i].read(sensor_registry[i].address);
-                mutli_channel_read = sensor_registry[i].address;
+            if (sensor_registry[i].identifier != mutli_channel_read) {
+                sensor_registry[i].read(sensor_registry[i].identifier);
+                mutli_channel_read = sensor_registry[i].identifier;
             }
             sensor_data[ch] = sensor_registry[i].getValue(
-                sensor_registry[i].address, sensor_registry[i].channel);
+                sensor_registry[i].identifier, sensor_registry[i].channel);
             ch++;
         }
     }

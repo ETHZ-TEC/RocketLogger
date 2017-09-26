@@ -169,7 +169,7 @@ $(BIN_DIR):
 .PHONY: clean code-format
 
 clean:
-	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d
+	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DEAMON) $(TARGET_FIRMWARE) $(TARGET_SERVER)
 
 code-format:
 	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
