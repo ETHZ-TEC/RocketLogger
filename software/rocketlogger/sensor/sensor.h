@@ -25,14 +25,14 @@
  */
 struct rl_sensor {
     char name[SENSOR_NAME_LENGTH];
-    uint8_t address;
-    uint8_t channel;
+    int identifier;
+    int channel;
     rl_unit unit;
     int32_t scale;
-    int (*init)(uint8_t);
-    void (*close)(uint8_t);
-    int (*read)(uint8_t);
-    int32_t (*getValue)(uint8_t, uint8_t);
+    int (*init)(int);
+    void (*close)(int);
+    int (*read)(int);
+    int32_t (*getValue)(int, int);
 };
 
 extern struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE];
@@ -45,7 +45,7 @@ int Sensors_initSharedComm(uint8_t);
 int Sensors_openBus(void);
 int Sensors_closeBus(int);
 
-uint8_t Sensors_scan(int8_t*);
-void Sensors_close(int8_t*);
+int Sensors_scan(int*);
+void Sensors_close(int*);
 
 #endif /* SENSOR_SENSOR_H_ */

@@ -115,29 +115,30 @@ void Sensors_closeSharedBus(void) {
  * @param sensors_available List of sensors of the registry available
  * @return Number of sensors from the regisry found on the bus
  */
-uint8_t Sensors_scan(int8_t sensors_available[]) {
+int Sensors_scan(int sensors_available[]) {
 
     // log message
-    char message[MAX_MESSAGE_LENGTH] = "Found ambient sensors:\n\t- ";
+    char message[MAX_MESSAGE_LENGTH] =
+        "List of available ambient sensors:\n\t- ";
 
     // Scan for available sensors //
-    uint8_t sensor_count = 0;
+    int sensor_count = 0;
 
     // scan
-    uint8_t mutli_channel_initialized = 0xff;
-    for (unsigned int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+    int mutli_channel_initialized = -1;
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // do not initialize multi channel sensors more than once
         int result = 0;
-        if (sensor_registry[i].address != mutli_channel_initialized) {
-            result = sensor_registry[i].init(sensor_registry[i].address);
+        if (sensor_registry[i].identifier != mutli_channel_initialized) {
+            result = sensor_registry[i].init(sensor_registry[i].identifier);
         } else {
             result = SUCCESS;
         }
 
         if (result == SUCCESS) {
             // sensor available
-            sensors_available[i] = (int8_t)sensor_registry[i].address;
-            mutli_channel_initialized = (int8_t)sensor_registry[i].address;
+            sensors_available[i] = sensor_registry[i].identifier;
+            mutli_channel_initialized = sensor_registry[i].identifier;
             sensor_count++;
 
             // message
@@ -146,7 +147,7 @@ uint8_t Sensors_scan(int8_t sensors_available[]) {
         } else {
             // sensor not available
             sensors_available[i] = -1;
-            mutli_channel_initialized = 0xff;
+            mutli_channel_initialized = -1;
         }
     }
 
@@ -165,11 +166,11 @@ uint8_t Sensors_scan(int8_t sensors_available[]) {
  * Close all sensors used on the I2C bus.
  * @param sensors_available List of available (previously initialized) sensors
  */
-void Sensors_close(int8_t sensors_available[]) {
+void Sensors_close(int sensors_available[]) {
     int i;
     for (i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (sensors_available[i] >= 0) {
-            sensor_registry[i].close(sensor_registry[i].address);
+            sensor_registry[i].close(sensor_registry[i].identifier);
         }
     }
 }

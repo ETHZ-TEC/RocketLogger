@@ -2,7 +2,7 @@
 
 #include "bme280.h"
 
-uint8_t BME280_sensors[] = BME280_I2C_ADDRESSES;
+int BME280_sensors[] = BME280_I2C_ADDRESSES;
 
 int32_t BME280_temperature[sizeof(BME280_sensors)] = {0};
 int32_t BME280_humidity[sizeof(BME280_sensors)] = {0};
@@ -12,10 +12,10 @@ struct BME280_calibration_t BME280_calibration[sizeof(BME280_sensors)];
 
 /**
  * Initialize the light sensor
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @return return code
  */
-int BME280_init(uint8_t sensor_address) {
+int BME280_init(int sensor_identifier) {
     int sensor_bus = Sensors_getSharedBus();
     if (sensor_bus < 0) {
         rl_log(ERROR, "BME280 I2C bus not initialized properly");
@@ -24,7 +24,8 @@ int BME280_init(uint8_t sensor_address) {
 
     int result;
 
-    result = Sensors_initSharedComm(sensor_address);
+    uint8_t device_address = (uint8_t)sensor_identifier;
+    result = Sensors_initSharedComm(device_address);
     if (result < 0) {
         rl_log(ERROR, "BME280 I2C initialization failed");
         return FAILURE;
@@ -36,13 +37,13 @@ int BME280_init(uint8_t sensor_address) {
         return FAILURE;
     }
 
-    result = BME280_readCalibration(sensor_address);
+    result = BME280_readCalibration(sensor_identifier);
     if (result < 0) {
         rl_log(ERROR, "BME280 reading calibration failed");
         return FAILURE;
     }
 
-    result = BME280_setParameters(sensor_address);
+    result = BME280_setParameters(sensor_identifier);
     if (result < 0) {
         rl_log(ERROR, "BME280 setting configuraiton failed");
         return FAILURE;
@@ -53,24 +54,26 @@ int BME280_init(uint8_t sensor_address) {
 
 /**
  * Close TSL sensor.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  */
-void BME280_close(uint8_t sensor_address) {
-    (void)sensor_address; // suppress unsued variable warning
+void BME280_close(int sensor_identifier) {
+    (void)sensor_identifier; // suppress unsued variable warning
 }
 
 /**
  * Read the sensor values.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @return Value in lux
  */
-int BME280_read(uint8_t sensor_address) {
+int BME280_read(int sensor_identifier) {
     int sensor_bus = Sensors_getSharedBus();
-    int sensor_index = BME280_getIndex(sensor_address);
+    int sensor_index = BME280_getIndex(sensor_identifier);
     uint8_t data[BME280_DATA_BLOCK_SIZE];
+    
 
     // select sensor
-    int result = Sensors_initSharedComm(sensor_address);
+    uint8_t device_address = (uint8_t)sensor_identifier;
+    int result = Sensors_initSharedComm(device_address);
     if (result < 0) {
         rl_log(ERROR, "BME280 I2C communication failed");
         return FAILURE;
@@ -96,23 +99,23 @@ int BME280_read(uint8_t sensor_address) {
     int32_t humidity_raw = (((int32_t)data[6]) << 8) | ((int32_t)data[7]);
 
     BME280_temperature[sensor_index] =
-        BME280_compensate_temperature(sensor_address, temperature_raw);
+        BME280_compensate_temperature(sensor_identifier, temperature_raw);
     BME280_humidity[sensor_index] = (int32_t)BME280_compensate_humidity(
-        sensor_address, humidity_raw, temperature_raw);
+        sensor_identifier, humidity_raw, temperature_raw);
     BME280_preasure[sensor_index] = (int32_t)BME280_compensate_preasure(
-        sensor_address, preasure_raw, temperature_raw);
+        sensor_identifier, preasure_raw, temperature_raw);
 
     return SUCCESS;
 }
 
 /**
  * Get the values read from the sensor
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @param channel The channel of the sensor to get
  * @return Channel value
  */
-int32_t BME280_getValue(uint8_t sensor_address, uint8_t channel) {
-    int sensor_index = BME280_getIndex(sensor_address);
+int32_t BME280_getValue(int sensor_identifier, int channel) {
+    int sensor_index = BME280_getIndex(sensor_identifier);
 
     switch (channel) {
     case BME280_CHANNEL_TEMPERATURE:
@@ -131,24 +134,28 @@ int32_t BME280_getValue(uint8_t sensor_address, uint8_t channel) {
 
 /**
  * Get the device ID
- * @param sensor_address The I2C address of the sensor
- * @return Status code
+ * @param sensor_identifier The I2C address of the sensor
+ * @return Devie ID or negative status code
  */
-uint8_t BME280_getID(void) {
+int BME280_getID(void) {
     int sensor_bus = Sensors_getSharedBus();
 
-    uint8_t sensor_id = i2c_smbus_read_byte_data(sensor_bus, BME280_REG_ID);
-    return sensor_id;
+    int read_result = i2c_smbus_read_byte_data(sensor_bus, BME280_REG_ID);
+
+    if (read_result < 0) {
+        rl_log(ERROR, "BME280 I2C error reading ID of sensor");
+    }
+    return read_result;
 }
 
 /**
  * Read the sensor specifc calibration values.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @return Status code
  */
-int BME280_readCalibration(uint8_t sensor_address) {
+int BME280_readCalibration(int sensor_identifier) {
     int sensor_bus = Sensors_getSharedBus();
-    int sensor_index = BME280_getIndex(sensor_address);
+    int sensor_index = BME280_getIndex(sensor_identifier);
     uint8_t data[26];
 
     // first calibration data block (0x88...0xA1, 26 values)
@@ -213,8 +220,8 @@ int BME280_readCalibration(uint8_t sensor_address) {
  * Set the sensor parameter to default for continuous sensing.
  * @return Status code
  */
-int BME280_setParameters(uint8_t sensor_address) {
-    (void)sensor_address; // suppress unsued variable warning
+int BME280_setParameters(int sensor_identifier) {
+    (void)sensor_identifier; // suppress unsued variable warning
     int sensor_bus = Sensors_getSharedBus();
 
     int result;
@@ -251,13 +258,13 @@ int BME280_setParameters(uint8_t sensor_address) {
 
 /**
  * Get the index of the sensor with specified address.
- * @param sensor_address The sensor address used to look up the index
+ * @param sensor_identifier The sensor address used to look up the index
  * @return The index of the sensor, or if not found -1
  */
-int BME280_getIndex(uint8_t sensor_address) {
+int BME280_getIndex(int sensor_identifier) {
     unsigned int index = 0;
     while (index < sizeof(BME280_sensors)) {
-        if (sensor_address == BME280_sensors[index]) {
+        if (sensor_identifier == BME280_sensors[index]) {
             return (int)index;
         }
         index++;
@@ -267,13 +274,13 @@ int BME280_getIndex(uint8_t sensor_address) {
 
 /**
  * Get fine grained temperature compensation value for further processing.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @param temperature_raw The raw temperature reading
  * @return Fine grained, compensated temperature (arbritrary unit)
  */
-int32_t BME280_compensate_temperature_fine(uint8_t sensor_address,
+int32_t BME280_compensate_temperature_fine(int sensor_identifier,
                                            int32_t temperature_raw) {
-    int sensor_index = BME280_getIndex(sensor_address);
+    int sensor_index = BME280_getIndex(sensor_identifier);
 
     int32_t var1, var2, temperature_fine;
     var1 = ((((temperature_raw >> 3) -
@@ -294,33 +301,32 @@ int32_t BME280_compensate_temperature_fine(uint8_t sensor_address,
 
 /**
  * Get the compensated temperature in milli degree centigrade.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @param temperature_raw The raw temperature reading
  * @return The compensated temperature in 0.001 degree centigrade
  */
-int32_t BME280_compensate_temperature(uint8_t sensor_address,
+int32_t BME280_compensate_temperature(int sensor_identifier,
                                       int32_t temperature_raw) {
     int32_t temperature_fine =
-        BME280_compensate_temperature_fine(sensor_address, temperature_raw);
+        BME280_compensate_temperature_fine(sensor_identifier, temperature_raw);
     int32_t temperature = (temperature_fine * 50 + 1280) >> 8;
     return temperature;
 }
 
 /**
  * Get the compensated preasure in milli Pascal.
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @param preasure_raw The raw preasure reading
  * @param temperature_raw The raw temperature reading
  * @return The compensated preasure in 0.001 Pascal
  */
-uint32_t BME280_compensate_preasure(uint8_t sensor_address,
-                                    int32_t preasure_raw,
+uint32_t BME280_compensate_preasure(int sensor_identifier, int32_t preasure_raw,
                                     int32_t temperature_raw) {
-    int sensor_index = BME280_getIndex(sensor_address);
+    int sensor_index = BME280_getIndex(sensor_identifier);
     int64_t var1, var2, preasure;
 
     int64_t temperature_fine =
-        BME280_compensate_temperature_fine(sensor_address, temperature_raw);
+        BME280_compensate_temperature_fine(sensor_identifier, temperature_raw);
     var1 = temperature_fine - 128000;
     var2 = var1 * var1 * (int64_t)BME280_calibration[sensor_index].P6 +
            ((var1 * (int64_t)BME280_calibration[sensor_index].P5) << 17) +
@@ -354,18 +360,17 @@ uint32_t BME280_compensate_preasure(uint8_t sensor_address,
 
 /**
  * Get the compensated relative humidity in micros (0.0001 percents).
- * @param sensor_address The I2C address of the sensor
+ * @param sensor_identifier The I2C address of the sensor
  * @param humidity_raw The raw humidity reading
  * @param temperature_raw The raw temperature reading
  * @return The compensated humidity in micros (0.0001 percents)
  */
-uint32_t BME280_compensate_humidity(uint8_t sensor_address,
-                                    int32_t humidity_raw,
+uint32_t BME280_compensate_humidity(int sensor_identifier, int32_t humidity_raw,
                                     int32_t temperature_raw) {
-    int sensor_index = BME280_getIndex(sensor_address);
+    int sensor_index = BME280_getIndex(sensor_identifier);
 
     int32_t temperature_fine =
-        BME280_compensate_temperature_fine(sensor_address, temperature_raw);
+        BME280_compensate_temperature_fine(sensor_identifier, temperature_raw);
 
     int32_t humidity = (temperature_fine - ((int32_t)76800));
     humidity =

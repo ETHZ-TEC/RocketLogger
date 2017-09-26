@@ -129,22 +129,22 @@ struct BME280_calibration_t {
 /*
  * API FUNCTIONS
  */
-int BME280_init(uint8_t);
-void BME280_close(uint8_t);
-int BME280_read(uint8_t);
-int32_t BME280_getValue(uint8_t, uint8_t);
+int BME280_init(int);
+void BME280_close(int);
+int BME280_read(int);
+int32_t BME280_getValue(int, int);
 
 /*
  * Helper FUNCTIONS
  */
 uint8_t BME280_getID(void);
-int BME280_readCalibration(uint8_t);
-int BME280_setParameters(uint8_t);
-int BME280_getIndex(uint8_t);
+int BME280_readCalibration(int);
+int BME280_setParameters(int);
+int BME280_getIndex(int);
 
-int32_t BME280_compensate_temperature_fine(uint8_t, int32_t);
-int32_t BME280_compensate_temperature(uint8_t, int32_t);
-uint32_t BME280_compensate_preasure(uint8_t, int32_t, int32_t);
-uint32_t BME280_compensate_humidity(uint8_t, int32_t, int32_t);
+int32_t BME280_compensate_temperature_fine(int, int32_t);
+int32_t BME280_compensate_temperature(int, int32_t);
+uint32_t BME280_compensate_preasure(int, int32_t, int32_t);
+uint32_t BME280_compensate_humidity(int, int32_t, int32_t);
 
 #endif /* SENSOR_BME280_H_ */
