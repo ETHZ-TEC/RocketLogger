@@ -2,7 +2,7 @@
 
 #include "bme280.h"
 
-int BME280_sensors[] = BME280_I2C_ADDRESSES;
+const int BME280_sensors[] = BME280_I2C_ADDRESSES;
 
 int32_t BME280_temperature[sizeof(BME280_sensors)] = {0};
 int32_t BME280_humidity[sizeof(BME280_sensors)] = {0};

@@ -4,7 +4,7 @@
 
 #include "tsl4531.h"
 
-int TSL4531_sensors[] = TSL4531_I2C_ADDRESSES;
+const int TSL4531_sensors[] = TSL4531_I2C_ADDRESSES;
 
 enum TSL4531_range TSL4531_range[sizeof(TSL4531_sensors)] = {
     TSL4531_RANGE_AUTO};

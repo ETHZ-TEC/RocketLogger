@@ -23,7 +23,7 @@ int sensor_bus = -1;
  *
  * @note The SENSOR_REGISTRY_SIZE needs to be adjusted accordingly.
  */
-struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
+const struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
     {
         "TSL4531_left", TSL4531_I2C_ADDRESS_LEFT, TSL4531_CHANNEL_DEFAULT,
         RL_UNIT_LUX, RL_SCALE_NONE, &TSL4531_init, &TSL4531_close,

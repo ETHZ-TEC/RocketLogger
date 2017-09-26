@@ -35,7 +35,7 @@ struct rl_sensor {
     int32_t (*getValue)(int, int);
 };
 
-extern struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE];
+extern const struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE];
 
 int Sensors_initSharedBus(void);
 void Sensors_closeSharedBus(void);
