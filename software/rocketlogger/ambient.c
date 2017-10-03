@@ -73,10 +73,13 @@ void ambient_setup_lead_in(struct rl_file_lead_in* lead_in,
 
     // number channels
     uint16_t channel_count = conf->ambient.sensor_count;
+
     // number binary channels
     uint16_t channel_bin_count = 0;
+
     // comment length
-    uint32_t comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
+    uint32_t comment_length = RL_FILE_COMMENT_ALIGNMENT_BYTES;
+
     // timestamps
     struct time_stamp time_real;
     struct time_stamp time_monotonic;
@@ -125,11 +128,14 @@ void ambient_setup_channels(struct rl_file_header* file_header,
 }
 
 void ambient_setup_header(struct rl_file_header* file_header,
-                          struct rl_conf* conf) {
+                          struct rl_conf* conf, char* comment) {
 
     // comment
-    char* comment = RL_FILE_COMMENT;
-    file_header->comment = comment;
+    if (comment == NULL) {
+        file_header->comment = "";
+    } else {
+        file_header->comment = comment;
+    }
 
     // channels
     ambient_setup_channels(file_header, conf);

@@ -17,7 +17,7 @@ int rl_read_status(struct rl_status* status);
 void rl_read_calibration(struct rl_calibration* calibration_ptr,
                          struct rl_conf* conf);
 
-int rl_start(struct rl_conf* conf);
+int rl_start(struct rl_conf* conf, char* file_comment);
 
 int rl_stop(void);
 

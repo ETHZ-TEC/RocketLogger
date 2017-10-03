@@ -263,9 +263,11 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
  * @param data_file File pointer to data file
  * @param ambient_file File pointer to ambient file
  * @param conf Pointer to current {@link rl_conf} configuration
+ * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
+int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
+               char* file_comment) {
 
     // average (for low rates)
     uint32_t avg_factor = 1;
@@ -359,7 +361,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
     file_header.channel = file_channel;
 
     // complete file header
-    file_setup_header(&file_header, conf);
+    file_setup_header(&file_header, conf, file_comment);
 
     // store header
     if (conf->file_format == BIN) {
@@ -383,7 +385,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf) {
         ambient_file_header.channel = ambient_file_channel;
 
         // complete file header
-        ambient_setup_header(&ambient_file_header, conf);
+        ambient_setup_header(&ambient_file_header, conf, file_comment);
 
         // store header
         file_store_header_bin(ambient_file, &ambient_file_header);

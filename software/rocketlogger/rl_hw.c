@@ -95,9 +95,10 @@ void hw_close(struct rl_conf* conf) {
 /**
  * Hardware sampling function
  * @param conf Pointer to current {@link rl_conf} configuration
+ * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int hw_sample(struct rl_conf* conf) {
+int hw_sample(struct rl_conf* conf, char* file_comment) {
 
     // open data file
     FILE* data = (FILE*)-1;
@@ -125,7 +126,7 @@ int hw_sample(struct rl_conf* conf) {
     }
 
     // SAMPLE
-    if (pru_sample(data, ambient_file, conf) == FAILURE) {
+    if (pru_sample(data, ambient_file, conf, file_comment) == FAILURE) {
         // error ocurred
         gpio_set_value(LED_ERROR_GPIO, 1);
     }

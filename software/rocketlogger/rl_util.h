@@ -37,6 +37,7 @@ typedef enum option {
     CALIBRATION,    //!< Use/ignore existing calibration values
     FILE_FORMAT,    //!< File format
     FILE_SIZE,      //!< Maximum data file size
+    COMMENT,        //!< File comment
     NO_OPTION       //!< No option
 } rl_option;
 
@@ -48,7 +49,7 @@ char* rl_get_version(void);
 rl_mode get_mode(char* mode);
 rl_option get_option(char* option);
 int parse_args(int argc, char* argv[], struct rl_conf* conf,
-               int* set_as_default);
+               int* set_as_default, char** file_comment);
 
 void print_usage(void);
 
