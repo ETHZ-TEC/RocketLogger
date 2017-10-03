@@ -698,12 +698,12 @@ class RocketLoggerData:
                                           file_extension)
 
         # adjust header files for decimation
-        header['sample_count'] = round(header['sample_count'] /
-                                       decimation_factor)
-        header['data_block_size'] = round(header['data_block_size'] /
-                                          decimation_factor)
-        header['sample_rate'] = round(header['sample_rate'] /
-                                      decimation_factor)
+        self._header['sample_count'] = \
+            round(self._header['sample_count'] / decimation_factor)
+        self._header['data_block_size'] = \
+            round(self._header['data_block_size'] / decimation_factor)
+        self._header['sample_rate'] = \
+            round(self._header['sample_rate'] / decimation_factor)
 
         self._filename = filename
         print('Read {} file(s)'.format(file_number))
@@ -888,10 +888,14 @@ class RocketLoggerData:
                             if channel['unit'] is 'current']
         channels_voltage = [channel for channel in self._header['channels']
                             if channel['unit'] is 'voltage']
+        channels_others = [channel for channel in self._header[
+            'channels'][self._header['channel_binary_count']:]
+            if channel['unit'] not in ['voltage', 'current']]
 
         plot_current_channels = []
         plot_digital_channels = []
         plot_voltage_channels = []
+        plot_other_channels = []
 
         # get and group channels to plot
         for channel_name in channel_names:
@@ -899,6 +903,7 @@ class RocketLoggerData:
                 plot_current_channels = channels_current
                 plot_digital_channels = channels_digital
                 plot_voltage_channels = channels_voltage
+                plot_other_channels = channels_others
                 break
             elif channel_name is 'voltages':
                 plot_voltage_channels = channels_voltage
@@ -923,8 +928,8 @@ class RocketLoggerData:
 
         # prepare plot groups
         plot_groups = [plot_voltage_channels, plot_current_channels,
-                       plot_digital_channels]
-        plot_groups_axis_label = ['voltage [V]', 'current [A]', 'digital']
+                       plot_digital_channels, plot_other_channels]
+        plot_groups_axis_label = ['voltage [V]', 'current [A]', 'digital', '']
         plot_time = self.get_time()
 
         subplot_count = len([group for group in plot_groups if len(group) > 0])
