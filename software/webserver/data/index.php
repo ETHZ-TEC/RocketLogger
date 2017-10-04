@@ -377,6 +377,15 @@
 									</div>
 								</div>
 							</div>
+
+							<!-- Comment Section -->
+							<div class="row">
+								<div class="col-md-12">
+									<h3>Comment</h3>
+									Comment stored in file:
+									<textarea class="form-control" rows="3" id="comment"></textarea>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

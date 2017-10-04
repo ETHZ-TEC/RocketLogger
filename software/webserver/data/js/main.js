@@ -125,7 +125,7 @@ var startTimeOut;
 
 // ajax post object
 var statusPost;		
-var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
+var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0', fileComment: ''};
 
 
 
@@ -1027,6 +1027,13 @@ function parseConf() {
 		config.fileName = "0"; // no storing
 	}
 	
+	// file comment
+	if (config.fileName != "0") {
+		config.fileComment = $("#comment").val();
+	} else {
+		config.fileComment = '';
+	}
+
 	// file format
 	var e = document.getElementById("file_format");
 	var r = document.getElementById("sample_rate");
@@ -1230,6 +1237,7 @@ function enableDisableFile() {
 		document.getElementById("file_size").disabled = false;
 		document.getElementById("file_size_unit").disabled = false;
 		document.getElementById("download").disabled = false;
+		document.getElementById("comment").disabled = false;
 	} else {
 		document.getElementById("file_format").disabled = true;
 		document.getElementById("filename").disabled = true;
@@ -1238,6 +1246,7 @@ function enableDisableFile() {
 		document.getElementById("file_size").disabled = true;
 		document.getElementById("file_size_unit").disabled = true;
 		document.getElementById("download").disabled = true;
+		document.getElementById("comment").disabled = true;
 	}
 }
 
@@ -1421,7 +1430,7 @@ $(function() {
 			
 			// filter writes to file-name form
 			eventId = event.target.id;
-			if(eventId == "filename") {
+			if(eventId == "filename" || eventId == "comment") {
 				return;
 			}
 			
