@@ -9,6 +9,7 @@ import os.path
 from unittest import TestCase
 
 import numpy as np
+import matplotlib.pyplot as plt
 import rocketlogger.data as rld
 
 from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
@@ -92,6 +93,8 @@ class TestFileImport(TestCase):
         data = RocketLoggerData(_FULL_TEST_FILE, memory_mapped=False,
                                 decimation_factor=10)
         self.assertEqual(data._header['data_block_size'], 100)
+        self.assertEqual(data._header['sample_count'], 500)
+        self.assertEqual(data._header['sample_rate'], 100)
         self.assertEqual(data.get_data('V1').shape, (500, 1))
 
     def test_direct_vs_memory_mapped(self):
@@ -198,6 +201,52 @@ class TestDataPlot(TestCase):
         self.data = RocketLoggerData(_STEPS_TEST_FILE)
 
     def tearDown(self):
+        plt.close('all')
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_header_field_count(self):
+        self.assertEqual(len(self.data._header), 14)
+
+    def test_header_channel_count(self):
+        self.assertEqual(len(self.data._header['channels']), 16)
+
+    def test_plot_all(self):
+        self.data.plot()
+
+    def test_plot_merged(self):
+        self.data.merge_channels()
+        self.data.plot()
+
+    def test_plot_invalid(self):
+        with self.assertRaises(RocketLoggerDataError):
+            self.data.plot(['A'])
+
+    def test_plot_voltage(self):
+        self.data.plot(['voltages'])
+
+    def test_plot_current(self):
+        self.data.plot(['currents'])
+
+    def test_plot_digital(self):
+        self.data.plot(['digital'])
+
+    def test_plot_single(self):
+        self.data.plot('V1')
+
+    def test_plot_multi_single(self):
+        self.data.plot(['V1', 'I1L', 'DI1'])
+
+
+class TestDataPlotDecimate(TestCase):
+
+    def setUp(self):
+        self.data = RocketLoggerData(_STEPS_TEST_FILE, decimation_factor=10)
+
+    def tearDown(self):
+        plt.close('all')
         del(self.data)
 
     def test_load(self):
