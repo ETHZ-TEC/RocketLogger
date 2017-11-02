@@ -23,6 +23,6 @@
 
 void hw_init(struct rl_conf* conf);
 void hw_close(struct rl_conf* conf);
-int hw_sample(struct rl_conf* conf);
+int hw_sample(struct rl_conf* conf, char* file_comment);
 
 #endif /* RL_HW_H_ */

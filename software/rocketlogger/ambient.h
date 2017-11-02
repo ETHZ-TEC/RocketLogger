@@ -25,6 +25,6 @@ void ambient_setup_lead_in(struct rl_file_lead_in* lead_in,
 void ambient_setup_channels(struct rl_file_header* file_header,
                             struct rl_conf* conf);
 void ambient_setup_header(struct rl_file_header* file_header,
-                          struct rl_conf* conf);
+                          struct rl_conf* conf, char* comment);
 
 #endif /* AMBIENT_H_ */

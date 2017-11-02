@@ -163,6 +163,8 @@ rl_option get_option(char* option) {
         return DEF_CONF;
     } else if (strcmp(option, "c") == 0) {
         return CALIBRATION;
+    } else if (strcmp(option, "C") == 0) {
+        return COMMENT;
     } else if (strcmp(option, "format") == 0) {
         return FILE_FORMAT;
     } else if (strcmp(option, "size") == 0) {
@@ -221,14 +223,16 @@ int parse_channels(int channels[], char* value) {
  * @param argv Input argument string
  * @param conf Pointer to {@link rl_conf} configuration to write
  * @param set_as_default Is set to 1, if configuration should be set as default
+ * @param file_comment Comment to write into the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int parse_args(int argc, char* argv[], struct rl_conf* conf,
-               int* set_as_default) {
+               int* set_as_default, char** file_comment) {
 
     int i; // argument count variable
     int no_file = 0;
     *set_as_default = 0;
+    *file_comment = NULL;
 
     // need at least 2 arguments
     if (argc < 2) {
@@ -446,6 +450,19 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                 }
                 break;
 
+            case COMMENT:
+                if (argc > ++i) {
+                    if (no_file == 0) {
+                        *file_comment = argv[i];
+                    } else {
+                        rl_log(INFO, "comment ignored");
+                    }
+                } else {
+                    rl_log(ERROR, "no comment given");
+                    return FAILURE;
+                }
+                break;
+
             case FILE_FORMAT:
                 if (argc > ++i) {
                     // ignore format, when no file is written
@@ -579,10 +596,14 @@ void print_usage(void) {
     printf("    -format format     Select file format: csv, bin.\n");
     printf("    -size   file_size  Select max file size (k, m, g can be "
            "used).\n");
+    printf("    -C comment         Comment stored in file header. Comment is "
+           "ignored\n");
+    printf("                         if file saving is disabled.\n");
     printf("    -w                 Enable webserver plotting.\n");
     printf("                         Use '-w 0' to disable webserver "
            "plotting.\n");
-    printf("    -s                 Set configuration as default.\n");
+    printf("    -s                 Set configuration as default (all except "
+           "comment).\n");
     printf("\n");
     printf("  Help/Info:\n");
     printf("    help, --help       Display this help message.\n");

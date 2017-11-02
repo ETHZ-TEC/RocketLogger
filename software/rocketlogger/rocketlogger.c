@@ -21,12 +21,14 @@ int main(int argc, char* argv[]) {
 
     struct rl_conf conf;
     int set_as_default;
+    char* file_comment;
 
     // get default config
     read_default_config(&conf);
 
     // parse arguments
-    if (parse_args(argc, argv, &conf, &set_as_default) == FAILURE) {
+    if (parse_args(argc, argv, &conf, &set_as_default, &file_comment) ==
+        FAILURE) {
         print_usage();
         exit(EXIT_FAILURE);
     }
@@ -109,7 +111,7 @@ int main(int argc, char* argv[]) {
     }
 
     // start the sampling
-    rl_start(&conf);
+    rl_start(&conf, file_comment);
 
     exit(EXIT_SUCCESS);
 }

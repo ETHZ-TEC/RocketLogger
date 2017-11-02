@@ -45,8 +45,10 @@ void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
     if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
         i2l_valid_channel = channel_bin_count++;
     }
+
     // comment length
-    uint32_t comment_length = strlen(RL_FILE_COMMENT) * sizeof(int8_t);
+    uint32_t comment_length = RL_FILE_COMMENT_ALIGNMENT_BYTES;
+
     // timestamps
     struct time_stamp timestamp_realtime;
     struct time_stamp timestamp_monotonic;
@@ -152,13 +154,17 @@ void file_setup_channels(struct rl_file_header* file_header,
  * Set up file header with current configuration
  * @param file_header Pointer to {@link rl_file_header} to set up
  * @param conf Pointer to current {@link rl_conf} struct
+ * @param comment The comment stored in the file header or NULL for default
  */
-void file_setup_header(struct rl_file_header* file_header,
-                       struct rl_conf* conf) {
+void file_setup_header(struct rl_file_header* file_header, struct rl_conf* conf,
+                       char* comment) {
 
     // comment
-    char* comment = RL_FILE_COMMENT;
-    file_header->comment = comment;
+    if (comment == NULL) {
+        file_header->comment = "";
+    } else {
+        file_header->comment = comment;
+    }
 
     // channels
     file_setup_channels(file_header, conf);
@@ -176,18 +182,16 @@ void file_store_header_bin(FILE* data_file,
                               file_header->lead_in.channel_count;
 
     // check if alignment bytes are needed after header comment
-    int comment_length = strlen(file_header->comment);
+    int comment_length = strlen(file_header->comment) + 1;
     int comment_unaligned_bytes =
         comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES;
-    if (comment_unaligned_bytes > 0) {
-        file_header->lead_in.comment_length = comment_length +
-                                              RL_FILE_COMMENT_ALIGNMENT_BYTES -
-                                              comment_unaligned_bytes;
-        file_header->lead_in.header_length =
-            sizeof(struct rl_file_lead_in) +
-            file_header->lead_in.comment_length +
-            total_channel_count * sizeof(struct rl_file_channel);
-    }
+
+    file_header->lead_in.comment_length = comment_length +
+                                          RL_FILE_COMMENT_ALIGNMENT_BYTES -
+                                          comment_unaligned_bytes;
+    file_header->lead_in.header_length =
+        sizeof(struct rl_file_lead_in) + file_header->lead_in.comment_length +
+        total_channel_count * sizeof(struct rl_file_channel);
 
     // write lead-in
     fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1,

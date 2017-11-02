@@ -21,8 +21,8 @@
 
 // FUNCTIONS
 void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
-void file_setup_header(struct rl_file_header* file_header,
-                       struct rl_conf* conf);
+void file_setup_header(struct rl_file_header* file_header, struct rl_conf* conf,
+                       char* comment);
 void file_store_header_bin(FILE* data, struct rl_file_header* file_header);
 void file_store_header_csv(FILE* data, struct rl_file_header* file_header);
 void file_update_header_bin(FILE* data, struct rl_file_header* file_header);

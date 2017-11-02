@@ -719,6 +719,14 @@ class RocketLoggerData:
             channel_names.append(channel['name'])
         return sorted(channel_names)
 
+    def get_comment(self):
+        """
+        Get the comment stored in the file header.
+
+        :returns: Comment stored in the file
+        """
+        return self._header['comment']
+
     def get_data(self, channel_names=['all']):
         """
         Get the data of the specified channels, by default of all channels.

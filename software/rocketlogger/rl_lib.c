@@ -58,9 +58,10 @@ void rl_read_calibration(struct rl_calibration* calibration_ptr,
 /**
  * RocketLogger start function: start sampling
  * @param conf Pointer to desired {@link rl_conf} configuration
+ * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_start(struct rl_conf* conf) {
+int rl_start(struct rl_conf* conf, char* file_comment) {
 
     // check mode
     switch (conf->mode) {
@@ -136,7 +137,7 @@ int rl_start(struct rl_conf* conf) {
 
     // SAMPLING
     rl_log(INFO, "sampling start");
-    hw_sample(conf);
+    hw_sample(conf, file_comment);
     rl_log(INFO, "sampling finished");
 
     // FINISH

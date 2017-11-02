@@ -171,7 +171,8 @@ int pru_init(void);
 int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
                    uint32_t avg_factor);
 
-int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf);
+int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf,
+               char* file_comment);
 
 void pru_stop(void);
 void pru_close(void);

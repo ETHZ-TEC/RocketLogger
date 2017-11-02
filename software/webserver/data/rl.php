@@ -141,7 +141,10 @@
 		if($_POST['setDefault'] == '1') {
 			$command = $command . " -s";
 		}
-		
+		if(isset($_POST['fileComment'])) {
+			$command = $command . " -C '" . str_replace("'", "\'", $_POST['fileComment']) . "'";
+		}
+
 		return $command;
 	}
 
