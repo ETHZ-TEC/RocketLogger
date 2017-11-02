@@ -249,6 +249,14 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
             bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
                        ((bin_adc2 & BINARY_MASK) << 2);
             bin_channel_pos = NUM_DIGITAL_INPUTS;
+            // average digital inputs
+            int32_t MASK = 1;
+            for (int j = 0; j < num_bin_channels; j++) {
+                if ((bin_data & MASK) > 0) {
+                    bin_avg_data[BUF1_INDEX][j] += 1;
+                }
+                MASK = MASK << 1;
+            }
         } else {
             bin_channel_pos = 0;
         }
