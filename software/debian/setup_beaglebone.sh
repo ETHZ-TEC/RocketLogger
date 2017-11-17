@@ -70,9 +70,6 @@ echo "> Updating network configuration"
 # copy network interface configuration
 cp -f network/interfaces /etc/network/
 
-# copy wifi ap configuration
-cp -f network/hostapd.conf /etc/hostapd/hostapd.conf
-
 # copy dhcp server configuration
 cp -f network/isc-dhcp-server /etc/default/isc-dhcp-server
 cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
@@ -89,7 +86,23 @@ apt-get update --assume-yes
 apt-get upgrade --assume-yes
 
 # install necessary dependencies
-apt-get install --assume-yes ntp gcc g++ libncurses5-dev libi2c-dev linux-headers-$(uname -r) lighttpd php5-cgi unzip
+apt-get install --assume-yes \
+  unzip                      \
+  git                        \
+  make                       \
+  gcc                        \
+  g++                        \
+  ti-pru-cgt-installer       \
+  device-tree-compiler       \
+  am335x-pru-package         \
+  ntp                        \
+  apache2                    \
+  lighttpd                   \
+  php5-cgi                   \
+  libncurses5-dev            \
+  libi2c-dev                 \
+  linux-headers-$(uname -r)
+
 
 ## grow file system
 echo "> Grow file system size"
@@ -124,3 +137,4 @@ if [ $REBOOT -eq 1 ]; then
 else
   echo "Done. Please reboot manually."
 fi
+
