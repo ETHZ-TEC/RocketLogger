@@ -337,7 +337,7 @@ class RocketLoggerData:
         for ch in range(header['channel_binary_count'] +
                         header['channel_analog_count']):
             channel = {}
-            channel['unit_index'] = _read_int(file_handle,
+            channel['unit_index'] = _read_uint(file_handle,
                                               _CHANNEL_UNIT_INDEX_BYTES)
             channel['scale'] = _read_int(file_handle, _CHANNEL_SCALE_BYTES)
             channel['data_size'] = _read_uint(file_handle,
