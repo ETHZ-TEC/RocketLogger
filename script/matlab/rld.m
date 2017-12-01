@@ -115,7 +115,11 @@ classdef rld
                     try
                         unit_text = UNIT_NAMES(unit+1);
                     catch
-                        unit_text = 'undefined';
+                        if unit == RL_UNIT_UNDEFINED
+                            unit_text = 'undefined';
+                        else
+                            error(['Invalid channel unit: ', num2str(unit)]);
+                        end
                     end
                     channel_scale = fread(file, 1, 'int32');
                     data_size = fread(file, 1, 'uint16');
