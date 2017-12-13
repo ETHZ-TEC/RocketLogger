@@ -21,6 +21,7 @@ cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
 
 # copy webserver data
 mkdir -p ${WEB_ROOT}
+rm -f ${WEB_ROOT}/index.html
 rsync -aP ${WEB_SOURCE}/ ${WEB_ROOT}/
 
 # create data and log dirs
