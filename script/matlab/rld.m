@@ -21,37 +21,49 @@ classdef rld
     
     methods
         % constructor
-        function [ obj ] = rld(file_name, decimation_factor)
+        function [ obj ] = rld(file_name, decimation_factor, join_files)
             %RLD Creates an RLD object from RocketLogger data file
             %   Parameters:
             %      - file_name:          File name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
             end
+            if ~exist('join_files', 'var')
+                join_files = true;
+            end
             
             if exist('file_name', 'var')
-                obj = read_file(obj, file_name, decimation_factor);
+                obj = read_file(obj, file_name, decimation_factor, join_files);
             end
         end
         
         % file reading
-        function [ obj ] = read_file(obj, file_name, decimation_factor)
+        function [ obj ] = read_file(obj, file_name, decimation_factor, join_files)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          Data file name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             %% IMPORT CONSTANTS
             rl_types;
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
+            end
+            if ~exist('join_files', 'var')
+                join_files = true;
             end
             
             %% CHECK FILE
@@ -145,8 +157,16 @@ classdef rld
                 
                 %% PARSE HEADER
                 % sanity checks
-                if sample_count ~= data_block_count*data_block_size
-                    warning('Inconsistency in number of samples taken');
+                if ceil(sample_count / data_block_size) ~= data_block_count
+                    error('Inconsistency in number of samples taken');
+                elseif sample_count < floor(data_block_size * data_block_count)
+                    old_sample_count = sample_count;
+                    data_block_count = floor(sample_count / data_block_size);
+                    sample_count = (data_block_count * data_block_size);
+                    warning('Skipping incomplete data block at end of file (%d samples)', old_sample_count - sample_count);
+                    % update header construct
+                    obj.header.data_block_count = floor(sample_count / data_block_size);
+                    obj.header.sample_count = (data_block_count * data_block_size);
                 end
                 
                 % digital inputs
@@ -327,6 +347,10 @@ classdef rld
                 
                 %% CHECK FOR ADDITIONAL FILES
                 
+                if ~join_files
+                    break;
+                end
+
                 % check if file is RL part-file
                 expression = '_p\d+\.';
                 start_index = regexp(file_name, expression, 'ONCE');
