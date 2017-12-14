@@ -63,7 +63,7 @@ class TestFileImport(TestCase):
 
     def test_normal(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
-        self.assertEqual(data.get_data('V1').shape, (5000, 1))
+        self.assertEqual(data.get_data().shape, (5000, 16))
 
     def test_no_file(self):
         with self.assertRaises(NotImplementedError):
@@ -302,6 +302,9 @@ class TestFullFile(TestCase):
     def test_header_channel_count(self):
         self.assertEqual(len(self.data._header['channels']), 16)
 
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (5000, 16))
+
     def test_channel_names(self):
         self.assertEqual(self.data.get_channel_names(),
                          sorted(['DI1', 'DI2', 'DI3', 'DI4', 'DI5', 'DI6',
@@ -310,7 +313,7 @@ class TestFullFile(TestCase):
                                  'I1L', 'I1H', 'I2L', 'I2H']))
 
 
-class TestSplitFile(TestCase):
+class TestJoinFile(TestCase):
 
     def setUp(self):
         self.data = RocketLoggerData(_SPLIT_TEST_FILE)
@@ -326,6 +329,37 @@ class TestSplitFile(TestCase):
 
     def test_header_channel_count(self):
         self.assertEqual(len(self.data._header['channels']), 16)
+
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (3 * 128000, 16))
+
+    def test_channel_names(self):
+        self.assertEqual(self.data.get_channel_names(),
+                         sorted(['DI1', 'DI2', 'DI3', 'DI4', 'DI5', 'DI6',
+                                 'I1L_valid', 'I2L_valid',
+                                 'V1', 'V2', 'V3', 'V4',
+                                 'I1L', 'I1H', 'I2L', 'I2H']))
+
+
+class TestNoJoinFile(TestCase):
+
+    def setUp(self):
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, join_files=False)
+
+    def tearDown(self):
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_header_field_count(self):
+        self.assertEqual(len(self.data._header), 14)
+
+    def test_header_channel_count(self):
+        self.assertEqual(len(self.data._header['channels']), 16)
+
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (128000, 16))
 
     def test_channel_names(self):
         self.assertEqual(self.data.get_channel_names(),
