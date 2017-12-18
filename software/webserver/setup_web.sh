@@ -34,8 +34,7 @@ WEB_ROOT="/var/www"
 WEB_SOURCE=`pwd`"/data"
 
 # disable apache web server
-systemctl disable apache2
-#rm -f /etc/init.d/apache2
+rm -f /etc/init.d/apache2
 
 # disable bonescript stuff
 systemctl disable bonescript.service
