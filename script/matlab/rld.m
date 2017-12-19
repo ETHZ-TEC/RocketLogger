@@ -1,5 +1,31 @@
 %%
-%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%% Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+%% All rights reserved.
+%% 
+%% Redistribution and use in source and binary forms, with or without
+%% modification, are permitted provided that the following conditions are met:
+%% 
+%% * Redistributions of source code must retain the above copyright notice, this
+%%   list of conditions and the following disclaimer.
+%% 
+%% * Redistributions in binary form must reproduce the above copyright notice,
+%%   this list of conditions and the following disclaimer in the documentation
+%%   and/or other materials provided with the distribution.
+%% 
+%% * Neither the name of the copyright holder nor the names of its
+%%   contributors may be used to endorse or promote products derived from
+%%   this software without specific prior written permission.
+%% 
+%% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+%% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+%% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+%% DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+%% FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%% DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+%% SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+%% CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+%% OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+%% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %%
 
 classdef rld
@@ -21,37 +47,49 @@ classdef rld
     
     methods
         % constructor
-        function [ obj ] = rld(file_name, decimation_factor)
+        function [ obj ] = rld(file_name, decimation_factor, join_files)
             %RLD Creates an RLD object from RocketLogger data file
             %   Parameters:
             %      - file_name:          File name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
             end
+            if ~exist('join_files', 'var')
+                join_files = true;
+            end
             
             if exist('file_name', 'var')
-                obj = read_file(obj, file_name, decimation_factor);
+                obj = read_file(obj, file_name, decimation_factor, join_files);
             end
         end
         
         % file reading
-        function [ obj ] = read_file(obj, file_name, decimation_factor)
+        function [ obj ] = read_file(obj, file_name, decimation_factor, join_files)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          Data file name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             %% IMPORT CONSTANTS
             rl_types;
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
+            end
+            if ~exist('join_files', 'var')
+                join_files = true;
             end
             
             %% CHECK FILE
@@ -115,7 +153,11 @@ classdef rld
                     try
                         unit_text = UNIT_NAMES(unit+1);
                     catch
-                        unit_text = 'undefined';
+                        if unit == RL_UNIT_UNDEFINED
+                            unit_text = 'undefined';
+                        else
+                            error(['Invalid channel unit: ', num2str(unit)]);
+                        end
                     end
                     channel_scale = fread(file, 1, 'int32');
                     data_size = fread(file, 1, 'uint16');
@@ -141,8 +183,16 @@ classdef rld
                 
                 %% PARSE HEADER
                 % sanity checks
-                if sample_count ~= data_block_count*data_block_size
-                    warning('Inconsistency in number of samples taken');
+                if ceil(sample_count / data_block_size) ~= data_block_count
+                    error('Inconsistency in number of samples taken');
+                elseif sample_count < floor(data_block_size * data_block_count)
+                    old_sample_count = sample_count;
+                    data_block_count = floor(sample_count / data_block_size);
+                    sample_count = (data_block_count * data_block_size);
+                    warning('Skipping incomplete data block at end of file (%d samples)', old_sample_count - sample_count);
+                    % update header construct
+                    obj.header.data_block_count = floor(sample_count / data_block_size);
+                    obj.header.sample_count = (data_block_count * data_block_size);
                 end
                 
                 % digital inputs
@@ -323,6 +373,10 @@ classdef rld
                 
                 %% CHECK FOR ADDITIONAL FILES
                 
+                if ~join_files
+                    break;
+                end
+
                 % check if file is RL part-file
                 expression = '_p\d+\.';
                 start_index = regexp(file_name, expression, 'ONCE');

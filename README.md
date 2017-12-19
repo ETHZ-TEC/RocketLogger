@@ -43,7 +43,7 @@ More details regarding the hardware design can be found on the [RocketLogger Har
 
  * To compile the RocketLogger software the following system components are required (install using `apt-get`):
 ```
-ntp gcc g++ libncurses5-dev libi2c-dev
+git make gcc g++ ti-pru-cgt-installer device-tree-compiler am335x-pru-package ntp libncurses5-dev libi2c-dev
 ```
  * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
    they can be installed using the follwing command on the target system:
@@ -58,11 +58,7 @@ apt-get install linux-headers-$(uname -r)
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
  * For using the remote web interface these additional system components will be needed:
 ```
-lighttpd php5-cgi unzip
-```
- * For for hosting and access point to wirelessly access the RocketLogger remote interface these additional system components are needed:
-```
-hostapd isc-dhcp-server
+apache2 lighttpd php5-cgi unzip
 ```
 
 If you follow the installation guide on the [RocketLogger Software Installation](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/software) wiki page, all necessary dependencies are installed during that process.

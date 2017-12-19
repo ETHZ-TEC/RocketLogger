@@ -1,7 +1,33 @@
 """
 RocketLogger data file import tests.
 
-Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
@@ -63,7 +89,7 @@ class TestFileImport(TestCase):
 
     def test_normal(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
-        self.assertEqual(data.get_data('V1').shape, (5000, 1))
+        self.assertEqual(data.get_data().shape, (5000, 16))
 
     def test_no_file(self):
         with self.assertRaises(NotImplementedError):
@@ -302,6 +328,9 @@ class TestFullFile(TestCase):
     def test_header_channel_count(self):
         self.assertEqual(len(self.data._header['channels']), 16)
 
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (5000, 16))
+
     def test_channel_names(self):
         self.assertEqual(self.data.get_channel_names(),
                          sorted(['DI1', 'DI2', 'DI3', 'DI4', 'DI5', 'DI6',
@@ -310,7 +339,7 @@ class TestFullFile(TestCase):
                                  'I1L', 'I1H', 'I2L', 'I2H']))
 
 
-class TestSplitFile(TestCase):
+class TestJoinFile(TestCase):
 
     def setUp(self):
         self.data = RocketLoggerData(_SPLIT_TEST_FILE)
@@ -326,6 +355,37 @@ class TestSplitFile(TestCase):
 
     def test_header_channel_count(self):
         self.assertEqual(len(self.data._header['channels']), 16)
+
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (3 * 128000, 16))
+
+    def test_channel_names(self):
+        self.assertEqual(self.data.get_channel_names(),
+                         sorted(['DI1', 'DI2', 'DI3', 'DI4', 'DI5', 'DI6',
+                                 'I1L_valid', 'I2L_valid',
+                                 'V1', 'V2', 'V3', 'V4',
+                                 'I1L', 'I1H', 'I2L', 'I2H']))
+
+
+class TestNoJoinFile(TestCase):
+
+    def setUp(self):
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, join_files=False)
+
+    def tearDown(self):
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_header_field_count(self):
+        self.assertEqual(len(self.data._header), 14)
+
+    def test_header_channel_count(self):
+        self.assertEqual(len(self.data._header['channels']), 16)
+
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (128000, 16))
 
     def test_channel_names(self):
         self.assertEqual(self.data.get_channel_names(),

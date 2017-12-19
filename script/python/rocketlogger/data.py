@@ -3,7 +3,33 @@ RocketLogger Data Import Support.
 
 File reading support for RocketLogger data (rld) files.
 
-Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
@@ -250,12 +276,15 @@ class RocketLoggerData:
     _timestamps_monotonic = []
     _timestamps_realtime = []
 
-    def __init__(self, filename=None, decimation_factor=1,
+    def __init__(self, filename=None, join_files=True, decimation_factor=1,
                  memory_mapped=True):
         """
         Constructor to create a RockerLoggerData object form data file.
 
         :param filename: The filename of the file to import
+
+        :param join_files: Enalbe joining of multiple files if numbered files
+            following the "<filename>_p#.rld" convention are found.
 
         :param decimation_factor: Decimation factor for values read
 
@@ -268,7 +297,8 @@ class RocketLoggerData:
             raise NotImplementedError('RocketLogger data file creation '
                                       'currently unsupported.')
         if isfile(filename):
-            self.load_file(filename, decimation_factor, memory_mapped)
+            self.load_file(filename, join_files, decimation_factor,
+                           memory_mapped)
         else:
             raise FileNotFoundError('File "{}" does not exist.'.format(
                                     filename))
@@ -321,10 +351,19 @@ class RocketLoggerData:
         if header['comment_length'] % 4 > 0:
             print('WARNING: Comment length unaligned {}.'.format(
                   header['comment_length']))
-        if (header['sample_count'] !=
-                header['data_block_count'] * header['data_block_size']):
+        if (ceil(header['sample_count'] / header['data_block_size']) !=
+                header['data_block_count']):
             raise RocketLoggerFileError('Inconsistency in number of samples '
                                         'taken!')
+        elif (header['sample_count'] < header['data_block_size'] *
+                header['data_block_count']):
+            old_count = header['sample_count']
+            header['data_block_count'] = floor(header['sample_count'] /
+                                               header['data_block_size'])
+            header['sample_count'] = (header['data_block_count'] *
+                                      header['data_block_size'])
+            print('Skipping incomplete data block at end of file '
+                  '({} samples)'.format(old_count - header['sample_count']))
 
         # read comment field
         header['comment'] = _read_str(file_handle, header['comment_length'])
@@ -337,8 +376,8 @@ class RocketLoggerData:
         for ch in range(header['channel_binary_count'] +
                         header['channel_analog_count']):
             channel = {}
-            channel['unit_index'] = _read_int(file_handle,
-                                              _CHANNEL_UNIT_INDEX_BYTES)
+            channel['unit_index'] = _read_uint(file_handle,
+                                               _CHANNEL_UNIT_INDEX_BYTES)
             channel['scale'] = _read_int(file_handle, _CHANNEL_SCALE_BYTES)
             channel['data_size'] = _read_uint(file_handle,
                                               _CHANNEL_DATA_BYTES_BYTES)
@@ -621,13 +660,17 @@ class RocketLoggerData:
             self._header['channel_analog_count'] =\
                 self._header['channel_analog_count'] - 1
 
-    def load_file(self, filename, decimation_factor=1, memory_mapped=True):
+    def load_file(self, filename, join_files=True, decimation_factor=1,
+                  memory_mapped=True):
         """
         Read a RocketLogger data file and return an RLD object.
 
-        :param filename: The filename of the file to import. If numbered files
-            following the "<filename>_p#.rld" convention are found, all files
-            are loaded and joined.
+        :param filename: The filename of the file to import. If numbered
+            files following the "<filename>_p#.rld" convention are found, they
+            can be joined during import using the `join_files` flag.
+
+        :param join_files: Enalbe joining of multiple files if numbered files
+            following the "<filename>_p#.rld" convention are found.
 
         :param decimation_factor: Decimation factor for values read
 
@@ -696,6 +739,10 @@ class RocketLoggerData:
             file_number = file_number + 1
             file_name = '{}_p{}{}'.format(file_basename, file_number,
                                           file_extension)
+
+            # skip looking for next file if joining not enabled
+            if not join_files:
+                break
 
         # adjust header files for decimation
         self._header['sample_count'] = \
