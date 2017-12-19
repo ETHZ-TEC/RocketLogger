@@ -1,6 +1,32 @@
-## Makefile for RocketLogger
+## Makefile for RocketLogger Binaries
 ##
-## Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+## Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+## All rights reserved.
+## 
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions are met:
+## 
+## * Redistributions of source code must retain the above copyright notice, this
+##   list of conditions and the following disclaimer.
+## 
+## * Redistributions in binary form must reproduce the above copyright notice,
+##   this list of conditions and the following disclaimer in the documentation
+##   and/or other materials provided with the distribution.
+## 
+## * Neither the name of the copyright holder nor the names of its
+##   contributors may be used to endorse or promote products derived from
+##   this software without specific prior written permission.
+## 
+## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+## AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+## DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+## FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+## SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+## CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+## OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##
 
 #####  DEFINITIONS  #####
@@ -11,6 +37,7 @@ LIB_DIR = lib
 OBJ_DIR = obj
 DEP_DIR = $(OBJ_DIR)/.dep
 SRC_DIR = .
+SENSOR_DIR = $(SRC_DIR)/sensor
 
 ## install directories
 INSTALL_BIN_DIR = /bin
@@ -25,6 +52,7 @@ FIRMWARE_NAME = rocketlogger_spi.bin
 ## source files
 SRC = $(wildcard  $(SRC_DIR)/*.c)
 SRC += $(wildcard  $(SRC_DIR)/*.cpp)
+SRC += $(wildcard  $(SENSOR_DIR)/*.c)
 FIRMWARE_SRC = SPI.p
 
 ## object files
@@ -123,15 +151,15 @@ uninstall:
 $(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rl_deamon.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_DEAMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_deamon.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	
+
 $(TARGET_FIRMWARE): $(FIRMWARE_SRC)
 	@$(MAKEDIR) $(@D)
 	$(PASM) -b $< $(@:.bin=)
@@ -144,7 +172,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.c
+	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
+$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
+	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	
 ## directories
 $(OBJ_DIR):
 	$(MAKEDIR) $(OBJ_DIR)
@@ -157,10 +192,13 @@ $(BIN_DIR):
 
 
 ## phony targets
-.PHONY: clean
+.PHONY: clean code-format
 
 clean:
-	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d
+	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DEAMON) $(TARGET_FIRMWARE) $(TARGET_SERVER)
+
+code-format:
+	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
 
 
 #####  INCLUDE DEPENDENCIES  #####

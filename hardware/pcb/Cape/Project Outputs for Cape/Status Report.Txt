@@ -1,10 +1,10 @@
-Output: Design Rules Check
-Type  : DRC
-From  : PCB Document [PCB.PcbDoc]
-   Generated File[PCB.html]
+Output: Bill of Materials
+Type  : BOM
+From  : Variant [[No Variations]] of Project [Cape.PrjPcb]
+   Generated File[Bill of Materials-Cape.xls]
 
 
 Files Generated   : 1
 Documents Printed : 0
 
-Finished Output Generation At 10:01:32 On 27.02.2017
+Finished Output Generation At 17:04:07 On 08.05.2017

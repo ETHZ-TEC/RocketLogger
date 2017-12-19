@@ -1,5 +1,31 @@
 /**
- * Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * 
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 // --- CONSTANTS --- //
@@ -125,7 +151,7 @@ var startTimeOut;
 
 // ajax post object
 var statusPost;		
-var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0'};
+var config = {command: 'start', sampleRate: '1', updateRate: '1', channels: 'all', forceHigh: '0', ignoreCalibration: "0", fileName: 'data.rld', fileFormat: 'bin', fileSize: '0', digitalInputs: '1', webServer: '1', setDefault: '0', fileComment: ''};
 
 
 
@@ -1027,6 +1053,13 @@ function parseConf() {
 		config.fileName = "0"; // no storing
 	}
 	
+	// file comment
+	if (config.fileName != "0") {
+		config.fileComment = $("#comment").val();
+	} else {
+		config.fileComment = '';
+	}
+
 	// file format
 	var e = document.getElementById("file_format");
 	var r = document.getElementById("sample_rate");
@@ -1230,6 +1263,7 @@ function enableDisableFile() {
 		document.getElementById("file_size").disabled = false;
 		document.getElementById("file_size_unit").disabled = false;
 		document.getElementById("download").disabled = false;
+		document.getElementById("comment").disabled = false;
 	} else {
 		document.getElementById("file_format").disabled = true;
 		document.getElementById("filename").disabled = true;
@@ -1238,6 +1272,7 @@ function enableDisableFile() {
 		document.getElementById("file_size").disabled = true;
 		document.getElementById("file_size_unit").disabled = true;
 		document.getElementById("download").disabled = true;
+		document.getElementById("comment").disabled = true;
 	}
 }
 
@@ -1421,7 +1456,7 @@ $(function() {
 			
 			// filter writes to file-name form
 			eventId = event.target.id;
-			if(eventId == "filename") {
+			if(eventId == "filename" || eventId == "comment") {
 				return;
 			}
 			

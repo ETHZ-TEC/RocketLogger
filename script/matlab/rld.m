@@ -1,5 +1,31 @@
 %%
-%% Copyright (c) 2016-2017, ETH Zurich, Computer Engineering Group
+%% Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+%% All rights reserved.
+%% 
+%% Redistribution and use in source and binary forms, with or without
+%% modification, are permitted provided that the following conditions are met:
+%% 
+%% * Redistributions of source code must retain the above copyright notice, this
+%%   list of conditions and the following disclaimer.
+%% 
+%% * Redistributions in binary form must reproduce the above copyright notice,
+%%   this list of conditions and the following disclaimer in the documentation
+%%   and/or other materials provided with the distribution.
+%% 
+%% * Neither the name of the copyright holder nor the names of its
+%%   contributors may be used to endorse or promote products derived from
+%%   this software without specific prior written permission.
+%% 
+%% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+%% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+%% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+%% DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+%% FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%% DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+%% SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+%% CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+%% OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+%% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %%
 
 classdef rld
@@ -21,37 +47,49 @@ classdef rld
     
     methods
         % constructor
-        function [ obj ] = rld(file_name, decimation_factor)
+        function [ obj ] = rld(file_name, decimation_factor, join_files)
             %RLD Creates an RLD object from RocketLogger data file
             %   Parameters:
             %      - file_name:          File name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
             end
+            if ~exist('join_files', 'var')
+                join_files = true;
+            end
             
             if exist('file_name', 'var')
-                obj = read_file(obj, file_name, decimation_factor);
+                obj = read_file(obj, file_name, decimation_factor, join_files);
             end
         end
         
         % file reading
-        function [ obj ] = read_file(obj, file_name, decimation_factor)
+        function [ obj ] = read_file(obj, file_name, decimation_factor, join_files)
             %READ_FILE Reads a RocketLogger data file and returns a RLD object
             %   Parameters:
             %      - file_name:          Data file name
             %      - decimation_factor:  Decimation factor for values read
             %                            (buffer size needs to be divisible
             %                             by the decimation factor)
+            %      - join_files:         Enalbe joining of multiple files
+            %                            if numbered files following the
+            %                            "<filename>_p#.rld" convention are found
             
             %% IMPORT CONSTANTS
             rl_types;
             
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
+            end
+            if ~exist('join_files', 'var')
+                join_files = true;
             end
             
             %% CHECK FILE
@@ -66,7 +104,7 @@ classdef rld
             file_number = 1;
             while file_exists
                 % check magic number
-                [magic, bytes_read] = fread(file, 1, 'uint32');
+                [file_magic, bytes_read] = fread(file, 1, 'uint32');
                 assert(bytes_read > 0, 'Failed to read file');
                 
                 % check file version
@@ -74,13 +112,13 @@ classdef rld
                 switch file_version
                     case 1
                         % old magic number
-                        assert(magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
+                        assert(file_magic == RL_FILE_MAGIC_OLD, 'File is no correct RocketLogger data file');
                         warning('Old file version');
-                    case 2
+                    case {2, 3}
                         % new magic number
-                        assert(magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
+                        assert(file_magic == RL_FILE_MAGIC, 'File is no correct RocketLogger data file');
                     otherwise
-                        error(['Unknown file version ', num2str(file_version)]);
+                        error(['Unsupported file version ', num2str(file_version)]);
                 end
                 
                 %% READ HEADER
@@ -112,7 +150,15 @@ classdef rld
                 % read
                 for i=1:channel_bin_count+channel_count
                     unit = fread(file, 1, 'uint32');
-                    unit_text = UNIT_NAMES(unit+1);
+                    try
+                        unit_text = UNIT_NAMES(unit+1);
+                    catch
+                        if unit == RL_UNIT_UNDEFINED
+                            unit_text = 'undefined';
+                        else
+                            error(['Invalid channel unit: ', num2str(unit)]);
+                        end
+                    end
                     channel_scale = fread(file, 1, 'int32');
                     data_size = fread(file, 1, 'uint16');
                     valid_data_channel = fread(file, 1, 'uint16');
@@ -128,16 +174,25 @@ classdef rld
                 
                 % header struct
                 if file_number == 1
-                    obj.header = struct('header_length', header_length, 'data_block_size', data_block_size, ...
-                        'data_block_count', data_block_count, 'sample_count', sample_count, 'sample_rate', sample_rate, ...
-                        'mac_address', mac_address, 'start_time', start_time, 'comment_length', comment_length, ...
-                        'channel_bin_count', channel_bin_count, 'channel_count', channel_count, 'comment', comment);
+                    obj.header = struct('file_magic', file_magic, 'file_version', file_version, 'header_length', header_length, ...
+                        'data_block_size', data_block_size, 'data_block_count', data_block_count, 'sample_count', sample_count, ...
+                        'sample_rate', sample_rate, 'mac_address', mac_address, 'start_time', start_time, ...
+                        'comment_length', comment_length, 'channel_bin_count', channel_bin_count, 'channel_count', channel_count, ...
+                        'comment', comment);
                 end
                 
                 %% PARSE HEADER
                 % sanity checks
-                if sample_count ~= data_block_count*data_block_size
-                    warning('Inconsistency in number of samples taken');
+                if ceil(sample_count / data_block_size) ~= data_block_count
+                    error('Inconsistency in number of samples taken');
+                elseif sample_count < floor(data_block_size * data_block_count)
+                    old_sample_count = sample_count;
+                    data_block_count = floor(sample_count / data_block_size);
+                    sample_count = (data_block_count * data_block_size);
+                    warning('Skipping incomplete data block at end of file (%d samples)', old_sample_count - sample_count);
+                    % update header construct
+                    obj.header.data_block_count = floor(sample_count / data_block_size);
+                    obj.header.sample_count = (data_block_count * data_block_size);
                 end
                 
                 % digital inputs
@@ -292,7 +347,12 @@ classdef rld
                         obj.channels(channel_bin_count+i).values = vals(:,i);
                         if obj.channels(channel_bin_count+i).valid_data_channel ~= NO_VALID_CHANNEL
                             % add range info
-                            obj.channels(channel_bin_count+i).valid = obj.channels(obj.channels(channel_bin_count+i).valid_data_channel).values;
+                            valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel + 1;
+                            % fix one-based channel link indexes for file version <= 2
+                            if file_version <= 2
+                                valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel;
+                            end
+                            obj.channels(channel_bin_count+i).valid = obj.channels(valid_channel_index).values;
                         end
                     end
                 else
@@ -300,7 +360,12 @@ classdef rld
                         obj.channels(channel_bin_count+i).values = [obj.channels(channel_bin_count+i).values; vals(:,i)];
                         if obj.channels(channel_bin_count+i).valid_data_channel ~= NO_VALID_CHANNEL
                             % add range info
-                            obj.channels(channel_bin_count+i).valid = obj.channels(obj.channels(channel_bin_count+i).valid_data_channel).values;
+                            valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel + 1;
+                            % fix one-based channel link indexes for file version <= 2
+                            if file_version <= 2
+                                valid_channel_index = obj.channels(channel_bin_count+i).valid_data_channel;
+                            end
+                            obj.channels(channel_bin_count+i).valid = obj.channels(valid_channel_index).values;
                         end
                     end
                 end
@@ -308,6 +373,10 @@ classdef rld
                 
                 %% CHECK FOR ADDITIONAL FILES
                 
+                if ~join_files
+                    break;
+                end
+
                 % check if file is RL part-file
                 expression = '_p\d+\.';
                 start_index = regexp(file_name, expression, 'ONCE');
