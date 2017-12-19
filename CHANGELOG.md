@@ -1,5 +1,5 @@
 
-## v1.1 (2017-00-00)
+## v1.1 (2017-12-19)
 
 - [FIXED] Hardware: ground loop in cape supply (#97)
 - [FIXED] Software/web interface: filename length check (#96)
