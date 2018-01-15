@@ -35,7 +35,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='rocketlogger',
-      version='1.1',
+      version='1.1.1',
       description='RocketLogger Python Support',
       url='https://rocketlogger.ethz.ch/',
       author='Computer Engineering Group, ETH Zurich',

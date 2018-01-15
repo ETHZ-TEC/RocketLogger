@@ -30,7 +30,7 @@
  */
 
 /// Rocket Logger version
-define("ROCKETLOGGER_VERSION", "1.1");
+define("ROCKETLOGGER_VERSION", "1.1.1");
 
 ?>
 
