@@ -45,6 +45,7 @@ from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
 _TEST_FILE_DIR = 'data'
 _FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-full.rld')
 _ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-analog-only.rld')
+_HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-high-current.rld')
 _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-steps.rld')
 _INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-unsupported.rld')
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-v3-only.rld')
@@ -175,6 +176,26 @@ class TestChannelMerge(TestCase):
         self.assertEqual(len(data._header['channels']), 16)
         data.merge_channels(keep_channels=True)
         self.assertEqual(len(data._header['channels']), 18)
+
+    def test_merge_calculation_overflow(self):
+        data = RocketLoggerData(_HIGH_CURRENT_TEST_FILE)
+        # manual merge with large dtype
+        ch_data = data.get_data(['I2L', 'I2H'])
+        ch_valid = data.get_data('I2L_valid').flatten()
+        ch_merged = ch_valid * ch_data[:, 0] + (1 - ch_valid) * ch_data[:, 1]
+        data.merge_channels(keep_channels=False)
+        self.assertAlmostEqual(
+            sum(abs(data.get_data('I2').flatten() - ch_merged)), 0)
+
+    def test_merge_keep_calculation_overflow(self):
+        data = RocketLoggerData(_HIGH_CURRENT_TEST_FILE)
+        # manual merge with large dtype
+        ch_data = data.get_data(['I2L', 'I2H'])
+        ch_valid = data.get_data('I2L_valid').flatten()
+        ch_merged = ch_valid * ch_data[:, 0] + (1 - ch_valid) * ch_data[:, 1]
+        data.merge_channels(keep_channels=True)
+        self.assertAlmostEqual(
+            sum(abs(data.get_data('I2').flatten() - ch_merged)), 0)
 
 
 class TestDataHandling(TestCase):

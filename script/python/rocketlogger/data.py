@@ -890,11 +890,13 @@ class RocketLoggerData:
             merged_channel_info['valid_link'] = _CHANNEL_VALID_UNLINKED
             merged_channel_info['name'] = candidate['merged']
 
-            # merge data. Note: Calculation has to be forced to merged data type to prevent overflow
+            # merge data: force data type to prevent calculation overflow
             merged_data = ((1 * self._data[low_valid_index]) *
                            self._data[low_index] +
                            (1 * np.logical_not(self._data[low_valid_index])) *
-                           self._data[high_index].astype(np.dtype('<i{}'.format(merged_channel_info['data_size']))) *
+                           self._data[high_index].astype(
+                               np.dtype('<i{}'.format(
+                                   merged_channel_info['data_size']))) *
                            10**(high_channel['scale'] - low_channel['scale']))
 
             # add merged channel
