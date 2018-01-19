@@ -35,6 +35,9 @@ import os.path
 from unittest import TestCase
 
 import numpy as np
+# select matplotlib backend not requiring dispaly _before_ importing pyplot
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import rocketlogger.data as rld
 
