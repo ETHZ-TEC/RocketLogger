@@ -1,4 +1,14 @@
 
+## v1.1.1 (2018-01-25)
+
+- [FIXED] Python support: ground loop in cape supply (#106). Credits: Alex Raimondi
+- [FIXED] Python support: specify tested python dependencies and automated testing for different environments
+
+_Notes:_
+
+This hotfix release fixes a data overflow problem in the python support library's channel merge functionality that occurs with v1.1 on some platforms.
+
+
 ## v1.1 (2017-12-19)
 
 - [FIXED] Hardware: ground loop in cape supply (#97)

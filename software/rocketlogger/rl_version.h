@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,6 @@
 #define RL_VERSION_H_
 
 /// The RocketLogger software version string
-#define RL_VERSION "1.1"
+#define RL_VERSION "1.1.1"
 
 #endif /* RL_VERSION_H_ */

@@ -1,6 +1,6 @@
 ## Makefile for device tree overlay
 ##
-## Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+## Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
 ## All rights reserved.
 ## 
 ## Redistribution and use in source and binary forms, with or without

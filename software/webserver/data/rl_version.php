@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  */
 
 /// Rocket Logger version
-define("ROCKETLOGGER_VERSION", "1.1");
+define("ROCKETLOGGER_VERSION", "1.1.1");
 
 ?>
 
