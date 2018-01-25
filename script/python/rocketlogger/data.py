@@ -3,7 +3,7 @@ RocketLogger Data Import Support.
 
 File reading support for RocketLogger data (rld) files.
 
-Copyright (c) 2016-2017, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -890,12 +890,13 @@ class RocketLoggerData:
             merged_channel_info['valid_link'] = _CHANNEL_VALID_UNLINKED
             merged_channel_info['name'] = candidate['merged']
 
-            merged_data = np.empty(self._data[low_index].shape, dtype=np.dtype(
-                '<i{}'.format(merged_channel_info['data_size'])))
+            # merge data: force data type to prevent calculation overflow
             merged_data = ((1 * self._data[low_valid_index]) *
                            self._data[low_index] +
                            (1 * np.logical_not(self._data[low_valid_index])) *
-                           self._data[high_index] *
+                           self._data[high_index].astype(
+                               np.dtype('<i{}'.format(
+                                   merged_channel_info['data_size']))) *
                            10**(high_channel['scale'] - low_channel['scale']))
 
             # add merged channel

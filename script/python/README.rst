@@ -4,6 +4,12 @@ RocketLogger Python Support Library
 This package provides RocketLogger data file handling support, basic data
 processing and plotting of the data.
 
+Dependencies:
+
+* Python 3: version 3.4-3.6
+* NumPy: version 1.11-1.14
+* Matplotlib: version 1.5-2.1
+
 
 Data Import
 -----------
