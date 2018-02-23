@@ -209,12 +209,15 @@ void file_store_header_bin(FILE* data_file,
 
     // check if alignment bytes are needed after header comment
     int comment_length = strlen(file_header->comment) + 1;
-    int comment_unaligned_bytes =
-        comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES;
+    int comment_align_bytes = 0;
+    if (comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES > 0) {
+        comment_align_bytes =
+            RL_FILE_COMMENT_ALIGNMENT_BYTES -
+            (comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES);
+    }
 
-    file_header->lead_in.comment_length = comment_length +
-                                          RL_FILE_COMMENT_ALIGNMENT_BYTES -
-                                          comment_unaligned_bytes;
+    file_header->lead_in.comment_length = comment_length + comment_align_bytes;
+
     file_header->lead_in.header_length =
         sizeof(struct rl_file_lead_in) + file_header->lead_in.comment_length +
         total_channel_count * sizeof(struct rl_file_channel);
@@ -225,11 +228,9 @@ void file_store_header_bin(FILE* data_file,
 
     // write comment, add zero bytes for proper header alignment if necessary
     fwrite(file_header->comment, comment_length, 1, data_file);
-    if (comment_unaligned_bytes > 0) {
+    if (comment_align_bytes > 0) {
         uint8_t zero_bytes[RL_FILE_COMMENT_ALIGNMENT_BYTES] = {0};
-        fwrite(zero_bytes,
-               RL_FILE_COMMENT_ALIGNMENT_BYTES - comment_unaligned_bytes, 1,
-               data_file);
+        fwrite(zero_bytes, comment_align_bytes, 1, data_file);
     }
 
     // write channel information
