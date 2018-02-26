@@ -32,6 +32,6 @@
 #define RL_VERSION_H_
 
 /// The RocketLogger software version string
-#define RL_VERSION "1.1.1"
+#define RL_VERSION "1.1.2"
 
 #endif /* RL_VERSION_H_ */
