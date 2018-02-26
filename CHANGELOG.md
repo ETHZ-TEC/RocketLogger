@@ -1,7 +1,16 @@
 
+## v1.1.2 (2018-02-26)
+
+- [FIXED] Software: invalid comment length calculation in binary file header (#107)
+
+_Notes:_
+
+This hotfix release fixes a comment length calculation issue that generated invalid files headers for some specific file comment lengths.
+
+
 ## v1.1.1 (2018-01-25)
 
-- [FIXED] Python support: ground loop in cape supply (#106). Credits: Alex Raimondi
+- [FIXED] Python support: overflow in channel merge functionality (#106). Credits: Alex Raimondi
 - [FIXED] Python support: specify tested python dependencies and automated testing for different environments
 
 _Notes:_
