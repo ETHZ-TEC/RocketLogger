@@ -1,24 +1,25 @@
 /**
  * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -209,12 +210,15 @@ void file_store_header_bin(FILE* data_file,
 
     // check if alignment bytes are needed after header comment
     int comment_length = strlen(file_header->comment) + 1;
-    int comment_unaligned_bytes =
-        comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES;
+    int comment_align_bytes = 0;
+    if (comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES > 0) {
+        comment_align_bytes =
+            RL_FILE_COMMENT_ALIGNMENT_BYTES -
+            (comment_length % RL_FILE_COMMENT_ALIGNMENT_BYTES);
+    }
 
-    file_header->lead_in.comment_length = comment_length +
-                                          RL_FILE_COMMENT_ALIGNMENT_BYTES -
-                                          comment_unaligned_bytes;
+    file_header->lead_in.comment_length = comment_length + comment_align_bytes;
+
     file_header->lead_in.header_length =
         sizeof(struct rl_file_lead_in) + file_header->lead_in.comment_length +
         total_channel_count * sizeof(struct rl_file_channel);
@@ -225,11 +229,9 @@ void file_store_header_bin(FILE* data_file,
 
     // write comment, add zero bytes for proper header alignment if necessary
     fwrite(file_header->comment, comment_length, 1, data_file);
-    if (comment_unaligned_bytes > 0) {
+    if (comment_align_bytes > 0) {
         uint8_t zero_bytes[RL_FILE_COMMENT_ALIGNMENT_BYTES] = {0};
-        fwrite(zero_bytes,
-               RL_FILE_COMMENT_ALIGNMENT_BYTES - comment_unaligned_bytes, 1,
-               data_file);
+        fwrite(zero_bytes, comment_align_bytes, 1, data_file);
     }
 
     // write channel information
