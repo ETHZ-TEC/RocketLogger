@@ -159,7 +159,7 @@ done
 # reboot or done
 if [ $REBOOT -eq 1 ]; then
   echo "Rebooting now..."
-  reboot
+  reboot && logout
 else
   echo "Done. Please reboot manually."
 fi
