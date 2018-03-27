@@ -115,7 +115,8 @@ int TSL4531_read(int sensor_identifier) {
         return FAILURE;
     }
 
-    TSL4531_values[sensor_index] = data & 0xffff;
+    TSL4531_values[sensor_index] =
+        (data & 0xffff) * TSL4531_multiplier[sensor_index];
 
     if (TSL4531_range[sensor_index] == TSL4531_RANGE_AUTO) {
         // Auto-Range
