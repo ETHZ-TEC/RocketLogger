@@ -1,4 +1,14 @@
 
+## v1.1.3 (in progress)
+
+- [FIXED] Software: currupt low current valid channel when digital channels are disabled (#108)
+- [FIXED] Software: invalid lux calculation for mid/high range of TSL4312 (#110)
+
+_Notes:_
+
+This hotfix release resolves two issues with the low current valid channel and a sensor value calculation.
+
+
 ## v1.1.2 (2018-02-26)
 
 - [FIXED] Software: invalid comment length calculation in binary file header (#107)
