@@ -46,8 +46,8 @@ void ambient_store_data(FILE* ambient_file,
                         struct rl_conf* conf) {
 
     // store timestamp
-    fwrite(&timestamp_realtime, sizeof(struct time_stamp), 1, ambient_file);
-    fwrite(&timestamp_monotonic, sizeof(struct time_stamp), 1, ambient_file);
+    fwrite(timestamp_realtime, sizeof(struct time_stamp), 1, ambient_file);
+    fwrite(timestamp_monotonic, sizeof(struct time_stamp), 1, ambient_file);
 
     // FETCH VALUES //
     int32_t sensor_data[conf->ambient.sensor_count];
