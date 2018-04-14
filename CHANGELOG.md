@@ -2,11 +2,12 @@
 ## v1.1.3 (in progress)
 
 - [FIXED] Software: currupt low current valid channel when digital channels are disabled (#108)
-- [FIXED] Software: invalid lux calculation for mid/high range of TSL4312 (#110)
+- [FIXED] Software: invalid lux calculation for mid/high range of TSL4531 (#111)
+- [FIXED] Software: invalid data block timestamps in sensor file (#113). Credits: Mojtaba Masoudinejad
 
 _Notes:_
 
-This hotfix release resolves two issues with the low current valid channel and a sensor value calculation.
+This hotfix release resolves an issue with the low current valid channel when disabling digital channels and two bugs related to external sensors.
 
 
 ## v1.1.2 (2018-02-26)
