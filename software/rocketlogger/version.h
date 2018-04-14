@@ -29,10 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RL_VERSION_H_
-#define RL_VERSION_H_
+#ifndef VERSION_H_
+#define VERSION_H_
 
 /// The RocketLogger software version string
-#define RL_VERSION "1.1.3"
+extern const char* PROJECT_VERSION;
 
-#endif /* RL_VERSION_H_ */
+/// Git code revision description of the code base
+extern const char* GIT_DESCRIPTION;
+
+/// Date of the of last git commit
+extern const char* GIT_DATE;
+
+/// Compilation date of the program
+extern const char* COMPILE_DATE;
+
+#endif /* VERSION_H_ */

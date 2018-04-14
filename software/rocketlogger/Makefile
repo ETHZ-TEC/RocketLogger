@@ -31,6 +31,10 @@
 
 #####  DEFINITIONS  #####
 
+## code revision
+PROJECT_NAME = RocketLogger
+PROJECT_VERSION = 1.1.3
+
 ## directories
 BIN_DIR = bin
 LIB_DIR = lib
@@ -48,6 +52,11 @@ BINARY_NAME = rocketlogger
 DEAMON_NAME = rocketloggerd
 SERVER_NAME = rocketloggers
 FIRMWARE_NAME = rocketlogger_spi.bin
+
+## code revision
+GIT_DESCRIPTION = `git describe --tags --dirty`
+GIT_DATE = `git show -s --format="%ci" HEAD`
+COMPILE_DATE = `date --rfc-3339=seconds`
 
 ## source files
 SRC = $(wildcard  $(SRC_DIR)/*.c)
@@ -179,7 +188,15 @@ $(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.c
 $(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
 	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
-	
+
+$(SRC_DIR)/version.c: force
+	echo "generating version.c"
+	@echo "#include \"version.h\"" > $@
+	@echo "const char* PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
+	@echo "const char* GIT_DESCRIPTION = \"$(GIT_DESCRIPTION)\";" >> $@
+	@echo "const char* GIT_DATE = \"$(GIT_DATE)\";" >> $@
+	@echo "const char* COMPILE_DATE = \"$(COMPILE_DATE)\";" >> $@
+
 ## directories
 $(OBJ_DIR):
 	$(MAKEDIR) $(OBJ_DIR)
@@ -192,7 +209,7 @@ $(BIN_DIR):
 
 
 ## phony targets
-.PHONY: clean code-format
+.PHONY: clean code-format force
 
 clean:
 	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DEAMON) $(TARGET_FIRMWARE) $(TARGET_SERVER)
