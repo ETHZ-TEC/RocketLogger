@@ -62,6 +62,7 @@ COMPILE_DATE = `date --rfc-3339=seconds`
 SRC = $(wildcard  $(SRC_DIR)/*.c)
 SRC += $(wildcard  $(SRC_DIR)/*.cpp)
 SRC += $(wildcard  $(SENSOR_DIR)/*.c)
+SRC += $(SRC_DIR)/version.c
 FIRMWARE_SRC = SPI.p
 
 ## object files
