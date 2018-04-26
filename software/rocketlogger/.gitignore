@@ -2,3 +2,4 @@ bin/
 obj/
 doc/
 .vscode/
+version.c

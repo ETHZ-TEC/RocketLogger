@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rl_version.h"
+#include "version.h"
 
 #include "rl_util.h"
 
@@ -122,14 +122,10 @@ void rl_print_status(struct rl_status* status) {
  * Print the RocketLogger software version on the command line.
  */
 void rl_print_version(void) {
-    printf("RocketLogger Software Stack version " RL_VERSION "\n");
+    printf("RocketLogger Software Stack version %s\n", PROJECT_VERSION);
+    printf("  git@%s (%s)\n", GIT_DESCRIPTION, GIT_DATE);
+    printf("  compiled at %s\n", COMPILE_DATE);
 }
-
-/**
- * Get the the RocketLogger software version number string.
- * @return The RocketLogger Sofware Stack's version number string.
- */
-char* rl_get_version(void) { return RL_VERSION; }
 
 // argument parsing
 /**

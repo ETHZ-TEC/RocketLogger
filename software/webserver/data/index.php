@@ -28,7 +28,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-    include_once('./rl_version.php');
+	include_once('./version.php');
+	unset($binary_version);
+	exec('rocketlogger --version', $binary_version);
     $hostname = php_uname('n');
 ?>
 <!DOCTYPE html>
@@ -52,17 +54,47 @@
 </head>
 <body>
 	<div class="container">
-		<div class="row top-buffer">
-			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
-			</div>
-			<div class="col-md-4">
-			</div>
-			<div class="col-md-4 col-xs-6">
-				<img class="img-responsive" src="img/tik_logo_small.png" alt="Logo TIK" align="right">
-			</div>
-		</div>
+		<!-- Header Container -->
+		<header id="header">
+			<!-- Info Bar Section -->
+			<?php
+				$warning_message = NULL;
+				$error_message = NULL;
+				if (!isset($binary_version)) {
+					$error_message = 'could not detect RocketLogger binary version!';
+				} else {
+					$binary_version_number = array_slice(explode(" ", $binary_version[0]), -1)[0];
+					if (PROJECT_VERSION != $binary_version_number) {
+						$warning_message = 'potentially incompatible binary and web interface versions (interface: v' . PROJECT_VERSION . ', binary: v' . $binary_version_number . ').';
+					}
+				}
 
+				if (isset($error_message)) {
+					echo '<div class="alert alert-danger alert-dismissible" role="alert">' .
+						 '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' .
+						 '<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> ' .
+						 '<strong>Error:</strong> ' . $error_message . '</div>';
+				} elseif (isset($warning_message)) {
+					echo '<div class="alert alert-warning alert-dismissible" role="alert">' .
+						 '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' .
+						 '<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> ' .
+						 '<strong>Warning:</strong> ' . $warning_message . '</div>';
+				}
+			?>
+
+			<div class="row top-buffer">
+				<div class="col-md-4 col-xs-6">
+					<img class="img-responsive" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
+				</div>
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4 col-xs-6">
+					<img class="img-responsive" src="img/tik_logo_small.png" alt="Logo TIK" align="right">
+				</div>
+			</div>
+		</header>
+
+		<!-- Control Panel Container -->
 		<div id="content">
 			<div class="page-header">
 				<div class="row">
@@ -611,7 +643,9 @@
 		</div>
 
         <footer id="footer">
-            <p>RocketLogger version <?php echo ROCKETLOGGER_VERSION; ?>  - <a href="http://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
+            <p><span  data-toggle="tooltip_help" title="<?php echo implode("\n", $binary_version); ?>">
+				RocketLogger version <?php echo PROJECT_VERSION; ?>
+				</span> - <a href="https://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
                 &copy; <?php echo date("Y"); ?>, ETH Zurich, Computer Engineering Group.
             </p>
         </footer>

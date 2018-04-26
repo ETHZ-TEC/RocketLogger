@@ -388,8 +388,8 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
     for (uint32_t i = 0; i < samples_count; i++) {
 
         // channel data variables
-        int32_t channel_data[NUM_CHANNELS];
-        uint32_t bin_data;
+        int32_t channel_data[NUM_CHANNELS] = {0};
+        uint32_t bin_data = 0x00000000;
 
         // read binary channels
         uint8_t bin_adc1 = (*((int8_t*)(buffer_addr)));
@@ -420,13 +420,11 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         // BINARY CHANNELS //
 
         // mask and combine digital inputs, if requestet
-        int bin_channel_pos;
+        int bin_channel_pos = 0;
         if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
             bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
                        ((bin_adc2 & BINARY_MASK) << 2);
             bin_channel_pos = NUM_DIGITAL_INPUTS;
-        } else {
-            bin_channel_pos = 0;
         }
 
         // mask and combine valid info
