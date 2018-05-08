@@ -16,7 +16,7 @@ The official RocketLogger website can be found at <https://rocketlogger.ethz.ch>
 
 The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updates at <https://lists.ee.ethz.ch/wws/info/rocketlogger>.
 
-The documentation of all project components is found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
+The documentation of all project components is found in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/home).
 
 
 Project Structure
