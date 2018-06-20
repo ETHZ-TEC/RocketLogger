@@ -47,6 +47,7 @@ from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
 
 _TEST_FILE_DIR = 'data'
 _FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-full.rld')
+_SINGLE_BLOCK_FILE = os.path.join(_TEST_FILE_DIR, 'test-single-block.rld')
 _ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-analog-only.rld')
 _HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-high-current.rld')
 _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-steps.rld')
@@ -135,6 +136,11 @@ class TestFileImport(TestCase):
         for i in range(len(data_mm._data)):
             arrays_equal = np.array_equal(data_mm._data[i], data_ff._data[i])
             self.assertTrue(arrays_equal)
+
+    def test_single_block_import(self):
+        data = RocketLoggerData(_SINGLE_BLOCK_FILE, memory_mapped=False)
+        self.assertEqual(data._header['data_block_count'], 1)
+        self.assertEqual(data.get_data('V1').shape, (1000, 1))
 
 
 class TestChannelMerge(TestCase):
