@@ -111,9 +111,7 @@
 #define COMMANDS_POS	r11 // is reused by I1M
 // channel input regs	r10-r23
 // status regs			r24-r25
-#define MASK_NEG		r26
-#define MASK_POS		r27
-#define UNUSED			r28 // unused
+// unused regs			r26-r28 // unused
 #define WAIT_VAR		r29
 
 
@@ -125,7 +123,7 @@
  
  
 // WAIT
- .macro wait
+.macro  wait
 .mparam time
 
 	mov WAIT_VAR, time
@@ -265,15 +263,28 @@ INP1LOW:
 .endm
 
 
-// SIGN EXTEND (24 to 32 bit)
-
-.macro sign_extend
+// SIGN EXTEND (16 to 32 bit)
+.macro sign_extend_16
 .mparam reg
-	
-	AND reg, reg, MASK_POS
+
+	MOV reg.w2, 0x0000
+	QBBC POS, reg.t15
+
+	MOV reg.w2, 0xFFFF
+
+	POS:
+
+.endm
+
+
+// SIGN EXTEND (24 to 32 bit)
+.macro sign_extend_24
+.mparam reg
+
+	MOV reg.b3, 0x00
 	QBBC POS, reg.t23
 	
-	OR reg, reg, MASK_NEG
+	MOV reg.b3, 0xFF
 	
 POS:
 
@@ -289,11 +300,6 @@ START:
 	SBCO    r0, C4, 4, 4     // store the modified r0 back at the load addr
  
 	MOV BASE_ADDRESS, 0x0 // load the base address into r1
-	
-	// masks for sign extension
-	MOV MASK_NEG, 0xFF
-	LSL MASK_NEG, MASK_NEG, 24
-	NOT MASK_POS, MASK_NEG
 	
 	SET CS1			// CS high
 	SET CS2
@@ -411,62 +417,48 @@ READ:
 	SBBO ADC1_STATUS_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
 	
-	// sign extension and storing
+	// sign extension
 	QBEQ HIGHPRECISION, PRECISION, 24
 	
+	// sign extension (16->32bit)
+	sign_extend_16 I1H_REG
+	sign_extend_16 I1H_2_REG
+	sign_extend_16 I1M_REG
+	sign_extend_16 I1L_REG
+	sign_extend_16 I1L_2_REG
+	sign_extend_16 V1_REG
+	sign_extend_16 V2_REG
+	sign_extend_16 I2H_REG
+	sign_extend_16 I2H_2_REG
+	sign_extend_16 I2M_REG
+	sign_extend_16 I2L_REG
+	sign_extend_16 I2L_2_REG
+	sign_extend_16 V3_REG
+	sign_extend_16 V4_REG
 	
-	// add current channels 
-	ADD I1H_REG, I1H_REG, I1H_2_REG
-	ADD I1L_REG, I1L_REG, I1L_2_REG
-	ADD I2H_REG, I2H_REG, I2H_2_REG
-	ADD I2L_REG, I2L_REG, I2L_2_REG
-	
-	
-	// I1
-	SBBO I1H_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	SBBO I1L_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	
-	// V1,2
-	SBBO V2_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	SBBO V1_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	
-	// I2
-	SBBO I2H_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	SBBO I2L_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	
-	// V3,4
-	SBBO V4_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	SBBO V3_REG, MEM_POINTER, 0, 2
-	ADD MEM_POINTER, MEM_POINTER, 2
-	
-	QBA LOWPRECISION
+	QBA DATAPROCESSING
 	
 HIGHPRECISION:
 
 	// sign extension (24->32bit)
-	sign_extend I1H_REG
-	sign_extend I1H_2_REG
-	sign_extend I1M_REG
-	sign_extend I1L_REG
-	sign_extend I1L_2_REG
-	sign_extend V1_REG
-	sign_extend V2_REG
-	sign_extend I2H_REG
-	sign_extend I2H_2_REG
-	sign_extend I2M_REG
-	sign_extend I2L_REG
-	sign_extend I2L_2_REG
-	sign_extend V3_REG
-	sign_extend V4_REG
+	sign_extend_24 I1H_REG
+	sign_extend_24 I1H_2_REG
+	sign_extend_24 I1M_REG
+	sign_extend_24 I1L_REG
+	sign_extend_24 I1L_2_REG
+	sign_extend_24 V1_REG
+	sign_extend_24 V2_REG
+	sign_extend_24 I2H_REG
+	sign_extend_24 I2H_2_REG
+	sign_extend_24 I2M_REG
+	sign_extend_24 I2L_REG
+	sign_extend_24 I2L_2_REG
+	sign_extend_24 V3_REG
+	sign_extend_24 V4_REG
 	
-	
+DATAPROCESSING:
+	// store the data in shared user space memory
+
 	// add current channels
 	ADD I1H_REG, I1H_REG, I1H_2_REG
 	ADD I1L_REG, I1L_REG, I1L_2_REG
@@ -497,13 +489,10 @@ HIGHPRECISION:
 	ADD MEM_POINTER, MEM_POINTER, 4
 	SBBO V3_REG, MEM_POINTER, 0, 4
 	ADD MEM_POINTER, MEM_POINTER, 4
-	
-LOWPRECISION:
 
 	QBA SAMPLINGLOOP
 
 FINISHED:
-
 	
 	// clear all ADC signals
 	CLR START_PIN
@@ -521,5 +510,3 @@ FINISHED:
 	
 	// pause PRU
 	HALT
-
-
