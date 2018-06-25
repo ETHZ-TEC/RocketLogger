@@ -1,4 +1,14 @@
 
+## v1.1.4 (2018-06-??)
+
+- [FIXED] Software: corrupt data when using high sampling rates and values are close to full range (#116)
+- [FIXED] Python support: single data block file import issue (#115).
+
+_Notes:_
+
+This hotfix release resolves a data wrap-around issue for sampling rates of 32 kSps and 64 kSps issue and a python support bug when importing files with ony block only.
+
+
 ## v1.1.3 (2018-04-26)
 
 - [FIXED] Software: corrupt low current valid channel when digital channels are disabled (#108)
