@@ -139,10 +139,9 @@
 #define PRECISION_LOW 16
 
 /**
- * Sample size definitions
+ * Sample size definition
  */
-#define SIZE_HIGH 4
-#define SIZE_LOW 2
+#define PRU_SAMPLE_SIZE 4
 
 /// Mask for valid bit read from PRU
 #define VALID_MASK 0x1
@@ -172,8 +171,6 @@ struct pru_data_struct {
     rl_pru_state state;
     /// ADC precision (in bit)
     uint32_t precision;
-    /// Sample size in shared memory
-    uint32_t sample_size;
     /// Pointer to shared buffer 0
     uint32_t buffer0_location;
     /// Pointer to shared buffer 1

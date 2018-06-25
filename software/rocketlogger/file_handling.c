@@ -355,14 +355,13 @@ void file_update_header_csv(FILE* data_file,
  * Handle a data buffer, dependent on current configuration
  * @param data_file File pointer to data file
  * @param buffer_addr Pointer to buffer to handle
- * @param sample_data_size Data size of the samples in bytes
  * @param samples_count Number of samples to read
  * @param timestamp_realtime {@link time_stamp} with realtime clock value
  * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
  * @param conf Current {@link rl_conf} configuration.
  */
 void file_handle_data(FILE* data_file, void* buffer_addr,
-                      uint32_t sample_data_size, uint32_t samples_count,
+                      uint32_t samples_count,
                       struct time_stamp* timestamp_realtime,
                       struct time_stamp* timestamp_monotonic,
                       struct rl_conf* conf) {
@@ -401,21 +400,15 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         int ch = 0;
         for (int j = 0; j < NUM_CHANNELS; j++) {
             if (conf->channels[j] == CHANNEL_ENABLED) {
-                int32_t adc_value;
-                if (sample_data_size == 4) {
-                    adc_value =
-                        *((int32_t*)(buffer_addr + sample_data_size * j));
-                } else {
-                    adc_value =
-                        *((int16_t*)(buffer_addr + sample_data_size * j));
-                }
+                int32_t adc_value =
+                    *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE));
                 channel_data[ch] =
                     (int32_t)((adc_value + calibration.offsets[j]) *
                               calibration.scales[j]);
                 ch++;
             }
         }
-        buffer_addr += NUM_CHANNELS * sample_data_size;
+        buffer_addr += NUM_CHANNELS * PRU_SAMPLE_SIZE;
 
         // BINARY CHANNELS //
 

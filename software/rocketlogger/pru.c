@@ -203,52 +203,42 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
     case 1:
         pru_sample_rate = K1;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 10:
         pru_sample_rate = K1;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 100:
         pru_sample_rate = K1;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 1000:
         pru_sample_rate = K1;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 2000:
         pru_sample_rate = K2;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 4000:
         pru_sample_rate = K4;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 8000:
         pru_sample_rate = K8;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 16000:
         pru_sample_rate = K16;
         pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 32000:
         pru_sample_rate = K32;
         pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_HIGH;
         break;
     case 64000:
         pru_sample_rate = K64;
         pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_HIGH;
         break;
     default:
         rl_log(ERROR, "wrong sample rate");
@@ -260,7 +250,7 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
     pru->buffer_size = (conf->sample_rate * avg_factor) / conf->update_rate;
 
     uint32_t buffer_size_bytes =
-        pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) +
+        pru->buffer_size * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
         PRU_BUFFER_STATUS_SIZE;
     pru->buffer0_location = read_file_value(MMAP_FILE "addr");
     pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
@@ -359,7 +349,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     unsigned int number_buffers =
         ceil_div(conf->sample_limit * avg_factor, pru.buffer_size);
     unsigned int buffer_size_bytes =
-        pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) +
+        pru.buffer_size * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
         PRU_BUFFER_STATUS_SIZE;
 
     // check memory size
@@ -605,13 +595,12 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         }
 
         // handle the buffer
-        file_handle_data(data_file, buffer_addr + 4, pru.sample_size,
-                         buffer_samples_count, &timestamp_realtime,
-                         &timestamp_monotonic, conf);
+        file_handle_data(data_file, buffer_addr + 4, buffer_samples_count,
+                         &timestamp_realtime, &timestamp_monotonic, conf);
 
         // process data for web when enabled
         if (conf->enable_web_server == 1) {
-            web_handle_data(web_data, sem_id, buffer_addr + 4, pru.sample_size,
+            web_handle_data(web_data, sem_id, buffer_addr + 4,
                             buffer_samples_count, &timestamp_realtime, conf);
         }
 
@@ -663,7 +652,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
         // print meter output
         if (conf->mode == METER) {
-            meter_print_buffer(conf, buffer_addr + 4, pru.sample_size);
+            meter_print_buffer(conf, buffer_addr + 4);
         }
     }
 

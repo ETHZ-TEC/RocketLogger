@@ -55,7 +55,7 @@ void file_store_header_csv(FILE* data, struct rl_file_header* file_header);
 void file_update_header_bin(FILE* data, struct rl_file_header* file_header);
 void file_update_header_csv(FILE* data, struct rl_file_header* file_header);
 void file_handle_data(FILE* data_file, void* buffer_addr,
-                      uint32_t sample_data_size, uint32_t samples_count,
+                      uint32_t samples_count,
                       struct time_stamp* timestamp_realtime,
                       struct time_stamp* timestamp_monotonic,
                       struct rl_conf* conf);

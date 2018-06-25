@@ -111,8 +111,7 @@ void web_buffer_add(struct ringbuffer* buffer, int64_t* data);
 int64_t* web_buffer_get(struct ringbuffer* buffer, int num);
 
 void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
-                     void* buffer_addr, uint32_t sample_data_size,
-                     uint32_t samples_count,
+                     void* buffer_addr, uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
                      struct rl_conf* conf);
 

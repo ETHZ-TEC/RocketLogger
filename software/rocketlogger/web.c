@@ -193,14 +193,12 @@ void web_merge_currents(uint8_t* valid, int64_t* dest, int64_t* src,
  * @param web_data_ptr Pointer to shared web data
  * @param sem_id ID of semaphores for shared web data
  * @param buffer_addr Pointer to buffer to handle
- * @param sample_data_size Size of samples to read
  * @param samples_count Number of samples to read
  * @param timestamp_realtime {@link time_stamp} with realtime clock value
  * @param conf Current {@link rl_conf} configuration.
  */
 void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
-                     void* buffer_addr, uint32_t sample_data_size,
-                     uint32_t samples_count,
+                     void* buffer_addr, uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
                      struct rl_conf* conf) {
 
@@ -249,15 +247,8 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         int ch = 0;
         for (int j = 0; j < NUM_CHANNELS; j++) {
             if (conf->channels[j] == CHANNEL_ENABLED) {
-                int32_t adc_value;
-                if (sample_data_size == 4) {
-                    adc_value =
-                        *((int32_t*)(buffer_addr + sample_data_size * j));
-                } else {
-                    adc_value =
-                        *((int16_t*)(buffer_addr + sample_data_size * j));
-                }
-
+                int32_t adc_value =
+                    *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE));
                 int32_t channel_value =
                     (int32_t)((adc_value + calibration.offsets[j]) *
                               calibration.scales[j]);
@@ -266,7 +257,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                 ch++;
             }
         }
-        buffer_addr += NUM_CHANNELS * sample_data_size;
+        buffer_addr += NUM_CHANNELS * PRU_SAMPLE_SIZE;
 
         // BINARY CHANNELS //
 

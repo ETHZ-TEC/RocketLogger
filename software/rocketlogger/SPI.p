@@ -52,13 +52,12 @@
 // pru data (position in memory)
 #define STATE_POS			0
 #define PRECISION_POS		4
-#define SAMPLE_SIZE_POS		8	// unused
-#define BUFFER0_POS			12
-#define BUFFER1_POS			16
-#define BUFFER_SIZE_POS		20
-#define SAMPLE_LIMIT_POS	24
-#define NUMBER_COMMANDS_POS	28
-#define MEM_COMMANDS_POS	32
+#define BUFFER0_POS			8
+#define BUFFER1_POS			12
+#define BUFFER_SIZE_POS		16
+#define SAMPLE_LIMIT_POS	20
+#define NUMBER_COMMANDS_POS	24
+#define MEM_COMMANDS_POS	28
 
 
 // gpio registers

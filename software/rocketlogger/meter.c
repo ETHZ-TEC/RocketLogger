@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "pru.h"
+
 #include "meter.h"
 
 /// Analog channel units
@@ -63,10 +65,8 @@ void meter_stop(void) { endwin(); }
  * Print data buffer in meter window
  * @param conf Pointer to current {@link rl_conf} configuration
  * @param buffer_addr
- * @param sample_size Size of samples in buffer
  */
-void meter_print_buffer(struct rl_conf* conf, void* buffer_addr,
-                        uint32_t sample_size) {
+void meter_print_buffer(struct rl_conf* conf, void* buffer_addr) {
 
     // clear screen
     erase();
@@ -97,18 +97,10 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr,
     for (j = 0; j < NUM_CHANNELS; j++) {
         if (conf->channels[j] == CHANNEL_ENABLED) {
             value = 0;
-            if (sample_size == 4) {
-                for (l = 0; l < avg_number; l++) {
-                    value += *((int32_t*)(buffer_addr + sample_size * j +
-                                          l * (NUM_CHANNELS * sample_size +
-                                               PRU_DIG_SIZE)));
-                }
-            } else {
-                for (l = 0; l < avg_number; l++) {
-                    value += *((int16_t*)(buffer_addr + sample_size * j +
-                                          l * (NUM_CHANNELS * sample_size +
-                                               PRU_DIG_SIZE)));
-                }
+            for (l = 0; l < avg_number; l++) {
+                value += *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE +
+                                      l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
+                                           PRU_DIG_SIZE)));
             }
             value = value / (int64_t)avg_number;
             channel_data[k] =
