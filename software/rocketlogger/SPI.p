@@ -263,20 +263,6 @@ INP1LOW:
 .endm
 
 
-// SIGN EXTEND (16 to 32 bit)
-.macro sign_extend_16
-.mparam reg
-
-	MOV reg.w2, 0x0000
-	QBBC POS, reg.t15
-
-	MOV reg.w2, 0xFFFF
-
-	POS:
-
-.endm
-
-
 // SIGN EXTEND (24 to 32 bit)
 .macro sign_extend_24
 .mparam reg
@@ -417,26 +403,23 @@ READ:
 	SBBO ADC1_STATUS_REG, MEM_POINTER, 0, 2
 	ADD MEM_POINTER, MEM_POINTER, 2
 	
-	// sign extension
+	// extend 16 bit data to 24 bit full range
 	QBEQ HIGHPRECISION, PRECISION, 24
 	
-	// sign extension (16->32bit)
-	sign_extend_16 I1H_REG
-	sign_extend_16 I1H_2_REG
-	sign_extend_16 I1M_REG
-	sign_extend_16 I1L_REG
-	sign_extend_16 I1L_2_REG
-	sign_extend_16 V1_REG
-	sign_extend_16 V2_REG
-	sign_extend_16 I2H_REG
-	sign_extend_16 I2H_2_REG
-	sign_extend_16 I2M_REG
-	sign_extend_16 I2L_REG
-	sign_extend_16 I2L_2_REG
-	sign_extend_16 V3_REG
-	sign_extend_16 V4_REG
-	
-	QBA DATAPROCESSING
+	LSL I1H_REG, I1H_REG, 8
+	LSL I1H_2_REG, I1H_2_REG, 8
+	LSL I1M_REG, I1M_REG, 8
+	LSL I1L_REG, I1L_REG, 8
+	LSL I1L_2_REG, I1L_2_REG, 8
+	LSL V1_REG, V1_REG, 8
+	LSL V2_REG, V2_REG, 8
+	LSL I2H_REG, I2H_REG, 8
+	LSL I2H_2_REG, I2H_2_REG, 8
+	LSL I2M_REG, I2M_REG, 8
+	LSL I2L_REG, I2L_REG, 8
+	LSL I2L_2_REG, I2L_2_REG, 8
+	LSL V3_REG, V3_REG, 8
+	LSL V4_REG, V4_REG, 8
 	
 HIGHPRECISION:
 

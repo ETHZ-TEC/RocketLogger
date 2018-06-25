@@ -81,15 +81,6 @@ int read_calibration(struct rl_conf* conf) {
     // store timestamp to conf and status
     status.calibration_time = calibration.time;
 
-    // calculate values for high rates
-    if (conf->sample_rate == 32000 || conf->sample_rate == 64000) {
-        int i;
-        for (i = 0; i < NUM_CHANNELS; i++) {
-            calibration.offsets[i] = calibration.offsets[i] / 256;
-            calibration.scales[i] = calibration.scales[i] * 256;
-        }
-    }
-
     // close file
     fclose(file);
 
