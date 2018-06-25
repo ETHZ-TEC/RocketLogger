@@ -67,8 +67,8 @@ Install the RocketLogger Python Support from the PiPy using:
 Contribute
 ----------
 
-- Issue Tracker: https://git.ee.ethz.ch/sigristl/rocketlogger/issues/
-- Source Code: https://git.ee.ethz.ch/sigristl/rocketlogger/
+- Issue Tracker: https://gitlab.ethz.ch/tec/public/rocketlogger/issues/
+- Source Code: https://gitlab.ethz.ch/tec/public/rocketlogger/
 
 
 License
