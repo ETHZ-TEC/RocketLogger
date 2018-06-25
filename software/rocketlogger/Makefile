@@ -148,7 +148,7 @@ install: all
 	echo "echo 1 > /sys/class/gpio/gpio31/value" >> /etc/init.d/rocketlogger
 	chmod +x /etc/init.d/rocketlogger
 	update-rc.d rocketlogger defaults
-	echo "options uio_pruss extram_pool_sz=0x300000" > /etc/modprobe.d/rl_pru.conf
+	echo "options uio_pruss extram_pool_sz=0x500000" > /etc/modprobe.d/rl_pru.conf
 
 uninstall:
 	$(REMOVE) $(INSTALL_BIN_DIR)/$(BINARY_NAME)

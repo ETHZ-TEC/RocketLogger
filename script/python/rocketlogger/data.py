@@ -467,7 +467,6 @@ class RocketLoggerData:
                                     dtype=block_dtype,
                                     count=file_header['data_block_count'],
                                     sep='')
-        file_data = file_data.squeeze()
 
         # reference for data blocks speeds up access time
         block_data = np.array(file_data['data'], copy=False)
