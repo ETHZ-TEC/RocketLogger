@@ -33,7 +33,7 @@
 
 ## code revision
 PROJECT_NAME = RocketLogger
-PROJECT_VERSION = 1.1.3
+PROJECT_VERSION = 1.1.4
 
 ## directories
 BIN_DIR = bin
