@@ -84,7 +84,7 @@ cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
-echo "RocketLogger v1.1.3" > /etc/issue.net
+echo "RocketLogger v1.1.4" > /etc/issue.net
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/

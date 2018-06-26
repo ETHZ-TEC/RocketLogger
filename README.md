@@ -16,7 +16,7 @@ The official RocketLogger website can be found at <https://rocketlogger.ethz.ch>
 
 The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updates at <https://lists.ee.ethz.ch/wws/info/rocketlogger>.
 
-The documentation of all project components is found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
+The documentation of all project components is found in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/home).
 
 
 Project Structure
@@ -27,7 +27,7 @@ The project consists of three parts:
 * The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
 * The [RocketLogger Scripts](script) that provides scripts to import and process RocketLogger Data (RLD) files and to generate the calibration data files.
 
-The detailed documentation of the project and its individual parts can be found in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
+The detailed documentation of the project and its individual parts can be found in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).
 
 
 Prerequisites
@@ -36,7 +36,7 @@ Prerequisites
 #### Hardware Design
  * Altium Designer installation (version 16.1 was used for the PCB design)
 
-More details regarding the hardware design can be found on the [RocketLogger Hardware Design Data](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/design-data) wiki page.
+More details regarding the hardware design can be found on the [RocketLogger Hardware Design Data](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/design-data) wiki page.
 
 
 #### Software Installation
@@ -52,7 +52,7 @@ apt-get install linux-headers-$(uname -r)
 ```
  * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
    A PRU compiler and application loader library are required to compile and deploy this functionality.
-   The official BeagleBone image comes with these tools pre-installed.
+   The BeagleBone package repositories have installer script to install these tools using the package manager.
    Otherwise the compiler can be downloaded at [PRU Code Generation Tools](http://software-dl.ti.com/codegen/non-esd/downloads/download.htm#PRU)
    or installed as add-on for the [Code Composer Studio](http://processors.wiki.ti.com/index.php/Download_CCS).
    The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
@@ -61,7 +61,7 @@ apt-get install linux-headers-$(uname -r)
 apache2 lighttpd php5-cgi unzip
 ```
 
-If you follow the installation guide on the [RocketLogger Software Installation](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/software) wiki page, all necessary dependencies are installed during that process.
+If you follow the installation guide on the [RocketLogger Software Installation](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/software) wiki page, all necessary dependencies are installed during that process.
 
 
 License

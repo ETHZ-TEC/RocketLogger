@@ -7,5 +7,4 @@ The RocketLogger hardware includes the following parts:
 * [Measurement Probes](probes): RocketLogger probe specifications
 * [Circuit Simulation](simulations): Simulation data of different circuit parts of the RocketLogger
 
-See also the documentation in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
-
+See also the documentation in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).

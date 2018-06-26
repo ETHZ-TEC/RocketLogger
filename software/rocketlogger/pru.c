@@ -243,12 +243,12 @@ int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
     case 32000:
         pru_sample_rate = K32;
         pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_LOW;
+        pru->sample_size = SIZE_HIGH;
         break;
     case 64000:
         pru_sample_rate = K64;
         pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_LOW;
+        pru->sample_size = SIZE_HIGH;
         break;
     default:
         rl_log(ERROR, "wrong sample rate");

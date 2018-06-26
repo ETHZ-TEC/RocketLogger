@@ -7,5 +7,4 @@ The RocketLogger software includes the following parts:
 * [RocketLogger Binary](rocketlogger): main progamm code
 * [Webserver](webserver): webserver code for remote control
 
-See also the documentation in the [RocketLogger Wiki](https://git.ee.ethz.ch/sigristl/rocketlogger/wikis/).
-
+See also the documentation in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).
