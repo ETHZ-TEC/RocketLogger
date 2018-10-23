@@ -483,7 +483,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
                 strcpy(file_ending, new_file_ending);
 
                 // open new data file
-                data_file = fopen(file_name, "w+");
+                data_file = fopen64(file_name, "w+");
 
                 // update header for new file
                 file_header.lead_in.data_block_count = 0;
@@ -521,7 +521,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
                     strcpy(file_ending, new_file_ending);
 
                     // open new ambient file
-                    ambient_file = fopen(file_name, "w+");
+                    ambient_file = fopen64(file_name, "w+");
 
                     // update header for new file
                     ambient_file_header.lead_in.data_block_count = 0;
