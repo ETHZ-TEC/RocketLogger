@@ -44,9 +44,9 @@
  * Create shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-struct web_shm* web_create_shm(void) {
+web_shm_t* web_create_shm(void) {
 
-    int shm_id = shmget(SHMEM_DATA_KEY, sizeof(struct web_shm),
+    int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t),
                         IPC_CREAT | SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(ERROR, "In create_web_shm: failed to get shared data memory id; "
@@ -54,7 +54,7 @@ struct web_shm* web_create_shm(void) {
                errno, strerror(errno));
         return NULL;
     }
-    struct web_shm* web_data = (struct web_shm*)shmat(shm_id, NULL, 0);
+    web_shm_t* web_data = (web_shm_t*)shmat(shm_id, NULL, 0);
 
     if (web_data == (void*)-1) {
         rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
@@ -70,17 +70,17 @@ struct web_shm* web_create_shm(void) {
  * Open existing shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-struct web_shm* web_open_shm(void) {
+web_shm_t* web_open_shm(void) {
 
     int shm_id =
-        shmget(SHMEM_DATA_KEY, sizeof(struct web_shm), SHMEM_PERMISSIONS);
+        shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(ERROR, "In create_web_shm: failed to get shared data memory id; "
                       "%d message: %s",
                errno, strerror(errno));
         return NULL;
     }
-    struct web_shm* web_data = (struct web_shm*)shmat(shm_id, NULL, 0);
+    web_shm_t* web_data = (web_shm_t*)shmat(shm_id, NULL, 0);
 
     if (web_data == (void*)-1) {
         rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
@@ -197,7 +197,7 @@ void web_merge_currents(uint8_t* valid, int64_t* dest, int64_t* src,
  * @param timestamp_realtime {@link time_stamp} with realtime clock value
  * @param conf Current {@link rl_conf} configuration.
  */
-void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
+void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
                      void* buffer_addr, uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
                      struct rl_conf* conf) {
@@ -212,8 +212,8 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
 
     // AVERAGE DATA //
 
-    // averaged data (for web and low rates)
-    uint32_t avg_length[WEB_RING_BUFFER_COUNT] = {
+    // averaged data for web
+    uint32_t avg_window[WEB_RING_BUFFER_COUNT] = {
         samples_count / BUFFER1_SIZE, samples_count / BUFFER10_SIZE,
         samples_count / BUFFER100_SIZE};
     int64_t avg_data[WEB_RING_BUFFER_COUNT][NUM_CHANNELS] = {{0}};
@@ -223,7 +223,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
 
     // WEB DATA //
 
-    // data for webserver
+    // data for web server
     int64_t web_data[WEB_RING_BUFFER_COUNT][BUFFER1_SIZE]
                     [web_data_ptr->num_channels];
 
@@ -257,7 +257,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
 
         // BINARY CHANNELS //
 
-        // mask and combine digital inputs, if requestet
+        // mask and combine digital inputs, if requested
         int bin_channel_pos;
         if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
             bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
@@ -297,31 +297,30 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         // HANDLE AVERAGE DATA //
 
         // buffer 1s/div
-        if ((i + 1) % avg_length[BUF1_INDEX] == 0) {
+        if ((i + 1) % avg_window[BUF1_INDEX] == 0) {
 
             // average channel data
             for (int j = 0; j < num_channels; j++) {
-                avg_data[BUF1_INDEX][j] /= avg_length[BUF1_INDEX];
+                avg_data[BUF1_INDEX][j] /= avg_window[BUF1_INDEX];
                 avg_data[BUF10_INDEX][j] += avg_data[BUF1_INDEX][j];
             }
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF1_INDEX],
-                               &web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]]
+                               &web_data[BUF1_INDEX][i / avg_window[BUF1_INDEX]]
                                         [num_bin_channels],
                                avg_data[BUF1_INDEX], conf);
 
             // average bin channels
             for (int j = 0; j < num_bin_channels; j++) {
-
                 bin_avg_data[BUF10_INDEX][j] += bin_avg_data[BUF1_INDEX][j];
 
                 // store bin channels for web
                 if (bin_avg_data[BUF1_INDEX][j] >=
-                    (avg_length[BUF1_INDEX] / 2)) {
-                    web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]][j] = 1;
+                    (avg_window[BUF1_INDEX] / 2)) {
+                    web_data[BUF1_INDEX][i / avg_window[BUF1_INDEX]][j] = 1;
                 } else {
-                    web_data[BUF1_INDEX][i / avg_length[BUF1_INDEX]][j] = 0;
+                    web_data[BUF1_INDEX][i / avg_window[BUF1_INDEX]][j] = 0;
                 }
             }
 
@@ -333,20 +332,20 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
             avg_valid[BUF1_INDEX][1] = 1;
         }
 
-        // buffer 10
-        if ((i + 1) % avg_length[BUF10_INDEX] == 0) {
+        // buffer 10s/div
+        if ((i + 1) % avg_window[BUF10_INDEX] == 0) {
 
             // average
             for (int j = 0; j < num_channels; j++) {
                 avg_data[BUF10_INDEX][j] /=
-                    (avg_length[BUF10_INDEX] / avg_length[BUF1_INDEX]);
+                    (avg_window[BUF10_INDEX] / avg_window[BUF1_INDEX]);
                 avg_data[BUF100_INDEX][j] += avg_data[BUF10_INDEX][j];
             }
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF10_INDEX],
                                &web_data[BUF10_INDEX]
-                                        [i / avg_length[BUF10_INDEX]]
+                                        [i / avg_window[BUF10_INDEX]]
                                         [num_bin_channels],
                                avg_data[BUF10_INDEX], conf);
 
@@ -357,10 +356,10 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
 
                 // store bin channels for web
                 if (bin_avg_data[BUF10_INDEX][j] >=
-                    (avg_length[BUF10_INDEX] / 2)) {
-                    web_data[BUF10_INDEX][i / avg_length[BUF10_INDEX]][j] = 1;
+                    (avg_window[BUF10_INDEX] / 2)) {
+                    web_data[BUF10_INDEX][i / avg_window[BUF10_INDEX]][j] = 1;
                 } else {
-                    web_data[BUF10_INDEX][i / avg_length[BUF10_INDEX]][j] = 0;
+                    web_data[BUF10_INDEX][i / avg_window[BUF10_INDEX]][j] = 0;
                 }
             }
 
@@ -372,19 +371,19 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
             avg_valid[BUF10_INDEX][1] = 1;
         }
 
-        // buffer 100
-        if ((i + 1) % avg_length[BUF100_INDEX] == 0) {
+        // buffer 100s/div
+        if ((i + 1) % avg_window[BUF100_INDEX] == 0) {
 
             // average
             for (int j = 0; j < num_channels; j++) {
                 avg_data[BUF100_INDEX][j] /=
-                    (avg_length[BUF100_INDEX] / avg_length[BUF10_INDEX]);
+                    (avg_window[BUF100_INDEX] / avg_window[BUF10_INDEX]);
             }
 
             // merge_currents (for web)
             web_merge_currents(avg_valid[BUF100_INDEX],
                                &web_data[BUF100_INDEX]
-                                        [i / avg_length[BUF100_INDEX]]
+                                        [i / avg_window[BUF100_INDEX]]
                                         [num_bin_channels],
                                avg_data[BUF100_INDEX], conf);
 
@@ -392,10 +391,10 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
             for (int j = 0; j < num_bin_channels; j++) {
 
                 if (bin_avg_data[BUF100_INDEX][j] >=
-                    (avg_length[BUF100_INDEX] / 2)) {
-                    web_data[BUF100_INDEX][i / avg_length[BUF100_INDEX]][j] = 1;
+                    (avg_window[BUF100_INDEX] / 2)) {
+                    web_data[BUF100_INDEX][i / avg_window[BUF100_INDEX]][j] = 1;
                 } else {
-                    web_data[BUF100_INDEX][i / avg_length[BUF100_INDEX]][j] = 0;
+                    web_data[BUF100_INDEX][i / avg_window[BUF100_INDEX]][j] = 0;
                 }
             }
 

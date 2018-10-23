@@ -101,8 +101,13 @@ struct web_shm {
     struct ringbuffer buffer[WEB_RING_BUFFER_COUNT];
 };
 
-struct web_shm* web_create_shm(void);
-struct web_shm* web_open_shm(void);
+/**
+ * Typedef for shared web server data structure.
+ */
+typedef struct web_shm web_shm_t;
+
+web_shm_t* web_create_shm(void);
+web_shm_t* web_open_shm(void);
 
 void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length);
 
@@ -110,7 +115,7 @@ void web_buffer_add(struct ringbuffer* buffer, int64_t* data);
 
 int64_t* web_buffer_get(struct ringbuffer* buffer, int num);
 
-void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
+void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
                      void* buffer_addr, uint32_t samples_count,
                      struct time_stamp* timestamp_realtime,
                      struct rl_conf* conf);

@@ -80,8 +80,7 @@ int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
  * @param path Path to selected directory
  * @return Free disk space in bytes
  */
-int64_t get_free_space(char* path) {
-
+static int64_t get_free_space(char* path) {
     struct statvfs stat;
     statvfs(path, &stat);
 
@@ -93,17 +92,16 @@ int64_t get_free_space(char* path) {
  * @param data Data array to print
  * @param length Length of array
  */
-void print_json_32(int32_t data[], int length) {
-    char str[MAX_STRING_LENGTH];
-    char val[MAX_STRING_VALUE];
-    int i;
-    sprintf(str, "[\"%d\"", data[0]);
-    for (i = 1; i < length; i++) {
-        sprintf(val, ",\"%d\"", data[i]);
-        strcat(str, val);
+static void print_json32(int32_t const* const data, const int length) {
+    printf("[");
+    for (int i = 0; i < length; i++) {
+        if (i > 0) {
+            printf(",%d", data[i]);
+        } else {
+            printf("%d", data[i]);
+        }
     }
-    strcat(str, "]\n");
-    printf("%s", str);
+    printf("]\n");
 }
 
 /**
@@ -111,23 +109,22 @@ void print_json_32(int32_t data[], int length) {
  * @param data Data array to print
  * @param length Length of array
  */
-void print_json_64(int64_t data[], int length) {
-    char str[MAX_STRING_LENGTH];
-    char val[MAX_STRING_VALUE];
-    int i;
-    sprintf(str, "[\"%lld\"", data[0]);
-    for (i = 1; i < length; i++) {
-        sprintf(val, ",\"%lld\"", data[i]);
-        strcat(str, val);
+static void print_json64(int64_t const* const data, const int length) {
+    printf("[");
+    for (int i = 0; i < length; i++) {
+        if (i > 0) {
+            printf(",%lld", data[i]);
+        } else {
+            printf("%lld", data[i]);
+        }
     }
-    strcat(str, "]\n");
-    printf("%s", str);
+    printf("]\n");
 }
 
 /**
  * Print current status in JSON format
  */
-void print_status(void) {
+static void print_status(void) {
     // STATUS
     printf("%d\n", status.state);
     if (status.state != RL_RUNNING) {
@@ -141,19 +138,19 @@ void print_status(void) {
     // copy of filename (for dirname)
     char file_name_copy[MAX_PATH_LENGTH];
     strcpy(file_name_copy, status.conf.file_name);
-    printf("%llu\n", get_free_space(dirname(file_name_copy)));
+    printf("%lld\n", get_free_space(dirname(file_name_copy)));
     printf("%llu\n", status.calibration_time);
 
     // CONFIG
-    printf("%d\n", status.conf.sample_rate);
+    printf("%u\n", status.conf.sample_rate);
     printf("%d\n", status.conf.update_rate);
     printf("%d\n", status.conf.digital_inputs);
     printf("%d\n", status.conf.calibration);
     printf("%d\n", status.conf.file_format);
     printf("%s\n", status.conf.file_name);
     printf("%llu\n", status.conf.max_file_size);
-    print_json_32(status.conf.channels, NUM_CHANNELS);
-    print_json_32(status.conf.force_high_channels, NUM_I_CHANNELS);
+    print_json32(status.conf.channels, NUM_CHANNELS);
+    print_json32(status.conf.force_high_channels, NUM_I_CHANNELS);
     printf("%llu\n", status.samples_taken);
     printf("%d\n", status.conf.enable_web_server);
 }
@@ -161,7 +158,7 @@ void print_status(void) {
 /**
  * Print requested data in JSON format
  */
-void print_data(void) {
+static void print_data(void) {
 
     // print data length
     int buffer_count = (curr_time - last_time + TIME_MARGIN) / 1000;
@@ -198,12 +195,11 @@ void print_data(void) {
 
     // read data
     int64_t data[buffer_count][buffer_size][num_channels];
-    int i;
 
     if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
         return;
     }
-    for (i = 0; i < buffer_count; i++) {
+    for (int i = 0; i < buffer_count; i++) {
 
         // read data buffer
         int64_t* shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
@@ -219,10 +215,9 @@ void print_data(void) {
     set_sem(sem_id, DATA_SEM, 1);
 
     // print data
-    for (i = buffer_count - 1; i >= 0; i--) {
-        int j;
-        for (j = 0; j < buffer_size; j++) {
-            print_json_64(data[i][j], num_channels);
+    for (int i = buffer_count - 1; i >= 0; i--) {
+        for (int j = 0; j < buffer_size; j++) {
+            print_json64(data[i][j], num_channels);
         }
     }
 }
@@ -233,7 +228,7 @@ void print_data(void) {
  *
  * @param argc Number of input arguments
  * @param argv Input argument string, consists of:
- *   - Request ID (can be used for client synchronisation)
+ *   - Request ID (can be used for client synchronization)
  *   - Data requested (1 for yes, 0 for no)
  *   - Requested time scale (0: 100 samples/s, 1: 10 samples/s, 2: 1 sample/s)
  *   - Time stamp in UNIX time (UTC) of most recent data available at web client
