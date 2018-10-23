@@ -99,6 +99,9 @@ LIBS += -lprussdrv
 LIBS += -lncurses
 LIBS += -lrt
 
+## defines
+DEFS = -D_LARGEFILE64_SOURCE
+
 ## warnings
 WARNINGS = -Wall -Wextra -fmessage-length=0
 
