@@ -100,7 +100,7 @@ LIBS += -lncurses
 LIBS += -lrt
 
 ## warnings
-WARNINGS = -Wall -Wextra -fmessage-length=0
+WARNINGS = -Werror -Wall -Wextra -fmessage-length=0
 
 ## optimization (at max -O1 when when checking for memory leaks)
 OPT = -O2 # -flto
