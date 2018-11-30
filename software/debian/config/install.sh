@@ -73,6 +73,7 @@ echo "> Setting user permissions"
 
 # configure sudoers
 cp -f sudo/sudoers /etc/
+cp -f sudo/privacy /etc/sudoers.d/
 
 
 ## security
