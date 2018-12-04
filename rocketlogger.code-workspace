@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "software/rocketlogger"
+		},
+		{
+			"path": "software/webserver/data"
+		},
+		{
+			"path": "script/python"
+		},
+		{
+			"path": "software/debian"
+		}
+		{
+			"path": "../rocketlogger.wiki"
+		},
+	],
+}
