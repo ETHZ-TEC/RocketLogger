@@ -33,7 +33,7 @@
 TARGET = ROCKETLOGGER-00A0.dtbo
 SRC = ROCKETLOGGER-v2.dts
 TMP = $(SRC).tmp
-INC_DIRS = /usr/src/linux-headers-`uname -r`/include
+INC_DIRS = /usr/src/linux-headers-$(shell uname -r)/include
 
 # install
 INSTALL_DIR = /lib/firmware
@@ -55,8 +55,8 @@ all: $(TARGET)
 
 install: all
 	$(CP) $(TARGET) $(INSTALL_DIR)
-	$(CP) capemgr /etc/default/capemgr
-	@echo "Binary and cape manager config installed, overlay will be loaded automativally after reboot."
+	@echo "WARNING: Need to enable u-boot overlays manually, reboot required after reconfiguration."
+#	@echo "Binary and cape manager config installed, overlay will be loaded automativally after reboot."
 
 .PHONY: clean uninstall
 clean:
