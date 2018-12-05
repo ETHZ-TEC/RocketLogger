@@ -30,9 +30,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-URL_DIRECTORY="http://debian.beagleboard.org/images/rcn-ee.net/rootfs/bb.org/release/2016-06-15/console/"
-IMAGE_FILE="bone-debian-7.11-console-armhf-2016-06-15-2gb.img.xz"
-IMAGE_SHA256="cfceb64083cf63ed49ad75c3b5f5665cef65eaa67c86420a2c4d27bddc22d1ee"
+# latest console testing image
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2018-11-25/stretch-console/"
+IMAGE_FILE="bone-debian-9.6-console-armhf-2018-11-25-1gb.img.xz"
+IMAGE_SHA256="86143c5a21be3452436bae89d2f5cc3c9c3512545546b43e81769329aab3ff9a"
+
+# # latest iot official release
+# URL_DIRECTORY="https://debian.beagleboard.org/images/"
+# IMAGE_FILE="bone-debian-9.5-iot-armhf-2018-10-07-4gb.img.xz"
+# IMAGE_SHA256="52363c654b7a1187656b08c5686af7564c956d6c60c7df5bf4af098f7df395e0"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"
@@ -46,4 +52,3 @@ else
   echo "SHA256 hash verification failed!"
   exit 1
 fi
-
