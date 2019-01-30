@@ -320,12 +320,12 @@ function showSamplingTime() {
 		var timeLeft = freeSpace/rate;
 		
 		var date = new Date(timeLeft * MS_SCALE);
-		var month = date.getMonth();
+		var month = date.getUTCMonth();
 		if(month>0) {
 			document.getElementById("time_left").innerHTML = "> 1Month";
 		} else {
 		
-			var d = date.getDate()-1;
+			var d = date.getUTCDate() - 1;
 			var h = date.getUTCHours();
 			var m = date.getUTCMinutes();
 			
@@ -475,40 +475,33 @@ function parseStatus(tempState) {
 		
 		// determine sampled time
 		var date = new Date(samplesTaken/sampleRate * MS_SCALE);
-		var month = date.getMonth();
+		var t = "";
+		var month = date.getUTCMonth();
+		var d = date.getUTCDate() - 1;
+		var h = date.getUTCHours();
+		var m = date.getUTCMinutes();
+		var s = date.getUTCSeconds();
+
+		if(d == 0) {
+			t = s + "s";
+		}
+		if(m>0) {
+			t = m + "min " + t;
+		}
+		if(h>0) {
+			t = h + "h " + t;
+		}
+		if(d>0) {
+			t = d + "d " + t;
+		}
 		if(month>0) {
-			document.getElementById("time_left").innerHTML = "> 1Month";
-		} else {
-		
-			var t = "";
-			var d = date.getDate()-1;
-			var h = date.getUTCHours();
-			var m = date.getUTCMinutes();
-			var s = date.getUTCSeconds();
-			
-			if(d == 0) {
-				t = s + "s";
-			}
-			if(m>0) {
-				t = m + "min " + t;
-			}
-			if(h>0) {
-				t = h + "h " + t;
-			}
-			if(d>0) {
-				t = d + "d " + t;
-			}
+			t = month + "Months " + t;
 		}
 		
 		document.getElementById("samples_taken").innerHTML = 'Samples Taken:';
 		document.getElementById("samples_taken_val").innerHTML = samplesTaken;
 		document.getElementById("time_sampled").innerHTML = 'Time Sampled:';
 		document.getElementById("time_sampled_val").innerHTML = t;
-	} else {
-		document.getElementById("samples_taken").innerHTML = '';
-		document.getElementById("samples_taken_val").innerHTML = '';
-		document.getElementById("time_sampled").innerHTML = '';
-		document.getElementById("time_sampled_val").innerHTML = '';
 	}
 	
 	// data
@@ -1502,6 +1495,4 @@ $(function() {
 		
 		// never ending update function
 		update();
-
-
 });
