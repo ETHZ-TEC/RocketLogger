@@ -219,7 +219,7 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
         samples_count / BUFFER1_SIZE, samples_count / BUFFER10_SIZE,
         samples_count / BUFFER100_SIZE};
     int64_t avg_data[WEB_RING_BUFFER_COUNT][NUM_CHANNELS] = {{0}};
-    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][NUM_DIGITAL_INPUTS] ={{0}};
+    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][NUM_DIGITAL_INPUTS] = {{0}};
     uint8_t avg_valid[WEB_RING_BUFFER_COUNT]
                      [NUM_I_CHANNELS] = {{1, 1}, {1, 1}, {1, 1}};
 
