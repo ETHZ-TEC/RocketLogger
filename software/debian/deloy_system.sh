@@ -76,7 +76,7 @@ fi
 
 # wait for system to reboot
 echo -n "Waiting for the system to reboot..."
-sleep 2
+sleep 5
 while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
   REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
   echo -n "."
@@ -96,6 +96,10 @@ if [ $REBOOT_TIMEOUT -eq 0 ]; then
   exit 1
 fi
 
+# waiting for ssh login
+echo "Waiting for ssh connection. You will be aked for the default user password, which is 'temppwd', when the system is ready."
+sleep 5
+ssh -F /dev/null -p 22 -t debian@${HOST} 'exit'
 
 # perform system configuration
 echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
