@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -130,7 +130,7 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     // open data file
     FILE* data = (FILE*)-1;
     if (conf->file_format != NO_FILE) { // open file only if storing requested
-        data = fopen(conf->file_name, "w+");
+        data = fopen64(conf->file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open data-file");
             return FAILURE;
@@ -140,7 +140,7 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     // open ambient file
     FILE* ambient_file = (FILE*)-1;
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        ambient_file = fopen(conf->ambient.file_name, "w+");
+        ambient_file = fopen64(conf->ambient.file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open ambient-file");
             return FAILURE;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -661,7 +661,7 @@ void reset_config(struct rl_conf* conf) {
     conf->enable_web_server = 1;
     conf->calibration = CAL_USE;
     conf->file_format = BIN;
-    conf->max_file_size = 0;
+    conf->max_file_size = 1000000;
 
     strcpy(conf->file_name, "/var/www/data/data.rld");
 

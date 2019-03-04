@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -218,14 +218,10 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
     uint32_t avg_length[WEB_RING_BUFFER_COUNT] = {
         samples_count / BUFFER1_SIZE, samples_count / BUFFER10_SIZE,
         samples_count / BUFFER100_SIZE};
-    int64_t avg_data[WEB_RING_BUFFER_COUNT][NUM_CHANNELS];
-    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][NUM_DIGITAL_INPUTS];
+    int64_t avg_data[WEB_RING_BUFFER_COUNT][NUM_CHANNELS] = {{0}};
+    uint32_t bin_avg_data[WEB_RING_BUFFER_COUNT][NUM_DIGITAL_INPUTS] = {{0}};
     uint8_t avg_valid[WEB_RING_BUFFER_COUNT]
                      [NUM_I_CHANNELS] = {{1, 1}, {1, 1}, {1, 1}};
-
-    memset(avg_data, 0, sizeof(int64_t) * num_channels * WEB_RING_BUFFER_COUNT);
-    memset(bin_avg_data, 0,
-           sizeof(uint32_t) * num_bin_channels * WEB_RING_BUFFER_COUNT);
 
     // WEB DATA //
 
@@ -411,6 +407,13 @@ void web_handle_data(struct web_shm* web_data_ptr, int sem_id,
                     web_data[BUF100_INDEX][i / avg_length[BUF100_INDEX]][j] = 0;
                 }
             }
+
+            // reset values
+            memset(avg_data[BUF100_INDEX], 0, sizeof(int64_t) * num_channels);
+            memset(bin_avg_data[BUF100_INDEX], 0,
+                   sizeof(uint32_t) * num_bin_channels);
+            avg_valid[BUF100_INDEX][0] = 1;
+            avg_valid[BUF100_INDEX][1] = 1;
         }
     }
 
