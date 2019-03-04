@@ -1,6 +1,6 @@
 ## Makefile for RocketLogger Binaries
 ##
-## Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+## Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
 ## All rights reserved.
 ## 
 ## Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 
 ## code revision
 PROJECT_NAME = RocketLogger
-PROJECT_VERSION = 1.1.4
+PROJECT_VERSION = 1.1.5
 
 ## directories
 BIN_DIR = bin
@@ -98,6 +98,9 @@ LIBS = -pthread
 LIBS += -lprussdrv
 LIBS += -lncurses
 LIBS += -lrt
+
+## defines
+DEFS = -D_LARGEFILE64_SOURCE
 
 ## warnings
 WARNINGS = -Werror -Wall -Wextra -fmessage-length=0

@@ -1,4 +1,16 @@
 
+## v1.1.5 (2019-03-04)
+
+- [FIXED] Software: corrupt data when writing files >2 GB (#119)
+- [FIXED] Software/web interface: data aggregation issue for larger time scale (#117).
+- [FIXED] Documentation: more detailed description of common measurement setups and user interfaces (#114, #120).
+- [CHANGED] Software: split data files at 1 GB by default (relates to #119)
+
+_Notes:_
+
+This hotfix release resolves a file writing issue when saving the measurements to single large data file and a data aggregation issue in the web interface preview. Furthermore, the documentation in the wiki on measurement setup and control has been updated and extended.
+
+
 ## v1.1.4 (2018-06-26)
 
 - [FIXED] Software: corrupt data when using high sampling rates and values are close to full range (#116)

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
 #
-# Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+# Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,7 @@ cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
-echo "RocketLogger v1.1.4" > /etc/issue.net
+echo "RocketLogger v1.1.5" > /etc/issue.net
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/
