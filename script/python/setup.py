@@ -1,7 +1,7 @@
 """"
 RocketLogger Python Library.
 
-Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='rocketlogger',
-      version='1.1.4',
+      version='1.1.5',
       description='RocketLogger Python Support',
       url='https://rocketlogger.ethz.ch/',
       author='Computer Engineering Group, ETH Zurich',
@@ -51,6 +51,7 @@ setup(name='rocketlogger',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
       ],
       keywords='rocketlogger data analysis',
       packages=find_packages(exclude=['contrib', 'docs', 'tests']),
