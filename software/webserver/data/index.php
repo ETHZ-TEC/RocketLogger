@@ -34,7 +34,7 @@
     $hostname = php_uname('n');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en" xml:lang="en" xmlns= "http://www.w3.org/1999/xhtml">
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -49,6 +49,7 @@
 	<meta name="apple-mobile-web-app-title" content="RocketLogger">
 	<meta name="application-name" content="RocketLogger">
 	<meta name="theme-color" content="#ff0000">
+	<meta http-equiv="Content-Language" content="en">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/main.css">
 </head>
