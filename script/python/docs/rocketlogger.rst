@@ -1,5 +1,5 @@
-rocketlogger package
-====================
+rocketlogger Package Reference
+==============================
 
 Subpackages
 -----------
@@ -15,6 +15,15 @@ rocketlogger.data module
 ------------------------
 
 .. automodule:: rocketlogger.data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+rocketlogger.calibration module
+-------------------------------
+
+.. automodule:: rocketlogger.calibration
     :members:
     :undoc-members:
     :show-inheritance:
