@@ -270,12 +270,6 @@ class RocketLoggerData:
     files.
     """
 
-    _data = []
-    _filename = None
-    _header = {}
-    _timestamps_monotonic = []
-    _timestamps_realtime = []
-
     def __init__(self, filename=None, join_files=True, decimation_factor=1,
                  memory_mapped=True):
         """
@@ -293,6 +287,12 @@ class RocketLoggerData:
             increase file read performance for many smaller files and/or
             some system configurations.
         """
+        self._data = []
+        self._filename = None
+        self._header = {}
+        self._timestamps_monotonic = []
+        self._timestamps_realtime = []
+
         if filename is None:
             raise NotImplementedError('RocketLogger data file creation '
                                       'currently unsupported.')
