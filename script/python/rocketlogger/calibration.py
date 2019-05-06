@@ -71,8 +71,13 @@ _CALIBRATION_FILE_DTYPE = np.dtype([
 ])
 
 # data format channel name sequence
-_CALIBRATION_FILE_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
-                                   'I2H', 'I2L', 'V3', 'V4']
+_CALIBRATION_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
+                              'I2H', 'I2L', 'V3', 'V4']
+
+# RocketLogger data file scales for channels
+_CALIBRATION_CHANNEL_SCALES = [
+    _ROCKETLOGGER_FILE_SCALE_IH, _ROCKETLOGGER_FILE_SCALE_IL,
+    _ROCKETLOGGER_FILE_SCALE_V, _ROCKETLOGGER_FILE_SCALE_V] * 2
 
 # channels with positive scales
 _CALIBRATION_POSITIVE_SCALE_CHANNELS = (_ROCKETLOGGER_CHANNELS_CURRENT_LOW +
@@ -93,7 +98,7 @@ def regression_linear(measurement, reference, zero_weight=1):
     weight = 1 + np.isclose(np.abs(reference), 0) * (zero_weight - 1)
     poly_coeffs = np.polyfit(measurement, reference, 1, w=weight)
     offset = round(poly_coeffs[1] / poly_coeffs[0])
-    scale = poly_coeffs[0] / _ROCKETLOGGER_FILE_SCALE_V
+    scale = poly_coeffs[0]
 
     return (offset, scale)
 
@@ -343,6 +348,7 @@ class RocketLoggerCalibration:
 
         self._error_offset = None
         self._error_scale = None
+        self._error_rmse = None
 
         # treat 1 arguments as an existing calibration to load
         if len(args) == 1:
@@ -370,7 +376,8 @@ class RocketLoggerCalibration:
         :param data_i2h: Current I2H calibration measurement data or filename.
         """
 
-        def _rld_copy_or_laod(data):
+        # data load helper function
+        def _rld_copy_or_load(data):
             if type(data) is RocketLoggerData:
                 return data
             elif os.path.isfile(data):
@@ -379,92 +386,106 @@ class RocketLoggerCalibration:
                              'existing data file.'.format(data))
 
         # store the loaded data in class
-        self._data_v = _rld_copy_or_laod(data_v)
-        self._data_i1l = _rld_copy_or_laod(data_i1l)
-        self._data_i1h = _rld_copy_or_laod(data_i1h)
-        self._data_i2l = _rld_copy_or_laod(data_i2l)
-        self._data_i2h = _rld_copy_or_laod(data_i2h)
+        self._data_v = _rld_copy_or_load(data_v)
+        self._data_i1l = _rld_copy_or_load(data_i1l)
+        self._data_i1h = _rld_copy_or_load(data_i1h)
+        self._data_i2l = _rld_copy_or_load(data_i2l)
+        self._data_i2h = _rld_copy_or_load(data_i2h)
 
         # reset existing error calculations, keep calibration values if loaded
         self._error_offset = None
         self._error_scale = None
+        self._error_rmse = None
 
-    def recalibrate(self, setup, fix_signs=True,
+    def recalibrate(self, setup, fix_signs=True, target_offset_error=1,
                     regression_alorithm=regression_linear, **kwargs):
         """
         Perform channel calibration with loaded measeurement data, overwriting
         any loaded calibration parameters.
 
-        :param setup: The calibration setup used for the measurements using the
+        :param setup: Calibration setup used for the measurements using the
                       RocketLoggerCalibrationSetup helper class to describe
 
-        :param fix_signs: Automatically fix sign error in calibrations
+        :param fix_signs: Set True to automatically fix sign error in
+                          calibration scales
 
-        :param regression_alorithm: the regression alorithm to use for the
-                                    regression, taking the setpoint
-                                    measurement and reference values as
-                                    arguments
+        :param target_offset_error: Factor in [1, inf) specifying the multiple
+                                    of the zero error to use as offset error
+                                    for the error calculations
 
-        :param kwargs: optional names arguments passed to the regression
+        :param regression_alorithm: Alorithm to use for the regression, taking
+                                    the setpoint measurement and reference
+                                    values as arguments and providing the
+                                    resulting offset and scale as output
+
+        :param kwargs: Optional names arguments passed to the regression
                        algorithm function
         """
         self._check_data_loaded()
+        if target_offset_error < 1:
+            raise ValueError('target_offset_error factor needs to be >= 1.')
 
-        # get the unscaled measurement values and setup setpoints
-        v1 = (self._data_v.get_data('V1').squeeze() /
-              _ROCKETLOGGER_FILE_SCALE_V)
-        v2 = (self._data_v.get_data('V2').squeeze() /
-              _ROCKETLOGGER_FILE_SCALE_V)
-        v3 = (self._data_v.get_data('V3').squeeze() /
-              _ROCKETLOGGER_FILE_SCALE_V)
-        v4 = (self._data_v.get_data('V4').squeeze() /
-              _ROCKETLOGGER_FILE_SCALE_V)
-        i1h = (self._data_i1h.get_data('I1H').squeeze() /
-               _ROCKETLOGGER_FILE_SCALE_IH)
-        i2h = (self._data_i2h.get_data('I2H').squeeze() /
-               _ROCKETLOGGER_FILE_SCALE_IH)
-        i1l = (self._data_i1l.get_data('I1L').squeeze() /
-               _ROCKETLOGGER_FILE_SCALE_IL)
-        i2l = (self._data_i2l.get_data('I2L').squeeze() /
-               _ROCKETLOGGER_FILE_SCALE_IL)
-
-        timestamp = np.datetime64(
-            min(x._header['start_time'] for x in
-                [self._data_v, self._data_i1l, self._data_i1h, self._data_i2l,
-                 self._data_i2h]))
+        # forced reference information
+        v_ref = setup.get_voltage_setpoints()
+        ih_ref = setup.get_current_high_setpoints()
+        il_ref = setup.get_current_low_setpoints()
+        reference = [ih_ref, il_ref, v_ref, v_ref] * 2
 
         v_step = setup.get_voltage_step(calibration=True)
         ih_step = setup.get_current_high_step(calibration=True)
         il_step = setup.get_current_low_step(calibration=True)
+        reference_steps = [ih_step, il_step, v_step, v_step] * 2
 
-        v_ref = setup.get_voltage_setpoints()
-        ih_ref = setup.get_current_high_setpoints()
-        il_ref = setup.get_current_low_setpoints()
-
-        # extract all setpoint information
-        setpoint_reference = [ih_ref, il_ref,  v_ref, v_ref] * 2
-        setpoint_steps = [ih_step, il_step, v_step, v_step] * 2
-        setpoint_traces = [i1h, i1l, v1, v2, i2h, i2l, v3, v4]
-        setpoint_measured = [_extract_setpoint_measurement(t, s)
-                             for t, s in zip(setpoint_traces, setpoint_steps)]
+        # extract mesurement information
+        measurement_data = [
+            self._data_i1h, self._data_i1l, self._data_v, self._data_v,
+            self._data_i2h, self._data_i2l, self._data_v, self._data_v]
+        measurement_traces = [data.get_data(channel).squeeze() / scale
+                              for data, channel, scale
+                              in zip(measurement_data,
+                                     _CALIBRATION_CHANNEL_NAMES,
+                                     _CALIBRATION_CHANNEL_SCALES)]
+        timestamp = np.datetime64(min([x._header['start_time']
+                                       for x in measurement_data]))
+        measurement = [_extract_setpoint_measurement(t, s)
+                       for t, s in zip(measurement_traces, reference_steps)]
 
         # perform regression
-        reg_result = [regression_alorithm(x, y)
-                      for x, y in zip(setpoint_measured, setpoint_reference)]
-        offsets, scales = zip(*reg_result)
+        regression_result = [regression_alorithm(x, y)
+                             for x, y in zip(measurement, reference)]
+        offsets, scales = zip(*regression_result)
 
+        # calculate residuals and errors
+        residual = [(x + offset) * scale - y for x, y, offset, scale
+                    in zip(measurement, reference, offsets, scales)]
+        rmse_errors = [np.sqrt(np.dot(res, res)) for res in residual]
+        offset_errors = [
+            np.max(np.abs(res[np.isclose(ref, 0)])) * target_offset_error
+            for res, ref in zip(residual, reference)]
+        scale_errors = [
+            np.abs(np.fmin(np.abs(res - offset_error),
+                           np.abs(res + offset_error)) / ref)
+            for res, ref, offset_error
+            in zip(residual, reference, offset_errors)]
+
+        # store data
         self._calibration_offset = np.array(offsets, dtype='<i4')
-        self._calibration_scale = np.array(scales, dtype='<f8')
+        self._calibration_scale = np.array(
+            [scale / file_scale for scale, file_scale
+             in zip(scales, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
         self._calibration_timestamp = np.array(timestamp,
                                                dtype='datetime64[s]')
+        self._error_offset = np.array(offset_errors)
+        self._error_scale = np.array(
+            [np.max(scale_error[np.abs(ref) > 0.1 * np.abs(np.max(ref))])
+             for scale_error, ref in zip(scale_errors, reference)])
+        self._error_rmse = np.array(rmse_errors)
 
-        # check and invert signs
+        # check and invert scales where necessary
         if fix_signs:
             for ch in _CALIBRATION_POSITIVE_SCALE_CHANNELS:
-                # check and invert if necessary
                 if self._calibration_scale[ch] < 0:
                     self._calibration_scale[ch] = -self._calibration_scale[ch]
-        return
 
     def print_statistics(self):
         """
@@ -477,7 +498,7 @@ class RocketLoggerCalibration:
             print()
             print('Calibration values:')
             print('  Channel  :  Offset [bit]  :  Scale [unit/bit]')
-            for i, name in enumerate(_CALIBRATION_FILE_CHANNEL_NAMES):
+            for i, name in enumerate(_CALIBRATION_CHANNEL_NAMES):
                 print('  {:7s}  :  {:12d}  :  {:16.6f}'.format(
                     name, self._calibration_offset[i],
                     self._calibration_scale[i]))
@@ -487,13 +508,11 @@ class RocketLoggerCalibration:
         try:
             self._check_errors_calculation_exists()
             print('Error calculation values:')
-            print('  Channel  :  Offset [unit]  :  Scale [%]')
-            for i, name in enumerate(_CALIBRATION_FILE_CHANNEL_NAMES):
-                print('  {:7s}  :  {:13d}  :  {:9.3f}'.format(
-                    name, self._calibration_offset[i],
-                    self._calibration_scale[i]))
-                print('  {}\t{}\t{}'.format(name, self._error_offset[i],
-                                            100 * self._error_scale[i]))
+            print('  Channel  :  Offset [unit]  :  Scale [%]  :  RMSE [unit]')
+            for i, name in enumerate(_CALIBRATION_CHANNEL_NAMES):
+                print('  {:7s}  :  {:13.6g}  :  {:9.5f}  :  {:11.6g}'.format(
+                    name, self._error_offset[i], 100 * self._error_scale[i],
+                    self._error_rmse[i]))
         except RocketLoggerCalibrationError:
             print('no error calculation data available')
 
@@ -518,8 +537,9 @@ class RocketLoggerCalibration:
                 'Invalid scale data in calibration file')
 
         # reset existing error calculations, keep measurement data if loaded
-        self._error_offset = []
-        self._error_scale = []
+        self._error_offset = None
+        self._error_scale = None
+        self._error_rmse = None
 
     def write_calibration_file(self, filename='calibration.dat'):
         """
@@ -544,8 +564,10 @@ class RocketLoggerCalibration:
         :param filename: Name of the file to write the calibration log to
         """
         # redirect statistics output to log file
+        stdout = sys.stdout
         with open(filename, 'w') as sys.stdout:
             self.print_statistics()
+        sys.stdout = stdout
 
     def _check_data_loaded(self):
         """Check for loaded calibration measurements, raise error if not."""
@@ -566,7 +588,8 @@ class RocketLoggerCalibration:
 
     def _check_errors_calculation_exists(self):
         """Check for existing calibration data, raise error if not."""
-        if any([self._error_offset is None, self._error_scale is None]):
+        if any([self._error_offset is None, self._error_scale is None,
+                self._error_rmse is None]):
             raise RocketLoggerCalibrationError(
                 'No error calculation data available. '
                 'Perform calculation first.')

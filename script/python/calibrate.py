@@ -67,7 +67,7 @@ cal.load_measurement_data(
 # perform the calibration
 cal.recalibrate(CALIBRATION_SETUP_SMU2450)
 
-# print/plot statistics
+# print calibration statistics
 cal.print_statistics()
 
 # write calibration and log file with and without input file prefix
