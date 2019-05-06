@@ -1434,6 +1434,11 @@ $(function () {
 
 	// calibration ignore checkbox
 	$("#ignore_calibration").change(function () {
+		if ($("#ignore_calibration:checked").length) {
+			$("#ignore_config").addClass("calibration-warning");
+		} else {
+			$("#ignore_config").removeClass("calibration-warning");
+		}
 		if (state == RL_RUNNING) {
 			alert("This will not affect the current measurement!");
 		}

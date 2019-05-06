@@ -53,6 +53,11 @@ body {
 	border-bottom-color: #ddd;
 }
 
+.calibration-warning {
+	color: red;
+	font-weight: bold;
+}
+
 .tooltip-inner {
 	text-align: left;
 	max-width:none;

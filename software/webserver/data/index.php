@@ -287,7 +287,7 @@
 									<div class="row">
 										<div class="col-md-12">
 											<div class="checkbox">
-												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="ignore_calibration" type="checkbox">Calibration Measurement (Ignore Calibration)</label>
+												<label data-toggle="tooltip" title="Ignore existing calibration"><input id="ignore_calibration" type="checkbox"><span  id="calibration_config">Calibration Measurement (Ignore Calibration)<span></label>
 											</div>
 										</div>
 									</div>
