@@ -661,7 +661,7 @@ void reset_config(struct rl_conf* conf) {
     conf->enable_web_server = 1;
     conf->calibration = CAL_USE;
     conf->file_format = BIN;
-    conf->max_file_size = 1000000;
+    conf->max_file_size = 1000000000;
 
     strcpy(conf->file_name, "/var/www/data/data.rld");
 
