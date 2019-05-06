@@ -30,3 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
+
+# switch to a matplotlib backend not requiring dispaly (before pyploy import!)
+import matplotlib as mpl
+mpl.use('Agg')

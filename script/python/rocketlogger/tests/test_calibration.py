@@ -227,8 +227,8 @@ class TestCalibrationProcedure(TestCase):
         reference_offset = np.array(
             [7978, 1769, 1079, 860, -3652, 1990, 967, 910])
         reference_scale = np.array(
-            [3.15541961e+00, 1.75362819e-02, -1.22411163e+02, -1.22087393e+02,
-             3.15646990e+00, 1.75031048e-02, -1.22223889e+02, -1.22244353e+02])
+            [3.15541961e+01, 1.75362819e+01, -1.22411163e+02, -1.22087393e+02,
+             3.15646990e+01, 1.75031048e+01, -1.22223889e+02, -1.22244353e+02])
         self.assertEqual(calibration._calibration_timestamp, reference_time)
         self.assertEqual(np.allclose(
             calibration._calibration_offset, reference_offset), True)
