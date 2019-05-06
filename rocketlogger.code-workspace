@@ -10,6 +10,9 @@
 			"path": "script/python"
 		},
 		{
+			"path": "script/matlab"
+		},
+		{
 			"path": "software/debian"
 		}
 		{

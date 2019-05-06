@@ -98,15 +98,20 @@ class TestFileImport(TestCase):
 
     def test_no_file(self):
         with self.assertRaises(NotImplementedError):
-            self.data = RocketLoggerData()
+            RocketLoggerData()
 
     def test_inexistend_file(self):
         with self.assertRaises(FileNotFoundError):
-            self.data = RocketLoggerData('nonexistent-data.rld')
+            RocketLoggerData('nonexistent-data.rld')
+
+    def test_overload_existing(self):
+        data = RocketLoggerData(_FULL_TEST_FILE)
+        with self.assertRaises(RocketLoggerDataError):
+            data.load_file(_FULL_TEST_FILE)
 
     def test_wrong_magic(self):
         with self.assertRaises(RocketLoggerFileError):
-            self.data = RocketLoggerData(_INCOMPATIBLE_TEST_FILE)
+            RocketLoggerData(_INCOMPATIBLE_TEST_FILE)
 
     def test_with_decimation(self):
         data = RocketLoggerData(_FULL_TEST_FILE, decimation_factor=10)
@@ -168,6 +173,18 @@ class TestChannelMerge(TestCase):
                                  'I1L_valid', 'I2L_valid',
                                  'V1', 'V2', 'V3', 'V4',
                                  'I1L', 'I1H', 'I1', 'I2L', 'I2H', 'I2']))
+
+    def test_merge_drop_remerge(self):
+        data = RocketLoggerData(_FULL_TEST_FILE)
+        data.merge_channels(keep_channels=False)
+        with self.assertWarns(RocketLoggerDataWarning):
+            data.merge_channels()
+
+    def test_merge_keep_remerge(self):
+        data = RocketLoggerData(_FULL_TEST_FILE)
+        data.merge_channels(keep_channels=True)
+        with self.assertRaises(RocketLoggerDataError):
+            data.merge_channels()
 
     def test_merge_inexistent_channels(self):
         data = RocketLoggerData(_SINGLE_TEST_FILE)
@@ -234,6 +251,46 @@ class TestDataHandling(TestCase):
         channel_names = ['DI1', 'DI3', 'I1L_valid', 'V1', 'V3', 'I1L']
         temp = self.data.get_data(channel_names)
         self.assertEqual(temp.shape[1], len(channel_names))
+
+    def test_get_channel_index(self):
+        index = self.data._get_channel_index('V1')
+        self.assertEqual(index, 10)
+
+    def test_get_channel_name(self):
+        name = self.data._get_channel_name(10)
+        self.assertEqual(name, 'V1')
+
+    def test_get_channel_name_list(self):
+        names = self.data._get_channel_name([10, 11])
+        self.assertListEqual(names, ['V1', 'V2'])
+
+    def test_channel_add(self):
+        channel_info = self.data._header['channels'][10].copy()
+        channel_info['name'] = 'A1'
+        self.data.add_channel(channel_info,
+                              np.ones_like(self.data.get_data('V1').squeeze()))
+        self.assertTrue('A1' in self.data.get_channel_names())
+        with self.assertRaises(RocketLoggerDataError):
+            self.data.add_channel(
+                channel_info,
+                np.ones_like(self.data.get_data('V1').squeeze()))
+
+    def test_channel_remove(self):
+        self.data.remove_channel('V4')
+        self.assertFalse('V4' in self.data.get_channel_names())
+
+    def test_channel_add_remove(self):
+        channel_info = self.data._header['channels'][10].copy()
+        channel_info['name'] = 'A1'
+        self.data.add_channel(channel_info,
+                              np.ones_like(self.data.get_data('V1').squeeze()))
+        self.assertTrue('A1' in self.data.get_channel_names())
+        self.data.remove_channel('A1')
+        self.assertFalse('A1' in self.data.get_channel_names())
+
+    def test_channel_remove_inexistent(self):
+        with self.assertRaises(KeyError):
+            self.data.remove_channel('A')
 
     def test_get_relative_time(self):
         temp = self.data.get_time(absolute_time=False)
