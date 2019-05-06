@@ -112,6 +112,20 @@ class TestCalibrationSetup(TestCase):
         with self.assertRaises(TypeError):
             RocketLoggerCalibrationSetup()
 
+    def test_calibration_setup_single(self):
+        setup = RocketLoggerCalibrationSetup(3, 1, 1, 1, False)
+
+    def test_calibration_setup_single_invalid(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerCalibrationSetup(2, 1, 1, 1, True)
+
+    def test_calibration_setup_dual(self):
+        RocketLoggerCalibrationSetup(5, 1, 1, 1, True)
+
+    def test_calibration_setup_dual_invalid(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerCalibrationSetup(3, 1, 1, 1, True)
+
     def test_SMU2540_setup_setpoint_count(self):
         self.assertEqual(CALIBRATION_SETUP_SMU2450.get_setpoint_count(), 201)
 
@@ -119,28 +133,37 @@ class TestCalibrationSetup(TestCase):
         setpoints = CALIBRATION_SETUP_SMU2450.get_voltage_setpoints()
         setpoints_reference = np.hstack([np.arange(-5, 5.1, 0.1),
                                          np.arange(4.9, -5.1, -0.1)])
-        print(setpoints)
-        print(setpoints_reference)
-        self.assertEqual(np.allclose(setpoints, setpoints_reference), True)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_SMU2540_setup_current_low_setpoints(self):
         setpoints = CALIBRATION_SETUP_SMU2450.get_current_low_setpoints()
         setpoints_reference = np.hstack([np.arange(-1e-3, 1.02e-3, 20e-6),
                                          np.arange(0.98e-3, -1.02e-3, -20e-6)])
-        print(setpoints)
-        print(setpoints_reference)
-        self.assertEqual(np.allclose(setpoints, setpoints_reference), True)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_SMU2540_setup_current_high_setpoints(self):
         setpoints = CALIBRATION_SETUP_SMU2450.get_current_high_setpoints()
         setpoints_reference = np.hstack([np.arange(-0.1, 0.102, 2e-3),
                                          np.arange(0.098, -0.102, -2e-3)])
-        print(setpoints)
-        print(setpoints_reference)
-        self.assertEqual(np.allclose(setpoints, setpoints_reference), True)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_basic_setup_setpoint_count(self):
         self.assertEqual(CALIBRATION_SETUP_BASIC.get_setpoint_count(), 3)
+
+    def test_basic_setup_voltage_setpoints(self):
+        setpoints = CALIBRATION_SETUP_BASIC.get_voltage_setpoints()
+        setpoints_reference = np.arange(-5, 5.1, 5)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
+
+    def test_basic_setup_current_low_setpoints(self):
+        setpoints = CALIBRATION_SETUP_BASIC.get_current_low_setpoints()
+        setpoints_reference = np.arange(-2e-3, 2.02e-3, 2e-3)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
+
+    def test_basic_setup_current_high_setpoints(self):
+        setpoints = CALIBRATION_SETUP_BASIC.get_current_high_setpoints()
+        setpoints_reference = np.arange(-0.5, 0.502, 0.5)
+        self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_setpoint_detection_size(self):
         data_measure = \
@@ -204,6 +227,38 @@ class TestCalibrationProcedure(TestCase):
         cal.recalibrate(CALIBRATION_SETUP_SMU2450)
         self._check_reference_calibration(cal)
 
+    def test_calibration_file_missing(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerCalibration(_TEMP_FILE, _TEMP_FILE, _TEMP_FILE,
+                                    _TEMP_FILE, _TEMP_FILE)
+
+    def test_calibration_file_channel_missing(self):
+        cal = RocketLoggerCalibration(_VOLTAGE_FILE, _VOLTAGE_FILE,
+                                      _VOLTAGE_FILE, _VOLTAGE_FILE,
+                                      _VOLTAGE_FILE)
+        with self.assertRaises(KeyError):
+            cal.recalibrate(CALIBRATION_SETUP_SMU2450)
+
+    def test_calibration_print_stat(self):
+        cal = RocketLoggerCalibration(_VOLTAGE_FILE, _CURRENT_LO1_FILE,
+                                      _CURRENT_HI_FILE, _CURRENT_LO2_FILE,
+                                      _CURRENT_HI_FILE)
+        cal.recalibrate(CALIBRATION_SETUP_SMU2450)
+        cal.print_statistics()
+
+    def test_calibration_print_stat_uncalibrated(self):
+        cal = RocketLoggerCalibration(_VOLTAGE_FILE, _CURRENT_LO1_FILE,
+                                      _CURRENT_HI_FILE, _CURRENT_LO2_FILE,
+                                      _CURRENT_HI_FILE)
+        cal.print_statistics()
+
+    def test_calibration_write_log(self):
+        cal = RocketLoggerCalibration(_VOLTAGE_FILE, _CURRENT_LO1_FILE,
+                                      _CURRENT_HI_FILE, _CURRENT_LO2_FILE,
+                                      _CURRENT_HI_FILE)
+        cal.recalibrate(CALIBRATION_SETUP_SMU2450)
+        cal.write_log_file(_TEMP_FILE)
+
     def test_calibration_write_reread(self):
         cal = RocketLoggerCalibration(_VOLTAGE_FILE, _CURRENT_LO1_FILE,
                                       _CURRENT_HI_FILE, _CURRENT_LO2_FILE,
@@ -230,7 +285,7 @@ class TestCalibrationProcedure(TestCase):
             [3.15541961e+01, 1.75362819e+01, -1.22411163e+02, -1.22087393e+02,
              3.15646990e+01, 1.75031048e+01, -1.22223889e+02, -1.22244353e+02])
         self.assertEqual(calibration._calibration_timestamp, reference_time)
-        self.assertEqual(np.allclose(
-            calibration._calibration_offset, reference_offset), True)
-        self.assertEqual(np.allclose(
-            calibration._calibration_scale, reference_scale), True)
+        self.assertTrue(np.allclose(calibration._calibration_offset,
+                                    reference_offset))
+        self.assertTrue(np.allclose(calibration._calibration_scale,
+                                    reference_scale))
