@@ -36,17 +36,17 @@ or using the shortcut with passing the trace filenames::
 to calculate new calibration parameters and store the files use::
 
     >>> cal.recalibrate(CALIBRATION_SETUP_SMU2450)
-    >>> cal.write_calibration_file()
+    >>> cal.write_calibration_file('calibration.dat')
 
-it is recommended to calculate and print the errors within the calibration data
-to verify that the provided calibration measurements were properly recorded::
+it is recommended to print the errors within the calibration data to verify
+that the provided calibration measurements were properly recorded::
 
-    >>> cal.calculate_error()
     >>> cal.print_statistics()
 
-the statistics output can also be save as log file, which is highly recommended::
+the statistics output can also be save as log file (it is  recommend to always
+keep a log file along with the calibration)::
 
-    >>> cal.write_log_file()
+    >>> cal.write_log_file('calibration.log')
 
 For a ready made script that can be used for performing the calibration
 calculations is available in `calibrate.py` distributed with the package.
