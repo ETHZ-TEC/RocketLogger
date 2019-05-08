@@ -133,6 +133,8 @@ apt install --assume-yes     \
   libi2c-dev                 \
   linux-headers-$(uname -r)
 
+echo "WARNING: package am335x-pru-package does not exist anymore. Needs to manually installed from <https://github.com/beagleboard/am335x_pru_package>."
+
 
 ## reboot
 echo "Platform initialized. System will reboot to apply configuration changes."
