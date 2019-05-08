@@ -14,7 +14,10 @@
 		},
 		{
 			"path": "software/debian"
-		}
+		},
+		{
+			"path": "software/device_tree_overlay"
+		},
 		{
 			"path": "../rocketlogger.wiki"
 		},
