@@ -51,7 +51,7 @@ echo "> Create new user 'rocketlogger'"
 # add new rocketlogger user with home directory and bash shell
 useradd --create-home --shell /bin/bash rocketlogger
 # set default password
-echo "rocketlogger:beaglebone" | chpasswd
+cat user/password | chpasswd
 
 # add rocketlogger user to admin and sudo group for super user commands
 usermod --append --groups admin rocketlogger
@@ -72,8 +72,9 @@ chage -E 1970-01-01 debian
 echo "> Setting user permissions"
 
 # configure sudoers
-cp -f sudo/sudoers /etc/
 cp -f sudo/privacy /etc/sudoers.d/
+cp -f sudo/rocketlogger_web /etc/sudoers.d/
+chmod 440 /etc/sudoers.d/*
 
 
 ## security
@@ -101,11 +102,7 @@ echo "> Updating network configuration"
 # copy network interface configuration
 cp -f network/interfaces /etc/network/
 
-# copy dhcp server configuration
-cp -f network/isc-dhcp-server /etc/default/isc-dhcp-server
-cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
-
-# create RL folder
+# create RocketLogger system config folder
 mkdir -p /etc/rocketlogger
 
 
