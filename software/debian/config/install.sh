@@ -73,7 +73,7 @@ echo "> Setting user permissions"
 
 # configure sudoers
 cp -f sudo/privacy /etc/sudoers.d/
-cp -f sudo/rocketlogger_web /etc/sudoers.d/
+#cp -f sudo/rocketlogger_web /etc/sudoers.d/
 chmod 440 /etc/sudoers.d/*
 
 
@@ -114,23 +114,26 @@ apt update --assume-yes
 apt upgrade --assume-yes
 
 # install fundamental dependencies
-apt install --assume-yes     \
-  unzip                      \
-  git                        \
-  make                       \
-  gcc                        \
-  g++                        \
-  ti-pru-cgt-installer       \
-  device-tree-compiler       \
-  ntp                        \
-  apache2                    \
-  lighttpd                   \
-  php-cgi                    \
-  libncurses5-dev            \
-  libi2c-dev                 \
+apt install --assume-yes        \
+  unzip                         \
+  git                           \
+  make                          \
+  gcc                           \
+  g++                           \
+  pru-software-support-package  \
+  ti-pru-cgt-installer          \
+  device-tree-compiler          \
+  ntp                           \
+  apache2                       \
+  lighttpd                      \
+  php-cgi                       \
+  libncurses5-dev               \
+  i2c-tools                     \
+  libi2c-dev                    \
   linux-headers-$(uname -r)
 
 echo "WARNING: package am335x-pru-package does not exist anymore. Needs to manually installed from <https://github.com/beagleboard/am335x_pru_package>."
+echo "WARNING: need to manually rund ldconfig after installing  am335x-pru-package PRU libraries."
 
 
 ## reboot

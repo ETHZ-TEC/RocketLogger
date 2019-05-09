@@ -32,7 +32,7 @@
 # 
 
 HOSTNAME="rocketlogger"
-REBOOT_TIMEOUT=20
+REBOOT_TIMEOUT=60
 
 # check arguments
 if [ $# -lt 1 ]; then
