@@ -29,19 +29,59 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdlib.h>
+
+#define LOG_FILE "/var/www/log/deamon.log"
+
 #include "gpio.h"
+#include "log.h"
 
 /// Linux GPIO number of start/stop button
 #define GPIO_BUTTON 26
+
+/// Linux GPIO number of start/stop button
+#define GPIO_POWER 31
+
 /// Minimal time interval between two interrupts (in seconds)
 #define MIN_INTERVAL 1
 
 /**
- * Setup button GPIO
+ * Setup power GPIO and power of RocketLogger cape
+ * 
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int gpio_setup(void) {
+int power_init(void) {
+    int ret1 = gpio_export(GPIO_POWER);
+    int ret2 = gpio_dir(GPIO_POWER, OUT);
+    int ret3 = gpio_set_value(GPIO_POWER, 1);
 
+    if (ret1 == FAILURE || ret2 == FAILURE || ret3 == FAILURE) {
+        return FAILURE;
+    }
+    return SUCCESS;
+}
+
+/**
+ * Deinitialize power GPIO
+ * 
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int power_deinit(void) {
+    int ret1 = gpio_set_value(GPIO_POWER, 0);
+    int ret2 = gpio_unexport(GPIO_POWER);
+
+    if (ret1 == FAILURE || ret2 == FAILURE) {
+        return FAILURE;
+    }
+    return SUCCESS;
+}
+
+/**
+ * Setup button GPIO and enable interrup
+ * 
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int button_init(void) {
     int ret1 = gpio_export(GPIO_BUTTON);
     int ret2 = gpio_dir(GPIO_BUTTON, IN);
     int ret3 = gpio_interrupt(GPIO_BUTTON, FALLING);
@@ -49,16 +89,30 @@ int gpio_setup(void) {
     if (ret1 == FAILURE || ret2 == FAILURE || ret3 == FAILURE) {
         return FAILURE;
     }
+    return SUCCESS;
+}
 
+/**
+ * Deinitialize button GPIO
+ * 
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int button_deinit(void) {
+    int ret1 = gpio_interrupt(GPIO_BUTTON, NONE);
+    int ret2 = gpio_unexport(GPIO_BUTTON);
+
+    if (ret1 == FAILURE || ret2 == FAILURE) {
+        return FAILURE;
+    }
     return SUCCESS;
 }
 
 /**
  * GPIO interrupt handler
+ * 
  * @param value GPIO value after interrupt
  */
-void interrupt_handler(int value) {
-
+void button_interrupt_handler(int value) {
     if (value == 0) { // only react if button pressed enough long
 
         // get RL status
@@ -83,16 +137,32 @@ void interrupt_handler(int value) {
  * @return standard Linux return codes
  */
 int main(void) {
+    // reset GPIO configuration
+    gpio_unexport(GPIO_POWER);
+    gpio_unexport(GPIO_BUTTON);
+    sleep(1);
 
-    int timeout = -1; // infinite timeout
-    if (gpio_setup() == FAILURE) {
+    if (power_init() == FAILURE) {
+        rl_log(ERROR, "Failed powering up cape.");
+        exit(EXIT_FAILURE);
+    }
+    if (button_init() == FAILURE) {
+        rl_log(ERROR, "Failed configuring button.");
         exit(EXIT_FAILURE);
     }
 
+    rl_log(INFO, "RocketLogger daemon started.");
+
     while (1) {
-        int val = gpio_wait_interrupt(GPIO_BUTTON, timeout);
-        interrupt_handler(val);
+        // wait for interrupt with indefinite timeout (-1)
+        int val = gpio_wait_interrupt(GPIO_BUTTON, -1);
+        button_interrupt_handler(val);
     }
+
+    rl_log(INFO, "RocketLogger daemon stopping...");
+
+    button_deinit();
+    power_deinit();
 
     exit(EXIT_SUCCESS);
 }

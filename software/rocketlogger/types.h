@@ -81,7 +81,9 @@
 /// Process ID file for background process
 #define PID_FILE "/var/run/rocketlogger.pid"
 /// Log file name
-#define LOG_FILE "/var/www/log/log.txt"
+#ifndef LOG_FILE
+#define LOG_FILE "/var/www/log/rocketlogger.log"
+#endif
 /// File to read MAC address
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
 /// Calibration file name
