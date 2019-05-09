@@ -32,20 +32,8 @@
 #ifndef SENSOR_TSL4531_H_
 #define SENSOR_TSL4531_H_
 
-#include <errno.h>
-#include <math.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <unistd.h>
 
-#include <fcntl.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "../log.h"
-#include "../types.h"
 
 #define TSL4531_I2C_ADDRESS_LEFT 0x29
 #define TSL4531_I2C_ADDRESS_RIGHT 0x28

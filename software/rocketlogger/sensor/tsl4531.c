@@ -30,6 +30,11 @@
  */
 
 #include <errno.h>
+#include <stdint.h>
+
+#include <i2c/smbus.h>
+
+#include "../log.h"
 
 #include "sensor.h"
 

@@ -31,7 +31,9 @@
 
 #include <stdint.h>
 
+#include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
 #include "../log.h"
 

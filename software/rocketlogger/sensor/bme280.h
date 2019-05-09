@@ -32,20 +32,7 @@
 #ifndef SENSOR_BME280_H_
 #define SENSOR_BME280_H_
 
-#include <errno.h>
-#include <math.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include <fcntl.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "../log.h"
-#include "../types.h"
 
 #define BME280_I2C_ADDRESS_LEFT 0x76
 

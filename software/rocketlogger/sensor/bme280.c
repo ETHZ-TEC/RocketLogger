@@ -29,6 +29,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
+
+#include <i2c/smbus.h>
+
+#include "../log.h"
+
 #include "sensor.h"
 
 #include "bme280.h"
