@@ -45,7 +45,7 @@
   part-number = "ROCKETLOGGER";
   version = "00A0";
 
-  /* ressources used by the rocketlogger cape */
+  /* resources used by the rocketlogger cape */
   exclusive-use =
 
     /* GPIO pins used */
@@ -87,8 +87,40 @@
     "ehrpwm1A", /* EHRPWM1 for Latch reset signal generation */
     "ehrpwm1B";
 
-  /* Pin definitions */
+  /* Free pins used by the pinmux helpers */
   fragment@0 {
+		target = <&ocp>;
+		__overlay__ {
+      P9_22_pinmux { status = "disabled"; }; /* ADC clock pin, ehrpwm0A controlled */
+      P9_14_pinmux { status = "disabled"; }; /* Latch reset A pin, ehrpwm1A controlled */
+      P9_16_pinmux { status = "disabled"; }; /* Latch reset B pin, ehrpwm1B controlled */
+      P9_24_pinmux { status = "disabled"; }; /* MISO1 pin, PRU0 controlled */
+      P9_25_pinmux { status = "disabled"; }; /* START pin, PRU0 controlled */
+      P9_27_pinmux { status = "disabled"; }; /* CS1 pin, PRU0 controlled */
+      P9_28_pinmux { status = "disabled"; }; /* CS0 pin, PRU0 controlled */
+      P9_29_pinmux { status = "disabled"; }; /* MOSI pin, PRU0 controlled */
+      P9_30_pinmux { status = "disabled"; }; /* MISO0 pin, PRU0 controlled */
+      P9_31_pinmux { status = "disabled"; }; /* SCLK pin, PRU0 controlled */
+      P8_15_pinmux { status = "disabled"; }; /* DR1 pin, PRU0 controlled */
+      P8_16_pinmux { status = "disabled"; }; /* DR0 pin, PRU0 controlled */
+      P9_11_pinmux { status = "disabled"; }; /* nForce high range 1 pin */
+      P9_12_pinmux { status = "disabled"; }; /* nForce high range 2 pin */
+      P8_11_pinmux { status = "disabled"; }; /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+      P8_12_pinmux { status = "disabled"; }; /* Error LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+      P8_14_pinmux { status = "disabled"; }; /* User button pin */
+      P9_13_pinmux { status = "disabled"; }; /* User button pin */
+      P8_27_pinmux { status = "disabled"; }; /* Digital input 3 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_28_pinmux { status = "disabled"; }; /* Digital input 4 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_29_pinmux { status = "disabled"; }; /* Digital input 5 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_39_pinmux { status = "disabled"; }; /* Digital input 6 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_40_pinmux { status = "disabled"; }; /* Digital input 1 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_41_pinmux { status = "disabled"; }; /* Digital input 2 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_13_pinmux { status = "disabled"; }; /* Digital input buffer disable pin */
+		};
+	};
+
+  /* Pin mux configuration */
+  fragment@1 {
     target = <&am33xx_pinmux>;
     __overlay__ {
       rl_pwm0_pins: pinmux_rl_pwm0_pins {
@@ -235,6 +267,8 @@
     __overlay__ {
       adc_clock {
         compatible = "ti,am33xx-ehrpwm";
+        #pwm-cells = <3>;
+//        reg = <0x48300200 0x100>;
         pwms = <&ehrpwm0 0 500000 (1 << 0)>;
         pwm-names = "rl_pwm0";
         pinctrl-names = "default";
@@ -251,6 +285,8 @@
     __overlay__ {
       range_switch_clock {
         compatible = "ti,am33xx-ehrpwm";
+        #pwm-cells = <3>;
+//        reg = <0x48302200 0x100>;
         pwms = <&ehrpwm1 0 500000 (1 << 0)>;
         pwm-names = "rl_pwm1";
         pinctrl-names = "default";
