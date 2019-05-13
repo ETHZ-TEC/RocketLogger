@@ -29,94 +29,146 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
+#include "log.h"
+#include "sysfs.h"
+
 #include "pwm.h"
 
 /// Physical memory file descriptor
-int mem_fd;
-/// Pointer to PWMSS0 (PWM-Sub-System) registers
-volatile uint16_t* pwmss0_regs;
-/// Pointer to PWMSS1 (PWM-Sub-System) registers
-volatile uint16_t* pwmss1_regs;
+int mem_fd = -1;
+/// Pointer to PWM0 registers
+volatile uint8_t* pwm0_mem = NULL;
+/// Pointer to PWM1 registers
+volatile uint8_t* pwm1_mem = NULL;
 
-/**
- * Map PWM registers into user space (on {@link pwmss0_regs} and {@link
- * pwmss1_regs} pointer)
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
- */
-int pwm_setup(void) {
+
+int pwm_init(void) {
+    // export and enable PWM peripherals via sysfs interface
+    sysfs_export(PWM0_SYSFS_PATH "export", EPWM0A_SYSFS_INDEX);
+    sysfs_export(PWM1_SYSFS_PATH "export", EPWM1A_SYSFS_INDEX);
+    sysfs_export(PWM1_SYSFS_PATH "export", EPWM1B_SYSFS_INDEX);
+
+    sysfs_write_int(EPWM0A_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
+    sysfs_write_int(EPWM1A_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
+    sysfs_write_int(EPWM1B_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
+
+    sysfs_write_int(EPWM0A_SYSFS_PATH "enable", 1);
+    sysfs_write_int(EPWM1A_SYSFS_PATH "enable", 1);
+    sysfs_write_int(EPWM1B_SYSFS_PATH "enable", 1);
 
     // open /dev/mem for memory mapping
-    if ((mem_fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
-        rl_log(ERROR, "can't open /dev/mem");
+    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if (mem_fd < 0) {
+        rl_log(ERROR, "can't open /dev/mem (%d)", mem_fd);
         return FAILURE;
     }
 
-    // map pwm0 registers into virtual memory
-    pwmss0_regs =
-        (volatile uint16_t*)mmap(NULL, PWM_SIZE, PROT_READ | PROT_WRITE,
-                                 MAP_SHARED, mem_fd, PWMSS0_BASE);
-    if (pwmss1_regs == (volatile uint16_t*)MAP_FAILED) {
-        rl_log(ERROR, "mmap failed");
-        close(mem_fd);
+    // map PWM0 registers
+    pwm0_mem = (volatile uint8_t*) mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWM0_BASE);
+    if ((void*)pwm0_mem == MAP_FAILED) {
+        pwm_deinit();
+        rl_log(ERROR, "mmap for PWM0 failed");
         return FAILURE;
     }
 
-    // map pwm1 registers into virtual memory
-    pwmss1_regs =
-        (volatile uint16_t*)mmap(NULL, PWM_SIZE, PROT_READ | PROT_WRITE,
-                                 MAP_SHARED, mem_fd, PWMSS1_BASE);
-    if (pwmss1_regs == (volatile uint16_t*)MAP_FAILED) {
-        rl_log(ERROR, "mmap failed");
-        close(mem_fd);
+    // map PWM1 registers
+    pwm1_mem = (volatile uint8_t*) mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWM1_BASE);
+    if ((void*)pwm1_mem == MAP_FAILED) {
+        pwm_deinit();
+        rl_log(ERROR, "mmap for PWM1 failed");
         return FAILURE;
     }
 
-    return SUCCESS;
+    return 0;
 }
 
-/**
- * Unmap PWM registers from user space
- */
-void pwm_close(void) {
-
+void pwm_deinit(void) {
     // unmap memory
-    munmap((void*)pwmss0_regs, PWM_SIZE);
-    munmap((void*)pwmss1_regs, PWM_SIZE);
+    if (pwm0_mem != NULL) {
+        munmap((void*)pwm0_mem, PWM_SIZE);
+        pwm0_mem = NULL;
+    }
+    if (pwm1_mem != NULL) {
+        munmap((void*)pwm1_mem, PWM_SIZE);
+        pwm1_mem = NULL;
+    }
 
     // close /dev/mem
-    close(mem_fd);
+    if (mem_fd >= 0) {
+        close(mem_fd);
+        mem_fd = -1;
+    }
+
+    // disable and unexport peripheral via sysfs interface
+    sysfs_write_int(EPWM0A_SYSFS_PATH "enable", 0);
+    sysfs_write_int(EPWM1A_SYSFS_PATH "enable", 0);
+    sysfs_write_int(EPWM1B_SYSFS_PATH "enable", 0);
+
+    sysfs_unexport(PWM0_SYSFS_PATH "unexport", EPWM0A_SYSFS_INDEX);
+    sysfs_unexport(PWM1_SYSFS_PATH "unexport", EPWM1A_SYSFS_INDEX);
+    sysfs_unexport(PWM1_SYSFS_PATH "unexport", EPWM1B_SYSFS_INDEX);
 }
 
-/**
- * Setup PWMSS1 for range latch reset clock
- * @param sample_rate ADC sampling rate in Sps
- */
-void pwm_setup_range_clock(int sample_rate) {
+void pwm_setup_range_reset(uint32_t sample_rate) {
+    // calculate period and compare register values
+    uint32_t period = RANGE_RESET_PERIOD_SCALE / sample_rate;
+    uint32_t compare_b = (uint32_t)(period * RANGE_RESET_PULSE_WIDTH) / 2;
+    uint32_t compare_a = period - compare_b;
 
-    int period = PWM_PERIOD_SCALE / sample_rate;
+    // get pointers of PWMSS1 registers
+    volatile uint16_t *epwm1_tbctl =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
+    volatile uint16_t *epwm1_tbprd =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
+    volatile uint16_t *epwm1_cmpa =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
+    volatile uint16_t *epwm1_cmpb =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_CMPB_OFFSET);
+    volatile uint16_t *epwm1_aqctla =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
+    volatile uint16_t *epwm1_aqctlb =
+        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLB_OFFSET);
 
-    // setup ehrpwm
-    pwmss1_regs[TBCTL] =
-        TBCTL_DEFAULT | UP_DOWN_COUNT | PRESCALE2; // set clock mode
+    // set clock prescaler 2 and up-down counting mode, no period double buffering
+    *epwm1_tbctl = TBCTL_FREERUN | TBCTL_CLKDIV_2 | TBCTL_PRDLD | TBCTL_COUNT_UP_DOWN;
 
-    pwmss1_regs[TBPRD] = period; // set clock period
+    // set period and compare register values
+    *epwm1_tbprd = (uint16_t)period;
+    *epwm1_cmpa = (uint16_t)compare_a;
+    *epwm1_cmpb = (uint16_t)compare_b;
 
-    pwmss1_regs[CMPA] = (1 - PULSE_WIDTH / 2) *
-                        period; // set compare registers for both output signals
-    pwmss1_regs[CMPB] = PULSE_WIDTH / 2 * period;
-
-    pwmss1_regs[AQCTLA] = RWC_AQ_A; // set actions
-    pwmss1_regs[AQCTLB] = RWC_AQ_B;
+    // set action qualifiers for both channels
+    *epwm1_aqctla = AQ_A_INCSET | AQ_A_DECCLR;
+    *epwm1_aqctlb = AQ_B_INCCLR | AQ_B_DECSET;
 }
 
-/**
- * Setup PWMSS0 for ADC master clock
- */
 void pwm_setup_adc_clock(void) {
+    // get pointers of PWMSS0 registers
+    volatile uint16_t *epwm0_tbctl =
+        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
+    volatile uint16_t *epwm0_tbprd =
+        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
+    volatile uint16_t *epwm0_cmpa =
+        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
+    volatile uint16_t *epwm0_aqctla =
+        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
 
-    // setup ehrpwm
-    pwmss0_regs[TBCTL] = TBCTL_DEFAULT;
-    pwmss0_regs[TBPRD] = ADC_CLOCK_PERIOD;
-    pwmss0_regs[CMPA] = ADC_CLOCK_PERIOD / 2; // 50% duty
-    pwmss0_regs[AQCTLA] = ADC_AQ;
+    // set clock prescaler 1 and up counting mode, no period double buffering
+    *epwm0_tbctl = TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP;
+
+    // set period and compare register values
+    *epwm0_tbprd = ADC_CLOCK_PERIOD;
+    *epwm0_cmpa = ADC_CLOCK_PERIOD / 2;
+
+    // set action qualifiers for both channels
+    *epwm0_aqctla = AQ_A_INCSET | AQ_PRDCLR | AQ_ZROCLR;
 }

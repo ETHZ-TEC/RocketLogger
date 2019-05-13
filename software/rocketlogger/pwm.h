@@ -32,79 +32,191 @@
 #ifndef PWM_H_
 #define PWM_H_
 
-#include <errno.h>
-#include <fcntl.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
-#include "log.h"
-#include "types.h"
 
-// base addresses
-/// PWMSS0 register base address
-#define PWMSS0_BASE 0x48300000
-/// PWMSS1 register base address
-#define PWMSS1_BASE 0x48302000
-/// EPWM module register offset
+/// Linux sysfs paths device files
+/// Path to the Linux sysfs PWM0 device files
+#define PWM0_SYSFS_PATH "/sys/class/pwm/pwmchip1/"
+/// Path to the Linux sysfs PWM1 device files
+#define PWM1_SYSFS_PATH "/sys/class/pwm/pwmchip4/"
+
+/// Index of the Linux sysfs ePWM0A module
+#define EPWM0A_SYSFS_INDEX 0
+/// Index of the Linux sysfs ePWM1A module
+#define EPWM1A_SYSFS_INDEX 0
+/// Index of the Linux sysfs ePWM1B module
+#define EPWM1B_SYSFS_INDEX 1
+
+/// Path to the Linux sysfs ePWM0A module
+#define EPWM0A_SYSFS_PATH PWM0_SYSFS_PATH "pwm-1:0/"
+/// Path to the Linux sysfs ePWM1A module
+#define EPWM1A_SYSFS_PATH PWM1_SYSFS_PATH "pwm-4:0/"
+/// Path to the Linux sysfs ePWM1B module
+#define EPWM1B_SYSFS_PATH PWM1_SYSFS_PATH "pwm-4:1/"
+
+/// Default PWM period
+#define PWM_PERIOD_DEFAULT 100000000
+
+// PWM module register base addresses, offsets and sizes
+/// PWM0 register base address
+#define PWM0_BASE 0x48300000
+/// PWM1 register base address
+#define PWM1_BASE 0x48302000
+/// PWM2 module register offset
+#define PWM2_BASE 0x48304000
+
+/// PWMSS module register offset
+#define PWMSS_OFFSET 0x0000
+/// eCAP module register offset
+#define ECAP_OFFSET 0x0100
+/// eQEP module register offset
+#define EQEP_OFFSET 0x0180
+/// ePWM module register offset
 #define EPWM_OFFSET 0x0200
 
-// pwm size
-/// Size of PWM register memory
-#define PWM_SIZE 0x00000FFF
+/// PWM module register map size
+#define PWM_SIZE 0x0260
+/// PWMSS module register map size
+#define PWMSS_SIZE 0x0100
+/// eCAP module register map size
+#define ECAP_SIZE 0x0080
+/// eQEP module register map size
+#define EQEP_SIZE 0x0080
+/// ePWM module register map size
+#define EPWM_SIZE 0x0060
 
-// configuration registers
-/// Counter control register offset
-#define TBCTL (EPWM_OFFSET + 0x0) / sizeof(uint16_t) // counter control
-/// Period register offset
-#define TBPRD (EPWM_OFFSET + 0xA) / sizeof(uint16_t) // period
-/// Compare register A offset
-#define CMPA (EPWM_OFFSET + 0x12) / sizeof(uint16_t) // compare
-/// Compare register B offset
-#define CMPB (EPWM_OFFSET + 0x14) / sizeof(uint16_t)
-/// Action qualifier register offset
-#define AQCTLA (EPWM_OFFSET + 0x16) / sizeof(uint16_t) // action qualifier
-/// Action qualifier register B offset
-#define AQCTLB (EPWM_OFFSET + 0x18) / sizeof(uint16_t)
 
-// register values
-/// Default counter value (see AM335x_TR)
-#define TBCTL_DEFAULT 0xC000
-/// Up-down counting
-#define UP_DOWN_COUNT 0x0002
-/// Counter prescale 2
-#define PRESCALE2 0x0400
+// PWMSS sub-module register base addresses, offsets and sizes
 
-// range switch clock configuration (action qualifier)
-/// Action qualifier A value for latch reset (see AM335x_TR)
-#define RWC_AQ_A 0x0060 // set when incrementing, clear when decrementing
-/// Action qualifier B value for latch reset (see AM335x_TR)
-#define RWC_AQ_B 0x0900 // set when decrementing, clear when incrementing
+/// PWMSS0 register base address
+#define PWMSS0_BASE (PWM0_BASE + PWMSS_OFFSET)
+/// PWMSS1 register base address
+#define PWMSS1_BASE (PWM1_BASE + PWMSS_OFFSET)
+/// PWMSS2 module register offset
+#define PWMSS2_BASE (PWM2_BASE + PWMSS_OFFSET)
 
-// pulse configuration
-/// Latch reset pulse width (part of sampling period)
-#define PULSE_WIDTH 0.1 // 10% of sampling period
-/// Latch reset period margin
-#define MARGIN 0.1
-/// Latch reset period scaling factor
-#define PWM_PERIOD_SCALE                                                       \
-    50000000 *                                                                 \
-        (1 + PULSE_WIDTH + MARGIN) // period scaling factor (period is set in
-                                   // 5ns, (/2 clock prescaling))
+// ePWM sub-module register base addresses, offsets and sizes
+/// ePWM0 register base address
+#define EPWM0_BASE (PWM0_BASE + EPWM_OFFSET)
+/// ePWM1 register base address
+#define EPWM1_BASE (PWM1_BASE + EPWM_OFFSET)
+/// ePWM2 register base address
+#define EPWM2_BASE (PWM2_BASE + EPWM_OFFSET)
 
-// ADC clock settings
-/// ADC master clock period in ns
-#define ADC_CLOCK_PERIOD 48 // in 10ns
-/// Action qualifier value for ADC clock (see AM335x_TR)
-#define ADC_AQ 0x0025 // clear on zero and period, set at 50%
 
-int pwm_setup(void);
-void pwm_close(void);
+// PWMSS configuration register offsets
+/// IP Revision Register
+#define PWMSS_IDVER_OFFSET 0x00
+/// System Configuration Register
+#define PWMSS_SYSCONFIG_OFFSET 0x04
+/// Clock Configuration Register
+#define PWMSS_CLKCONFIG_OFFSET 0x08
+/// Clock Status Register
+#define PWMSS_CLKSTATUS_OFFSET 0x0C
 
-void pwm_setup_range_clock(int sample_rate);
+
+// ePWM configuration register offsets
+/// Time-Base Control Register
+#define EPWM_TBCTL_OFFSET 0x00
+/// Time-Base Status Register
+#define EPWM_TBSTS_OFFSET 0x02
+/// Time-Base Phase Register
+#define EPWM_TBPHS_OFFSET 0x06
+/// Time-Base Counter Register
+#define EPWM_TBCNT_OFFSET 0x08
+/// Time-Base Period Register
+#define EPWM_TBPRD_OFFSET 0x0A
+/// Counter-Compare Control Register
+#define EPWM_CMPCTL_OFFSET 0x0E
+/// Counter-Compare A Register
+#define EPWM_CMPA_OFFSET 0x12
+/// Counter-Compare B Register
+#define EPWM_CMPB_OFFSET 0x14
+/// Action-Qualifier Control Register for Output A (EPWMxA)
+#define EPWM_AQCTLA_OFFSET 0x16
+/// Action-Qualifier Control Register for Output B (EPWMxB)
+#define EPWM_AQCTLB_OFFSET 0x18
+
+
+// ePWM configuration register values (selection)
+/// TBCTL default value after reset
+#define TBCTL_FREERUN 0xC000
+/// Up counting mode
+#define TBCTL_COUNT_UP 0x0000
+/// Up-down counting mode
+#define TBCTL_COUNT_UP_DOWN 0x0002
+/// Period register double buffer disable
+#define TBCTL_PRDLD 0x0008
+/// Use counter clock prescaler of 1
+#define TBCTL_CLKDIV_1 0x0000
+/// Use counter clock prescaler of 2
+#define TBCTL_CLKDIV_2 0x0400
+
+/// Action quilifier: clear on zero
+#define AQ_ZROCLR 0x0001
+/// Action quilifier: set on zero
+#define AQ_ZROSET 0x0002
+/// Action quilifier: clear on period
+#define AQ_PRDCLR 0x0004
+/// Action quilifier: clear set on period
+#define AQ_PRDSET 0x0008
+/// Action quilifier: clear on compare A when incrementing
+#define AQ_A_INCCLR 0x0010
+/// Action quilifier: set on compare A when incrementing
+#define AQ_A_INCSET 0x0020
+/// Action quilifier: clear on compare A when decrementing
+#define AQ_A_DECCLR 0x0040
+/// Action quilifier: set on compare A when decrementing
+#define AQ_A_DECSET 0x0080
+/// Action quilifier: clear on compare B when incrementing
+#define AQ_B_INCCLR 0x0100
+/// Action quilifier: set on compare B when incrementing
+#define AQ_B_INCSET 0x0200
+/// Action quilifier: clear on compare B when decrementing
+#define AQ_B_DECCLR 0x0400
+/// Action quilifier: set on compare B when decrementing
+#define AQ_B_DECSET 0x0800
+
+/// ADC master clock period (in units 10 ns)
+#define ADC_CLOCK_PERIOD 48
+/// Range latch reset pulse width (fraction of sampling period in [0, 1])
+#define RANGE_RESET_PULSE_WIDTH 0.1
+/// Range latch reset period extra margin (fraction of sampling period in [0, 1])
+#define RANGE_RESET_PERIOD_MARGIN 0.1
+/// Range latch reset period scaling factor (in units of 20 ns)
+#define RANGE_RESET_PERIOD_SCALE                                              \
+  (50000000 * (1 + RANGE_RESET_PULSE_WIDTH + RANGE_RESET_PERIOD_MARGIN))
+
+
+/**
+ * Initialize PWM modules.
+ * 
+ * Map PWM registers into user space (on {@link pwm0_mem} and {@link
+ * pwm1_mem} pointer)
+ * 
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
+int pwm_init(void);
+
+/**
+ * Deinitialize PWM modules.
+ * 
+ * Unmapping registers from user space
+ */
+void pwm_deinit(void);
+
+/**
+ * Setup PWMSS1 for range latch reset clock.
+ * 
+ * @param sample_rate ADC sampling rate in Sps
+ */
+void pwm_setup_range_reset(uint32_t sample_rate);
+
+/**
+ * Setup PWMSS0 for ADC master clock.
+ */
 void pwm_setup_adc_clock(void);
+
 
 #endif /* PWM_H_ */

@@ -89,8 +89,8 @@
 
   /* Free pins used by the pinmux helpers */
   fragment@0 {
-		target = <&ocp>;
-		__overlay__ {
+    target = <&ocp>;
+    __overlay__ {
       P9_22_pinmux { status = "disabled"; }; /* ADC clock pin, ehrpwm0A controlled */
       P9_14_pinmux { status = "disabled"; }; /* Latch reset A pin, ehrpwm1A controlled */
       P9_16_pinmux { status = "disabled"; }; /* Latch reset B pin, ehrpwm1B controlled */
@@ -116,8 +116,8 @@
       P8_40_pinmux { status = "disabled"; }; /* Digital input 1 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
       P8_41_pinmux { status = "disabled"; }; /* Digital input 2 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
       P8_13_pinmux { status = "disabled"; }; /* Digital input buffer disable pin */
-		};
-	};
+    };
+  };
 
   /* Pin mux configuration */
   fragment@1 {
@@ -189,28 +189,28 @@
   fragment@10 {
     target = <&ocp>;
     __overlay__ {
-      rl_range_pinmux {
+      rl_range_pinmux: rl_range_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_range_pins>;
       };
 
-      rl_user_pinmux {
+      rl_user_pinmux: rl_user_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_user_pins>;
       };
 
-      rl_power_pinmux {
+      rl_power_pinmux: rl_power_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_power_pins>;
       };
 
-      rl_digital_pinmux {
+      rl_digital_pinmux: rl_digital_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
@@ -243,6 +243,8 @@
     target = <&ehrpwm0>;
     __overlay__ {
       status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm0_pins>;
     };
   };
 
@@ -257,44 +259,8 @@
     target = <&ehrpwm1>;
     __overlay__ {
       status = "okay";
-    };
-  };
-
-
-  /* PWM configuration */  
-  fragment@40 {
-    target = <&ocp>;
-    __overlay__ {
-      adc_clock {
-        compatible = "ti,am33xx-ehrpwm";
-        #pwm-cells = <3>;
-//        reg = <0x48300200 0x100>;
-        pwms = <&ehrpwm0 0 500000 (1 << 0)>;
-        pwm-names = "rl_pwm0";
-        pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm0_pins>;
-        status = "okay";
-//        enabled = <1>;
-//        duty = <0>;
-      };
-    };
-  };
-
-  fragment@41 {
-    target = <&ocp>;
-    __overlay__ {
-      range_switch_clock {
-        compatible = "ti,am33xx-ehrpwm";
-        #pwm-cells = <3>;
-//        reg = <0x48302200 0x100>;
-        pwms = <&ehrpwm1 0 500000 (1 << 0)>;
-        pwm-names = "rl_pwm1";
-        pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm1_pins>;
-        status = "okay";
-//        enabled = <1>;
-//        duty = <0>;
-      };
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm1_pins>;
     };
   };
 };

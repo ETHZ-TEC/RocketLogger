@@ -29,7 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "gpio.h"
+#include "pru.h"
+#include "pwm.h"
 #include "sensor/sensor.h"
+#include "types.h"
 
 #include "rl_hw.h"
 
@@ -39,16 +43,17 @@
  */
 void hw_init(struct rl_conf* conf) {
 
-    // PWM
-    pwm_setup();
+    // PWM configuration
+    pwm_init();
+
     if (conf->sample_rate < MIN_ADC_RATE) {
-        pwm_setup_range_clock(MIN_ADC_RATE);
+        pwm_setup_range_reset(MIN_ADC_RATE);
     } else {
-        pwm_setup_range_clock(conf->sample_rate);
+        pwm_setup_range_reset(conf->sample_rate);
     }
     pwm_setup_adc_clock();
 
-    // GPIO
+    // GPIO configuration
     // force high range
     gpio_export(FHR1_GPIO);
     gpio_export(FHR2_GPIO);
@@ -92,7 +97,7 @@ void hw_init(struct rl_conf* conf) {
 void hw_close(struct rl_conf* conf) {
 
     // PWM
-    pwm_close();
+    pwm_deinit();
 
     // GPIO
     // force high range
