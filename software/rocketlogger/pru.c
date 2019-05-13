@@ -391,15 +391,14 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
     // file header lead-in
     struct rl_file_header ambient_file_header;
-    // channel array
-    struct rl_file_channel ambient_file_channel[conf->ambient.sensor_count];
 
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
 
         ambient_setup_lead_in(&(ambient_file_header.lead_in), conf);
 
-        // channel array
-        ambient_file_header.channel = ambient_file_channel;
+        // allocate channel array
+        ambient_file_header.channel =
+            malloc(conf->ambient.sensor_count * sizeof(struct rl_file_channel));
 
         // complete file header
         ambient_setup_header(&ambient_file_header, conf, file_comment);
@@ -657,13 +656,16 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     }
 
     // FILE FINISH (flush)
+    // flush ambient data and cleanup file header
+    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+        fflush(ambient_file);
+        free(ambient_file_header.channel);
+    }
+
     if (conf->file_format != NO_FILE && status.state != RL_ERROR) {
-        // print info
-        rl_log(INFO, "stored %llu samples to file", status.samples_taken);
-
-        printf("Stored %llu samples to file.\n", status.samples_taken);
-
         fflush(data_file);
+        rl_log(INFO, "stored %llu samples to file", status.samples_taken);
+        printf("Stored %llu samples to file.\n", status.samples_taken);
     }
 
     // PRU FINISH (unmap memory)
