@@ -32,54 +32,100 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-#include <fcntl.h>
-#include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+/// Path to the Linux sysfs GPIO device files
+#define GPIO_SYSFS_PATH "/sys/class/gpio/"
+/// Minimal time a button needs to be pressed (in microseconds)
+#define GPIO_DEBOUNCE_DELAY 100000
+/// Infinite GPIO interrupt wait timeout
+#define GPIO_INT_TIMEOUT_INF -1
 
-#include "log.h"
-#include "types.h"
+/// Linux sysfs GPIO number for forcing I1 high
+#define GPIO_FHR1 30
+/// Linux sysfs GPIO number for forcing I2 high
+#define GPIO_FHR2 60
+/// Linux sysfs GPIO number of status LED
+#define GPIO_LED_STATUS 45
+/// Linux sysfs GPIO number of error LED
+#define GPIO_LED_ERROR 44
+/// Linux sysfs GPIO number of start/stop button
+#define GPIO_BUTTON 26
+/// Linux sysfs GPIO number of RocketLogger cape power enable
+#define GPIO_POWER 31
 
-/// Path to linux GPIO device files
-#define GPIO_PATH "/sys/class/gpio/"
-/// Minimal time a button needs to be pressed (in µs)
-#define MIN_BUTTON_TIME 100000
 
 /**
  * GPIO direction definition
  */
-typedef enum direction {
-    IN, //!< GPIO read mode
-    OUT //!< GPIO write mode
-} rl_direction;
+typedef enum gpio_mode {
+    GPIO_MODE_IN, //!< GPIO read mode
+    GPIO_MODE_OUT //!< GPIO write mode
+} gpio_mode_t;
 
 /**
  * GPIO interrupt edge definition
  */
-typedef enum edge {
-    NONE,    //!< No interrupt
-    RISING,  //!< Interrupt on rising edge
-    FALLING, //!< Interrupt on falling edge
-    BOTH     //!< Interrupt on both edges
-} rl_edge;
+typedef enum gpio_interrupt {
+    GPIO_INT_NONE,    //!< No interrupt
+    GPIO_INT_RISING,  //!< Interrupt on rising edge
+    GPIO_INT_FALLING, //!< Interrupt on falling edge
+    GPIO_INT_BOTH,    //!< Interrupt on both edges
+} gpio_interrupt_t;
 
-// gpio unexport
-int gpio_unexport(int num);
 
-// gpio export
-int gpio_export(int num);
+/**
+ * Initialize a GPIO.
+ * 
+ * Export sysfs GPIO resource and configure GPIO mode.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param mode GPIO mode (input or output) to configure
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
+int gpio_init(int gpio_number, gpio_mode_t mode);
 
-// set direction
-int gpio_dir(int num, rl_direction dir);
+/**
+ * Denitialize a GPIO.
+ * 
+ * Unexport sysfs GPIO resource.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
+int gpio_deinit(int gpio_number);
 
-// gpio value
-int gpio_set_value(int num, int val);
-int gpio_get_value(int num);
+/**
+ * Set the GPIO value.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param value GPIO state to set (0 or 1)
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
+int gpio_set_value(int gpio_number, int value);
 
-// interrupt
-int gpio_interrupt(int num, rl_edge e);
-int gpio_wait_interrupt(int num, int timeout); // timout<0 -> infinite
+/**
+ * Get the GPIO value.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return The read GPIO value, {@link FAILURE} on failure
+ */
+int gpio_get_value(int gpio_number);
+
+/**
+ * Configure the GPIO interrupt mode.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param interrupt_mode GPIO interrupt mode to configure
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ */
+int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode);
+
+/**
+ * Wait for interrupt on GPIO pin.
+ * 
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param timeout Maximum waiting time (in milliseconds), negative for infinite
+ * @return {@link SUCCESS} in case of interrupt, {@link FAILURE} otherwise.
+ */
+int gpio_wait_interrupt(int gpio_number, int timeout);
 
 #endif /* GPIO_H_ */

@@ -55,21 +55,17 @@ void hw_init(struct rl_conf* conf) {
 
     // GPIO configuration
     // force high range
-    gpio_export(FHR1_GPIO);
-    gpio_export(FHR2_GPIO);
-    gpio_dir(FHR1_GPIO, OUT);
-    gpio_dir(FHR2_GPIO, OUT);
-    gpio_set_value(FHR1_GPIO,
+    gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
+    gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
+    gpio_set_value(GPIO_FHR1,
                    (conf->force_high_channels[0] == CHANNEL_DISABLED));
-    gpio_set_value(FHR2_GPIO,
+    gpio_set_value(GPIO_FHR2,
                    (conf->force_high_channels[1] == CHANNEL_DISABLED));
     // leds
-    gpio_export(LED_STATUS_GPIO);
-    gpio_export(LED_ERROR_GPIO);
-    gpio_dir(LED_STATUS_GPIO, OUT);
-    gpio_dir(LED_ERROR_GPIO, OUT);
-    gpio_set_value(LED_STATUS_GPIO, 1);
-    gpio_set_value(LED_ERROR_GPIO, 0);
+    gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
+    gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
+    gpio_set_value(GPIO_LED_STATUS, 1);
+    gpio_set_value(GPIO_LED_ERROR, 0);
 
     // PRU
     pru_init();
@@ -100,11 +96,11 @@ void hw_close(struct rl_conf* conf) {
     pwm_deinit();
 
     // GPIO
-    // force high range
-    gpio_unexport(FHR1_GPIO);
-    gpio_unexport(FHR2_GPIO);
-    // leds (not unexport!)
-    gpio_set_value(LED_STATUS_GPIO, 0);
+    // deinitialize force high range GPIOS
+    gpio_deinit(GPIO_FHR1);
+    gpio_deinit(GPIO_FHR2);
+    // reset LED (do not unexport)
+    gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
     if (conf->mode != LIMIT) {
