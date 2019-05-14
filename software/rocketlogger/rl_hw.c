@@ -29,6 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "calibration.h"
 #include "gpio.h"
 #include "pru.h"
 #include "pwm.h"
@@ -106,7 +107,7 @@ void hw_close(struct rl_conf* conf) {
     if (conf->mode != LIMIT) {
         pru_stop();
     }
-    pru_close();
+    pru_deinit();
 
     // SENSORS
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
@@ -127,7 +128,7 @@ void hw_close(struct rl_conf* conf) {
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int hw_sample(struct rl_conf* conf, char* file_comment) {
-
+    int ret;
     // open data file
     FILE* data = (FILE*)-1;
     if (conf->file_format != NO_FILE) { // open file only if storing requested
@@ -149,12 +150,14 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     }
 
     // read calibration
-    if (read_calibration(conf) == FAILURE) {
+    ret = read_calibration(conf);
+    if (ret != SUCCESS) {
         rl_log(WARNING, "no calibration file, returning uncalibrated values");
     }
 
     // SAMPLE
-    if (pru_sample(data, ambient_file, conf, file_comment) == FAILURE) {
+    ret = pru_sample(data, ambient_file, conf, file_comment);
+    if (ret != SUCCESS) {
         // error ocurred
         gpio_set_value(LED_ERROR_GPIO, 1);
     }

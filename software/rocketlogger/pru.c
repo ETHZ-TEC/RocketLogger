@@ -30,31 +30,164 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
+#include <time.h>
 
+#include <prussdrv.h>
+#include <pruss_intc_mapping.h>
+#include <pthread.h>
+
+#include "ambient.h"
+#include "calibration.h"
 #include "file_handling.h"
+#include "log.h"
+#include "meter.h"
+#include "sem.h"
+#include "types.h"
 #include "util.h"
 #include "web.h"
 
 #include "pru.h"
 
-// PRU TIMEOUT WRAPPER
+/**
+ * Internal pthread for waiting on PRU events.
+ * 
+ * @param voidEvent Pointer to event to wait for
+ * @return unused, always returns NULL
+ */
+void* pru_wait_event_thread(void*);
 
-/// PRU access mutex
+/// PRU access mutex for timed out PRU event wait
 pthread_mutex_t waiting = PTHREAD_MUTEX_INITIALIZER;
 
-/// Notification variable
+/// Notification variable for PRU event wait
 pthread_cond_t done = PTHREAD_COND_INITIALIZER;
 
-/**
- * Wait on PRU event
- * @param voidEvent PRU event to wait on
- */
-void* pru_wait_event(void* voidEvent) {
+int pru_init(void) {
+    tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
 
+    // initialize and open PRU device
+    prussdrv_init();
+    int ret = prussdrv_open(PRU_EVTOUT_0);
+    if (ret != 0) {
+        rl_log(ERROR, "failed to open PRUSS driver");
+        return FAILURE;
+    }
+
+    // setup PRU interrupt mapping
+    prussdrv_pruintc_init(&pruss_intc_initdata);
+
+    return SUCCESS;
+}
+
+void pru_deinit(void) {
+    // disable PRU and close memory mappings
+    prussdrv_pru_disable(0);
+    prussdrv_exit();
+}
+
+
+int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates) {
+    // zero aggregates value is also considered no aggregation
+    if (aggregates == 0) {
+        aggregates = 1;
+    }
+
+
+    // set state
+    if (conf->mode == LIMIT) {
+        pru->state = PRU_FINITE;
+    } else {
+        pru->state = PRU_CONTINUOUS;
+    }
+
+    // set sampling rate configuration
+    uint32_t pru_sample_rate;
+    switch (conf->sample_rate) {
+    case 1:
+        pru_sample_rate = K1;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 10:
+        pru_sample_rate = K1;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 100:
+        pru_sample_rate = K1;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 1000:
+        pru_sample_rate = K1;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 2000:
+        pru_sample_rate = K2;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 4000:
+        pru_sample_rate = K4;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 8000:
+        pru_sample_rate = K8;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 16000:
+        pru_sample_rate = K16;
+        pru->adc_precision = PRU_PRECISION_HIGH;
+        break;
+    case 32000:
+        pru_sample_rate = K32;
+        pru->adc_precision = PRU_PRECISION_LOW;
+        break;
+    case 64000:
+        pru_sample_rate = K64;
+        pru->adc_precision = PRU_PRECISION_LOW;
+        break;
+    default:
+        rl_log(ERROR, "invalid sample rate");
+        return FAILURE;
+    }
+
+    // set buffer infos
+    pru->sample_limit = conf->sample_limit * aggregates;
+    pru->buffer_length = (conf->sample_rate * aggregates) / conf->update_rate;
+    pru->buffer0_ptr = NULL;
+    pru->buffer1_ptr = NULL;
+
+    // setup commands to send for ADC initialization
+    pru->adc_command_count = PRU_ADC_COMMAND_COUNT;
+    pru->adc_command[0] = RESET;
+    pru->adc_command[1] = SDATAC;
+    pru->adc_command[2] = WREG | CONFIG3 | CONFIG3DEFAULT; // write configuration
+    pru->adc_command[3] = WREG | CONFIG1 | CONFIG1DEFAULT | pru_sample_rate;
+
+    // set channel gains
+    pru->adc_command[4] = WREG | CH1SET | GAIN2;  // High Range A
+    pru->adc_command[5] = WREG | CH2SET | GAIN2;  // High Range B
+    pru->adc_command[6] = WREG | CH3SET | GAIN1;  // Medium Range
+    pru->adc_command[7] = WREG | CH4SET | GAIN1;  // Low Range A
+    pru->adc_command[8] = WREG | CH5SET | GAIN1;  // Low Range B
+    pru->adc_command[9] = WREG | CH6SET | GAIN1;  // Voltage 1
+    pru->adc_command[10] = WREG | CH7SET | GAIN1; // Voltage 2
+    pru->adc_command[11] = RDATAC;                // continuous reading
+
+    return SUCCESS;
+}
+
+int pru_set_state(pru_state_t state) {
+    int res = prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&state,
+                              sizeof(int));
+    // PRU memory write fence
+    __sync_synchronize();
+    return res;
+}
+
+void* pru_wait_event_thread(void* voidEvent) {
     unsigned int event = *((unsigned int*)voidEvent);
 
     // allow the thread to be killed at any time
@@ -70,226 +203,33 @@ void* pru_wait_event(void* voidEvent) {
     return NULL;
 }
 
-/**
- * Wrapper for PRU event waiting with time out
- * @param event PRU event to wait on
- * @param timeout Time out in seconds
- * @return error code of pthread timedwait function
- */
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
-
     struct timespec abs_time;
     pthread_t tid;
-    int err;
 
     pthread_mutex_lock(&waiting);
 
-    // pthread cond_timedwait expects an absolute time to wait until
+    // pthread conditional_timed wait expects an absolute time to wait until
     clock_gettime(CLOCK_REALTIME, &abs_time);
     abs_time.tv_sec += timeout;
 
-    pthread_create(&tid, NULL, pru_wait_event, (void*)&event);
+    pthread_create(&tid, NULL, pru_wait_event_thread, (void*)&event);
 
-    err = pthread_cond_timedwait(&done, &waiting, &abs_time);
-
-    if (!err) {
+    int res = pthread_cond_timedwait(&done, &waiting, &abs_time);
+    if (res <= 0) {
         pthread_mutex_unlock(&waiting);
     }
 
-    return err;
+    return res;
 }
 
-// PRU MEMORY MAPPING
-/**
- * Map PRU memory into user space
- */
-void* pru_map_memory(void) {
-
-    // get pru memory location and size
-    unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
-    unsigned int size = read_file_value(MMAP_FILE "size");
-
-    // memory map file
-    int fd;
-    if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
-        rl_log(ERROR, "failed to open /dev/mem");
-        return NULL;
-    }
-
-    // map shared memory into userspace
-    void* pru_mmap = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                          (off_t)pru_memory);
-
-    if (pru_mmap == (void*)-1) {
-        rl_log(ERROR, "failed to map base address");
-        return NULL;
-    }
-
-    close(fd);
-
-    return pru_mmap;
-}
-
-/**
- * Unmap PRU memory from user space
- * @param pru_mmap Pointer to mapped memory
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_unmap_memory(void* pru_mmap) {
-
-    // get pru memory size
-    unsigned int size = read_file_value(MMAP_FILE "size");
-
-    if (munmap(pru_mmap, size) == -1) {
-        rl_log(ERROR, "failed to unmap memory");
-        return FAILURE;
-    }
-
-    return SUCCESS;
-}
-
-// PRU INITIALISATION
-
-/**
- * Write state to PRU
- * @param state PRU state to write
- */
-void pru_set_state(rl_pru_state state) {
-
-    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&state,
-                              sizeof(int));
-}
-
-/**
- * PRU initiation
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_init(void) {
-
-    // init PRU
-    tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
-    prussdrv_init();
-    if (prussdrv_open(PRU_EVTOUT_0) == -1) {
-        rl_log(ERROR, "failed to open PRU");
-        return FAILURE;
-    }
-    prussdrv_pruintc_init(&pruss_intc_initdata);
-
-    return SUCCESS;
-}
-
-/**
- * PRU data struct setup
- * @param pru Pointer to {@link pru_data_struct} to setup
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param avg_factor Average factor for sampling rates smaller than minimal ADC
- * rate
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
-                   uint32_t avg_factor) {
-
-    uint32_t pru_sample_rate;
-
-    // set state
-    if (conf->mode == LIMIT) {
-        pru->state = PRU_LIMIT;
-    } else {
-        pru->state = PRU_CONTINUOUS;
-    }
-
-    // set sampling rate configuration
-    switch (conf->sample_rate) {
-    case 1:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 10:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 100:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 1000:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 2000:
-        pru_sample_rate = K2;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 4000:
-        pru_sample_rate = K4;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 8000:
-        pru_sample_rate = K8;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 16000:
-        pru_sample_rate = K16;
-        pru->precision = PRECISION_HIGH;
-        break;
-    case 32000:
-        pru_sample_rate = K32;
-        pru->precision = PRECISION_LOW;
-        break;
-    case 64000:
-        pru_sample_rate = K64;
-        pru->precision = PRECISION_LOW;
-        break;
-    default:
-        rl_log(ERROR, "wrong sample rate");
-        return FAILURE;
-    }
-
-    // set buffer infos
-    pru->sample_limit = conf->sample_limit * avg_factor;
-    pru->buffer_size = (conf->sample_rate * avg_factor) / conf->update_rate;
-
-    uint32_t buffer_size_bytes =
-        pru->buffer_size * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
-        PRU_BUFFER_STATUS_SIZE;
-    pru->buffer0_location = read_file_value(MMAP_FILE "addr");
-    pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
-
-    // set commands
-    pru->number_commands = NUMBER_ADC_COMMANDS;
-    pru->commands[0] = RESET;
-    pru->commands[1] = SDATAC;
-    pru->commands[2] = WREG | CONFIG3 | CONFIG3DEFAULT; // write configuration
-    pru->commands[3] = WREG | CONFIG1 | CONFIG1DEFAULT | pru_sample_rate;
-
-    // set channel gains
-    pru->commands[4] = WREG | CH1SET | GAIN2;  // High Range A
-    pru->commands[5] = WREG | CH2SET | GAIN2;  // High Range B
-    pru->commands[6] = WREG | CH3SET | GAIN1;  // Medium Range
-    pru->commands[7] = WREG | CH4SET | GAIN1;  // Low Range A
-    pru->commands[8] = WREG | CH5SET | GAIN1;  // Low Range B
-    pru->commands[9] = WREG | CH6SET | GAIN1;  // Voltage 1
-    pru->commands[10] = WREG | CH7SET | GAIN1; // Voltage 2
-    pru->commands[11] = RDATAC;                // continuous reading
-
-    return SUCCESS;
-}
-
-/**
- * Main PRU sampling function
- * @param data_file File pointer to data file
- * @param ambient_file File pointer to ambient file
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
 int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
                char* file_comment) {
 
     // average (for low rates)
-    uint32_t avg_factor = 1;
+    uint32_t aggregates = 1;
     if (conf->sample_rate < MIN_ADC_RATE) {
-        avg_factor = MIN_ADC_RATE / conf->sample_rate;
+        aggregates = MIN_ADC_RATE / conf->sample_rate;
     }
 
     // METER
@@ -339,31 +279,29 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
     // PRU SETUP
 
-    // Map the PRU's interrupts
-    tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
-    prussdrv_pruintc_init(&pruss_intc_initdata);
+    // initialize PRU data structure
+    pru_data_t pru;
+    pru_init_data(&pru, conf, aggregates);
 
-    // setup PRU
-    struct pru_data_struct pru;
-    pru_data_setup(&pru, conf, avg_factor);
-    unsigned int number_buffers =
-        ceil_div(conf->sample_limit * avg_factor, pru.buffer_size);
-    unsigned int buffer_size_bytes =
-        pru.buffer_size * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
+    unsigned int buffer_read_count =
+        ceil_div(conf->sample_limit * aggregates, pru.buffer_length);
+    unsigned int pru_buffer_size =
+        pru.buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
         PRU_BUFFER_STATUS_SIZE;
 
-    // check memory size
-    unsigned int max_size = read_file_value(MMAP_FILE "size");
-    if (2 * buffer_size_bytes > max_size) {
+    // check PRU memory size
+    unsigned int max_size = read_file_value(PRU_MMAP_SYSFS_PATH "size");
+    if (2 * pru_buffer_size > max_size) {
         rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  "
                       "modprobe uio_pruss extram_pool_sz=0x%06x",
-               2 * buffer_size_bytes);
+               2 * pru_buffer_size);
         pru.state = PRU_OFF;
     }
 
-    // map PRU memory into userspace
-    void* buffer0 = pru_map_memory();
-    void* buffer1 = buffer0 + buffer_size_bytes;
+    // map PRU memory into user space and initialize buffer pointers
+    prussdrv_map_prumem(PRUSS0_PRU0_DATARAM, &(pru.buffer0_ptr));
+    pru.buffer1_ptr = pru.buffer0_ptr + pru_buffer_size;
+
 
     // DATA FILE STORING
 
@@ -411,10 +349,14 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
     // write configuration to PRU memory
     prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&pru,
-                              sizeof(struct pru_data_struct));
+                              sizeof(pru));
+
+    // PRU memory write fence
+    __sync_synchronize();
+
 
     // run SPI on PRU0
-    if (prussdrv_exec_program(0, PRU_CODE) < 0) {
+    if (prussdrv_exec_program(0, PRU_BINARY_FILE) < 0) {
         rl_log(ERROR, "PRU code not found");
         pru.state = PRU_OFF;
     }
@@ -444,7 +386,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     // continuous sampling loop
     for (uint32_t i = 0;
          status.sampling == SAMPLING_ON && status.state == RL_RUNNING &&
-         !(conf->mode == LIMIT && i >= number_buffers);
+         !(conf->mode == LIMIT && i >= buffer_read_count);
          i++) {
 
         if (conf->file_format != NO_FILE) {
@@ -538,17 +480,17 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
         // select current buffer
         if (i % 2 == 0) {
-            buffer_addr = buffer0;
+            buffer_addr = pru.buffer0_ptr;
         } else {
-            buffer_addr = buffer1;
+            buffer_addr = pru.buffer1_ptr;
         }
 
         // select buffer size
-        if (i < number_buffers - 1 || pru.sample_limit % pru.buffer_size == 0) {
-            buffer_samples_count = pru.buffer_size; // full buffer size
+        if (i < buffer_read_count - 1 || pru.sample_limit % pru.buffer_length == 0) {
+            buffer_samples_count = pru.buffer_length; // full buffer size
         } else {
             buffer_samples_count =
-                pru.sample_limit % pru.buffer_size; // unfull buffer size
+                pru.sample_limit % pru.buffer_length; // unfull buffer size
         }
 
         // Wait for event completion from PRU
@@ -588,7 +530,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
             buffers_lost += (buffer_index - i);
             rl_log(WARNING,
                    "overrun: %d samples (%d buffer) lost (%d in total)",
-                   (buffer_index - i) * pru.buffer_size, buffer_index - i,
+                   (buffer_index - i) * pru.buffer_length, buffer_index - i,
                    buffers_lost);
             i = buffer_index;
         }
@@ -608,7 +550,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
             // update the number of samples stored
             file_header.lead_in.data_block_count += 1;
             file_header.lead_in.sample_count +=
-                buffer_samples_count / avg_factor;
+                buffer_samples_count / aggregates;
 
             if (conf->file_format == BIN) {
                 file_update_header_bin(data_file, &file_header);
@@ -637,7 +579,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         }
 
         // update and write state
-        status.samples_taken += buffer_samples_count / avg_factor;
+        status.samples_taken += buffer_samples_count / aggregates;
         status.buffer_number = i + 1 - buffers_lost;
         write_status(&status);
 
@@ -668,9 +610,6 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         printf("Stored %llu samples to file.\n", status.samples_taken);
     }
 
-    // PRU FINISH (unmap memory)
-    pru_unmap_memory(buffer0);
-
     // WEBSERVER FINISH
     // unmap shared memory
     if (conf->enable_web_server == 1) {
@@ -691,29 +630,14 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     return SUCCESS;
 }
 
-/**
- * Stop and shut down PRU operation.
- * @note When sampling in continuous mode, this has to be called before {@link
- * pru_close}.
- */
 void pru_stop(void) {
 
     // write OFF to PRU state (so PRU can clean up)
     pru_set_state(PRU_OFF);
 
-    // wait for interrupt (if no ERROR occured) and clear event
+    // wait for interrupt (if no ERROR occurred) and clear event
     if (status.state != RL_ERROR) {
         pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
     }
-}
-
-/**
- * Disable PRU
- */
-void pru_close(void) {
-
-    // Disable PRU and close memory mappings
-    prussdrv_pru_disable(0);
-    prussdrv_exit();
 }

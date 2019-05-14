@@ -52,7 +52,7 @@ INSTALL_SERVICE_DIR = /etc/systemd/system
 BINARY_NAME = rocketlogger
 DEAMON_NAME = rocketloggerd
 SERVER_NAME = rocketloggers
-FIRMWARE_NAME = rocketlogger_spi.bin
+FIRMWARE_NAME = rocketlogger.bin
 
 ## config file names
 SERVICE_CONFIG = rocketlogger.service
@@ -67,7 +67,7 @@ SRC = $(wildcard  $(SRC_DIR)/*.c)
 SRC += $(wildcard  $(SRC_DIR)/*.cpp)
 SRC += $(wildcard  $(SENSOR_DIR)/*.c)
 SRC += $(SRC_DIR)/version.c
-FIRMWARE_SRC = SPI.p
+FIRMWARE_SRC = rocketlogger.p
 
 ## object files
 OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .o, $(basename $(SRC)))))

@@ -260,8 +260,8 @@ void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
         // mask and combine digital inputs, if requested
         int bin_channel_pos;
         if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-            bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
-                       ((bin_adc2 & BINARY_MASK) << 2);
+            bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |
+                       ((bin_adc2 & PRU_BINARY_MASK) << 2);
             bin_channel_pos = NUM_DIGITAL_INPUTS;
             // average digital inputs
             int32_t MASK = 1;
@@ -276,8 +276,8 @@ void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
         }
 
         // mask and combine valid info
-        uint8_t valid1 = (~bin_adc1) & VALID_MASK;
-        uint8_t valid2 = (~bin_adc2) & VALID_MASK;
+        uint8_t valid1 = (~bin_adc1) & PRU_VALID_MASK;
+        uint8_t valid2 = (~bin_adc2) & PRU_VALID_MASK;
 
         if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
             bin_data = bin_data | (valid1 << bin_channel_pos);

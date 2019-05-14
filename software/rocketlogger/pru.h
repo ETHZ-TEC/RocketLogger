@@ -32,37 +32,11 @@
 #ifndef PRU_H_
 #define PRU_H_
 
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <math.h>
-#include <pruss_intc_mapping.h>
-#include <prussdrv.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <time.h>
-#include <unistd.h>
 
-#include "ambient.h"
-#include "calibration.h"
-#include "file_handling.h"
-#include "log.h"
-#include "meter.h"
-#include "sem.h"
 #include "types.h"
-#include "util.h"
-#include "web.h"
+
 
 // ------  ADC DEFINITIONS  ------ //
 
@@ -122,21 +96,17 @@
 #define CONFIG2DEFAULT 0xE000
 #define CONFIG3DEFAULT 0xE800
 
-// ------  FILES  ------ //
-
-/// Memory map file
-#define MMAP_FILE "/sys/class/uio/uio0/maps/map1/"
 /// PRU binary file location
-#define PRU_CODE "/lib/firmware/rocketlogger_spi.bin"
-
-// ------  PRU DEFINES  ------ //
+#define PRU_BINARY_FILE "/lib/firmware/rocketlogger.bin"
+/// Memory map file
+#define PRU_MMAP_SYSFS_PATH "/sys/class/uio/uio0/maps/map1/"
 
 /**
- * ADS131E08S precision defines({@link PRECISION_HIGH} for low sampling rates,
- * {@link PRECISION_LOW} for high ones)
+ * ADS131E08S precision defines({@link PRU_PRECISION_HIGH} for low sampling rates,
+ * {@link PRU_PRECISION_LOW} for high ones)
  */
-#define PRECISION_HIGH 24
-#define PRECISION_LOW 16
+#define PRU_PRECISION_HIGH 24
+#define PRU_PRECISION_LOW 16
 
 /**
  * Sample size definition
@@ -144,9 +114,9 @@
 #define PRU_SAMPLE_SIZE 4
 
 /// Mask for valid bit read from PRU
-#define VALID_MASK 0x1
+#define PRU_VALID_MASK 0x1
 /// Mask for binary inputs read from PRU
-#define BINARY_MASK 0xE
+#define PRU_BINARY_MASK 0xE
 
 /// PRU time out in seconds
 #define PRU_TIMEOUT 3
@@ -156,49 +126,101 @@
  */
 typedef enum pru_state {
     PRU_OFF = 0,       //!< PRU off
-    PRU_LIMIT = 1,     //!< Limited sampling mode
+    PRU_FINITE = 1,    //!< Finite sampling mode
     PRU_CONTINUOUS = 3 //!< Continuous sampling mode
-} rl_pru_state;
+} pru_state_t;
 
 /// Number of ADC commands
-#define NUMBER_ADC_COMMANDS 12
+#define PRU_ADC_COMMAND_COUNT 12
 
 /**
  * Struct for data exchange with PRU
  */
-struct pru_data_struct {
+typedef struct pru_data {
     /// Current PRU state
-    rl_pru_state state;
-    /// ADC precision (in bit)
-    uint32_t precision;
+    pru_state_t state;
     /// Pointer to shared buffer 0
-    uint32_t buffer0_location;
+    void* buffer0_ptr;
     /// Pointer to shared buffer 1
-    uint32_t buffer1_location;
-    /// Shared buffer size
-    uint32_t buffer_size;
+    void* buffer1_ptr;
+    /// Shared buffer length in number of data elements
+    uint32_t buffer_length;
     /// Samples to take (0 for continuous)
     uint32_t sample_limit;
+    /// ADC precision (in bit)
+    uint32_t adc_precision;
     /// Number of ADC commands to send
-    uint32_t number_commands;
+    uint32_t adc_command_count;
     /// ADC commands to send
-    uint32_t commands[NUMBER_ADC_COMMANDS];
-};
+    uint32_t adc_command[PRU_ADC_COMMAND_COUNT];
+} pru_data_t;
 
 // ------  FUNCTIONS  ------ //
 
-void* pru_wait_event(void* voidEvent);
+/**
+ * Initialize PRU driver.
+ * 
+ * Map PRU shared memory and enable PRU interrupts.
+ * 
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int pru_init(void);
+
+/**
+ * Shutdown PRU and deinitialize PRU driver.
+ * 
+ * Halts the PRU, unmaps PRU shared memory and disables PRU interrupts.
+ */
+void pru_deinit(void);
+
+/**
+ * PRU data structure initialization.
+ * 
+ * @param pru {@link pru_data_t} data structure to initialize
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param aggregates Number of samples to aggregate for sampling rates smaller than the minimal ADC rate (set 1 for no aggregates)
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates);
+
+/**
+ * Write a new state to the PRU shared memory.
+ * 
+ * @param state The PRU state to write
+ * @return Number of bytes written, negative value on error.
+ */
+int pru_set_state(pru_state_t state);
+
+/**
+ * Wait for a PRU event with timeout
+ * 
+ * @param event PRU event to wait for
+ * @param timeout Time out in seconds
+ * @return Zero on success, error code otherwise, see also pthread_cond_timedwait() documentation
+ */
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
-void pru_set_state(rl_pru_state state);
-int pru_init(void);
-int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
-                   uint32_t avg_factor);
-
+/**
+ * Main PRU sampling routine.
+ * 
+ * Configures and runs the actual RocketLogger measurements
+ * 
+ * @param data_file File pointer to data file
+ * @param ambient_file File pointer to ambient file
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param file_comment Comment to store in the file header
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf,
                char* file_comment);
 
+/**
+ * Stop running PRU measurements.
+ * 
+ * @note When sampling in continuous mode, this has to be called before {@link
+ * pru_close}.
+ */
 void pru_stop(void);
-void pru_close(void);
+
 
 #endif /* PRU_H_ */
