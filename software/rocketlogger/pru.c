@@ -30,6 +30,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <sys/ipc.h>
@@ -156,8 +157,16 @@ int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates) {
     // set buffer infos
     pru->sample_limit = conf->sample_limit * aggregates;
     pru->buffer_length = (conf->sample_rate * aggregates) / conf->update_rate;
-    pru->buffer0_ptr = NULL;
-    pru->buffer1_ptr = NULL;
+
+    uint32_t buffer_size_bytes =
+        pru->buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
+        PRU_BUFFER_STATUS_SIZE;
+
+    void* prumem_map_base;
+    prussdrv_map_prumem(PRUSS0_PRU0_DATARAM, &prumem_map_base);
+    uint32_t prumem_base = (uint32_t) prussdrv_get_phys_addr(prumem_map_base);
+    pru->buffer0_ptr = prumem_base + sizeof(pru_data_t);
+    pru->buffer1_ptr = prumem_base + sizeof(pru_data_t) + buffer_size_bytes;
 
     // setup commands to send for ADC initialization
     pru->adc_command_count = PRU_ADC_COMMAND_COUNT;
@@ -181,7 +190,7 @@ int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates) {
 
 int pru_set_state(pru_state_t state) {
     int res = prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&state,
-                              sizeof(int));
+                              sizeof(state));
     // PRU memory write fence
     __sync_synchronize();
     return res;
@@ -229,7 +238,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     // average (for low rates)
     uint32_t aggregates = 1;
     if (conf->sample_rate < MIN_ADC_RATE) {
-        aggregates = MIN_ADC_RATE / conf->sample_rate;
+        aggregates = (uint32_t)(MIN_ADC_RATE / conf->sample_rate);
     }
 
     // METER
@@ -283,25 +292,22 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     pru_data_t pru;
     pru_init_data(&pru, conf, aggregates);
 
-    unsigned int buffer_read_count =
-        ceil_div(conf->sample_limit * aggregates, pru.buffer_length);
-    unsigned int pru_buffer_size =
-        pru.buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
-        PRU_BUFFER_STATUS_SIZE;
+    // get user space mapped PRU memory addresses
+    void* buffer0_ptr = prussdrv_get_virt_addr(pru.buffer0_ptr);
+    void* buffer1_ptr = prussdrv_get_virt_addr(pru.buffer1_ptr);
 
-    // check PRU memory size
-    unsigned int max_size = read_file_value(PRU_MMAP_SYSFS_PATH "size");
-    if (2 * pru_buffer_size > max_size) {
-        rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  "
-                      "modprobe uio_pruss extram_pool_sz=0x%06x",
-               2 * pru_buffer_size);
+    // check max PRU buffer size
+    uint32_t prumem_size_demand = sizeof(pru_data_t) + 2 *
+        (pru.buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
+         PRU_BUFFER_STATUS_SIZE);
+    uint32_t prumem_max_addr = pru.buffer0_ptr - sizeof(pru_data_t) + prumem_size_demand - 1;
+    if (prussdrv_get_virt_addr(prumem_max_addr) == 0) {
+        rl_log(ERROR, "insufficient PRU memory allocated/available.\n"
+                      "update uio_pruss configuration if possible:"
+                      "options uio_pruss extram_pool_sz=0x%06x",
+               prumem_size_demand);
         pru.state = PRU_OFF;
     }
-
-    // map PRU memory into user space and initialize buffer pointers
-    prussdrv_map_prumem(PRUSS0_PRU0_DATARAM, &(pru.buffer0_ptr));
-    pru.buffer1_ptr = pru.buffer0_ptr + pru_buffer_size;
-
 
     // DATA FILE STORING
 
@@ -361,9 +367,9 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         pru.state = PRU_OFF;
     }
 
-    // wait for first PRU event
+    // wait for PRU startup event
     if (pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
-        // timeout occured
+        // timeout occurred
         rl_log(ERROR, "PRU not responding");
         pru.state = PRU_OFF;
     }
@@ -378,6 +384,10 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     uint32_t buffer_samples_count; // number of samples per buffer
     uint32_t num_files = 1;        // number of files stored
     uint8_t skipped_buffers = 0;   // skipped buffers for ambient reading
+
+    // buffers to read in finite mode
+    uint32_t buffer_read_count =
+        ceil_div(conf->sample_limit * aggregates, pru.buffer_length);
 
     // sampling started
     status.sampling = SAMPLING_ON;
@@ -480,9 +490,9 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
         // select current buffer
         if (i % 2 == 0) {
-            buffer_addr = pru.buffer0_ptr;
+            buffer_addr = buffer0_ptr;
         } else {
-            buffer_addr = pru.buffer1_ptr;
+            buffer_addr = buffer1_ptr;
         }
 
         // select buffer size
@@ -524,6 +534,9 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         // clear event
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
+        // PRU memory sync before accessing data
+        __sync_synchronize();
+
         // check for overrun (compare buffer numbers)
         uint32_t buffer_index = *((uint32_t*)buffer_addr);
         if (buffer_index != i) {
@@ -536,12 +549,12 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
         }
 
         // handle the buffer
-        file_handle_data(data_file, buffer_addr + 4, buffer_samples_count,
+        file_handle_data(data_file, buffer_addr + PRU_BUFFER_STATUS_SIZE, buffer_samples_count,
                          &timestamp_realtime, &timestamp_monotonic, conf);
 
         // process data for web when enabled
         if (conf->enable_web_server == 1) {
-            web_handle_data(web_data, sem_id, buffer_addr + 4,
+            web_handle_data(web_data, sem_id, buffer_addr + PRU_BUFFER_STATUS_SIZE,
                             buffer_samples_count, &timestamp_realtime, conf);
         }
 
@@ -593,7 +606,7 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
         // print meter output
         if (conf->mode == METER) {
-            meter_print_buffer(conf, buffer_addr + 4);
+            meter_print_buffer(conf, buffer_addr + PRU_BUFFER_STATUS_SIZE);
         }
     }
 

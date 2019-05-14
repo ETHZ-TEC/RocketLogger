@@ -113,7 +113,7 @@
 /// Data update rate in {@link METER} mode
 #define METER_UPDATE_RATE 5
 /// Size of PRU digital information in bytes
-#define PRU_DIG_SIZE 2
+#define PRU_DIG_SIZE 4
 /// Size of PRU buffer status in bytes
 #define PRU_BUFFER_STATUS_SIZE 4
 

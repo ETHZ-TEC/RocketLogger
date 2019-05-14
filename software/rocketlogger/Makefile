@@ -152,6 +152,7 @@ install: all
 	$(COPY) $(SERVICE_CONFIG) $(INSTALL_SERVICE_DIR)
 	chmod 755 $(INSTALL_SERVICE_DIR)/$(SERVICE_CONFIG)
 	systemctl enable rocketlogger
+	systemctl restart rocketlogger
 
 uninstall:
 	$(REMOVE) $(INSTALL_BIN_DIR)/$(BINARY_NAME)

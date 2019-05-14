@@ -125,9 +125,9 @@
  * PRU state definition
  */
 typedef enum pru_state {
-    PRU_OFF = 0,       //!< PRU off
-    PRU_FINITE = 1,    //!< Finite sampling mode
-    PRU_CONTINUOUS = 3 //!< Continuous sampling mode
+    PRU_OFF = 0x00,       //!< PRU off
+    PRU_FINITE = 0x01,    //!< Finite sampling mode
+    PRU_CONTINUOUS = 0x03 //!< Continuous sampling mode
 } pru_state_t;
 
 /// Number of ADC commands
@@ -140,9 +140,9 @@ typedef struct pru_data {
     /// Current PRU state
     pru_state_t state;
     /// Pointer to shared buffer 0
-    void* buffer0_ptr;
+    uint32_t buffer0_ptr;
     /// Pointer to shared buffer 1
-    void* buffer1_ptr;
+    uint32_t buffer1_ptr;
     /// Shared buffer length in number of data elements
     uint32_t buffer_length;
     /// Samples to take (0 for continuous)
