@@ -192,7 +192,7 @@ $(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
 	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-$(SRC_DIR)/version.c: force
+$(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.o, $(OBJ))
 	echo "generating version.c"
 	@echo "#include \"version.h\"" > $@
 	@echo "const char* PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
@@ -212,7 +212,7 @@ $(BIN_DIR):
 
 
 ## phony targets
-.PHONY: clean code-format force
+.PHONY: clean code-format
 
 clean:
 	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_FIRMWARE) $(TARGET_SERVER)
