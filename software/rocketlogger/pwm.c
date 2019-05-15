@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <errno.h>
@@ -46,10 +46,9 @@
 /// Physical memory file descriptor
 int mem_fd = -1;
 /// Pointer to PWM0 registers
-volatile uint8_t* pwm0_mem = NULL;
+volatile uint8_t *pwm0_mem = NULL;
 /// Pointer to PWM1 registers
-volatile uint8_t* pwm1_mem = NULL;
-
+volatile uint8_t *pwm1_mem = NULL;
 
 int pwm_init(void) {
     // export and enable PWM peripherals via sysfs interface
@@ -73,16 +72,18 @@ int pwm_init(void) {
     }
 
     // map PWM0 registers
-    pwm0_mem = (volatile uint8_t*) mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWM0_BASE);
-    if ((void*)pwm0_mem == MAP_FAILED) {
+    pwm0_mem = (volatile uint8_t *)mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE,
+                                        MAP_SHARED, mem_fd, PWM0_BASE);
+    if ((void *)pwm0_mem == MAP_FAILED) {
         pwm_deinit();
         rl_log(ERROR, "mmap for PWM0 failed");
         return FAILURE;
     }
 
     // map PWM1 registers
-    pwm1_mem = (volatile uint8_t*) mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, PWM1_BASE);
-    if ((void*)pwm1_mem == MAP_FAILED) {
+    pwm1_mem = (volatile uint8_t *)mmap(0, PWM_SIZE, PROT_READ | PROT_WRITE,
+                                        MAP_SHARED, mem_fd, PWM1_BASE);
+    if ((void *)pwm1_mem == MAP_FAILED) {
         pwm_deinit();
         rl_log(ERROR, "mmap for PWM1 failed");
         return FAILURE;
@@ -94,11 +95,11 @@ int pwm_init(void) {
 void pwm_deinit(void) {
     // unmap memory
     if (pwm0_mem != NULL) {
-        munmap((void*)pwm0_mem, PWM_SIZE);
+        munmap((void *)pwm0_mem, PWM_SIZE);
         pwm0_mem = NULL;
     }
     if (pwm1_mem != NULL) {
-        munmap((void*)pwm1_mem, PWM_SIZE);
+        munmap((void *)pwm1_mem, PWM_SIZE);
         pwm1_mem = NULL;
     }
 
@@ -126,20 +127,22 @@ void pwm_setup_range_reset(uint32_t sample_rate) {
 
     // get pointers of PWMSS1 registers
     volatile uint16_t *epwm1_tbctl =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
     volatile uint16_t *epwm1_tbprd =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
     volatile uint16_t *epwm1_cmpa =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
     volatile uint16_t *epwm1_cmpb =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_CMPB_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_CMPB_OFFSET);
     volatile uint16_t *epwm1_aqctla =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
     volatile uint16_t *epwm1_aqctlb =
-        (volatile uint16_t*)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLB_OFFSET);
+        (volatile uint16_t *)(pwm1_mem + EPWM_OFFSET + EPWM_AQCTLB_OFFSET);
 
-    // set clock prescaler 2 and up-down counting mode, no period double buffering
-    *epwm1_tbctl = TBCTL_FREERUN | TBCTL_CLKDIV_2 | TBCTL_PRDLD | TBCTL_COUNT_UP_DOWN;
+    // set clock prescaler 2 and up-down counting mode, no period double
+    // buffering
+    *epwm1_tbctl =
+        TBCTL_FREERUN | TBCTL_CLKDIV_2 | TBCTL_PRDLD | TBCTL_COUNT_UP_DOWN;
 
     // set period and compare register values
     *epwm1_tbprd = (uint16_t)period;
@@ -154,16 +157,17 @@ void pwm_setup_range_reset(uint32_t sample_rate) {
 void pwm_setup_adc_clock(void) {
     // get pointers of PWMSS0 registers
     volatile uint16_t *epwm0_tbctl =
-        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
+        (volatile uint16_t *)(pwm0_mem + EPWM_OFFSET + EPWM_TBCTL_OFFSET);
     volatile uint16_t *epwm0_tbprd =
-        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
+        (volatile uint16_t *)(pwm0_mem + EPWM_OFFSET + EPWM_TBPRD_OFFSET);
     volatile uint16_t *epwm0_cmpa =
-        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
+        (volatile uint16_t *)(pwm0_mem + EPWM_OFFSET + EPWM_CMPA_OFFSET);
     volatile uint16_t *epwm0_aqctla =
-        (volatile uint16_t*)(pwm0_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
+        (volatile uint16_t *)(pwm0_mem + EPWM_OFFSET + EPWM_AQCTLA_OFFSET);
 
     // set clock prescaler 1 and up counting mode, no period double buffering
-    *epwm0_tbctl = TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP;
+    *epwm0_tbctl =
+        TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP;
 
     // set period and compare register values
     *epwm0_tbprd = ADC_CLOCK_PERIOD;

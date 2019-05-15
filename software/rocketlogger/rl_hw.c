@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "calibration.h"
@@ -42,7 +42,7 @@
  * Initiate all hardware modules
  * @param conf Pointer to current {@link rl_conf} configuration
  */
-void hw_init(struct rl_conf* conf) {
+void hw_init(struct rl_conf *conf) {
 
     // PWM configuration
     pwm_init();
@@ -91,7 +91,7 @@ void hw_init(struct rl_conf* conf) {
  * Close all hardware modules
  * @param conf Pointer to current {@link rl_conf} configuration
  */
-void hw_close(struct rl_conf* conf) {
+void hw_close(struct rl_conf *conf) {
 
     // PWM
     pwm_deinit();
@@ -127,10 +127,10 @@ void hw_close(struct rl_conf* conf) {
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int hw_sample(struct rl_conf* conf, char* file_comment) {
+int hw_sample(struct rl_conf *conf, char *file_comment) {
     int ret;
     // open data file
-    FILE* data = (FILE*)-1;
+    FILE *data = (FILE *)-1;
     if (conf->file_format != NO_FILE) { // open file only if storing requested
         data = fopen64(conf->file_name, "w+");
         if (data == NULL) {
@@ -140,7 +140,7 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     }
 
     // open ambient file
-    FILE* ambient_file = (FILE*)-1;
+    FILE *ambient_file = (FILE *)-1;
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
         ambient_file = fopen64(conf->ambient.file_name, "w+");
         if (data == NULL) {

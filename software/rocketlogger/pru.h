@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef PRU_H_
@@ -36,7 +36,6 @@
 #include <stdio.h>
 
 #include "types.h"
-
 
 // ------  ADC DEFINITIONS  ------ //
 
@@ -102,8 +101,8 @@
 #define PRU_MMAP_SYSFS_PATH "/sys/class/uio/uio0/maps/map1/"
 
 /**
- * ADS131E08S precision defines({@link PRU_PRECISION_HIGH} for low sampling rates,
- * {@link PRU_PRECISION_LOW} for high ones)
+ * ADS131E08S precision defines({@link PRU_PRECISION_HIGH} for low sampling
+ * rates, {@link PRU_PRECISION_LOW} for high ones)
  */
 #define PRU_PRECISION_HIGH 24
 #define PRU_PRECISION_LOW 16
@@ -159,33 +158,34 @@ typedef struct pru_data {
 
 /**
  * Initialize PRU driver.
- * 
+ *
  * Map PRU shared memory and enable PRU interrupts.
- * 
+ *
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int pru_init(void);
 
 /**
  * Shutdown PRU and deinitialize PRU driver.
- * 
+ *
  * Halts the PRU, unmaps PRU shared memory and disables PRU interrupts.
  */
 void pru_deinit(void);
 
 /**
  * PRU data structure initialization.
- * 
+ *
  * @param pru {@link pru_data_t} data structure to initialize
  * @param conf Pointer to current {@link rl_conf} configuration
- * @param aggregates Number of samples to aggregate for sampling rates smaller than the minimal ADC rate (set 1 for no aggregates)
+ * @param aggregates Number of samples to aggregate for sampling rates smaller
+ * than the minimal ADC rate (set 1 for no aggregates)
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates);
+int pru_init_data(pru_data_t *pru, struct rl_conf *conf, uint32_t aggregates);
 
 /**
  * Write a new state to the PRU shared memory.
- * 
+ *
  * @param state The PRU state to write
  * @return Number of bytes written, negative value on error.
  */
@@ -193,34 +193,34 @@ int pru_set_state(pru_state_t state);
 
 /**
  * Wait for a PRU event with timeout
- * 
+ *
  * @param event PRU event to wait for
  * @param timeout Time out in seconds
- * @return Zero on success, error code otherwise, see also pthread_cond_timedwait() documentation
+ * @return Zero on success, error code otherwise, see also
+ * pthread_cond_timedwait() documentation
  */
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
 /**
  * Main PRU sampling routine.
- * 
+ *
  * Configures and runs the actual RocketLogger measurements
- * 
+ *
  * @param data_file File pointer to data file
  * @param ambient_file File pointer to ambient file
  * @param conf Pointer to current {@link rl_conf} configuration
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf,
-               char* file_comment);
+int pru_sample(FILE *data, FILE *ambient_file, struct rl_conf *conf,
+               char *file_comment);
 
 /**
  * Stop running PRU measurements.
- * 
+ *
  * @note When sampling in continuous mode, this has to be called before {@link
  * pru_close}.
  */
 void pru_stop(void);
-
 
 #endif /* PRU_H_ */

@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdint.h>
@@ -44,7 +44,7 @@
  * Create shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-web_shm_t* web_create_shm(void) {
+web_shm_t *web_create_shm(void) {
 
     int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t),
                         IPC_CREAT | SHMEM_PERMISSIONS);
@@ -54,9 +54,9 @@ web_shm_t* web_create_shm(void) {
                errno, strerror(errno));
         return NULL;
     }
-    web_shm_t* web_data = (web_shm_t*)shmat(shm_id, NULL, 0);
+    web_shm_t *web_data = (web_shm_t *)shmat(shm_id, NULL, 0);
 
-    if (web_data == (void*)-1) {
+    if (web_data == (void *)-1) {
         rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
                       "message: %s",
                errno, strerror(errno));
@@ -70,19 +70,18 @@ web_shm_t* web_create_shm(void) {
  * Open existing shared memory for data exchange with web server
  * @return pointer to shared memory, NULL in case of failure
  */
-web_shm_t* web_open_shm(void) {
+web_shm_t *web_open_shm(void) {
 
-    int shm_id =
-        shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
+    int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(ERROR, "In create_web_shm: failed to get shared data memory id; "
                       "%d message: %s",
                errno, strerror(errno));
         return NULL;
     }
-    web_shm_t* web_data = (web_shm_t*)shmat(shm_id, NULL, 0);
+    web_shm_t *web_data = (web_shm_t *)shmat(shm_id, NULL, 0);
 
-    if (web_data == (void*)-1) {
+    if (web_data == (void *)-1) {
         rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
                       "message: %s",
                errno, strerror(errno));
@@ -98,7 +97,7 @@ web_shm_t* web_open_shm(void) {
  * @param element_size Desired element size in bytes
  * @param length Buffer length in elements
  */
-void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length) {
+void web_buffer_reset(struct ringbuffer *buffer, int element_size, int length) {
     buffer->element_size = element_size;
     buffer->length = length;
     buffer->filled = 0;
@@ -110,7 +109,7 @@ void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length) {
  * @param buffer Pointer to ring buffer
  * @param data Pointer to data array to add
  */
-void web_buffer_add(struct ringbuffer* buffer, int64_t* data) {
+void web_buffer_add(struct ringbuffer *buffer, int64_t *data) {
     memcpy((buffer->data) +
                buffer->head * buffer->element_size / sizeof(int64_t),
            data, buffer->element_size);
@@ -126,7 +125,7 @@ void web_buffer_add(struct ringbuffer* buffer, int64_t* data) {
  * @param num Element number (0 corresponds to the newest element)
  * @return pointer to desired element
  */
-int64_t* web_buffer_get(struct ringbuffer* buffer, int num) {
+int64_t *web_buffer_get(struct ringbuffer *buffer, int num) {
     int pos = ((int)buffer->head + (int)buffer->length - 1 - num) %
               (int)buffer->length;
 
@@ -140,8 +139,8 @@ int64_t* web_buffer_get(struct ringbuffer* buffer, int num) {
  * @param src Pointer to source array
  * @param conf Pointer to current {@link rl_conf} configuration
  */
-void web_merge_currents(uint8_t* valid, int64_t* dest, int64_t* src,
-                        struct rl_conf* conf) {
+void web_merge_currents(uint8_t *valid, int64_t *dest, int64_t *src,
+                        struct rl_conf *conf) {
 
     int ch_in = 0;
     int ch_out = 0;
@@ -197,10 +196,10 @@ void web_merge_currents(uint8_t* valid, int64_t* dest, int64_t* src,
  * @param timestamp_realtime {@link time_stamp} with realtime clock value
  * @param conf Current {@link rl_conf} configuration.
  */
-void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
-                     void* buffer_addr, uint32_t samples_count,
-                     struct time_stamp* timestamp_realtime,
-                     struct rl_conf* conf) {
+void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
+                     uint32_t samples_count,
+                     struct time_stamp *timestamp_realtime,
+                     struct rl_conf *conf) {
 
     // count channels
     int num_bin_channels = 0;
@@ -234,8 +233,8 @@ void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
         uint32_t bin_data;
 
         // read binary channels
-        uint8_t bin_adc1 = (*((int8_t*)(buffer_addr)));
-        uint8_t bin_adc2 = (*((int8_t*)(buffer_addr + 1)));
+        uint8_t bin_adc1 = (*((int8_t *)(buffer_addr)));
+        uint8_t bin_adc2 = (*((int8_t *)(buffer_addr + 1)));
 
         buffer_addr += PRU_DIG_SIZE;
 
@@ -244,7 +243,7 @@ void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
         for (int j = 0; j < NUM_CHANNELS; j++) {
             if (conf->channels[j] == CHANNEL_ENABLED) {
                 int32_t adc_value =
-                    *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE));
+                    *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE));
                 int32_t channel_value =
                     (int32_t)((adc_value + calibration.offsets[j]) *
                               calibration.scales[j]);

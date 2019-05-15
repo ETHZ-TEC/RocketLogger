@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <poll.h>
@@ -39,7 +39,6 @@
 #include "types.h"
 
 #include "gpio.h"
-
 
 int gpio_init(int gpio_number, gpio_mode_t mode) {
     int ret = 0;
@@ -103,7 +102,8 @@ int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode) {
         return FAILURE;
     }
     if (ret < 0) {
-        rl_log(ERROR, "could not configure interrupt of GPIO pin #%d", gpio_number);
+        rl_log(ERROR, "could not configure interrupt of GPIO pin #%d",
+               gpio_number);
         return FAILURE;
     }
 
@@ -119,7 +119,7 @@ int gpio_set_value(int gpio_number, int value) {
     // construct sysfs path
     char sysfs_file[MAX_PATH_LENGTH];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
-    
+
     // set the output value
     int ret = sysfs_write_int(sysfs_file, value);
     if (ret < 0) {
@@ -134,7 +134,7 @@ int gpio_get_value(int gpio_number) {
     // construct sysfs path
     char sysfs_file[MAX_PATH_LENGTH];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
-    
+
     // set the output value
     int value = -1;
     int ret = sysfs_read_int(sysfs_file, &value);
@@ -153,15 +153,14 @@ int gpio_wait_interrupt(int gpio_number, int timeout) {
 
     int fd = open(sysfs_file, O_RDONLY);
     if (fd < 0) {
-        rl_log(ERROR, "could not open value file for GPIO pin #%d", gpio_number);
+        rl_log(ERROR, "could not open value file for GPIO pin #%d",
+               gpio_number);
         return FAILURE;
     }
 
     // initialize polling structure
     struct pollfd fds = {
-        .fd = fd,
-        .events = POLLPRI,
-        .revents = 0,
+        .fd = fd, .events = POLLPRI, .revents = 0,
     };
     int nfds = 1;
 
@@ -189,7 +188,8 @@ int gpio_wait_interrupt(int gpio_number, int timeout) {
     ret = read(fds.fd, &value_buffer, 1);
     close(fd);
     if (ret <= 0) {
-        rl_log(ERROR, "GPIO read back after poll event failed for GPIO pin #%d", gpio_number);
+        rl_log(ERROR, "GPIO read back after poll event failed for GPIO pin #%d",
+               gpio_number);
         return FAILURE;
     }
     return atoi(value_buffer);

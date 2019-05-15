@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <errno.h>
@@ -92,7 +92,7 @@ int count_channels(int channels[NUM_CHANNELS]) {
  * @param status Pointer to struct array.
  * @return {@link SUCCESS} in case of a success, {@link FAILURE} otherwise.
  */
-int read_status(struct rl_status* status) {
+int read_status(struct rl_status *status) {
 
     // map shared memory
     int shm_id =
@@ -103,9 +103,9 @@ int read_status(struct rl_status* status) {
                errno, strerror(errno));
         return FAILURE;
     }
-    struct rl_status* shm_status = (struct rl_status*)shmat(shm_id, NULL, 0);
+    struct rl_status *shm_status = (struct rl_status *)shmat(shm_id, NULL, 0);
 
-    if (shm_status == (void*)-1) {
+    if (shm_status == (void *)-1) {
         rl_log(ERROR, "In read_status: failed to map shared status memory; %d "
                       "message: %s",
                errno, strerror(errno));
@@ -126,7 +126,7 @@ int read_status(struct rl_status* status) {
  * @param status Pointer to struct array.
  * @return {@link SUCCESS} in case of a success, {@link FAILURE} otherwise.
  */
-int write_status(struct rl_status* status) {
+int write_status(struct rl_status *status) {
 
     // map shared memory
     int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(struct rl_status),
@@ -138,8 +138,8 @@ int write_status(struct rl_status* status) {
         return FAILURE;
     }
 
-    struct rl_status* shm_status = (struct rl_status*)shmat(shm_id, NULL, 0);
-    if (shm_status == (void*)-1) {
+    struct rl_status *shm_status = (struct rl_status *)shmat(shm_id, NULL, 0);
+    if (shm_status == (void *)-1) {
         rl_log(ERROR, "In write_status: failed to map shared status memory; %d "
                       "message: %s",
                errno, strerror(errno));
@@ -200,7 +200,7 @@ void sig_handler(int signo) {
  * @return integer value in the file, {@link FAILURE} when failed.
  */
 int read_file_value(char filename[]) {
-    FILE* fp;
+    FILE *fp;
     unsigned int value = 0;
     fp = fopen(filename, "rt");
     if (fp == NULL) {
@@ -220,8 +220,8 @@ int read_file_value(char filename[]) {
  * @param timestamp_realtime Pointer to {@link time_stamp} struct
  * @param timestamp_monotonic Pointer to {@link time_stamp} struct
  */
-void create_time_stamp(struct time_stamp* timestamp_realtime,
-                       struct time_stamp* timestamp_monotonic) {
+void create_time_stamp(struct time_stamp *timestamp_realtime,
+                       struct time_stamp *timestamp_monotonic) {
 
     struct timespec spec_real;
     struct timespec spec_monotonic;
@@ -246,7 +246,7 @@ void create_time_stamp(struct time_stamp* timestamp_realtime,
  * @param mac_address Empty array with size {@link MAC_ADDRESS_LENGTH}
  */
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
-    FILE* fp = fopen(MAC_ADDRESS_FILE, "r");
+    FILE *fp = fopen(MAC_ADDRESS_FILE, "r");
 
     unsigned int temp;
     fscanf(fp, "%x", &temp);

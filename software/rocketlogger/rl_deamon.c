@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #define LOG_FILE "/var/www/log/deamon.log"
@@ -36,14 +36,12 @@
 #include "gpio.h"
 #include "log.h"
 
-
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
 
-
 /**
  * Setup power GPIO and power of RocketLogger cape
- * 
+ *
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int power_init(void) {
@@ -58,7 +56,7 @@ int power_init(void) {
 
 /**
  * Deinitialize power GPIO
- * 
+ *
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int power_deinit(void) {
@@ -73,7 +71,7 @@ int power_deinit(void) {
 
 /**
  * Setup button GPIO and enable interrup
- * 
+ *
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int button_init(void) {
@@ -88,7 +86,7 @@ int button_init(void) {
 
 /**
  * Deinitialize button GPIO
- * 
+ *
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
 int button_deinit(void) {
@@ -103,7 +101,7 @@ int button_deinit(void) {
 
 /**
  * GPIO interrupt handler
- * 
+ *
  * @param value GPIO value after interrupt
  */
 void button_interrupt_handler(int value) {

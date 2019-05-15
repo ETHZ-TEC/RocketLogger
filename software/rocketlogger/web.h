@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef WEB_H_
@@ -106,18 +106,18 @@ struct web_shm {
  */
 typedef struct web_shm web_shm_t;
 
-web_shm_t* web_create_shm(void);
-web_shm_t* web_open_shm(void);
+web_shm_t *web_create_shm(void);
+web_shm_t *web_open_shm(void);
 
-void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length);
+void web_buffer_reset(struct ringbuffer *buffer, int element_size, int length);
 
-void web_buffer_add(struct ringbuffer* buffer, int64_t* data);
+void web_buffer_add(struct ringbuffer *buffer, int64_t *data);
 
-int64_t* web_buffer_get(struct ringbuffer* buffer, int num);
+int64_t *web_buffer_get(struct ringbuffer *buffer, int num);
 
-void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
-                     void* buffer_addr, uint32_t samples_count,
-                     struct time_stamp* timestamp_realtime,
-                     struct rl_conf* conf);
+void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
+                     uint32_t samples_count,
+                     struct time_stamp *timestamp_realtime,
+                     struct rl_conf *conf);
 
 #endif /* WEB_H_ */

@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <sys/types.h>
@@ -61,7 +61,7 @@ rl_state rl_get_status(void) {
  * @param status Pointer to {@link rl_status} struct to write to
  * @return current status {@link rl_state}
  */
-int rl_read_status(struct rl_status* status) {
+int rl_read_status(struct rl_status *status) {
 
     // get pid
     pid_t pid = get_pid();
@@ -80,8 +80,8 @@ int rl_read_status(struct rl_status* status) {
  * @param calibration_ptr Pointer to {@link rl_calibration} to write to
  * @param conf Current {@link rl_conf} configuration
  */
-void rl_read_calibration(struct rl_calibration* calibration_ptr,
-                         struct rl_conf* conf) {
+void rl_read_calibration(struct rl_calibration *calibration_ptr,
+                         struct rl_conf *conf) {
     read_calibration(conf);
     memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
 }
@@ -92,7 +92,7 @@ void rl_read_calibration(struct rl_calibration* calibration_ptr,
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_start(struct rl_conf* conf, char* file_comment) {
+int rl_start(struct rl_conf *conf, char *file_comment) {
 
     // check mode
     switch (conf->mode) {

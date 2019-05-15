@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef FILE_HANDLING_H_
@@ -47,17 +47,17 @@
 #define CSV_DELIMITER ","
 
 // FUNCTIONS
-void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf);
-void file_setup_header(struct rl_file_header* file_header, struct rl_conf* conf,
-                       char* comment);
-void file_store_header_bin(FILE* data, struct rl_file_header* file_header);
-void file_store_header_csv(FILE* data, struct rl_file_header* file_header);
-void file_update_header_bin(FILE* data, struct rl_file_header* file_header);
-void file_update_header_csv(FILE* data, struct rl_file_header* file_header);
-void file_handle_data(FILE* data_file, void* buffer_addr,
+void file_setup_lead_in(struct rl_file_lead_in *lead_in, struct rl_conf *conf);
+void file_setup_header(struct rl_file_header *file_header, struct rl_conf *conf,
+                       char *comment);
+void file_store_header_bin(FILE *data, struct rl_file_header *file_header);
+void file_store_header_csv(FILE *data, struct rl_file_header *file_header);
+void file_update_header_bin(FILE *data, struct rl_file_header *file_header);
+void file_update_header_csv(FILE *data, struct rl_file_header *file_header);
+void file_handle_data(FILE *data_file, void *buffer_addr,
                       uint32_t samples_count,
-                      struct time_stamp* timestamp_realtime,
-                      struct time_stamp* timestamp_monotonic,
-                      struct rl_conf* conf);
+                      struct time_stamp *timestamp_realtime,
+                      struct time_stamp *timestamp_monotonic,
+                      struct rl_conf *conf);
 
 #endif /* FILE_HANDLING_H_ */

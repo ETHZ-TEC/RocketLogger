@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "version.h"
@@ -37,7 +37,7 @@
  * Print RocketLogger configuration on command line
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void rl_print_config(struct rl_conf* conf) {
+void rl_print_config(struct rl_conf *conf) {
 
     char file_format_names[3][8] = {"no file", "csv", "binary"};
     char data_aggregation_names[3][10] = {"none", "downsample", "average"};
@@ -100,7 +100,7 @@ void rl_print_config(struct rl_conf* conf) {
  * Print RocketLogger status on command line
  * @param status Pointer to {@link rl_status} status
  */
-void rl_print_status(struct rl_status* status) {
+void rl_print_status(struct rl_status *status) {
 
     if (status->state == RL_OFF) {
         printf("\nRocketLogger IDLE\n\n");
@@ -133,7 +133,7 @@ void rl_print_version(void) {
  * @param mode Pointer to argument string to parse
  * @return provided mode
  */
-rl_mode get_mode(char* mode) {
+rl_mode get_mode(char *mode) {
     if (strcmp(mode, "sample") == 0) {
         return LIMIT;
     } else if (strcmp(mode, "cont") == 0) {
@@ -163,7 +163,7 @@ rl_mode get_mode(char* mode) {
  * @param option Pointer to argument string to parse
  * @return provided option
  */
-rl_option get_option(char* option) {
+rl_option get_option(char *option) {
     if (strcmp(option, "f") == 0) {
         return FILE_NAME;
     } else if (strcmp(option, "r") == 0) {
@@ -203,7 +203,7 @@ rl_option get_option(char* option) {
  * @param value Pointer to argument string to parse
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int parse_channels(int channels[], char* value) {
+int parse_channels(int channels[], char *value) {
 
     // check first channel number
     if (isdigit(value[0]) && atoi(value) >= 0 && atoi(value) <= 9) {
@@ -228,7 +228,7 @@ int parse_channels(int channels[], char* value) {
     for (j = 1; j < 2 * (NUM_CHANNELS - 1) && value[j] == ','; j = j + 2) {
 
         // check channel number
-        char* c = &value[j + 1];
+        char *c = &value[j + 1];
         if (isdigit(c[0]) && atoi(c) >= 0 && atoi(c) < NUM_CHANNELS) {
             channels[atoi(c)] = 1;
         } else {
@@ -249,8 +249,8 @@ int parse_channels(int channels[], char* value) {
  * @param file_comment Comment to write into the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int parse_args(int argc, char* argv[], struct rl_conf* conf,
-               int* set_as_default, char** file_comment) {
+int parse_args(int argc, char *argv[], struct rl_conf *conf,
+               int *set_as_default, char **file_comment) {
 
     int i; // argument count variable
     int no_file = 0;
@@ -372,7 +372,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                 if (argc > ++i) {
 
                     // check first number
-                    char* c = argv[i];
+                    char *c = argv[i];
                     if (isdigit(c[0]) && atoi(c) < 3 && atoi(c) >= 0) {
 
                         // reset default forced channel selection
@@ -389,7 +389,7 @@ int parse_args(int argc, char* argv[], struct rl_conf* conf,
                     // check second number
                     if (argv[i][1] == ',') {
 
-                        char* c = &argv[i][2];
+                        char *c = &argv[i][2];
                         if (atoi(c) < 3 && atoi(c) > 0) {
                             conf->force_high_channels[atoi(c) - 1] =
                                 CHANNEL_ENABLED;
@@ -640,7 +640,7 @@ void print_usage(void) {
  * Print provided configuration to command line
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void print_config(struct rl_conf* conf) {
+void print_config(struct rl_conf *conf) {
     printf("\nRocketLogger Configuration:\n");
     rl_print_config(conf);
     printf("\n");
@@ -650,7 +650,7 @@ void print_config(struct rl_conf* conf) {
  * Reset configuration to standard values
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void reset_config(struct rl_conf* conf) {
+void reset_config(struct rl_conf *conf) {
     conf->version = RL_CONF_VERSION;
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
@@ -680,7 +680,7 @@ void reset_config(struct rl_conf* conf) {
  * @param conf Pointer to {@link rl_conf} configuration
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int read_default_config(struct rl_conf* conf) {
+int read_default_config(struct rl_conf *conf) {
 
     // check if config file existing
     if (open(DEFAULT_CONFIG, O_RDWR) <= 0) {
@@ -689,7 +689,7 @@ int read_default_config(struct rl_conf* conf) {
     }
 
     // open config file
-    FILE* file = fopen(DEFAULT_CONFIG, "r");
+    FILE *file = fopen(DEFAULT_CONFIG, "r");
     if (file == NULL) {
         rl_log(ERROR, "failed to open configuration file");
         return FAILURE;
@@ -719,10 +719,10 @@ int read_default_config(struct rl_conf* conf) {
  * @param conf Pointer to {@link rl_conf} configuration to write
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int write_default_config(struct rl_conf* conf) {
+int write_default_config(struct rl_conf *conf) {
 
     // open config file
-    FILE* file = fopen(DEFAULT_CONFIG, "w");
+    FILE *file = fopen(DEFAULT_CONFIG, "w");
     if (file == NULL) {
         rl_log(ERROR, "failed to create configuration file");
         return FAILURE;

@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <libgen.h>
@@ -52,7 +52,7 @@
 /// ID of semaphore set
 int sem_id;
 /// Pointer to shared memory data
-struct web_shm* web_data;
+struct web_shm *web_data;
 
 /// Client request id
 uint32_t id;
@@ -80,7 +80,7 @@ int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
  * @param path Path to selected directory
  * @return Free disk space in bytes
  */
-static int64_t get_free_space(char* path) {
+static int64_t get_free_space(char *path) {
     struct statvfs stat;
     statvfs(path, &stat);
 
@@ -92,7 +92,7 @@ static int64_t get_free_space(char* path) {
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json32(int32_t const* const data, const int length) {
+static void print_json32(int32_t const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
@@ -109,7 +109,7 @@ static void print_json32(int32_t const* const data, const int length) {
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json64(int64_t const* const data, const int length) {
+static void print_json64(int64_t const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
@@ -202,7 +202,7 @@ static void print_data(void) {
     for (int i = 0; i < buffer_count; i++) {
 
         // read data buffer
-        int64_t* shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
+        int64_t *shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
         if (web_data->buffer[t_scale].element_size > sizeof(data)) {
             rl_log(ERROR,
                    "In print_data: memcpy is trying to copy to much data.");
@@ -234,7 +234,7 @@ static void print_data(void) {
  *   - Time stamp in UNIX time (UTC) of most recent data available at web client
  * @return standard Linux return codes
  */
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 
     // parse arguments
     if (argc != ARG_COUNT + 1) {

@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef RL_UTIL_H_
@@ -68,20 +68,20 @@ typedef enum option {
     NO_OPTION       //!< No option
 } rl_option;
 
-void rl_print_config(struct rl_conf* conf);
-void rl_print_status(struct rl_status* status);
+void rl_print_config(struct rl_conf *conf);
+void rl_print_status(struct rl_status *status);
 void rl_print_version(void);
 
-rl_mode get_mode(char* mode);
-rl_option get_option(char* option);
-int parse_args(int argc, char* argv[], struct rl_conf* conf,
-               int* set_as_default, char** file_comment);
+rl_mode get_mode(char *mode);
+rl_option get_option(char *option);
+int parse_args(int argc, char *argv[], struct rl_conf *conf,
+               int *set_as_default, char **file_comment);
 
 void print_usage(void);
 
-void print_config(struct rl_conf* conf);
-void reset_config(struct rl_conf* conf);
-int read_default_config(struct rl_conf* conf);
-int write_default_config(struct rl_conf* conf);
+void print_config(struct rl_conf *conf);
+void reset_config(struct rl_conf *conf);
+int read_default_config(struct rl_conf *conf);
+int write_default_config(struct rl_conf *conf);
 
 #endif /* RL_UTIL_H_ */

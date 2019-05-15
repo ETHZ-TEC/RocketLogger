@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "pru.h"
@@ -34,7 +34,7 @@
 #include "meter.h"
 
 /// Analog channel units
-char* channel_units[NUM_CHANNELS] = {"mA", "uA", "V", "V",
+char *channel_units[NUM_CHANNELS] = {"mA", "uA", "V", "V",
                                      "mA", "uA", "V", "V"};
 /// Analog channel scales
 uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 100000000, 100000000,
@@ -66,7 +66,7 @@ void meter_stop(void) { endwin(); }
  * @param conf Pointer to current {@link rl_conf} configuration
  * @param buffer_addr
  */
-void meter_print_buffer(struct rl_conf* conf, void* buffer_addr) {
+void meter_print_buffer(struct rl_conf *conf, void *buffer_addr) {
 
     // clear screen
     erase();
@@ -89,8 +89,8 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr) {
     uint32_t avg_number = conf->sample_rate / conf->update_rate;
 
     // read digital channels
-    dig_data[0] = (int32_t)(*((int8_t*)(buffer_addr)));
-    dig_data[1] = (int32_t)(*((int8_t*)(buffer_addr + 1)));
+    dig_data[0] = (int32_t)(*((int8_t *)(buffer_addr)));
+    dig_data[1] = (int32_t)(*((int8_t *)(buffer_addr + 1)));
     buffer_addr += PRU_DIG_SIZE;
 
     // read, average and scale values (if channel selected)
@@ -98,9 +98,9 @@ void meter_print_buffer(struct rl_conf* conf, void* buffer_addr) {
         if (conf->channels[j] == CHANNEL_ENABLED) {
             value = 0;
             for (l = 0; l < avg_number; l++) {
-                value += *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE +
-                                      l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
-                                           PRU_DIG_SIZE)));
+                value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
+                                       l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
+                                            PRU_DIG_SIZE)));
             }
             value = value / (int64_t)avg_number;
             channel_data[k] =

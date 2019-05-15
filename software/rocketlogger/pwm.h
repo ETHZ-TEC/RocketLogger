@@ -19,21 +19,20 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef PWM_H_
 #define PWM_H_
 
 #include <stdint.h>
-
 
 /// Linux sysfs paths device files
 /// Path to the Linux sysfs PWM0 device files
@@ -86,7 +85,6 @@
 /// ePWM module register map size
 #define EPWM_SIZE 0x0060
 
-
 // PWMSS sub-module register base addresses, offsets and sizes
 
 /// PWMSS0 register base address
@@ -104,7 +102,6 @@
 /// ePWM2 register base address
 #define EPWM2_BASE (PWM2_BASE + EPWM_OFFSET)
 
-
 // PWMSS configuration register offsets
 /// IP Revision Register
 #define PWMSS_IDVER_OFFSET 0x00
@@ -114,7 +111,6 @@
 #define PWMSS_CLKCONFIG_OFFSET 0x08
 /// Clock Status Register
 #define PWMSS_CLKSTATUS_OFFSET 0x0C
-
 
 // ePWM configuration register offsets
 /// Time-Base Control Register
@@ -137,7 +133,6 @@
 #define EPWM_AQCTLA_OFFSET 0x16
 /// Action-Qualifier Control Register for Output B (EPWMxB)
 #define EPWM_AQCTLB_OFFSET 0x18
-
 
 // ePWM configuration register values (selection)
 /// TBCTL default value after reset
@@ -182,33 +177,32 @@
 #define ADC_CLOCK_PERIOD 48
 /// Range latch reset pulse width (fraction of sampling period in [0, 1])
 #define RANGE_RESET_PULSE_WIDTH 0.1
-/// Range latch reset period extra margin (fraction of sampling period in [0, 1])
+/// Range latch reset period margin (fraction of sampling period in [0, 1])
 #define RANGE_RESET_PERIOD_MARGIN 0.1
 /// Range latch reset period scaling factor (in units of 20 ns)
-#define RANGE_RESET_PERIOD_SCALE                                              \
-  (50000000 * (1 + RANGE_RESET_PULSE_WIDTH + RANGE_RESET_PERIOD_MARGIN))
-
+#define RANGE_RESET_PERIOD_SCALE                                               \
+    (50000000 * (1 + RANGE_RESET_PULSE_WIDTH + RANGE_RESET_PERIOD_MARGIN))
 
 /**
  * Initialize PWM modules.
- * 
+ *
  * Map PWM registers into user space (on {@link pwm0_mem} and {@link
  * pwm1_mem} pointer)
- * 
+ *
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
 int pwm_init(void);
 
 /**
  * Deinitialize PWM modules.
- * 
+ *
  * Unmapping registers from user space
  */
 void pwm_deinit(void);
 
 /**
  * Setup PWMSS1 for range latch reset clock.
- * 
+ *
  * @param sample_rate ADC sampling rate in Sps
  */
 void pwm_setup_range_reset(uint32_t sample_rate);
@@ -217,6 +211,5 @@ void pwm_setup_range_reset(uint32_t sample_rate);
  * Setup PWMSS0 for ADC master clock.
  */
 void pwm_setup_adc_clock(void);
-
 
 #endif /* PWM_H_ */
