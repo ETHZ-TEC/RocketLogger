@@ -655,7 +655,7 @@ void reset_config(struct rl_conf* conf) {
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
     conf->aggregation = AGGREGATE_DOWNSAMPLE;
-    conf->update_rate = 5;
+    conf->update_rate = 1;
     conf->sample_limit = 0;
     conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
     conf->enable_web_server = 1;

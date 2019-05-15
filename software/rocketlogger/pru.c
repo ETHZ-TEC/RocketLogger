@@ -162,11 +162,11 @@ int pru_init_data(pru_data_t* pru, struct rl_conf* conf, uint32_t aggregates) {
         pru->buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
         PRU_BUFFER_STATUS_SIZE;
 
-    void* prumem_map_base;
-    prussdrv_map_prumem(PRUSS0_PRU0_DATARAM, &prumem_map_base);
-    uint32_t prumem_base = (uint32_t) prussdrv_get_phys_addr(prumem_map_base);
-    pru->buffer0_ptr = prumem_base + sizeof(pru_data_t);
-    pru->buffer1_ptr = prumem_base + sizeof(pru_data_t) + buffer_size_bytes;
+    void* pru_extmem_base;
+    prussdrv_map_extmem(&pru_extmem_base);
+    uint32_t pru_extmem_phys = (uint32_t) prussdrv_get_phys_addr(pru_extmem_base);
+    pru->buffer0_ptr = pru_extmem_phys;
+    pru->buffer1_ptr = pru_extmem_phys + buffer_size_bytes;
 
     // setup commands to send for ADC initialization
     pru->adc_command_count = PRU_ADC_COMMAND_COUNT;
@@ -292,22 +292,22 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
     pru_data_t pru;
     pru_init_data(&pru, conf, aggregates);
 
+    // check max PRU buffer size
+    uint32_t pru_extmem_size = (uint32_t)prussdrv_extmem_size();
+    uint32_t pru_extmem_size_demand =  2 *
+        (pru.buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
+         PRU_BUFFER_STATUS_SIZE);
+    if (pru_extmem_size_demand > pru_extmem_size) {
+        rl_log(ERROR, "insufficient PRU memory allocated/available.\n"
+                      "update uio_pruss configuration:"
+                      "options uio_pruss extram_pool_sz=0x%06x",
+               pru_extmem_size_demand);
+        pru.state = PRU_OFF;
+    }
+
     // get user space mapped PRU memory addresses
     void* buffer0_ptr = prussdrv_get_virt_addr(pru.buffer0_ptr);
     void* buffer1_ptr = prussdrv_get_virt_addr(pru.buffer1_ptr);
-
-    // check max PRU buffer size
-    uint32_t prumem_size_demand = sizeof(pru_data_t) + 2 *
-        (pru.buffer_length * (PRU_SAMPLE_SIZE * NUM_CHANNELS + PRU_DIG_SIZE) +
-         PRU_BUFFER_STATUS_SIZE);
-    uint32_t prumem_max_addr = pru.buffer0_ptr - sizeof(pru_data_t) + prumem_size_demand - 1;
-    if (prussdrv_get_virt_addr(prumem_max_addr) == 0) {
-        rl_log(ERROR, "insufficient PRU memory allocated/available.\n"
-                      "update uio_pruss configuration if possible:"
-                      "options uio_pruss extram_pool_sz=0x%06x",
-               prumem_size_demand);
-        pru.state = PRU_OFF;
-    }
 
     // DATA FILE STORING
 
