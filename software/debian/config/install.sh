@@ -124,13 +124,13 @@ apt install --assume-yes        \
   ti-pru-cgt-installer          \
   device-tree-compiler          \
   ntp                           \
-  apache2                       \
-  lighttpd                      \
-  php-cgi                       \
   libncurses5-dev               \
   i2c-tools                     \
   libi2c-dev                    \
   linux-headers-$(uname -r)
+  # apache2                       \
+  # lighttpd                      \
+  # php-cgi                       \
 
 echo "WARNING: package am335x-pru-package does not exist anymore. Needs to manually installed from <https://github.com/beagleboard/am335x_pru_package>."
 echo "WARNING: need to manually rund ldconfig after installing  am335x-pru-package PRU libraries."

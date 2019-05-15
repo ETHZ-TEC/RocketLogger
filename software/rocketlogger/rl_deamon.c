@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define LOG_FILE "/var/www/log/deamon.log"
+#define LOG_FILE "/var/www/rocketlogger/log/deamon.log"
 
 #include <stdlib.h>
 

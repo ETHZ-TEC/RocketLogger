@@ -4,7 +4,7 @@
 			"path": "software/rocketlogger"
 		},
 		{
-			"path": "software/webserver/data"
+			"path": "software/webserver"
 		},
 		{
 			"path": "script/python"

@@ -663,7 +663,7 @@ void reset_config(struct rl_conf *conf) {
     conf->file_format = BIN;
     conf->max_file_size = 1000000000;
 
-    strcpy(conf->file_name, "/var/www/data/data.rld");
+    strcpy(conf->file_name, "/var/www/rocketlogger/data/data.rld");
 
     int i;
     for (i = 0; i < NUM_CHANNELS; i++) {
@@ -672,7 +672,7 @@ void reset_config(struct rl_conf *conf) {
     memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
 
     conf->ambient.enabled = AMBIENT_DISABLED;
-    strcpy(conf->ambient.file_name, "/var/www/data/data-ambient.rld");
+    strcpy(conf->ambient.file_name, "/var/www/rocketlogger/data/data-ambient.rld");
 }
 
 /**

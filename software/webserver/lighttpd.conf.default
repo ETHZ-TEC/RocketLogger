@@ -3,11 +3,9 @@ server.modules = (
 	"mod_access",
 	"mod_alias",
  	"mod_redirect",
-  "mod_fastcgi",
-  "mod_auth",
 )
 
-server.document-root        = "/var/www/rocketlogger"
+server.document-root        = "/var/www/html"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
 server.errorlog             = "/var/log/lighttpd/error.log"
 server.pid-file             = "/var/run/lighttpd.pid"
@@ -44,32 +42,6 @@ compress.filetype           = ( "application/javascript", "text/css", "text/html
 include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
 include_shell "/usr/share/lighttpd/create-mime.conf.pl"
 include "/etc/lighttpd/conf-enabled/*.conf"
-
-# directory listing for data and log folders
-# dir-listing.activate = "enable"
-
-# PHP fastcgi config
-fastcgi.server = (
-  ".php" => (
-    (
-      "bin-path" => "/usr/bin/php-cgi",
-      "socket" => "/tmp/php.sock",
-    ),
-  ),
-)
-
-# authentication config
-auth.debug = 2
-auth.backend = "htpasswd"
-auth.backend.htpasswd.userfile = "/home/rocketlogger/.htpasswd"
-
-auth.require = (
-  "/" => (
-    "method" => "basic",
-    "realm" => "RocketLogger Remote Login",
-    "require" => "valid-user",
-  ),
-)
 
 #server.compat-module-load   = "disable"
 server.modules += (

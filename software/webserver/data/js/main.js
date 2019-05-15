@@ -349,7 +349,7 @@ function parseStatus(tempState) {
 	var digitalInputs = tempState[2];
 	var calibration = tempState[3];
 	var fileFormat = tempState[4];
-	var tempFilename = tempState[5];
+	var sysFilename = tempState[5];
 	var maxFileSize = parseInt(tempState[6]) / MB_SCALE;
 	var tempChannels = JSON.parse(tempState[7]);
 	var tempForceHighChannels = JSON.parse(tempState[8]);
@@ -429,7 +429,8 @@ function parseStatus(tempState) {
 	}
 
 	// file name
-	filename = tempFilename.slice(14);
+	var temp = sysFilename.split('/');
+	filename = temp[temp.length - 1];
 	$("#filename").val(filename);
 
 	// max file size
