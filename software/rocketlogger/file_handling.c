@@ -31,21 +31,27 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <time.h>
 
+#include "log.h"
 #include "pru.h"
+#include "rl_file.h"
+#include "types.h"
 #include "util.h"
 
 #include "file_handling.h"
 
 /// Channel names
-const char *channel_names[NUM_CHANNELS] = {"I1H", "I1L", "V1", "V2",
-                                           "I2H", "I2L", "V3", "V4"};
+char const *const channel_names[NUM_CHANNELS] = {"I1H", "I1L", "V1", "V2",
+                                                 "I2H", "I2L", "V3", "V4"};
 /// Digital input names
-const char *digital_input_names[NUM_DIGITAL_INPUTS] = {"DI1", "DI2", "DI3",
-                                                       "DI4", "DI5", "DI6"};
+char const *const digital_input_names[NUM_DIGITAL_INPUTS] = {
+    "DI1", "DI2", "DI3", "DI4", "DI5", "DI6"};
 /// Valid channel names
-const char *valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
+char const *const valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
 
 /// Global variable to determine i1l valid channel
 int i1l_valid_channel = 0;
@@ -57,7 +63,8 @@ int i2l_valid_channel = 0;
  * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
  * @param conf Pointer to current {@link rl_conf} struct
  */
-void file_setup_lead_in(struct rl_file_lead_in *lead_in, struct rl_conf *conf) {
+void file_setup_lead_in(struct rl_file_lead_in *const lead_in,
+                        struct rl_conf const *const conf) {
 
     // number channels
     uint16_t channel_count = count_channels(conf->channels);
@@ -103,8 +110,8 @@ void file_setup_lead_in(struct rl_file_lead_in *lead_in, struct rl_conf *conf) {
  * @param file_header Pointer to {@link rl_file_header} struct to set up
  * @param conf Pointer to current {@link rl_conf} struct
  */
-void file_setup_channels(struct rl_file_header *file_header,
-                         struct rl_conf *conf) {
+void file_setup_channels(struct rl_file_header *const file_header,
+                         struct rl_conf const *const conf) {
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
 
@@ -183,8 +190,9 @@ void file_setup_channels(struct rl_file_header *file_header,
  * @param conf Pointer to current {@link rl_conf} struct
  * @param comment The comment stored in the file header or NULL for default
  */
-void file_setup_header(struct rl_file_header *file_header, struct rl_conf *conf,
-                       char *comment) {
+void file_setup_header(struct rl_file_header *const file_header,
+                       struct rl_conf const *const conf,
+                       char const *const comment) {
 
     // comment
     if (comment == NULL) {
@@ -203,7 +211,7 @@ void file_setup_header(struct rl_file_header *file_header, struct rl_conf *conf,
  * @param file_header Pointer to {@link rl_file_header} struct
  */
 void file_store_header_bin(FILE *data_file,
-                           struct rl_file_header *file_header) {
+                           struct rl_file_header *const file_header) {
 
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
@@ -246,7 +254,7 @@ void file_store_header_bin(FILE *data_file,
  * @param file_header Pointer to {@link rl_file_header} struct
  */
 void file_store_header_csv(FILE *data_file,
-                           struct rl_file_header *file_header) {
+                           struct rl_file_header const *const file_header) {
     // lead-in
     fprintf(data_file, "RocketLogger CSV File\n");
     fprintf(data_file, "File Version,%u\n",
@@ -319,7 +327,7 @@ void file_store_header_csv(FILE *data_file,
  * @param file_header Pointer to {@link rl_file_header} struct
  */
 void file_update_header_bin(FILE *data_file,
-                            struct rl_file_header *file_header) {
+                            struct rl_file_header const *const file_header) {
 
     // seek to beginning and rewrite lead_in
     rewind(data_file);
@@ -336,7 +344,7 @@ void file_update_header_bin(FILE *data_file,
  * @param file_header Pointer to {@link rl_file_header} struct
  */
 void file_update_header_csv(FILE *data_file,
-                            struct rl_file_header *file_header) {
+                            struct rl_file_header const *const file_header) {
     rewind(data_file);
     fprintf(data_file, "RocketLogger CSV File\n");
     fprintf(data_file, "File Version,%u\n",
@@ -360,11 +368,11 @@ void file_update_header_csv(FILE *data_file,
  * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
  * @param conf Current {@link rl_conf} configuration.
  */
-void file_handle_data(FILE *data_file, void *buffer_addr,
+void file_handle_data(FILE *data_file, void const *buffer_addr,
                       uint32_t samples_count,
-                      struct time_stamp *timestamp_realtime,
-                      struct time_stamp *timestamp_monotonic,
-                      struct rl_conf *conf) {
+                      struct time_stamp const *const timestamp_realtime,
+                      struct time_stamp const *const timestamp_monotonic,
+                      struct rl_conf const *const conf) {
 
     // write timestamp to file
     if (conf->file_format == BIN) {
@@ -412,7 +420,7 @@ void file_handle_data(FILE *data_file, void *buffer_addr,
 
         // BINARY CHANNELS //
 
-        // mask and combine digital inputs, if requestet
+        // mask and combine digital inputs, if requested
         int bin_channel_pos = 0;
         if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
             bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |

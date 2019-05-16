@@ -29,6 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
+#include <sys/types.h>
+
+#include "log.h"
+#include "types.h"
+
 #include "rl_util.h"
 
 /// Number of possible sampling rates

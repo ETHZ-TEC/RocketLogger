@@ -32,10 +32,8 @@
 #ifndef LOG_H_
 #define LOG_H_
 
-#include <stdio.h>
-
 #include "types.h"
 
-void rl_log(rl_log_type type, const char *format, ...);
+void rl_log(rl_log_type type, char const *const format, ...);
 
 #endif /* LOG_H_ */

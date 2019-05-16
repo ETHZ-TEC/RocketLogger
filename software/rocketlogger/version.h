@@ -33,15 +33,15 @@
 #define VERSION_H_
 
 /// The RocketLogger software version string
-extern const char *PROJECT_VERSION;
+extern char const *const PROJECT_VERSION;
 
 /// Git code revision description of the code base
-extern const char *GIT_DESCRIPTION;
+extern char const *const GIT_DESCRIPTION;
 
 /// Date of the of last git commit
-extern const char *GIT_DATE;
+extern char const *const GIT_DATE;
 
 /// Compilation date of the program
-extern const char *COMPILE_DATE;
+extern char const *const COMPILE_DATE;
 
 #endif /* VERSION_H_ */

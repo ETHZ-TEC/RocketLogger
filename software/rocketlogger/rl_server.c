@@ -29,11 +29,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/statvfs.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include <libgen.h>
+#include <sys/shm.h>
+#include <sys/statvfs.h>
+#include <sys/types.h>
+
+#include "calibration.h"
+#include "log.h"
 #include "rl_lib.h"
 #include "rl_util.h"
 #include "sem.h"

@@ -32,43 +32,8 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
-// INCLUDES
-
-// standard
-#include <ctype.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
-// ipc, memory mapping, multithreading
-#include <pthread.h>
-#include <signal.h>
-#include <sys/mman.h>
-#include <sys/shm.h>
-
-// files
-#include <fcntl.h>
-#include <poll.h>
-#include <sys/stat.h>
-
-// time
-#include <sys/time.h>
-#include <time.h>
-
-// pru
-#include <pruss_intc_mapping.h>
-#include <prussdrv.h>
-
-// ncurses (text-based UI)
-#include <ncurses.h>
-
-// DEFINES
-
-// return codes
 /**
  * Return code definitions
  */
@@ -336,10 +301,10 @@ struct rl_status status;
 /// Calibration data
 struct rl_calibration calibration;
 /// Channel names
-extern const char *channel_names[NUM_CHANNELS];
+extern char const *const channel_names[NUM_CHANNELS];
 /// Digital input names
-extern const char *digital_input_names[NUM_DIGITAL_INPUTS];
+extern char const *const digital_input_names[NUM_DIGITAL_INPUTS];
 /// Range valid information names
-extern const char *valid_info_names[NUM_I_CHANNELS];
+extern char const *const valid_info_names[NUM_I_CHANNELS];
 
 #endif /* TYPES_H_ */

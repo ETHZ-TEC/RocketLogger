@@ -37,8 +37,6 @@
 
 #include "types.h"
 
-// ------  ADC DEFINITIONS  ------ //
-
 /**
  * ADS131E08S command (extended to 32 bits for PRU use) definitions
  */
@@ -154,8 +152,6 @@ typedef struct pru_data {
     uint32_t adc_command[PRU_ADC_COMMAND_COUNT];
 } pru_data_t;
 
-// ------  FUNCTIONS  ------ //
-
 /**
  * Initialize PRU driver.
  *
@@ -181,7 +177,8 @@ void pru_deinit(void);
  * than the minimal ADC rate (set 1 for no aggregates)
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_init_data(pru_data_t *pru, struct rl_conf *conf, uint32_t aggregates);
+int pru_init_data(pru_data_t *const pru, struct rl_conf const *const conf,
+                  uint32_t aggregates);
 
 /**
  * Write a new state to the PRU shared memory.
@@ -212,8 +209,8 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE *data, FILE *ambient_file, struct rl_conf *conf,
-               char *file_comment);
+int pru_sample(FILE *data, FILE *ambient_file, struct rl_conf const *const conf,
+               char const *const file_comment);
 
 /**
  * Stop running PRU measurements.

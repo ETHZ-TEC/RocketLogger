@@ -42,7 +42,7 @@
  * @param value The resource number of the device to export
  * @return 0 in case of success, -1 otherwise.
  */
-int sysfs_export(char *sysfs_file, int value);
+int sysfs_export(char const *const sysfs_file, int value);
 
 /**
  * Unexport (deactivate) a sysfs device.
@@ -53,7 +53,7 @@ int sysfs_export(char *sysfs_file, int value);
  * @param value The resource number of the device to unexport
  * @return 0 in case of success, -1 otherwise.
  */
-int sysfs_unexport(char *sysfs_file, int value);
+int sysfs_unexport(char const *const sysfs_file, int value);
 
 /**
  * Write a string to a sysfs device file.
@@ -62,7 +62,7 @@ int sysfs_unexport(char *sysfs_file, int value);
  * @param value The value to write to write
  * @return 0 in case of success, -1 otherwise.
  */
-int sysfs_write_string(char *sysfs_file, char *value);
+int sysfs_write_string(char const *const sysfs_file, char const *const value);
 /**
  * Read a string from a sysfs device file.
  *
@@ -71,7 +71,8 @@ int sysfs_write_string(char *sysfs_file, char *value);
  * @param length Max length to the string to read.
  * @return Read string length in case of success, -1 on failure.
  */
-int sysfs_read_string(char *sysfs_file, char *value, int length);
+int sysfs_read_string(char const *const sysfs_file, char *const value,
+                      int length);
 
 /**
  * Write an integer to a sysfs device file.
@@ -80,7 +81,7 @@ int sysfs_read_string(char *sysfs_file, char *value, int length);
  * @param value The value to write to write
  * @return 0 in case of success, -1 otherwise.
  */
-int sysfs_write_int(char *sysfs_file, int value);
+int sysfs_write_int(char const *const sysfs_file, int value);
 
 /**
  * Write an integer to a sysfs device file.
@@ -89,6 +90,6 @@ int sysfs_write_int(char *sysfs_file, int value);
  * @param value Pointer to the integer variable to write to.
  * @return 0 in case of success, -1 otherwise.
  */
-int sysfs_read_int(char *sysfs_file, int *value);
+int sysfs_read_int(char const *const sysfs_file, int *const value);
 
 #endif /* SYSFS_H_ */

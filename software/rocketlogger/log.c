@@ -29,6 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "log.h"
 
 /**
@@ -36,7 +43,7 @@
  * @param type Type of message.
  * @param format Message format.
  */
-void rl_log(rl_log_type type, const char *format, ...) {
+void rl_log(rl_log_type type, char const *const format, ...) {
 
     // open/init file
     FILE *log_fp;

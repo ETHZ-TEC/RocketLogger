@@ -29,7 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
+
+#include <ncurses.h>
+
 #include "pru.h"
+#include "types.h"
+#include "util.h"
 
 #include "meter.h"
 
@@ -43,9 +49,6 @@ uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 100000000, 100000000,
 const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {
     DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
 
-/**
- * Init meter window
- */
 void meter_init(void) {
     // init ncurses mode
     initscr();
@@ -56,17 +59,10 @@ void meter_init(void) {
     refresh();
 }
 
-/**
- * Stop meter window
- */
 void meter_stop(void) { endwin(); }
 
-/**
- * Print data buffer in meter window
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param buffer_addr
- */
-void meter_print_buffer(struct rl_conf *conf, void *buffer_addr) {
+void meter_print_buffer(struct rl_conf const *const conf,
+                        void const *buffer_addr) {
 
     // clear screen
     erase();

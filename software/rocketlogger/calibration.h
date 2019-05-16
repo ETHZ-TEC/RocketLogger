@@ -32,20 +32,10 @@
 #ifndef CALIBRATION_H_
 #define CALIBRATION_H_
 
-#include <fcntl.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <unistd.h>
-
-#include "log.h"
 #include "types.h"
 
 void reset_offsets(void);
 void reset_scales(void);
-int read_calibration(struct rl_conf *conf);
+int read_calibration(struct rl_conf const *const conf);
 
 #endif /* CALIBRATION_H_ */

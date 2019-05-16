@@ -29,6 +29,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
+#include "ambient.h"
+#include "lib_util.h"
+#include "log.h"
 #include "version.h"
 
 #include "rl_util.h"
@@ -37,7 +51,7 @@
  * Print RocketLogger configuration on command line
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void rl_print_config(struct rl_conf *conf) {
+void rl_print_config(struct rl_conf const *const conf) {
 
     char file_format_names[3][8] = {"no file", "csv", "binary"};
     char data_aggregation_names[3][10] = {"none", "downsample", "average"};
@@ -100,7 +114,7 @@ void rl_print_config(struct rl_conf *conf) {
  * Print RocketLogger status on command line
  * @param status Pointer to {@link rl_status} status
  */
-void rl_print_status(struct rl_status *status) {
+void rl_print_status(struct rl_status const *const status) {
 
     if (status->state == RL_OFF) {
         printf("\nRocketLogger IDLE\n\n");
@@ -133,7 +147,7 @@ void rl_print_version(void) {
  * @param mode Pointer to argument string to parse
  * @return provided mode
  */
-rl_mode get_mode(char *mode) {
+rl_mode get_mode(char const *const mode) {
     if (strcmp(mode, "sample") == 0) {
         return LIMIT;
     } else if (strcmp(mode, "cont") == 0) {
@@ -163,7 +177,7 @@ rl_mode get_mode(char *mode) {
  * @param option Pointer to argument string to parse
  * @return provided option
  */
-rl_option get_option(char *option) {
+rl_option get_option(char const *const option) {
     if (strcmp(option, "f") == 0) {
         return FILE_NAME;
     } else if (strcmp(option, "r") == 0) {
@@ -249,8 +263,8 @@ int parse_channels(int channels[], char *value) {
  * @param file_comment Comment to write into the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int parse_args(int argc, char *argv[], struct rl_conf *conf,
-               int *set_as_default, char **file_comment) {
+int parse_args(int argc, char *argv[], struct rl_conf *const conf,
+               int *const set_as_default, char **file_comment) {
 
     int i; // argument count variable
     int no_file = 0;
@@ -640,7 +654,7 @@ void print_usage(void) {
  * Print provided configuration to command line
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void print_config(struct rl_conf *conf) {
+void print_config(struct rl_conf const *const conf) {
     printf("\nRocketLogger Configuration:\n");
     rl_print_config(conf);
     printf("\n");
@@ -650,7 +664,7 @@ void print_config(struct rl_conf *conf) {
  * Reset configuration to standard values
  * @param conf Pointer to {@link rl_conf} configuration
  */
-void reset_config(struct rl_conf *conf) {
+void reset_config(struct rl_conf *const conf) {
     conf->version = RL_CONF_VERSION;
     conf->mode = CONTINUOUS;
     conf->sample_rate = 1000;
@@ -672,7 +686,8 @@ void reset_config(struct rl_conf *conf) {
     memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
 
     conf->ambient.enabled = AMBIENT_DISABLED;
-    strcpy(conf->ambient.file_name, "/var/www/rocketlogger/data/data-ambient.rld");
+    strcpy(conf->ambient.file_name,
+           "/var/www/rocketlogger/data/data-ambient.rld");
 }
 
 /**
@@ -680,7 +695,7 @@ void reset_config(struct rl_conf *conf) {
  * @param conf Pointer to {@link rl_conf} configuration
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int read_default_config(struct rl_conf *conf) {
+int read_default_config(struct rl_conf *const conf) {
 
     // check if config file existing
     if (open(DEFAULT_CONFIG, O_RDWR) <= 0) {
@@ -719,7 +734,7 @@ int read_default_config(struct rl_conf *conf) {
  * @param conf Pointer to {@link rl_conf} configuration to write
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int write_default_config(struct rl_conf *conf) {
+int write_default_config(struct rl_conf const *const conf) {
 
     // open config file
     FILE *file = fopen(DEFAULT_CONFIG, "w");

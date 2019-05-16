@@ -33,9 +33,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "sysfs.h"
 
@@ -45,11 +47,11 @@
 /// Buffer for dynamic string operations
 static char string_buffer[SYSFS_STRING_BUFFER_LENGTH];
 
-int sysfs_export(char *sysfs_file, int value) {
+int sysfs_export(char const *const sysfs_file, int value) {
     return sysfs_write_int(sysfs_file, value);
 }
 
-int sysfs_unexport(char *sysfs_file, int value) {
+int sysfs_unexport(char const *const sysfs_file, int value) {
     int ret = sysfs_write_int(sysfs_file, value);
 
     // do not treat EBUSY as error
@@ -62,7 +64,7 @@ int sysfs_unexport(char *sysfs_file, int value) {
     return -0;
 }
 
-int sysfs_write_string(char *sysfs_file, char *value) {
+int sysfs_write_string(char const *const sysfs_file, char const *const value) {
     int fd = open(sysfs_file, O_WRONLY);
     if (fd < 0) {
         return -1;
@@ -77,7 +79,8 @@ int sysfs_write_string(char *sysfs_file, char *value) {
     return 0;
 }
 
-int sysfs_read_string(char *sysfs_file, char *value, int length) {
+int sysfs_read_string(char const *const sysfs_file, char *const value,
+                      int length) {
     int fd = open(sysfs_file, O_RDONLY);
     if (fd < 0) {
         return -1;
@@ -91,7 +94,7 @@ int sysfs_read_string(char *sysfs_file, char *value, int length) {
     return len;
 }
 
-int sysfs_write_int(char *sysfs_file, int value) {
+int sysfs_write_int(char const *const sysfs_file, int value) {
     string_buffer[0] = 0;
     int ret = snprintf(string_buffer, SYSFS_STRING_BUFFER_LENGTH, "%d", value);
     if (ret <= 0 || ret >= SYSFS_STRING_BUFFER_LENGTH) {
@@ -100,7 +103,7 @@ int sysfs_write_int(char *sysfs_file, int value) {
     return sysfs_write_string(sysfs_file, string_buffer);
 }
 
-int sysfs_read_int(char *sysfs_file, int *value) {
+int sysfs_read_int(char const *const sysfs_file, int *const value) {
     int ret = sysfs_read_string(sysfs_file, string_buffer,
                                 SYSFS_STRING_BUFFER_LENGTH);
     if (ret <= 0) {

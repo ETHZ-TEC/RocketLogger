@@ -34,7 +34,6 @@
 
 #include <stdint.h>
 
-#include "log.h"
 #include "types.h"
 #include "util.h"
 
@@ -106,18 +105,62 @@ struct web_shm {
  */
 typedef struct web_shm web_shm_t;
 
+/**
+ * Create shared memory for data exchange with web server.
+ *
+ * @return pointer to shared memory, NULL in case of failure
+ */
 web_shm_t *web_create_shm(void);
+
+/**
+ * Open existing shared memory for data exchange with web server.
+ *
+ * @return pointer to shared memory, NULL in case of failure
+ */
 web_shm_t *web_open_shm(void);
 
-void web_buffer_reset(struct ringbuffer *buffer, int element_size, int length);
+/**
+ * Reset web data ring buffer.
+ *
+ * @param buffer Pointer to ring buffer to reset
+ * @param element_size Desired element size in bytes
+ * @param length Buffer length in elements
+ */
+void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
+                      int length);
 
-void web_buffer_add(struct ringbuffer *buffer, int64_t *data);
+/**
+ * Add element to ring buffer.
+ *
+ * @param buffer Pointer to ring buffer
+ * @param data Pointer to data array to add
+ */
+void web_buffer_add(struct ringbuffer *const buffer, int64_t const *const data);
 
-int64_t *web_buffer_get(struct ringbuffer *buffer, int num);
+/**
+ * Get pointer to a specific element of a ringbuffer.
+ *
+ * @param buffer Pointer to ring buffer
+ * @param num Element number (0 corresponds to the newest element)
+ * @return pointer to desired element
+ */
+int64_t *web_buffer_get(struct ringbuffer *const buffer, int num);
 
-void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
-                     uint32_t samples_count,
-                     struct time_stamp *timestamp_realtime,
-                     struct rl_conf *conf);
+/**
+ * Process the data buffer for the web interface.
+ *
+ * @param web_data_ptr Pointer to shared web data
+ * @param sem_id ID of semaphores for shared web data
+ * @param buffer_addr Pointer to buffer to handle
+ * @param samples_count Number of samples to read
+ * @param timestamp_realtime {@link time_stamp} with realtime clock value
+ * @param conf Current {@link rl_conf} configuration.
+ * @return {@link SUCCESS} on successful processing, {@link FAILURE} otherwise
+
+ */
+int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
+                    void const *buffer_addr, uint32_t samples_count,
+                    struct time_stamp const *const timestamp_realtime,
+                    struct rl_conf const *const conf);
 
 #endif /* WEB_H_ */

@@ -32,11 +32,7 @@
 #ifndef LIB_UTIL_H_
 #define LIB_UTIL_H_
 
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "types.h"
+#include <sys/types.h>
 
 int check_sample_rate(int sample_rate);
 int check_update_rate(int update_rate);

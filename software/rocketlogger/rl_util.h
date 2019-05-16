@@ -32,16 +32,6 @@
 #ifndef RL_UTIL_H_
 #define RL_UTIL_H_
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "rl_lib.h"
 #include "types.h"
 
 /// Default configuration file
@@ -68,20 +58,20 @@ typedef enum option {
     NO_OPTION       //!< No option
 } rl_option;
 
-void rl_print_config(struct rl_conf *conf);
-void rl_print_status(struct rl_status *status);
+void rl_print_config(struct rl_conf const *const conf);
+void rl_print_status(struct rl_status const *const status);
 void rl_print_version(void);
 
-rl_mode get_mode(char *mode);
-rl_option get_option(char *option);
+rl_mode get_mode(char const *const mode);
+rl_option get_option(char const *const option);
 int parse_args(int argc, char *argv[], struct rl_conf *conf,
                int *set_as_default, char **file_comment);
 
 void print_usage(void);
 
-void print_config(struct rl_conf *conf);
-void reset_config(struct rl_conf *conf);
-int read_default_config(struct rl_conf *conf);
-int write_default_config(struct rl_conf *conf);
+void print_config(struct rl_conf const *const conf);
+void reset_config(struct rl_conf *const conf);
+int read_default_config(struct rl_conf *const conf);
+int write_default_config(struct rl_conf const *const conf);
 
 #endif /* RL_UTIL_H_ */

@@ -72,7 +72,7 @@ int Sensors_initSharedComm(uint8_t);
 int Sensors_openBus(void);
 int Sensors_closeBus(int);
 
-int Sensors_scan(int *);
-void Sensors_close(int *);
+int Sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]);
+void Sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]);
 
 #endif /* SENSOR_SENSOR_H_ */

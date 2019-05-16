@@ -29,9 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define LOG_FILE "/var/www/rocketlogger/log/deamon.log"
+#define LOG_FILE "/var/www/rocketlogger/log/daemon.log"
 
 #include <stdlib.h>
+
+#include <unistd.h>
 
 #include "gpio.h"
 #include "log.h"

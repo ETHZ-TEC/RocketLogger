@@ -29,12 +29,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
 #include "calibration.h"
 #include "gpio.h"
+#include "log.h"
 #include "pru.h"
 #include "pwm.h"
 #include "sensor/sensor.h"
 #include "types.h"
+#include "util.h"
 
 #include "rl_hw.h"
 
@@ -42,7 +46,7 @@
  * Initiate all hardware modules
  * @param conf Pointer to current {@link rl_conf} configuration
  */
-void hw_init(struct rl_conf *conf) {
+void hw_init(struct rl_conf *const conf) {
 
     // PWM configuration
     pwm_init();
@@ -91,7 +95,7 @@ void hw_init(struct rl_conf *conf) {
  * Close all hardware modules
  * @param conf Pointer to current {@link rl_conf} configuration
  */
-void hw_close(struct rl_conf *conf) {
+void hw_close(struct rl_conf const *const conf) {
 
     // PWM
     pwm_deinit();
@@ -127,7 +131,8 @@ void hw_close(struct rl_conf *conf) {
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int hw_sample(struct rl_conf *conf, char *file_comment) {
+int hw_sample(struct rl_conf const *const conf,
+              char const *const file_comment) {
     int ret;
     // open data file
     FILE *data = (FILE *)-1;
@@ -159,7 +164,7 @@ int hw_sample(struct rl_conf *conf, char *file_comment) {
     ret = pru_sample(data, ambient_file, conf, file_comment);
     if (ret != SUCCESS) {
         // error ocurred
-        gpio_set_value(LED_ERROR_GPIO, 1);
+        gpio_set_value(GPIO_LED_ERROR, 1);
     }
 
     // close data file

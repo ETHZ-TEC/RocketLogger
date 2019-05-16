@@ -30,10 +30,15 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
-#include <i2c/smbus.h>
+#include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "../log.h"
 
@@ -42,6 +47,7 @@
 
 #include "sensor.h"
 
+/// I2C sensor bus identifier for communication
 int sensor_bus = -1;
 
 /**
@@ -144,7 +150,7 @@ void Sensors_closeSharedBus(void) {
  * @param sensors_available List of sensors of the registry available
  * @return Number of sensors from the regisry found on the bus
  */
-int Sensors_scan(int sensors_available[]) {
+int Sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]) {
 
     // log message
     char message[MAX_MESSAGE_LENGTH] =
@@ -195,7 +201,7 @@ int Sensors_scan(int sensors_available[]) {
  * Close all sensors used on the I2C bus.
  * @param sensors_available List of available (previously initialized) sensors
  */
-void Sensors_close(int sensors_available[]) {
+void Sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]) {
     int i;
     for (i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (sensors_available[i] >= 0) {

@@ -29,9 +29,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
+
+#include <signal.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "calibration.h"
+#include "lib_util.h"
+#include "log.h"
+#include "rl_hw.h"
+#include "util.h"
 
 #include "rl_lib.h"
 
@@ -40,7 +48,6 @@
  * @return current status {@link rl_state}
  */
 rl_state rl_get_status(void) {
-
     struct rl_status status;
 
     // get pid
@@ -61,8 +68,7 @@ rl_state rl_get_status(void) {
  * @param status Pointer to {@link rl_status} struct to write to
  * @return current status {@link rl_state}
  */
-int rl_read_status(struct rl_status *status) {
-
+rl_state rl_read_status(struct rl_status *const status) {
     // get pid
     pid_t pid = get_pid();
     if (pid == FAILURE || kill(pid, 0) < 0) {
@@ -75,13 +81,14 @@ int rl_read_status(struct rl_status *status) {
 
     return status->state;
 }
+
 /**
  * Read calibration file
  * @param calibration_ptr Pointer to {@link rl_calibration} to write to
  * @param conf Current {@link rl_conf} configuration
  */
-void rl_read_calibration(struct rl_calibration *calibration_ptr,
-                         struct rl_conf *conf) {
+void rl_read_calibration(struct rl_calibration *const calibration_ptr,
+                         struct rl_conf const *const conf) {
     read_calibration(conf);
     memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
 }
@@ -92,14 +99,14 @@ void rl_read_calibration(struct rl_calibration *calibration_ptr,
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_start(struct rl_conf *conf, char *file_comment) {
+int rl_start(struct rl_conf *const conf, char const *const file_comment) {
 
     // check mode
     switch (conf->mode) {
     case LIMIT:
         break;
     case CONTINUOUS:
-        // create deamon to run in background
+        // create daemon to run in background
         if (daemon(1, 1) < 0) {
             rl_log(ERROR, "failed to create background process");
             return SUCCESS;

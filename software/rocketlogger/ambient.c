@@ -29,7 +29,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "rl_file.h"
 #include "sensor/sensor.h"
+#include "types.h"
+#include "util.h"
 
 #include "ambient.h"
 
@@ -41,9 +48,9 @@
  * @param conf Current {@link rl_conf} configuration.
  */
 void ambient_store_data(FILE *ambient_file,
-                        struct time_stamp *timestamp_realtime,
-                        struct time_stamp *timestamp_monotonic,
-                        struct rl_conf *conf) {
+                        struct time_stamp const *const timestamp_realtime,
+                        struct time_stamp const *const timestamp_monotonic,
+                        struct rl_conf const *const conf) {
 
     // store timestamp
     fwrite(timestamp_realtime, sizeof(struct time_stamp), 1, ambient_file);
@@ -75,7 +82,7 @@ void ambient_store_data(FILE *ambient_file,
 
 // FILE HEADER //
 
-void ambient_set_file_name(struct rl_conf *conf) {
+void ambient_set_file_name(struct rl_conf *const conf) {
 
     // determine new file name
     char ambient_file_name[MAX_PATH_LENGTH];
@@ -98,8 +105,8 @@ void ambient_set_file_name(struct rl_conf *conf) {
     strcpy(conf->ambient.file_name, ambient_file_name);
 }
 
-void ambient_setup_lead_in(struct rl_file_lead_in *lead_in,
-                           struct rl_conf *conf) {
+void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in,
+                           struct rl_conf const *const conf) {
 
     // number channels
     uint16_t channel_count = conf->ambient.sensor_count;
@@ -132,8 +139,8 @@ void ambient_setup_lead_in(struct rl_file_lead_in *lead_in,
     lead_in->channel_count = channel_count;
 }
 
-void ambient_setup_channels(struct rl_file_header *file_header,
-                            struct rl_conf *conf) {
+void ambient_setup_channels(struct rl_file_header *const file_header,
+                            struct rl_conf const *const conf) {
 
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
@@ -157,8 +164,9 @@ void ambient_setup_channels(struct rl_file_header *file_header,
     }
 }
 
-void ambient_setup_header(struct rl_file_header *file_header,
-                          struct rl_conf *conf, char *comment) {
+void ambient_setup_header(struct rl_file_header *const file_header,
+                          struct rl_conf const *const conf,
+                          char const *const comment) {
 
     // comment
     if (comment == NULL) {

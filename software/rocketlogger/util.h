@@ -51,10 +51,10 @@ struct time_stamp {
 
 int is_current(int index);
 int is_low_current(int index);
-int count_channels(int channels[NUM_CHANNELS]);
+int count_channels(int const channels[NUM_CHANNELS]);
 
-int read_status(struct rl_status *status);
-int write_status(struct rl_status *status);
+int read_status(struct rl_status *const status);
+int write_status(struct rl_status const *const status);
 
 int ceil_div(int n, int d);
 
@@ -62,8 +62,9 @@ void sig_handler(int signo);
 
 int read_file_value(char filename[]);
 
-void create_time_stamp(struct time_stamp *time_real,
-                       struct time_stamp *time_monotonic);
+void create_time_stamp(struct time_stamp *const time_real,
+                       struct time_stamp *const time_monotonic);
+
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
 
 #endif /* UTIL_H_ */

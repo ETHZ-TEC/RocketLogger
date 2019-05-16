@@ -29,21 +29,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/types.h>
-#include <time.h>
+#include <string.h>
 
 #include <pruss_intc_mapping.h>
 #include <prussdrv.h>
 #include <pthread.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
+#include <sys/types.h>
 
 #include "ambient.h"
-#include "calibration.h"
 #include "file_handling.h"
 #include "log.h"
 #include "meter.h"
@@ -91,7 +92,8 @@ void pru_deinit(void) {
     prussdrv_exit();
 }
 
-int pru_init_data(pru_data_t *pru, struct rl_conf *conf, uint32_t aggregates) {
+int pru_init_data(pru_data_t *const pru, struct rl_conf const *const conf,
+                  uint32_t aggregates) {
     // zero aggregates value is also considered no aggregation
     if (aggregates == 0) {
         aggregates = 1;
@@ -232,8 +234,10 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
     return res;
 }
 
-int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
-               char *file_comment) {
+int pru_sample(FILE *data_file, FILE *ambient_file,
+               struct rl_conf const *const conf,
+               char const *const file_comment) {
+    int res;
 
     // average (for low rates)
     uint32_t aggregates = 1;
@@ -307,8 +311,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
     }
 
     // get user space mapped PRU memory addresses
-    void *buffer0_ptr = prussdrv_get_virt_addr(pru.buffer0_ptr);
-    void *buffer1_ptr = prussdrv_get_virt_addr(pru.buffer1_ptr);
+    void const *buffer0_ptr = prussdrv_get_virt_addr(pru.buffer0_ptr);
+    void const *buffer1_ptr = prussdrv_get_virt_addr(pru.buffer1_ptr);
 
     // DATA FILE STORING
 
@@ -377,13 +381,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
-    void *buffer_addr;
+    void const *buffer_addr;
     struct time_stamp timestamp_monotonic;
     struct time_stamp timestamp_realtime;
     uint32_t buffers_lost = 0;
-    uint32_t buffer_samples_count; // number of samples per buffer
-    uint32_t num_files = 1;        // number of files stored
-    uint8_t skipped_buffers = 0;   // skipped buffers for ambient reading
+    uint32_t buffer_samples_count;    // number of samples per buffer
+    uint32_t num_files = 1;           // number of files stored
+    uint8_t skipped_buffer_count = 0; // skipped buffers for ambient reading
+    bool web_server_skip = false;
 
     // buffers to read in finite mode
     uint32_t buffer_read_count =
@@ -555,10 +560,16 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
                          &timestamp_monotonic, conf);
 
         // process data for web when enabled
-        if (conf->enable_web_server == 1) {
-            web_handle_data(web_data, sem_id,
-                            buffer_addr + PRU_BUFFER_STATUS_SIZE,
-                            buffer_samples_count, &timestamp_realtime, conf);
+        if (conf->enable_web_server == 1 && !web_server_skip) {
+            res = web_handle_data(
+                web_data, sem_id, buffer_addr + PRU_BUFFER_STATUS_SIZE,
+                buffer_samples_count, &timestamp_realtime, conf);
+            if (res == FAILURE) {
+                // disable web interface on failure, but continue sampling
+                web_server_skip = true;
+                rl_log(WARNING, "Web server connection failed. "
+                                "Disabling web interface.");
+            }
         }
 
         // update and write header
@@ -576,7 +587,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
         }
 
         // handle ambient data
-        if (skipped_buffers + 1 >= conf->update_rate) { // always 1 Sps
+        if (skipped_buffer_count + 1 >= conf->update_rate) { // always 1 Sps
             if (conf->ambient.enabled == AMBIENT_ENABLED) {
 
                 // fetch and write data
@@ -589,9 +600,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
                     AMBIENT_DATA_BLOCK_SIZE;
                 file_update_header_bin(ambient_file, &ambient_file_header);
             }
-            skipped_buffers = 0;
+            skipped_buffer_count = 0;
         } else {
-            skipped_buffers++;
+            skipped_buffer_count++;
         }
 
         // update and write state
@@ -600,8 +611,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file, struct rl_conf *conf,
         write_status(&status);
 
         // notify web clients
-        // Note: There is a possible race condition here, which might result in
-        // one web client not getting notified once, do we care?
+        /**
+         * @todo: There is a possible race condition here, which might result in
+         * one web client not getting notified once, do we care?
+         */
         if (conf->enable_web_server == 1) {
             int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
             set_sem(sem_id, WAIT_SEM, num_web_clients);

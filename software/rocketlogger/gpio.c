@@ -29,9 +29,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include <fcntl.h>
+#include <poll.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "log.h"

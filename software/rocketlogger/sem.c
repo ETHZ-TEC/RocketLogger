@@ -31,11 +31,15 @@
 
 #define _GNU_SOURCE
 
-#include <fcntl.h>
+#include <errno.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+
+#include "log.h"
+#include "types.h"
 
 #include "sem.h"
 

@@ -196,10 +196,10 @@ $(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
 $(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.o, $(OBJ))
 	echo "generating version.c"
 	@echo "#include \"version.h\"" > $@
-	@echo "const char* PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
-	@echo "const char* GIT_DESCRIPTION = \"$(GIT_DESCRIPTION)\";" >> $@
-	@echo "const char* GIT_DATE = \"$(GIT_DATE)\";" >> $@
-	@echo "const char* COMPILE_DATE = \"$(COMPILE_DATE)\";" >> $@
+	@echo "char const *const PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
+	@echo "char const *const GIT_DESCRIPTION = \"$(GIT_DESCRIPTION)\";" >> $@
+	@echo "char const *const GIT_DATE = \"$(GIT_DATE)\";" >> $@
+	@echo "char const *const COMPILE_DATE = \"$(COMPILE_DATE)\";" >> $@
 
 ## directories
 $(OBJ_DIR):

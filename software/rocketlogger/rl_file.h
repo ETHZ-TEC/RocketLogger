@@ -34,7 +34,6 @@
 
 #include <stdint.h>
 
-#include "types.h"
 #include "util.h"
 
 // Defines
@@ -165,7 +164,7 @@ struct rl_file_header {
     struct rl_file_lead_in lead_in;
 
     /// Comment field
-    char *comment; // = NULL;
+    char const *comment; // = NULL;
 
     /// Channels definitions (binary and normal)
     struct rl_file_channel *channel; // = NULL;

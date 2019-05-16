@@ -29,6 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
 #include "calibration.h"
 
 // reset calibration
@@ -58,7 +60,7 @@ void reset_scales(void) {
  * @return {@link FAILURE} if calibration file not existing, {@link SUCCESS}
  * otherwise.
  */
-int read_calibration(struct rl_conf *conf) {
+int read_calibration(struct rl_conf const *const conf) {
 
     // open calibration file
     FILE *file = fopen(CALIBRATION_FILE, "r");

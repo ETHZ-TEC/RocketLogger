@@ -32,17 +32,25 @@
 #ifndef METER_H_
 #define METER_H_
 
-#include <ncurses.h>
-#include <stdint.h>
-
-#include "log.h"
 #include "types.h"
-#include "util.h"
 
+/**
+ * Initialize meter window.
+ */
 void meter_init(void);
 
+/**
+ * Deinitialize meter window.
+ */
 void meter_stop(void);
 
-void meter_print_buffer(struct rl_conf *conf, void *virt_addr);
+/**
+ * Print data buffer in meter window.
+ *
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param buffer_addr
+ */
+void meter_print_buffer(struct rl_conf const *const conf,
+                        void const *virt_addr);
 
 #endif /* METER_H_ */

@@ -33,10 +33,11 @@
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "log.h"
 #include "types.h"
@@ -77,7 +78,7 @@ int is_low_current(int index) {
  * @param channels Channel array.
  * @return the number of sampled channels.
  */
-int count_channels(int channels[NUM_CHANNELS]) {
+int count_channels(int const channels[NUM_CHANNELS]) {
     int c = 0;
     for (int i = 0; i < NUM_CHANNELS; i++) {
         if (channels[i] == CHANNEL_ENABLED) {
@@ -89,10 +90,10 @@ int count_channels(int channels[NUM_CHANNELS]) {
 
 /**
  * Reads the status of the running measurement from shared memory.
- * @param status Pointer to struct array.
+ * @param status Pointer to struct array to write the status to.
  * @return {@link SUCCESS} in case of a success, {@link FAILURE} otherwise.
  */
-int read_status(struct rl_status *status) {
+int read_status(struct rl_status *const status) {
 
     // map shared memory
     int shm_id =
@@ -126,7 +127,7 @@ int read_status(struct rl_status *status) {
  * @param status Pointer to struct array.
  * @return {@link SUCCESS} in case of a success, {@link FAILURE} otherwise.
  */
-int write_status(struct rl_status *status) {
+int write_status(struct rl_status const *const status) {
 
     // map shared memory
     int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(struct rl_status),
@@ -220,8 +221,8 @@ int read_file_value(char filename[]) {
  * @param timestamp_realtime Pointer to {@link time_stamp} struct
  * @param timestamp_monotonic Pointer to {@link time_stamp} struct
  */
-void create_time_stamp(struct time_stamp *timestamp_realtime,
-                       struct time_stamp *timestamp_monotonic) {
+void create_time_stamp(struct time_stamp *const timestamp_realtime,
+                       struct time_stamp *const timestamp_monotonic) {
 
     struct timespec spec_real;
     struct timespec spec_monotonic;

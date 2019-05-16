@@ -29,21 +29,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+#include "log.h"
 #include "pru.h"
 #include "sem.h"
 #include "types.h"
+#include "util.h"
 
 #include "web.h"
 
 /**
- * Create shared memory for data exchange with web server
- * @return pointer to shared memory, NULL in case of failure
+ * Merge high/low currents for web interface.
+ *
+ * @param valid Valid information of low range current channels
+ * @param dest Pointer to destination array
+ * @param src Pointer to source array
+ * @param conf Pointer to current {@link rl_conf} configuration
  */
+void web_merge_currents(uint8_t const *const valid, int64_t *dest,
+                        int64_t const *const src,
+                        struct rl_conf const *const conf);
+
 web_shm_t *web_create_shm(void) {
 
     int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t),
@@ -66,15 +78,11 @@ web_shm_t *web_create_shm(void) {
     return web_data;
 }
 
-/**
- * Open existing shared memory for data exchange with web server
- * @return pointer to shared memory, NULL in case of failure
- */
 web_shm_t *web_open_shm(void) {
 
     int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(ERROR, "In create_web_shm: failed to get shared data memory id; "
+        rl_log(ERROR, "In web_open_shm: failed to get shared data memory id; "
                       "%d message: %s",
                errno, strerror(errno));
         return NULL;
@@ -82,7 +90,7 @@ web_shm_t *web_open_shm(void) {
     web_shm_t *web_data = (web_shm_t *)shmat(shm_id, NULL, 0);
 
     if (web_data == (void *)-1) {
-        rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
+        rl_log(ERROR, "In web_open_shm: failed to map shared data memory; %d "
                       "message: %s",
                errno, strerror(errno));
         return NULL;
@@ -91,25 +99,16 @@ web_shm_t *web_open_shm(void) {
     return web_data;
 }
 
-/**
- * Reset web data ring buffer
- * @param buffer Pointer to ring buffer to reset
- * @param element_size Desired element size in bytes
- * @param length Buffer length in elements
- */
-void web_buffer_reset(struct ringbuffer *buffer, int element_size, int length) {
+void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
+                      int length) {
     buffer->element_size = element_size;
     buffer->length = length;
     buffer->filled = 0;
     buffer->head = 0;
 }
 
-/**
- * Add element to ring buffer
- * @param buffer Pointer to ring buffer
- * @param data Pointer to data array to add
- */
-void web_buffer_add(struct ringbuffer *buffer, int64_t *data) {
+void web_buffer_add(struct ringbuffer *const buffer,
+                    int64_t const *const data) {
     memcpy((buffer->data) +
                buffer->head * buffer->element_size / sizeof(int64_t),
            data, buffer->element_size);
@@ -119,87 +118,17 @@ void web_buffer_add(struct ringbuffer *buffer, int64_t *data) {
     buffer->head = (buffer->head + 1) % buffer->length;
 }
 
-/**
- * Get pointer to a specific element of a ringbuffer
- * @param buffer Pointer to ring buffer
- * @param num Element number (0 corresponds to the newest element)
- * @return pointer to desired element
- */
-int64_t *web_buffer_get(struct ringbuffer *buffer, int num) {
+int64_t *web_buffer_get(struct ringbuffer *const buffer, int num) {
     int pos = ((int)buffer->head + (int)buffer->length - 1 - num) %
               (int)buffer->length;
 
     return buffer->data + pos * buffer->element_size / sizeof(int64_t);
 }
 
-/**
- * Merge high/low currents for web interface
- * @param valid Valid information of low range current channels
- * @param dest Pointer to destination array
- * @param src Pointer to source array
- * @param conf Pointer to current {@link rl_conf} configuration
- */
-void web_merge_currents(uint8_t *valid, int64_t *dest, int64_t *src,
-                        struct rl_conf *conf) {
-
-    int ch_in = 0;
-    int ch_out = 0;
-
-    if (conf->channels[I1H_INDEX] == CHANNEL_ENABLED &&
-        conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
-        if (valid[0] == 1) {
-            dest[ch_out++] = src[++ch_in];
-        } else {
-            dest[ch_out++] = src[ch_in++] * H_L_SCALE;
-        }
-        ch_in++;
-    } else if (conf->channels[I1H_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++] * H_L_SCALE;
-    } else if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-    if (conf->channels[V1_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-    if (conf->channels[V2_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-
-    if (conf->channels[I2H_INDEX] == CHANNEL_ENABLED &&
-        conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
-        if (valid[1] == 1) {
-            dest[ch_out++] = src[++ch_in];
-        } else {
-            dest[ch_out++] = src[ch_in++] * H_L_SCALE;
-        }
-        ch_in++;
-    } else if (conf->channels[I2H_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++] * H_L_SCALE;
-    } else if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-
-    if (conf->channels[V3_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-    if (conf->channels[V4_INDEX] == CHANNEL_ENABLED) {
-        dest[ch_out++] = src[ch_in++];
-    }
-}
-
-/**
- * Process the data buffer for the web interface
- * @param web_data_ptr Pointer to shared web data
- * @param sem_id ID of semaphores for shared web data
- * @param buffer_addr Pointer to buffer to handle
- * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param conf Current {@link rl_conf} configuration.
- */
-void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
-                     uint32_t samples_count,
-                     struct time_stamp *timestamp_realtime,
-                     struct rl_conf *conf) {
+int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
+                    void const *buffer_addr, uint32_t samples_count,
+                    struct time_stamp const *const timestamp_realtime,
+                    struct rl_conf const *const conf) {
 
     // count channels
     int num_bin_channels = 0;
@@ -410,10 +339,7 @@ void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
 
     // get shared memory access
     if (wait_sem(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
-        // disable webserver and continue running
-        conf->enable_web_server = 0;
-        status.state = RL_RUNNING;
-        rl_log(WARNING, "semaphore failure. Webserver disabled");
+        return FAILURE;
     } else {
 
         // write time
@@ -430,5 +356,56 @@ void web_handle_data(web_shm_t *web_data_ptr, int sem_id, void *buffer_addr,
 
         // release shared memory
         set_sem(sem_id, DATA_SEM, 1);
+    }
+
+    return SUCCESS;
+}
+
+void web_merge_currents(uint8_t const *const valid, int64_t *dest,
+                        int64_t const *const src,
+                        struct rl_conf const *const conf) {
+
+    int ch_in = 0;
+    int ch_out = 0;
+
+    if (conf->channels[I1H_INDEX] == CHANNEL_ENABLED &&
+        conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
+        if (valid[0] == 1) {
+            dest[ch_out++] = src[++ch_in];
+        } else {
+            dest[ch_out++] = src[ch_in++] * H_L_SCALE;
+        }
+        ch_in++;
+    } else if (conf->channels[I1H_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++] * H_L_SCALE;
+    } else if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
+    }
+    if (conf->channels[V1_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
+    }
+    if (conf->channels[V2_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
+    }
+
+    if (conf->channels[I2H_INDEX] == CHANNEL_ENABLED &&
+        conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
+        if (valid[1] == 1) {
+            dest[ch_out++] = src[++ch_in];
+        } else {
+            dest[ch_out++] = src[ch_in++] * H_L_SCALE;
+        }
+        ch_in++;
+    } else if (conf->channels[I2H_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++] * H_L_SCALE;
+    } else if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
+    }
+
+    if (conf->channels[V3_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
+    }
+    if (conf->channels[V4_INDEX] == CHANNEL_ENABLED) {
+        dest[ch_out++] = src[ch_in++];
     }
 }

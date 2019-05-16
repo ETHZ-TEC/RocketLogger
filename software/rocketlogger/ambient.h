@@ -32,26 +32,29 @@
 #ifndef AMBIENT_H_
 #define AMBIENT_H_
 
-#include <stdint.h>
+#include <stdio.h>
 
-#include "log.h"
 #include "rl_file.h"
 #include "types.h"
 #include "util.h"
 
-#define AMBIENT_SAMPLING_RATE 1 // Sps
+/// Ambient sensor read out rate in samples per second
+#define AMBIENT_SAMPLING_RATE 1
+
+/// Ambient sensor data file block size in measurements
 #define AMBIENT_DATA_BLOCK_SIZE 1
 
 void ambient_store_data(FILE *ambient_file,
-                        struct time_stamp *timestamp_realtime,
-                        struct time_stamp *timestamp_monotonic,
-                        struct rl_conf *conf);
-void ambient_set_file_name(struct rl_conf *conf);
-void ambient_setup_lead_in(struct rl_file_lead_in *lead_in,
-                           struct rl_conf *conf);
-void ambient_setup_channels(struct rl_file_header *file_header,
-                            struct rl_conf *conf);
-void ambient_setup_header(struct rl_file_header *file_header,
-                          struct rl_conf *conf, char *comment);
+                        struct time_stamp const *const timestamp_realtime,
+                        struct time_stamp const *const timestamp_monotonic,
+                        struct rl_conf const *const conf);
+void ambient_set_file_name(struct rl_conf *const conf);
+void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in,
+                           struct rl_conf const *const conf);
+void ambient_setup_channels(struct rl_file_header *const file_header,
+                            struct rl_conf const *const conf);
+void ambient_setup_header(struct rl_file_header *const file_header,
+                          struct rl_conf const *const conf,
+                          char const *const comment);
 
 #endif /* AMBIENT_H_ */
