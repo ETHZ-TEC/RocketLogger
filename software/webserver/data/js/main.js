@@ -1273,12 +1273,12 @@ function download() {
 }
 
 function showLog() {
-	file = 'log/log.txt';
+	file = 'log/rocketlogger.log';
 	window.open(file);
 }
 
 function browseFiles() {
-	window.open('data');
+	window.open('data/');
 }
 
 function plotsCollapsed() {
