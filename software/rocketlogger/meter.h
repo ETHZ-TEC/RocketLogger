@@ -42,7 +42,7 @@ void meter_init(void);
 /**
  * Deinitialize meter window.
  */
-void meter_stop(void);
+void meter_deinit(void);
 
 /**
  * Print data buffer in meter window.

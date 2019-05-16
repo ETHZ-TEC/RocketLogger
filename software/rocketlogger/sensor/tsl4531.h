@@ -69,14 +69,20 @@
 #define TSL4531_MULT_400 1
 
 /**
- * Ranges
+ * TSL4531 measurement ranges
  */
-enum TSL4531_range {
+enum tsl4531_range {
     TSL4531_RANGE_LOW,
     TSL4531_RANGE_MEDIUM,
     TSL4531_RANGE_HIGH,
     TSL4531_RANGE_AUTO,
 };
+
+/**
+ * Typedef for TSL4531 measurement ranges
+ */
+typedef enum tsl4531_range tsl4531_range_t;
+
 #define TSL4531_RANGE_LOW_MAX 65000
 #define TSL4531_RANGE_MEDIUM_MAX 130000
 #define TSL4531_RANGE_HYSTERESIS 5000
@@ -84,20 +90,20 @@ enum TSL4531_range {
 /*
  * API FUNCTIONS
  */
-int TSL4531_init(int);
-void TSL4531_close(int);
-int TSL4531_read(int);
-int32_t TSL4531_getValue(int, int);
+int tsl4531_init(int);
+void tsl4531_deinit(int);
+int tsl4531_read(int);
+int32_t tsl4531_get_value(int, int);
 
-int TSL4531_setRange(int, int);
-int TSL4531_getRange(int);
+int tsl4531_set_range(int, int);
+int tsl4531_get_range(int);
 
 /*
  * Helper FUNCTIONS
  */
-int TSL4531_getID(void);
-int TSL4531_setParameters(int);
-int TSL4531_sendRange(int, int);
-int TSL4531_getIndex(int);
+int tsl4531_get_id(void);
+int tsl4531_set_parameters(int);
+int tsl4531_send_range(int, int);
+int tsl4531_get_index(int);
 
 #endif /* SENSOR_TSL4531_H_ */

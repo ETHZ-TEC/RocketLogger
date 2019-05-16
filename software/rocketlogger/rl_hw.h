@@ -34,8 +34,27 @@
 
 #include "types.h"
 
+/**
+ * Initialize all hardware modules.
+ *
+ * @param conf Pointer to current {@link rl_conf} configuration
+ */
 void hw_init(struct rl_conf *const conf);
-void hw_close(struct rl_conf const *const conf);
+
+/**
+ * Deinitialize and close all hardware modules.
+ *
+ * @param conf Pointer to current {@link rl_conf} configuration
+ */
+void hw_deinit(struct rl_conf const *const conf);
+
+/**
+ * Hardware perform samling of data.
+ *
+ * @param conf Pointer to current {@link rl_conf} configuration
+ * @param file_comment Comment to store in the file header
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int hw_sample(struct rl_conf const *const conf, char const *const file_comment);
 
 #endif /* RL_HW_H_ */

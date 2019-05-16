@@ -73,9 +73,9 @@ enum time_scale {
 #define H_L_SCALE 100
 
 /**
- * Ring buffer for data exchange to web server
+ * Ring buffer data structure for data exchange with web server
  */
-struct ringbuffer {
+struct web_buffer {
     /// Size of buffer element
     uint32_t element_size;
     ///  Size of buffer in elements
@@ -89,6 +89,11 @@ struct ringbuffer {
 };
 
 /**
+ * Typedef for web server data buffer
+ */
+typedef struct web_buffer web_buffer_t;
+
+/**
  * Shared memory struct for data exchange to web server
  */
 struct web_shm {
@@ -97,7 +102,7 @@ struct web_shm {
     /// Number of channels sampled
     uint32_t num_channels;
     /// Array of ring buffers for different time scales
-    struct ringbuffer buffer[WEB_RING_BUFFER_COUNT];
+    web_buffer_t buffer[WEB_RING_BUFFER_COUNT];
 };
 
 /**
@@ -120,14 +125,20 @@ web_shm_t *web_create_shm(void);
 web_shm_t *web_open_shm(void);
 
 /**
+ * Close shared memory mapped for data exchange with web server.
+ *
+ * @param web_shm Pointer to shared memory used for web server data exchange
+ */
+void web_close_shm(web_shm_t const *web_shm);
+
+/**
  * Reset web data ring buffer.
  *
  * @param buffer Pointer to ring buffer to reset
  * @param element_size Desired element size in bytes
  * @param length Buffer length in elements
  */
-void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
-                      int length);
+void web_buffer_reset(web_buffer_t *const buffer, int element_size, int length);
 
 /**
  * Add element to ring buffer.
@@ -135,7 +146,7 @@ void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
  * @param buffer Pointer to ring buffer
  * @param data Pointer to data array to add
  */
-void web_buffer_add(struct ringbuffer *const buffer, int64_t const *const data);
+void web_buffer_add(web_buffer_t *const buffer, int64_t const *const data);
 
 /**
  * Get pointer to a specific element of a ringbuffer.
@@ -144,7 +155,7 @@ void web_buffer_add(struct ringbuffer *const buffer, int64_t const *const data);
  * @param num Element number (0 corresponds to the newest element)
  * @return pointer to desired element
  */
-int64_t *web_buffer_get(struct ringbuffer *const buffer, int num);
+int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
 
 /**
  * Process the data buffer for the web interface.

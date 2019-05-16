@@ -42,10 +42,6 @@
 
 #include "rl_hw.h"
 
-/**
- * Initiate all hardware modules
- * @param conf Pointer to current {@link rl_conf} configuration
- */
 void hw_init(struct rl_conf *const conf) {
 
     // PWM configuration
@@ -77,9 +73,9 @@ void hw_init(struct rl_conf *const conf) {
 
     // SENSORS
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        Sensors_initSharedBus();
+        sensors_init();
         conf->ambient.sensor_count =
-            Sensors_scan(conf->ambient.available_sensors);
+            sensors_scan(conf->ambient.available_sensors);
     }
 
     // STATE
@@ -91,11 +87,7 @@ void hw_init(struct rl_conf *const conf) {
     write_status(&status);
 }
 
-/**
- * Close all hardware modules
- * @param conf Pointer to current {@link rl_conf} configuration
- */
-void hw_close(struct rl_conf const *const conf) {
+void hw_deinit(struct rl_conf const *const conf) {
 
     // PWM
     pwm_deinit();
@@ -115,8 +107,8 @@ void hw_close(struct rl_conf const *const conf) {
 
     // SENSORS
     if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        Sensors_close(conf->ambient.available_sensors);
-        Sensors_closeSharedBus();
+        sensors_close(conf->ambient.available_sensors);
+        sensors_deinit();
     }
 
     // RESET SHARED MEM
@@ -125,12 +117,6 @@ void hw_close(struct rl_conf const *const conf) {
     write_status(&status);
 }
 
-/**
- * Hardware sampling function
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
 int hw_sample(struct rl_conf const *const conf,
               char const *const file_comment) {
     int ret;
@@ -155,7 +141,7 @@ int hw_sample(struct rl_conf const *const conf,
     }
 
     // read calibration
-    ret = read_calibration(conf);
+    ret = calibration_load(conf);
     if (ret != SUCCESS) {
         rl_log(WARNING, "no calibration file, returning uncalibrated values");
     }
@@ -163,7 +149,7 @@ int hw_sample(struct rl_conf const *const conf,
     // SAMPLE
     ret = pru_sample(data, ambient_file, conf, file_comment);
     if (ret != SUCCESS) {
-        // error ocurred
+        // error occurred
         gpio_set_value(GPIO_LED_ERROR, 1);
     }
 

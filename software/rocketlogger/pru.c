@@ -39,9 +39,6 @@
 #include <pruss_intc_mapping.h>
 #include <prussdrv.h>
 #include <pthread.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/shm.h>
 #include <sys/types.h>
 
 #include "ambient.h"
@@ -92,7 +89,7 @@ void pru_deinit(void) {
     prussdrv_exit();
 }
 
-int pru_init_data(pru_data_t *const pru, struct rl_conf const *const conf,
+int pru_data_init(pru_data_t *const pru, struct rl_conf const *const conf,
                   uint32_t aggregates) {
     // zero aggregates value is also considered no aggregation
     if (aggregates == 0) {
@@ -256,8 +253,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     if (conf->enable_web_server == 1) {
         // semaphores
-        sem_id = create_sem(SEM_KEY, NUM_SEMS);
-        set_sem(sem_id, DATA_SEM, 1);
+        sem_id = sem_create(SEM_KEY, NUM_SEMS);
+        sem_set(sem_id, DATA_SEM, 1);
 
         // shared memory
         web_data = web_create_shm();
@@ -294,7 +291,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // initialize PRU data structure
     pru_data_t pru;
-    pru_init_data(&pru, conf, aggregates);
+    pru_data_init(&pru, conf, aggregates);
 
     // check max PRU buffer size
     uint32_t pru_extmem_size = (uint32_t)prussdrv_extmem_size();
@@ -616,8 +613,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
          * one web client not getting notified once, do we care?
          */
         if (conf->enable_web_server == 1) {
-            int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
-            set_sem(sem_id, WAIT_SEM, num_web_clients);
+            int num_web_clients = sem_get(sem_id, WAIT_SEM);
+            sem_set(sem_id, WAIT_SEM, num_web_clients);
         }
 
         // print meter output
@@ -642,13 +639,13 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     // WEBSERVER FINISH
     // unmap shared memory
     if (conf->enable_web_server == 1) {
-        remove_sem(sem_id);
-        shmdt(web_data);
+        sem_remove(sem_id);
+        web_close_shm(web_data);
     }
 
     // METER FINISH
     if (conf->mode == METER) {
-        meter_stop();
+        meter_deinit();
     }
 
     // STATE

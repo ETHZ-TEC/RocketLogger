@@ -34,10 +34,57 @@
 
 #include <sys/types.h>
 
-int create_sem(key_t key, int num_sems);
-int remove_sem(int sem_id);
-int open_sem(key_t key, int num_sems);
-int wait_sem(int sem_id, int sem_num, int time_out);
-int set_sem(int sem_id, int sem_num, int val);
+/**
+ * Create RocketLogger semaphore set.
+ *
+ * @return ID of created set
+ */
+int sem_create(key_t key, int num_sems);
+
+/**
+ * Remove semaphore set.
+ *
+ * @param sem_id ID of set to remove
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int sem_remove(int sem_id);
+
+/**
+ * Open existing RocketLogger semaphore set.
+ *
+ * @return ID of opened set
+ */
+int sem_open(key_t key, int num_sems);
+
+/**
+ * Wait on a semaphore until access granted.
+ *
+ * @param sem_id ID of semaphore set
+ * @param sem_num Number of semaphore in set
+ * @param time_out Maximum waiting time
+ * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
+ * out, {@link FAILURE} otherwise
+ */
+int sem_wait(int sem_id, int sem_num, int time_out);
+
+/**
+ * Set value to semaphore.
+ *
+ * @param sem_id ID of semaphore set
+ * @param sem_num Number of semaphore in set
+ * @param val Value to be set to semaphore
+ * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
+ * out, {@link FAILURE} otherwise
+ */
+int sem_set(int sem_id, int sem_num, int val);
+
+/**
+ * Get value of a semaphore.
+ *
+ * @param sem_id ID of semaphore set
+ * @param sem_num Number of semaphore in set
+ * @return The semaphore count or -1 on error.
+ */
+int sem_get(int sem_id, int sem_num);
 
 #endif /* SEM_H_ */

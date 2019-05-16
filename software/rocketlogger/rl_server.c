@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <libgen.h>
-#include <sys/shm.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
 
@@ -171,11 +170,11 @@ static void print_data(void) {
     int buffer_count = (curr_time - last_time + TIME_MARGIN) / 1000;
 
     // get available buffers
-    if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
         return;
     }
     int buffer_available = web_data->buffer[t_scale].filled;
-    set_sem(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, DATA_SEM, 1);
 
     if (buffer_count > buffer_available) {
         buffer_count = buffer_available;
@@ -203,7 +202,7 @@ static void print_data(void) {
     // read data
     int64_t data[buffer_count][buffer_size][num_channels];
 
-    if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
         return;
     }
     for (int i = 0; i < buffer_count; i++) {
@@ -219,7 +218,7 @@ static void print_data(void) {
                    web_data->buffer[t_scale].element_size);
         }
     }
-    set_sem(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, DATA_SEM, 1);
 
     // print data
     for (int i = buffer_count - 1; i >= 0; i--) {
@@ -273,7 +272,7 @@ int main(int argc, char *argv[]) {
     }
 
     // open semaphore
-    sem_id = open_sem(SEM_KEY, NUM_SEMS);
+    sem_id = sem_open(SEM_KEY, NUM_SEMS);
     if (sem_id < 0) {
         // error already logged
         exit(EXIT_FAILURE);
@@ -287,12 +286,12 @@ int main(int argc, char *argv[]) {
     while (data_read == 0) {
 
         // get current time
-        if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+        if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
             exit(EXIT_FAILURE);
         }
         curr_time = web_data->time;
         num_channels = web_data->num_channels;
-        set_sem(sem_id, DATA_SEM, 1);
+        sem_set(sem_id, DATA_SEM, 1);
 
         if (curr_time > last_time) {
 
@@ -312,7 +311,7 @@ int main(int argc, char *argv[]) {
 
             // wait on new data
             if (data_read == 0) {
-                if (wait_sem(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
+                if (sem_wait(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
                     // time-out or error -> stop
                     break;
                 }
@@ -321,7 +320,7 @@ int main(int argc, char *argv[]) {
     }
 
     // unmap shared memory
-    shmdt(web_data);
+    web_close_shm(web_data);
 
     exit(EXIT_SUCCESS);
 }

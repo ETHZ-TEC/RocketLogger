@@ -69,7 +69,7 @@ void ambient_store_data(FILE *ambient_file,
                 sensor_registry[i].read(sensor_registry[i].identifier);
                 mutli_channel_read = sensor_registry[i].identifier;
             }
-            sensor_data[ch] = sensor_registry[i].getValue(
+            sensor_data[ch] = sensor_registry[i].get_value(
                 sensor_registry[i].identifier, sensor_registry[i].channel);
             ch++;
         }

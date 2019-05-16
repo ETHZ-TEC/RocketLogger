@@ -59,7 +59,7 @@ void meter_init(void) {
     refresh();
 }
 
-void meter_stop(void) { endwin(); }
+void meter_deinit(void) { endwin(); }
 
 void meter_print_buffer(struct rl_conf const *const conf,
                         void const *buffer_addr) {

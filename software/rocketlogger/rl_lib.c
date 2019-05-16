@@ -49,18 +49,7 @@
  */
 rl_state rl_get_status(void) {
     struct rl_status status;
-
-    // get pid
-    pid_t pid = get_pid();
-    if (pid == FAILURE || kill(pid, 0) < 0) {
-        // process not running
-        status.state = RL_OFF;
-    } else {
-        // read status
-        read_status(&status);
-    }
-
-    return status.state;
+    return rl_read_status(&status);
 }
 
 /**
@@ -89,7 +78,7 @@ rl_state rl_read_status(struct rl_status *const status) {
  */
 void rl_read_calibration(struct rl_calibration *const calibration_ptr,
                          struct rl_conf const *const conf) {
-    read_calibration(conf);
+    calibration_load(conf);
     memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
 }
 
@@ -179,7 +168,7 @@ int rl_start(struct rl_conf *const conf, char const *const file_comment) {
     rl_log(INFO, "sampling finished");
 
     // FINISH
-    hw_close(conf);
+    hw_deinit(conf);
 
     return SUCCESS;
 }

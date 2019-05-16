@@ -150,7 +150,12 @@ typedef struct pru_data {
     uint32_t adc_command_count;
     /// ADC commands to send
     uint32_t adc_command[PRU_ADC_COMMAND_COUNT];
-} pru_data_t;
+}
+
+/**
+ * Typedef for PRU data exchange structure
+ */
+typedef struct pru_data pru_data_t;
 
 /**
  * Initialize PRU driver.
@@ -177,7 +182,7 @@ void pru_deinit(void);
  * than the minimal ADC rate (set 1 for no aggregates)
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_init_data(pru_data_t *const pru, struct rl_conf const *const conf,
+int pru_data_init(pru_data_t *const pru, struct rl_conf const *const conf,
                   uint32_t aggregates);
 
 /**

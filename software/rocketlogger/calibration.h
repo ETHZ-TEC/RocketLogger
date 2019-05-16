@@ -34,8 +34,23 @@
 
 #include "types.h"
 
-void reset_offsets(void);
-void reset_scales(void);
-int read_calibration(struct rl_conf const *const conf);
+/**
+ * Reset all calibration offsets to default state (0).
+ */
+void calibration_reset_offsets(void);
+
+/**
+ * Reset all calibration scales to default state (1).
+ */
+void calibration_reset_scales(void);
+
+/**
+ * Load the calibration values from calibration file.
+ *
+ * @param conf Pointer to {@link rl_conf} struct.
+ * @return {@link FAILURE} if calibration file not existing, {@link SUCCESS}
+ * otherwise.
+ */
+int calibration_load(struct rl_conf const *const conf);
 
 #endif /* CALIBRATION_H_ */

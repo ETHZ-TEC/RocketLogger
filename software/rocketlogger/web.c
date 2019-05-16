@@ -57,20 +57,17 @@ void web_merge_currents(uint8_t const *const valid, int64_t *dest,
                         struct rl_conf const *const conf);
 
 web_shm_t *web_create_shm(void) {
-
     int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t),
                         IPC_CREAT | SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(ERROR, "In create_web_shm: failed to get shared data memory id; "
-                      "%d message: %s",
+        rl_log(ERROR, "Failed creating shared web data memory; %d message: %s",
                errno, strerror(errno));
         return NULL;
     }
     web_shm_t *web_data = (web_shm_t *)shmat(shm_id, NULL, 0);
 
     if (web_data == (void *)-1) {
-        rl_log(ERROR, "In create_web_shm: failed to map shared data memory; %d "
-                      "message: %s",
+        rl_log(ERROR, "Failed mapping shared web data memory; %d message: %s",
                errno, strerror(errno));
         return NULL;
     }
@@ -79,19 +76,16 @@ web_shm_t *web_create_shm(void) {
 }
 
 web_shm_t *web_open_shm(void) {
-
     int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(ERROR, "In web_open_shm: failed to get shared data memory id; "
-                      "%d message: %s",
+        rl_log(ERROR, "Failed getting shared web data memory; %d message: %s",
                errno, strerror(errno));
         return NULL;
     }
     web_shm_t *web_data = (web_shm_t *)shmat(shm_id, NULL, 0);
 
     if (web_data == (void *)-1) {
-        rl_log(ERROR, "In web_open_shm: failed to map shared data memory; %d "
-                      "message: %s",
+        rl_log(ERROR, "Failed mapping shared web data memory; %d message: %s",
                errno, strerror(errno));
         return NULL;
     }
@@ -99,7 +93,15 @@ web_shm_t *web_open_shm(void) {
     return web_data;
 }
 
-void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
+void web_close_shm(web_shm_t const *web_shm) {
+    int res = shmdt(web_shm);
+    if (res != 0) {
+        rl_log(ERROR, "Failed detaching shared web data memory; %d message: %s",
+               errno, strerror(errno));
+    }
+}
+
+void web_buffer_reset(web_buffer_t *const buffer, int element_size,
                       int length) {
     buffer->element_size = element_size;
     buffer->length = length;
@@ -107,8 +109,7 @@ void web_buffer_reset(struct ringbuffer *const buffer, int element_size,
     buffer->head = 0;
 }
 
-void web_buffer_add(struct ringbuffer *const buffer,
-                    int64_t const *const data) {
+void web_buffer_add(web_buffer_t *const buffer, int64_t const *const data) {
     memcpy((buffer->data) +
                buffer->head * buffer->element_size / sizeof(int64_t),
            data, buffer->element_size);
@@ -118,7 +119,7 @@ void web_buffer_add(struct ringbuffer *const buffer,
     buffer->head = (buffer->head + 1) % buffer->length;
 }
 
-int64_t *web_buffer_get(struct ringbuffer *const buffer, int num) {
+int64_t *web_buffer_get(web_buffer_t *const buffer, int num) {
     int pos = ((int)buffer->head + (int)buffer->length - 1 - num) %
               (int)buffer->length;
 
@@ -338,7 +339,7 @@ int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
     // WRITE WEB DATA //
 
     // get shared memory access
-    if (wait_sem(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
+    if (sem_wait(sem_id, DATA_SEM, SEM_WRITE_TIME_OUT) == TIME_OUT) {
         return FAILURE;
     } else {
 
@@ -355,7 +356,7 @@ int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
                        &web_data[BUF100_INDEX][0][0]);
 
         // release shared memory
-        set_sem(sem_id, DATA_SEM, 1);
+        sem_set(sem_id, DATA_SEM, 1);
     }
 
     return SUCCESS;

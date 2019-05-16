@@ -32,6 +32,7 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <string.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -43,53 +44,35 @@
 
 #include "sem.h"
 
-/**
- * Create RocketLogger semaphore set
- * @return ID of created set
- */
-int create_sem(key_t key, int num_sems) {
+int sem_create(key_t key, int num_sems) {
     int sem_id = semget(key, num_sems, IPC_CREAT | S_IRWXU);
     if (sem_id < 0) {
-        rl_log(ERROR, "failed to create semaphores. Errno = %d", errno);
+        rl_log(ERROR, "Failed to create semaphore; %d message: %s", errno,
+               strerror(errno));
     }
     return sem_id;
 }
 
-/**
- * Remove semaphore set
- * @param sem_id ID of set to remove
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int remove_sem(int sem_id) {
+int sem_remove(int sem_id) {
     // remove semaphores
     if (semctl(sem_id, 0, IPC_RMID) < 0) {
-        rl_log(ERROR, "failed to remove semaphores. Errno = %d", errno);
+        rl_log(ERROR, "Failed to remove semaphore; %d message: %s", errno,
+               strerror(errno));
         return FAILURE;
     }
     return SUCCESS;
 }
 
-/**
- * Open existing RocketLogger semaphore set
- * @return ID of opened set
- */
-int open_sem(key_t key, int num_sems) {
+int sem_open(key_t key, int num_sems) {
     int sem_id = semget(key, num_sems, S_IRWXU);
     if (sem_id < 0) {
-        rl_log(ERROR, "failed to open semaphores. Errno = %d", errno);
+        rl_log(ERROR, "Failed to open semaphore; %d message: %s", errno,
+               strerror(errno));
     }
     return sem_id;
 }
 
-/**
- * Wait on a semaphore until access granted
- * @param sem_id ID of semaphore set
- * @param sem_num Number of semaphore in set
- * @param time_out Maximum waiting time
- * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
- * out, {@link FAILURE} otherwise
- */
-int wait_sem(int sem_id, int sem_num, int time_out) {
+int sem_wait(int sem_id, int sem_num, int time_out) {
     // operation on semaphore
     int num_ops = 1;
     int sem_op = -1;
@@ -98,34 +81,30 @@ int wait_sem(int sem_id, int sem_num, int time_out) {
 
     if (semtimedop(sem_id, &sem_ops, num_ops, &t_out) < 0) {
         if (errno == EAGAIN) {
+            rl_log(ERROR, "Timeout waiting on semaphore; %d message: %s", errno,
+                   strerror(errno));
             rl_log(WARNING, "time-out waiting on semaphore");
             return TIME_OUT;
         } else if (errno == EIDRM) {
-            rl_log(INFO, "waiting on semaphore failed: semaphore removed");
+            rl_log(ERROR, "Failed waiting on semaphore, semaphore removed; %d "
+                          "message: %s",
+                   errno, strerror(errno));
             return TIME_OUT;
         } else if (errno == EINVAL) {
-            rl_log(WARNING,
-                   "waiting on semaphore failed: semaphore not existing");
+            rl_log(ERROR, "Failed waiting on semaphore, semaphore inexistent; "
+                          "%d message: %s",
+                   errno, strerror(errno));
             return FAILURE;
         } else {
-            rl_log(ERROR, "failed doing operation on semaphore. Errno = %d",
-                   errno);
+            rl_log(ERROR, "Failed waiting on semaphore; %d message: %s", errno,
+                   strerror(errno));
             return FAILURE;
         }
     }
-
     return SUCCESS;
 }
 
-/**
- * Set value to semaphore
- * @param sem_id ID of semaphore set
- * @param sem_num Number of semaphore in set
- * @param val Value to be set to semaphore
- * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
- * out, {@link FAILURE} otherwise
- */
-int set_sem(int sem_id, int sem_num, int val) {
+int sem_set(int sem_id, int sem_num, int val) {
     // operation on semaphore
     int num_ops = 1;
     int sem_op = val;
@@ -134,14 +113,23 @@ int set_sem(int sem_id, int sem_num, int val) {
 
     if (semtimedop(sem_id, &sem_ops, num_ops, &time_out) < 0) {
         if (errno == EAGAIN) {
-            rl_log(ERROR, "time-out waiting on semaphore");
+            rl_log(ERROR, "Timeout on setting semaphore count; %d message: %s",
+                   errno, strerror(errno));
             return TIME_OUT;
         } else {
-            rl_log(ERROR, "failed doing operation on semaphore. Errno = %d",
-                   errno);
+            rl_log(ERROR, "Failed setting semaphore count; %d message: %s",
+                   errno, strerror(errno));
             return FAILURE;
         }
     }
-
     return SUCCESS;
+}
+
+int sem_get(int sem_id, int sem_num) {
+    int count = semctl(sem_id, sem_num, GETNCNT);
+    if (count < 0) {
+        rl_log(ERROR, "Failed getting semaphore count; %d message: %s", errno,
+               strerror(errno));
+    }
+    return count;
 }
