@@ -33,23 +33,21 @@
 
 #include "calibration.h"
 
+rl_calibration_t calibration_data;
+
 void calibration_reset_offsets(void) {
-    int i;
-    for (i = 0; i < NUM_CHANNELS; i++) {
-        calibration.offsets[i] = 0;
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+        calibration_data.offsets[i] = 0;
     }
 }
 
 void calibration_reset_scales(void) {
-    int i;
-    for (i = 0; i < NUM_CHANNELS; i++) {
-        calibration.scales[i] = 1;
+    for (int i = 0; i < NUM_CHANNELS; i++) {
+        calibration_data.scales[i] = 1;
     }
 }
 
-int calibration_load(struct rl_conf const *const conf) {
-
-    // open calibration file
+int calibration_load(rl_config_t const *const config) {
     FILE *file = fopen(CALIBRATION_FILE, "r");
     if (file == NULL) {
         // no calibration file available
@@ -58,17 +56,18 @@ int calibration_load(struct rl_conf const *const conf) {
         status.calibration_time = 0;
         return FAILURE;
     }
+
     // read calibration
-    fread(&calibration, sizeof(struct rl_calibration), 1, file);
+    fread(&calibration_data, sizeof(rl_calibration_t), 1, file);
 
     // reset calibration, if ignored
-    if (conf->calibration == CAL_IGNORE) {
+    if (config->calibration_ignore) {
         calibration_reset_offsets();
         calibration_reset_scales();
     }
 
-    // store timestamp to conf and status
-    status.calibration_time = calibration.time;
+    // store timestamp to config and status
+    status.calibration_time = calibration_data.time;
 
     // close file
     fclose(file);

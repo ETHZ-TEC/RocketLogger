@@ -84,12 +84,12 @@ int sem_wait(int sem_id, int sem_num, int time_out) {
             rl_log(ERROR, "Timeout waiting on semaphore; %d message: %s", errno,
                    strerror(errno));
             rl_log(WARNING, "time-out waiting on semaphore");
-            return TIME_OUT;
+            return TIMEOUT;
         } else if (errno == EIDRM) {
             rl_log(ERROR, "Failed waiting on semaphore, semaphore removed; %d "
                           "message: %s",
                    errno, strerror(errno));
-            return TIME_OUT;
+            return TIMEOUT;
         } else if (errno == EINVAL) {
             rl_log(ERROR, "Failed waiting on semaphore, semaphore inexistent; "
                           "%d message: %s",
@@ -115,7 +115,7 @@ int sem_set(int sem_id, int sem_num, int val) {
         if (errno == EAGAIN) {
             rl_log(ERROR, "Timeout on setting semaphore count; %d message: %s",
                    errno, strerror(errno));
-            return TIME_OUT;
+            return TIMEOUT;
         } else {
             rl_log(ERROR, "Failed setting semaphore count; %d message: %s",
                    errno, strerror(errno));

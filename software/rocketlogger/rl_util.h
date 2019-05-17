@@ -38,9 +38,9 @@
 #define DEFAULT_CONFIG "/etc/rocketlogger/default.conf"
 
 /**
- * Available options for RocketLogger CLI
+ * Available command line options of the RocketLogger CLI
  */
-typedef enum option {
+enum rl_option {
     FILE_NAME,      //!< Name of data file to write
     SAMPLE_RATE,    //!< Sampling rate
     UPDATE_RATE,    //!< Data file update rate
@@ -56,22 +56,27 @@ typedef enum option {
     FILE_SIZE,      //!< Maximum data file size
     COMMENT,        //!< File comment
     NO_OPTION       //!< No option
-} rl_option;
+};
 
-void rl_print_config(struct rl_conf const *const conf);
-void rl_print_status(struct rl_status const *const status);
+/**
+ * Typedef for RocketLogger command line options
+ */
+typedef enum rl_option rl_option_t;
+
+void rl_print_config(rl_config_t const *const conf);
+void rl_print_status(rl_status_t const *const status);
 void rl_print_version(void);
 
-rl_mode get_mode(char const *const mode);
-rl_option get_option(char const *const option);
-int parse_args(int argc, char *argv[], struct rl_conf *conf,
-               int *set_as_default, char **file_comment);
+rl_mode_t get_mode(char const *const mode);
+rl_option_t get_option(char const *const option);
+int parse_args(int argc, char * argv[], rl_config_t *const config,
+               bool *const set_as_default, char **const file_comment);
 
 void print_usage(void);
 
-void print_config(struct rl_conf const *const conf);
-void reset_config(struct rl_conf *const conf);
-int read_default_config(struct rl_conf *const conf);
-int write_default_config(struct rl_conf const *const conf);
+void print_config(rl_config_t const *const conf);
+void reset_config(rl_config_t *const conf);
+int read_default_config(rl_config_t *const conf);
+int write_default_config(rl_config_t const *const conf);
 
 #endif /* RL_UTIL_H_ */

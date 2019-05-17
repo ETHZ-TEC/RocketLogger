@@ -43,7 +43,7 @@
  * @param type Type of message.
  * @param format Message format.
  */
-void rl_log(rl_log_type type, char const *const format, ...) {
+void rl_log(rl_log_t type, char const *const format, ...) {
 
     // open/init file
     FILE *log_fp;

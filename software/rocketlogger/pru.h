@@ -112,13 +112,13 @@ void pru_deinit(void);
 /**
  * PRU data structure initialization.
  *
- * @param pru {@link pru_data_t} data structure to initialize
- * @param conf Pointer to current {@link rl_conf} configuration
+ * @param pru_data {@link pru_data_t} data structure to initialize
+ * @param config Pointer to current {@link rl_config_t} configuration
  * @param aggregates Number of samples to aggregate for sampling rates smaller
  * than the minimal ADC rate (set 1 for no aggregates)
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_data_init(pru_data_t *const pru, struct rl_conf const *const conf,
+int pru_data_init(pru_data_t *const pru_data, rl_config_t const *const config,
                   uint32_t aggregates);
 
 /**
@@ -146,18 +146,18 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
  *
  * @param data_file File pointer to data file
  * @param ambient_file File pointer to ambient file
- * @param conf Pointer to current {@link rl_conf} configuration
+ * @param config Pointer to current {@link rl_config_tig_t} configuration
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int pru_sample(FILE *data, FILE *ambient_file, struct rl_conf const *const conf,
+int pru_sample(FILE *data, FILE *ambient_file, rl_config_t const *const config,
                char const *const file_comment);
 
 /**
  * Stop running PRU measurements.
  *
  * @note When sampling in continuous mode, this has to be called before {@link
- * pru_close}.
+ * pru_deinit}.
  */
 void pru_stop(void);
 

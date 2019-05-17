@@ -46,15 +46,6 @@
 /// Index of 100s/div buffer
 #define BUF100_INDEX 2
 
-/**
- * RocketLogger time scale definition
- */
-enum time_scale {
-    S1 = 0,  //!< 100 sample/s
-    S10 = 1, //!< 10 samples/s
-    S100 = 2 //!< 1 samples/s
-};
-
 /// Size of 1s/div buffer
 #define BUFFER1_SIZE 100
 /// Size of 10s/div buffer
@@ -71,6 +62,20 @@ enum time_scale {
 
 /// Current high-low scale difference
 #define H_L_SCALE 100
+
+/**
+ * RocketLogger web interface time scale definition
+ */
+enum web_time_scale {
+    WEB_TIME_SCALE_1 = 0,  //!< 100 sample/s
+    WEB_TIME_SCALE_10 = 1, //!< 10 samples/s
+    WEB_TIME_SCALE_100 = 2 //!< 1 samples/s
+};
+
+/**
+ * Typedef for web interface time scale.
+ */
+typedef enum web_time_scale web_time_scale_t;
 
 /**
  * Ring buffer data structure for data exchange with web server
@@ -164,14 +169,14 @@ int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
  * @param sem_id ID of semaphores for shared web data
  * @param buffer_addr Pointer to buffer to handle
  * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param conf Current {@link rl_conf} configuration.
+ * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
+ * @param config Current {@link rl_config_t} configuration.
  * @return {@link SUCCESS} on successful processing, {@link FAILURE} otherwise
 
  */
 int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
                     void const *buffer_addr, uint32_t samples_count,
-                    struct time_stamp const *const timestamp_realtime,
-                    struct rl_conf const *const conf);
+                    rl_timestamp_t const *const timestamp_realtime,
+                    rl_config_t const *const config);
 
 #endif /* WEB_H_ */

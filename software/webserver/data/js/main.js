@@ -347,7 +347,7 @@ function parseStatus(tempState) {
 	// EXTRACT STATUS INFO
 	var sampleRate = parseInt(tempState[0]);
 	var digitalInputs = tempState[2];
-	var calibration = tempState[3];
+	var calibrationIgnore = tempState[3];
 	var fileFormat = tempState[4];
 	var sysFilename = tempState[5];
 	var maxFileSize = parseInt(tempState[6]) / MB_SCALE;
@@ -408,10 +408,10 @@ function parseStatus(tempState) {
 	var digInps = (digitalInputs == "1");
 
 	// calibration
-	if (calibration == "1") {
-		document.getElementById("ignore_calibration").checked = false;
-	} else {
+	if (calibrationIgnore == "1") {
 		document.getElementById("ignore_calibration").checked = true;
+	} else {
+		document.getElementById("ignore_calibration").checked = false;
 	}
 
 	// file format

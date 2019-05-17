@@ -34,6 +34,20 @@
 
 #include "types.h"
 
-void rl_log(rl_log_type type, char const *const format, ...);
+/**
+ * RocketLogger log type definition
+ */
+enum rl_log {
+    ERROR,   //!< Error
+    WARNING, //!< Warning
+    INFO,    //!< Information
+};
+
+/**
+ * Typedef for RocketLogger log types
+ */
+typedef enum rl_log rl_log_t;
+
+void rl_log(rl_log_t type, char const *const format, ...);
 
 #endif /* LOG_H_ */

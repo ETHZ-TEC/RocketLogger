@@ -41,24 +41,23 @@
 /// CSV value delimiter character
 #define CSV_DELIMITER ","
 
-// FUNCTIONS
-void file_setup_lead_in(struct rl_file_lead_in *const lead_in,
-                        struct rl_conf const *const conf);
-void file_setup_header(struct rl_file_header *const file_header,
-                       struct rl_conf const *const conf,
+void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
+                        rl_config_t const *const config);
+void file_setup_header(rl_file_header_t *const file_header,
+                       rl_config_t const *const config,
                        char const *const comment);
 void file_store_header_bin(FILE *data,
-                           struct rl_file_header *const file_header);
+                           rl_file_header_t *const file_header);
 void file_store_header_csv(FILE *data,
-                           struct rl_file_header const *const file_header);
+                           rl_file_header_t const *const file_header);
 void file_update_header_bin(FILE *data,
-                            struct rl_file_header const *const file_header);
+                            rl_file_header_t const *const file_header);
 void file_update_header_csv(FILE *data,
-                            struct rl_file_header const *const file_header);
+                            rl_file_header_t const *const file_header);
 void file_handle_data(FILE *data_file, void const *buffer_addr,
                       uint32_t samples_count,
-                      struct time_stamp const *const timestamp_realtime,
-                      struct time_stamp const *const timestamp_monotonic,
-                      struct rl_conf const *const conf);
+                      rl_timestamp_t const *const timestamp_realtime,
+                      rl_timestamp_t const *const timestamp_monotonic,
+                      rl_config_t const *const config);
 
 #endif /* FILE_HANDLING_H_ */

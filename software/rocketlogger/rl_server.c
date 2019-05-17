@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,7 +66,7 @@ uint32_t id;
 /// 1: data requested, 0: no data requested
 uint8_t get_data;
 /// Requested time scale
-uint32_t t_scale;
+web_time_scale_t t_scale;
 /// Last client time stamp
 int64_t last_time;
 /// Time stamp of last buffer stored to shared memory
@@ -74,7 +75,7 @@ int64_t curr_time;
 int8_t num_channels;
 
 /// Current status of RocketLogger
-struct rl_status status;
+rl_status_t status;
 
 /// Buffer sizes for different time scales
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
@@ -94,17 +95,17 @@ static int64_t get_free_space(char *path) {
 }
 
 /**
- * Print a 32-bit integer array in JSON format
+ * Print a boolean array in JSON format
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json32(int32_t const *const data, const int length) {
+static void print_json_bool(bool const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
-            printf(",%d", data[i]);
+            printf(",%d", data[i] ? 1 : 0);
         } else {
-            printf("%d", data[i]);
+            printf("%d", data[i] ? 1 : 0);
         }
     }
     printf("]\n");
@@ -115,7 +116,7 @@ static void print_json32(int32_t const *const data, const int length) {
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json64(int64_t const *const data, const int length) {
+static void print_json_int64(int64_t const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
@@ -134,31 +135,31 @@ static void print_status(void) {
     // STATUS
     printf("%d\n", status.state);
     if (status.state != RL_RUNNING) {
-        read_default_config(&status.conf);
+        read_default_config(&status.config);
 
         // read calibration time
-        struct rl_calibration tmp_calibration;
-        rl_read_calibration(&tmp_calibration, &status.conf);
+        rl_calibration_t tmp_calibration;
+        rl_read_calibration(&status.config, &tmp_calibration);
         status.calibration_time = tmp_calibration.time;
     }
     // copy of filename (for dirname)
     char file_name_copy[MAX_PATH_LENGTH];
-    strcpy(file_name_copy, status.conf.file_name);
+    strcpy(file_name_copy, status.config.file_name);
     printf("%lld\n", get_free_space(dirname(file_name_copy)));
     printf("%llu\n", status.calibration_time);
 
     // CONFIG
-    printf("%u\n", status.conf.sample_rate);
-    printf("%d\n", status.conf.update_rate);
-    printf("%d\n", status.conf.digital_inputs);
-    printf("%d\n", status.conf.calibration);
-    printf("%d\n", status.conf.file_format);
-    printf("%s\n", status.conf.file_name);
-    printf("%llu\n", status.conf.max_file_size);
-    print_json32(status.conf.channels, NUM_CHANNELS);
-    print_json32(status.conf.force_high_channels, NUM_I_CHANNELS);
+    printf("%u\n", status.config.sample_rate);
+    printf("%d\n", status.config.update_rate);
+    printf("%d\n", status.config.digital_input_enable ? 1 : 0);
+    printf("%d\n", status.config.calibration_ignore ? 1 : 0);
+    printf("%d\n", status.config.file_format);
+    printf("%s\n", status.config.file_name);
+    printf("%llu\n", status.config.max_file_size);
+    print_json_bool(status.config.channels, NUM_CHANNELS);
+    print_json_bool(status.config.force_high_channels, NUM_I_CHANNELS);
     printf("%llu\n", status.samples_taken);
-    printf("%d\n", status.conf.enable_web_server);
+    printf("%d\n", status.config.web_interface_enable ? 1 : 0);
 }
 
 /**
@@ -223,7 +224,7 @@ static void print_data(void) {
     // print data
     for (int i = buffer_count - 1; i >= 0; i--) {
         for (int j = 0; j < buffer_size; j++) {
-            print_json64(data[i][j], num_channels);
+            print_json_int64(data[i][j], num_channels);
         }
     }
 }
@@ -249,21 +250,22 @@ int main(int argc, char *argv[]) {
     }
     id = atoi(argv[1]);
     get_data = atoi(argv[2]);
-    t_scale = atoi(argv[3]);
+    t_scale = (web_time_scale_t)atoi(argv[3]);
     last_time = atoll(argv[4]);
 
     // check time scale
-    if (t_scale != S1 && t_scale != S10 && t_scale != S100) {
+    if (t_scale != WEB_TIME_SCALE_1 && t_scale != WEB_TIME_SCALE_10 &&
+        t_scale != WEB_TIME_SCALE_100) {
         rl_log(WARNING, "unknown time scale");
-        t_scale = S1;
+        t_scale = WEB_TIME_SCALE_1;
     }
 
     // get status
     rl_read_status(&status);
 
     // quit, if data not requested or not running or web disabled
-    if (status.state != RL_RUNNING || status.sampling == SAMPLING_OFF ||
-        status.conf.enable_web_server == 0 || get_data == 0) {
+    if (status.state != RL_RUNNING || status.sampling == RL_SAMPLING_OFF ||
+        !status.config.web_interface_enable || get_data == 0) {
         // print request id and status
         printf("%d\n", id);
         print_status();

@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -47,15 +48,15 @@
  */
 int main(int argc, char *argv[]) {
 
-    struct rl_conf conf;
-    int set_as_default;
+    rl_config_t config;
+    bool set_as_default;
     char *file_comment;
 
     // get default config
-    read_default_config(&conf);
+    read_default_config(&config);
 
     // parse arguments
-    if (parse_args(argc, argv, &conf, &set_as_default, &file_comment) ==
+    if (parse_args(argc, argv, &config, &set_as_default, &file_comment) ==
         FAILURE) {
         print_usage();
         exit(EXIT_FAILURE);
@@ -63,17 +64,17 @@ int main(int argc, char *argv[]) {
 
     // store config as default
     if (set_as_default == 1) {
-        write_default_config(&conf);
+        write_default_config(&config);
     }
 
-    switch (conf.mode) {
+    switch (config.mode) {
     case LIMIT:
         if (rl_get_status() == RL_RUNNING) {
             rl_log(ERROR,
                    "RocketLogger already running\n Run:  rocketlogger stop\n");
             exit(EXIT_FAILURE);
         }
-        print_config(&conf);
+        print_config(&config);
         printf("Start sampling ...\n");
         break;
 
@@ -83,7 +84,7 @@ int main(int argc, char *argv[]) {
                    "RocketLogger already running\n Run:  rocketlogger stop\n");
             exit(EXIT_FAILURE);
         }
-        print_config(&conf);
+        print_config(&config);
         printf("Data acquisition running in background ...\n  Stop with:   "
                "rocketlogger stop\n\n");
         break;
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
         break;
 
     case STATUS: {
-        struct rl_status status;
+        rl_status_t status;
         rl_read_status(&status);
         rl_print_status(&status);
         return status.state;
@@ -113,16 +114,16 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
 
     case SET_DEFAULT:
-        write_default_config(&conf);
+        write_default_config(&config);
         if (rl_get_status() == RL_RUNNING) {
             printf("\n");
             rl_log(WARNING, "change will not affect current measurement");
         }
-        print_config(&conf);
+        print_config(&config);
         exit(EXIT_SUCCESS);
 
     case PRINT_DEFAULT:
-        print_config(&conf);
+        print_config(&config);
         exit(EXIT_SUCCESS);
 
     case PRINT_VERSION:
@@ -139,7 +140,7 @@ int main(int argc, char *argv[]) {
     }
 
     // start the sampling
-    rl_start(&conf, file_comment);
+    rl_start(&config, file_comment);
 
     exit(EXIT_SUCCESS);
 }

@@ -32,6 +32,7 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /**
@@ -39,20 +40,16 @@
  */
 #define SUCCESS 1
 #define UNDEFINED 0
-#define TIME_OUT 0
 #define FAILURE -1
+#define TIMEOUT 0
 
-// files
 /// Process ID file for background process
 #define PID_FILE "/var/run/rocketlogger.pid"
+
 /// Log file name
 #ifndef LOG_FILE
 #define LOG_FILE "/var/www/rocketlogger/log/rocketlogger.log"
 #endif
-/// File to read MAC address
-#define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
-/// Calibration file name
-#define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
 
 /// Log file size in bytes
 #define MAX_LOG_FILE_SIZE 1000000
@@ -64,7 +61,6 @@
 /// Permissions for shared memory
 #define SHMEM_PERMISSIONS 0666
 
-// constants
 /// Maximum path length in characters
 #define MAX_PATH_LENGTH 256
 /// Maximum number of RocketLogger channels
@@ -100,94 +96,11 @@
 /// Minimal ADC sampling rate
 #define MIN_ADC_RATE 1000
 
-// ROCKETLOGGER
-/**
- * RocketLogger state definition
- */
-typedef enum state {
-    RL_OFF = 0,     //!< Idle
-    RL_RUNNING = 1, //!< Running
-    RL_ERROR = -1,  //!< Error
-} rl_state;
-
-/**
- * RocketLogger sampling state definition
- */
-typedef enum sampling {
-    SAMPLING_OFF = 0, //!< Not sampling
-    SAMPLING_ON = 1,  //!< Sampling
-} rl_sampling;
-
-/**
- * RocketLogger mode definition
- */
-typedef enum mode {
-    LIMIT, //!< Limited sampling mode (limited by number of samples to take)
-    CONTINUOUS,    //!< Continuous sampling mode (in background)
-    METER,         //!< Meter mode (display current values in terminal)
-    STATUS,        //!< Get current status of RocketLogger
-    STOPPED,       //!< Stop continuous sampling
-    SET_DEFAULT,   //!< Set default configuration
-    PRINT_DEFAULT, //!< Print default configuration
-    PRINT_VERSION, //!< Print the RocketLogger Software Stack version
-    HELP,          //!< Show help
-    NO_MODE        //!< No mode
-} rl_mode;
-
-/**
- * RocketLogger data aggregation mode definition
- */
-typedef enum aggregation {
-    AGGREGATE_NONE = 0,       //!< No aggregation
-    AGGREGATE_DOWNSAMPLE = 1, //!< Aggregate using downsampling
-    AGGREGATE_AVERAGE = 2     //!< Aggregate by averaging data
-} rl_aggregation;
-
-/**
- * RocketLogger file format definition
- */
-typedef enum file_format {
-    NO_FILE = 0, //!< No file
-    CSV = 1,     //!< CSV format
-    BIN = 2      //!< Binary format
-} rl_file_format;
-
-/**
- * RocketLogger calibration definition
- */
-typedef enum use_cal {
-    CAL_IGNORE = 0, //!< Ignore calibration
-    CAL_USE = 1     //!< Use calibration (if existing)
-} rl_use_cal;
-
-/**
- * RocketLogger log file types definition
- */
-typedef enum log_type {
-    ERROR,   //!< Error
-    WARNING, //!< Warning
-    INFO     //!< Information
-} rl_log_type;
-
 /// RocketLogger configuration structure version number
-#define RL_CONF_VERSION 0x01
+#define RL_CONF_VERSION 0x02
 
 // AMBIENT CONF //
 #define AMBIENT_MAX_SENSOR_COUNT 128
-#define AMBIENT_DISABLED 0
-#define AMBIENT_ENABLED 1
-struct rl_ambient {
-    int enabled;
-    int sensor_count;
-    int available_sensors[AMBIENT_MAX_SENSOR_COUNT];
-    char file_name[MAX_PATH_LENGTH];
-} ambient;
-
-// channel properties
-/// Channel sampling disabled
-#define CHANNEL_DISABLED 0
-/// Channel sampling enabled
-#define CHANNEL_ENABLED 1
 
 // channel indices in channels array
 /**
@@ -201,78 +114,6 @@ struct rl_ambient {
 #define I2L_INDEX 5
 #define V3_INDEX 6
 #define V4_INDEX 7
-
-// digital inputs
-/// Digital input sampling disabled
-#define DIGITAL_INPUTS_DISABLED 0
-/// Digital input sampling ensabled
-#define DIGITAL_INPUTS_ENABLED 1
-
-/**
- * RocketLogger sampling configuration
- */
-struct rl_conf {
-    /// Configuration structure version
-    int version;
-    /// Sampling mode
-    rl_mode mode;
-    /// Sampling rate
-    int sample_rate;
-    /// Aggregation mode (for sampling rates below lowest native one)
-    rl_aggregation aggregation;
-    /// Data update rate
-    int update_rate;
-    /// Sample limit (0 for continuous)
-    int sample_limit;
-    /// Channels to sample
-    int channels[NUM_CHANNELS];
-    /// Current channels to force to high range
-    int force_high_channels[NUM_I_CHANNELS];
-    /// En-/disable digital inputs
-    int digital_inputs;
-    /// En-/disable plots on web interface
-    int enable_web_server;
-    /// Use/ignore existing calibration
-    rl_use_cal calibration;
-    /// File format
-    rl_file_format file_format;
-    /// Maximum data file size
-    uint64_t max_file_size;
-    /// Data file name
-    char file_name[MAX_PATH_LENGTH];
-    /// Ambient conf
-    struct rl_ambient ambient;
-};
-
-/**
- * RocketLogger status
- */
-struct rl_status {
-    /// State
-    rl_state state;
-    /// Sampling state
-    rl_sampling sampling;
-    /// Number of samples taken
-    uint64_t samples_taken;
-    /// Number of buffers taken
-    uint32_t buffer_number;
-    /// Current configuration
-    struct rl_conf conf;
-    /// Time stamp of last calibration run
-    uint64_t calibration_time;
-};
-
-/**
- * RocketLogger calibration data
- */
-struct rl_calibration {
-    /// Time stamp of calibration run
-    uint64_t time;
-    /// Channel offsets (in bit)
-    int offsets[NUM_CHANNELS];
-    /// Channel scalings
-    double scales[NUM_CHANNELS];
-};
 
 // SEMAPHORES
 /// Semaphore key (used for set creation)
@@ -295,11 +136,169 @@ struct rl_calibration {
 /// No flag
 #define NO_FLAG 0
 
-// ----- GLOBAL VARIABLES ----- //
+
+/**
+ * RocketLogger execution mode definition
+ */
+enum rl_mode {
+    LIMIT, //!< Limited sampling mode (limited by number of samples to take)
+    CONTINUOUS,    //!< Continuous sampling mode (in background)
+    METER,         //!< Meter mode (display current values in terminal)
+    STATUS,        //!< Get current status of RocketLogger
+    STOPPED,       //!< Stop continuous sampling
+    SET_DEFAULT,   //!< Set default configuration
+    PRINT_DEFAULT, //!< Print default configuration
+    PRINT_VERSION, //!< Print the RocketLogger Software Stack version
+    HELP,          //!< Show help
+    NO_MODE        //!< No mode
+};
+
+/**
+ * Typedef for RocketLogger execution modes
+ */
+typedef enum rl_mode rl_mode_t;
+
+/**
+ * RocketLogger state definition
+ */
+enum rl_state {
+    RL_OFF = 0,     //!< Idle
+    RL_RUNNING = 1, //!< Running
+    RL_ERROR = -1,  //!< Error
+};
+
+/**
+ * Typedef for RocketLogger states
+ */
+typedef enum rl_state rl_state_t;
+
+/**
+ * RocketLogger sampling state definition
+ */
+enum rl_sampling {
+    RL_SAMPLING_OFF = 0, //!< Not sampling
+    RL_SAMPLING_ON = 1,  //!< Sampling
+};
+
+/**
+ * Typedef for RocketLogger sampling states
+ */
+typedef enum rl_sampling rl_sampling_t;
+
+/**
+ * RocketLogger data aggregation mode definition
+ */
+enum rl_aggregation {
+    RL_AGGREGATE_NONE = 0,       //!< No aggregation
+    RL_AGGREGATE_DOWNSAMPLE = 1, //!< Aggregate using downsampling
+    RL_AGGREGATE_AVERAGE = 2     //!< Aggregate by averaging data
+};
+
+/**
+ * Typedef for RocketLogger data aggregation modes
+ */
+typedef enum rl_aggregation rl_aggregation_t;
+
+/**
+ * RocketLogger file format definition
+ */
+enum rl_file_format {
+    RL_FILE_NONE = 0, //!< No file
+    RL_FILE_CSV = 1,  //!< CSV format
+    RL_FILE_BIN = 2   //!< Binary format
+};
+
+/**
+ * Typedef for RocketLogger file formats
+ */
+typedef enum rl_file_format rl_file_format_t;
+
+/**
+ * RocketLogger ambient sensor configuration.
+ */
+struct rl_ambient {
+    /// Enable ambient sensors
+    bool enabled;
+    /// Number of sensors found on the bus
+    int sensor_count;
+    /// Identifiers of sensors found
+    int available_sensors[AMBIENT_MAX_SENSOR_COUNT];
+    /// Filename of the ambient measurement file
+    char file_name[MAX_PATH_LENGTH];
+};
+
+/**
+ * Typedef of RocketLogger ambient sensor configuration
+ */
+typedef struct rl_ambient rl_ambient_t;
+
+/**
+ * RocketLogger sampling configuration structure.
+ */
+struct rl_config {
+    /// Configuration structure version
+    int version;
+    /// Sampling mode
+    rl_mode_t mode;
+    /// Sampling rate
+    int sample_rate;
+    /// Aggregation mode (for sampling rates below lowest native one)
+    rl_aggregation_t aggregation;
+    /// Data update rate
+    int update_rate;
+    /// Sample limit (0 for continuous)
+    int sample_limit;
+    /// Channels to sample
+    bool channels[NUM_CHANNELS];
+    /// Current channels to force to high range
+    bool force_high_channels[NUM_I_CHANNELS];
+    /// En-/disable digital inputs
+    bool digital_input_enable;
+    /// En-/disable plots on web interface
+    bool web_interface_enable;
+    /// Use/ignore existing calibration
+    bool calibration_ignore;
+    /// File format
+    rl_file_format_t file_format;
+    /// Maximum data file size
+    uint64_t max_file_size;
+    /// Data file name
+    char file_name[MAX_PATH_LENGTH];
+    /// Ambient conf
+    struct rl_ambient ambient;
+};
+
+/**
+ * Typedef for RocketLogger sampling configuration.
+ */
+typedef struct rl_config rl_config_t;
+
+/**
+ * RocketLogger status structure definition.
+ */
+struct rl_status {
+    /// State
+    rl_state_t state;
+    /// Sampling state
+    rl_sampling_t sampling;
+    /// Number of samples taken
+    uint64_t samples_taken;
+    /// Number of buffers taken
+    uint32_t buffer_number;
+    /// Current configuration
+    rl_config_t config;
+    /// Time stamp of last calibration run
+    uint64_t calibration_time;
+};
+
+/**
+ * Typedef for RocketLogger sampling configuration.
+ */
+typedef struct rl_status rl_status_t;
+
 /// RocketLogger status
-struct rl_status status;
-/// Calibration data
-struct rl_calibration calibration;
+rl_status_t status;
+
 /// Channel names
 extern char const *const channel_names[NUM_CHANNELS];
 /// Digital input names

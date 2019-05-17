@@ -42,15 +42,15 @@
 
 #include "rl_hw.h"
 
-void hw_init(struct rl_conf *const conf) {
+void hw_init(rl_config_t *const config) {
 
     // PWM configuration
     pwm_init();
 
-    if (conf->sample_rate < MIN_ADC_RATE) {
+    if (config->sample_rate < MIN_ADC_RATE) {
         pwm_setup_range_reset(MIN_ADC_RATE);
     } else {
-        pwm_setup_range_reset(conf->sample_rate);
+        pwm_setup_range_reset(config->sample_rate);
     }
     pwm_setup_adc_clock();
 
@@ -59,9 +59,9 @@ void hw_init(struct rl_conf *const conf) {
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
     gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
     gpio_set_value(GPIO_FHR1,
-                   (conf->force_high_channels[0] == CHANNEL_DISABLED));
+                   (config->force_high_channels[0]));
     gpio_set_value(GPIO_FHR2,
-                   (conf->force_high_channels[1] == CHANNEL_DISABLED));
+                   (config->force_high_channels[1]));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
@@ -72,22 +72,22 @@ void hw_init(struct rl_conf *const conf) {
     pru_init();
 
     // SENSORS
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+    if (config->ambient.enabled) {
         sensors_init();
-        conf->ambient.sensor_count =
-            sensors_scan(conf->ambient.available_sensors);
+        config->ambient.sensor_count =
+            sensors_scan(config->ambient.available_sensors);
     }
 
     // STATE
     status.state = RL_RUNNING;
-    status.sampling = SAMPLING_OFF;
+    status.sampling = RL_SAMPLING_OFF;
     status.samples_taken = 0;
     status.buffer_number = 0;
-    status.conf = *conf;
+    status.config = *config;
     write_status(&status);
 }
 
-void hw_deinit(struct rl_conf const *const conf) {
+void hw_deinit(rl_config_t const *const config) {
 
     // PWM
     pwm_deinit();
@@ -100,14 +100,14 @@ void hw_deinit(struct rl_conf const *const conf) {
     gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
-    if (conf->mode != LIMIT) {
+    if (config->mode != LIMIT) {
         pru_stop();
     }
     pru_deinit();
 
     // SENSORS
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        sensors_close(conf->ambient.available_sensors);
+    if (config->ambient.enabled) {
+        sensors_close(config->ambient.available_sensors);
         sensors_deinit();
     }
 
@@ -117,13 +117,12 @@ void hw_deinit(struct rl_conf const *const conf) {
     write_status(&status);
 }
 
-int hw_sample(struct rl_conf const *const conf,
-              char const *const file_comment) {
+int hw_sample(rl_config_t const *const config, char const *const file_comment) {
     int ret;
     // open data file
     FILE *data = (FILE *)-1;
-    if (conf->file_format != NO_FILE) { // open file only if storing requested
-        data = fopen64(conf->file_name, "w+");
+    if (config->file_format != RL_FILE_NONE) { // open file only if storing requested
+        data = fopen64(config->file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open data-file");
             return FAILURE;
@@ -132,8 +131,8 @@ int hw_sample(struct rl_conf const *const conf,
 
     // open ambient file
     FILE *ambient_file = (FILE *)-1;
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        ambient_file = fopen64(conf->ambient.file_name, "w+");
+    if (config->ambient.enabled) {
+        ambient_file = fopen64(config->ambient.file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open ambient-file");
             return FAILURE;
@@ -141,23 +140,23 @@ int hw_sample(struct rl_conf const *const conf,
     }
 
     // read calibration
-    ret = calibration_load(conf);
+    ret = calibration_load(config);
     if (ret != SUCCESS) {
         rl_log(WARNING, "no calibration file, returning uncalibrated values");
     }
 
     // SAMPLE
-    ret = pru_sample(data, ambient_file, conf, file_comment);
+    ret = pru_sample(data, ambient_file, config, file_comment);
     if (ret != SUCCESS) {
         // error occurred
         gpio_set_value(GPIO_LED_ERROR, 1);
     }
 
     // close data file
-    if (conf->file_format != NO_FILE) {
+    if (config->file_format != RL_FILE_NONE) {
         fclose(data);
     }
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+    if (config->ambient.enabled) {
         fclose(ambient_file);
     }
 

@@ -32,16 +32,17 @@
 #ifndef RL_LIB_H_
 #define RL_LIB_H_
 
+#include "calibration.h"
 #include "types.h"
 
-rl_state rl_get_status(void);
+rl_state_t rl_get_status(void);
 
-rl_state rl_read_status(struct rl_status *const status);
+rl_state_t rl_read_status(rl_status_t *const status);
 
-void rl_read_calibration(struct rl_calibration *const calibration_ptr,
-                         struct rl_conf const *const conf);
+void rl_read_calibration(rl_config_t const *const config,
+                         rl_calibration_t *const calibration);
 
-int rl_start(struct rl_conf *const conf, char const *const file_comment);
+int rl_start(rl_config_t *const config, char const *const file_comment);
 
 int rl_stop(void);
 

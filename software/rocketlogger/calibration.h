@@ -34,6 +34,31 @@
 
 #include "types.h"
 
+/// Calibration file name
+#define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
+
+/**
+ * RocketLogger calibration data structure.
+ */
+struct rl_calibration {
+    /// Time stamp of calibration run
+    uint64_t time;
+    /// Channel offsets (in bit)
+    int offsets[NUM_CHANNELS];
+    /// Channel scalings
+    double scales[NUM_CHANNELS];
+};
+
+/**
+ * Typedef for RocketLogger calibration data.
+ */
+typedef struct rl_calibration rl_calibration_t;
+
+/**
+ * Calibration data structure.
+ */
+extern rl_calibration_t calibration_data;
+
 /**
  * Reset all calibration offsets to default state (0).
  */
@@ -47,10 +72,10 @@ void calibration_reset_scales(void);
 /**
  * Load the calibration values from calibration file.
  *
- * @param conf Pointer to {@link rl_conf} struct.
+ * @param config Pointer to {@link rl_config_t} struct.
  * @return {@link FAILURE} if calibration file not existing, {@link SUCCESS}
  * otherwise.
  */
-int calibration_load(struct rl_conf const *const conf);
+int calibration_load(rl_config_t const *const config);
 
 #endif /* CALIBRATION_H_ */

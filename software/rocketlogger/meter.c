@@ -33,6 +33,7 @@
 
 #include <ncurses.h>
 
+#include "calibration.h"
 #include "pru.h"
 #include "types.h"
 #include "util.h"
@@ -61,7 +62,7 @@ void meter_init(void) {
 
 void meter_deinit(void) { endwin(); }
 
-void meter_print_buffer(struct rl_conf const *const conf,
+void meter_print_buffer(rl_config_t const *const config,
                         void const *buffer_addr) {
 
     // clear screen
@@ -74,7 +75,7 @@ void meter_print_buffer(struct rl_conf const *const conf,
     uint32_t i = 0; // currents
     uint32_t v = 0; // voltages
 
-    uint32_t num_channels = count_channels(conf->channels);
+    uint32_t num_channels = count_channels(config->channels);
 
     // data
     int64_t value = 0;
@@ -82,7 +83,7 @@ void meter_print_buffer(struct rl_conf const *const conf,
     int32_t channel_data[num_channels];
 
     // number of samples to average
-    uint32_t avg_number = conf->sample_rate / conf->update_rate;
+    uint32_t avg_number = config->sample_rate / config->update_rate;
 
     // read digital channels
     dig_data[0] = (int32_t)(*((int8_t *)(buffer_addr)));
@@ -91,7 +92,7 @@ void meter_print_buffer(struct rl_conf const *const conf,
 
     // read, average and scale values (if channel selected)
     for (j = 0; j < NUM_CHANNELS; j++) {
-        if (conf->channels[j] == CHANNEL_ENABLED) {
+        if (config->channels[j]) {
             value = 0;
             for (l = 0; l < avg_number; l++) {
                 value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
@@ -100,8 +101,8 @@ void meter_print_buffer(struct rl_conf const *const conf,
             }
             value = value / (int64_t)avg_number;
             channel_data[k] =
-                (int32_t)(((int32_t)value + calibration.offsets[j]) *
-                          calibration.scales[j]);
+                (int32_t)(((int32_t)value + calibration_data.offsets[j]) *
+                          calibration_data.scales[j]);
             k++;
         }
     }
@@ -110,7 +111,7 @@ void meter_print_buffer(struct rl_conf const *const conf,
     mvprintw(1, 28, "RocketLogger Meter");
 
     for (j = 0; j < NUM_CHANNELS; j++) {
-        if (conf->channels[j] == CHANNEL_ENABLED) {
+        if (config->channels[j]) {
             if (is_current(j)) {
                 // current
                 mvprintw(i * 2 + 5, 10, "%s:", channel_names[j]);
@@ -152,7 +153,7 @@ void meter_print_buffer(struct rl_conf const *const conf,
     }
 
     // digital inputs
-    if (conf->digital_inputs > 0) {
+    if (config->digital_input_enable) {
         mvprintw(20, 10, "Digital Inputs:");
 
         j = 0;

@@ -37,24 +37,24 @@
 /**
  * Initialize all hardware modules.
  *
- * @param conf Pointer to current {@link rl_conf} configuration
+ * @param config Pointer to current {@link rl_config_t} configuration
  */
-void hw_init(struct rl_conf *const conf);
+void hw_init(rl_config_t *const config);
 
 /**
  * Deinitialize and close all hardware modules.
  *
- * @param conf Pointer to current {@link rl_conf} configuration
+ * @param config Pointer to current {@link rl_config_t} configuration
  */
-void hw_deinit(struct rl_conf const *const conf);
+void hw_deinit(rl_config_t const *const config);
 
 /**
  * Hardware perform samling of data.
  *
- * @param conf Pointer to current {@link rl_conf} configuration
+ * @param config Pointer to current {@link rl_config_t} configuration
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int hw_sample(struct rl_conf const *const conf, char const *const file_comment);
+int hw_sample(rl_config_t const *const config, char const *const file_comment);
 
 #endif /* RL_HW_H_ */

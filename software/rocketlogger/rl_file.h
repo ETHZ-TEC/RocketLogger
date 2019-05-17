@@ -122,7 +122,7 @@ struct rl_file_lead_in {
     uint8_t mac_address[MAC_ADDRESS_LENGTH];
 
     /// Start time of the measurement in UNIX time, UTC
-    struct time_stamp start_time; // = 0;
+    rl_timestamp_t start_time; // = 0;
 
     /// Comment length
     uint32_t comment_length; // = 0;
@@ -133,6 +133,11 @@ struct rl_file_lead_in {
     /// Analog channel count
     uint16_t channel_count; // = 0;
 };
+
+/**
+ * Typedef for RocketLogger file head lead in
+ */
+typedef struct rl_file_lead_in rl_file_lead_in_t;
 
 /**
  * Channel definition for the binary file header.
@@ -156,18 +161,28 @@ struct rl_file_channel {
 };
 
 /**
+ * Typedef for RocketLogger file header channel description.
+ */
+typedef struct rl_file_channel rl_file_channel_t;
+
+/**
  * File header definition for the binary file.
  */
 struct rl_file_header {
 
     /// File header lead in (constant size)
-    struct rl_file_lead_in lead_in;
+    rl_file_lead_in_t lead_in;
 
     /// Comment field
     char const *comment; // = NULL;
 
     /// Channels definitions (binary and normal)
-    struct rl_file_channel *channel; // = NULL;
+    rl_file_channel_t *channel; // = NULL;
 };
+
+/**
+ * Typedef for RocketLogger file header.
+ */
+typedef struct rl_file_header rl_file_header_t;
 
 #endif /* RL_FILE_H_ */

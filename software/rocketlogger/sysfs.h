@@ -63,6 +63,7 @@ int sysfs_unexport(char const *const sysfs_file, int value);
  * @return 0 in case of success, -1 otherwise.
  */
 int sysfs_write_string(char const *const sysfs_file, char const *const value);
+
 /**
  * Read a string from a sysfs device file.
  *

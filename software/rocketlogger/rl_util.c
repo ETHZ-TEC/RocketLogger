@@ -30,6 +30,7 @@
  */
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,64 +50,63 @@
 
 /**
  * Print RocketLogger configuration on command line
- * @param conf Pointer to {@link rl_conf} configuration
+ * @param config Pointer to {@link rl_config_t} configuration
  */
-void rl_print_config(struct rl_conf const *const conf) {
+void rl_print_config(rl_config_t const *const config) {
 
     char file_format_names[3][8] = {"no file", "csv", "binary"};
     char data_aggregation_names[3][10] = {"none", "downsample", "average"};
 
-    if (conf->sample_rate >= KSPS) {
-        printf("  Sampling rate:    %dkSps\n", conf->sample_rate / KSPS);
+    if (config->sample_rate >= KSPS) {
+        printf("  Sampling rate:    %dkSps\n", config->sample_rate / KSPS);
     } else {
-        printf("  Sampling rate:    %dSps\n", conf->sample_rate);
+        printf("  Sampling rate:    %dSps\n", config->sample_rate);
     }
     printf("  Data aggregation: %s\n",
-           data_aggregation_names[conf->aggregation]);
+           data_aggregation_names[config->aggregation]);
 
-    printf("  Update rate:      %dHz\n", conf->update_rate);
-    if (conf->enable_web_server == 1) {
+    printf("  Update rate:      %dHz\n", config->update_rate);
+    if (config->web_interface_enable) {
         printf("  Webserver:        enabled\n");
     } else {
         printf("  Webserver:        disabled\n");
     }
-    if (conf->digital_inputs == 1) {
+    if (config->digital_input_enable) {
         printf("  Digital inputs:   enabled\n");
     } else {
         printf("  Digital inputs:   disabled\n");
     }
-    printf("  File format:      %s\n", file_format_names[conf->file_format]);
-    if (conf->file_format != NO_FILE) {
-        printf("  File name:        %s\n", conf->file_name);
+    printf("  File format:      %s\n", file_format_names[config->file_format]);
+    if (config->file_format != RL_FILE_NONE) {
+        printf("  File name:        %s\n", config->file_name);
     }
-    if (conf->max_file_size != 0) {
+    if (config->max_file_size != 0) {
         printf("  Max file size:    %lluMB\n",
-               conf->max_file_size / (uint64_t)1e6);
+               config->max_file_size / (uint64_t)1e6);
     }
-    if (conf->calibration == CAL_IGNORE) {
+    if (config->calibration_ignore) {
         printf("  Calibration:      ignored\n");
     }
     printf("  Channels:         ");
     for (int i = 0; i < NUM_CHANNELS; i++) {
-        if (conf->channels[i] == CHANNEL_ENABLED) {
+        if (config->channels[i]) {
             printf("%d,", i);
         }
     }
     printf("\n");
-    if (conf->force_high_channels[0] == CHANNEL_ENABLED ||
-        conf->force_high_channels[1] == CHANNEL_ENABLED) {
+    if (config->force_high_channels[0] || config->force_high_channels[1]) {
         printf("  Forced channels:  ");
         for (int i = 0; i < NUM_I_CHANNELS; i++) {
-            if (conf->force_high_channels[i] == CHANNEL_ENABLED) {
+            if (config->force_high_channels[i]) {
                 printf("%d,", i + 1);
             }
         }
         printf("\n");
     }
-    if (conf->sample_limit == 0) {
+    if (config->sample_limit == 0) {
         printf("  Sample limit:     no limit\n");
     } else {
-        printf("  Sample limit:     %d\n", conf->sample_limit);
+        printf("  Sample limit:     %d\n", config->sample_limit);
     }
 }
 
@@ -114,13 +114,13 @@ void rl_print_config(struct rl_conf const *const conf) {
  * Print RocketLogger status on command line
  * @param status Pointer to {@link rl_status} status
  */
-void rl_print_status(struct rl_status const *const status) {
+void rl_print_status(rl_status_t const *const status) {
 
     if (status->state == RL_OFF) {
         printf("\nRocketLogger IDLE\n\n");
     } else {
         printf("\nRocketLogger Status: RUNNING\n");
-        rl_print_config(&(status->conf));
+        rl_print_config(&(status->config));
         printf("  Samples taken:    %llu\n", status->samples_taken);
         time_t time = (time_t)status->calibration_time;
         if (time > 0) {
@@ -141,13 +141,12 @@ void rl_print_version(void) {
     printf("  compiled at %s\n", COMPILE_DATE);
 }
 
-// argument parsing
 /**
  * Get RocketLogger mode of provided command line argument
  * @param mode Pointer to argument string to parse
  * @return provided mode
  */
-rl_mode get_mode(char const *const mode) {
+rl_mode_t get_mode(char const *const mode) {
     if (strcmp(mode, "sample") == 0) {
         return LIMIT;
     } else if (strcmp(mode, "cont") == 0) {
@@ -177,7 +176,7 @@ rl_mode get_mode(char const *const mode) {
  * @param option Pointer to argument string to parse
  * @return provided option
  */
-rl_option get_option(char const *const option) {
+rl_option_t get_option(char const *const option) {
     if (strcmp(option, "f") == 0) {
         return FILE_NAME;
     } else if (strcmp(option, "r") == 0) {
@@ -217,20 +216,19 @@ rl_option get_option(char const *const option) {
  * @param value Pointer to argument string to parse
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int parse_channels(int channels[], char *value) {
+int parse_channels(bool channels[NUM_CHANNELS], char *value) {
 
     // check first channel number
     if (isdigit(value[0]) && atoi(value) >= 0 && atoi(value) <= 9) {
 
         // reset default channel selection
-        memset(channels, 0, sizeof(int) * NUM_CHANNELS);
+        memset(channels, 0, sizeof(bool) * NUM_CHANNELS);
         channels[atoi(value)] = 1;
 
     } else if (strcmp(value, "all") == 0) {
         // all channels
-        int i;
-        for (i = 0; i < NUM_CHANNELS; i++) {
-            channels[i] = CHANNEL_ENABLED;
+        for (int i = 0; i < NUM_CHANNELS; i++) {
+            channels[i] = true;
         }
     } else {
         rl_log(ERROR, "wrong channel number");
@@ -258,17 +256,16 @@ int parse_channels(int channels[], char *value) {
  * Parse input arguments of RocketLogger CLI
  * @param argc Number of input arguments
  * @param argv Input argument string
- * @param conf Pointer to {@link rl_conf} configuration to write
+ * @param config Pointer to {@link rl_config_t} configuration to write
  * @param set_as_default Is set to 1, if configuration should be set as default
  * @param file_comment Comment to write into the file header
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int parse_args(int argc, char *argv[], struct rl_conf *const conf,
-               int *const set_as_default, char **file_comment) {
-
+int parse_args(int argc, char *argv[], rl_config_t *const config,
+               bool *const set_as_default, char **const file_comment) {
     int i; // argument count variable
-    int no_file = 0;
-    *set_as_default = 0;
+    bool no_file = false;
+    *set_as_default = false;
     *file_comment = NULL;
 
     // need at least 2 arguments
@@ -278,16 +275,16 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
     }
 
     // MODE
-    conf->mode = get_mode(argv[1]);
-    if (conf->mode == NO_MODE) {
+    config->mode = get_mode(argv[1]);
+    if (config->mode == NO_MODE) {
         rl_log(ERROR, "wrong mode");
         return FAILURE;
     }
 
-    if (conf->mode == LIMIT) {
+    if (config->mode == LIMIT) {
         // parse sample limit
         if (argc > 2 && isdigit(argv[2][0]) && atoi(argv[2]) > 0) {
-            conf->sample_limit = atoi(argv[2]);
+            config->sample_limit = atoi(argv[2]);
             i = 3;
         } else {
             rl_log(ERROR, "no possible sample limit");
@@ -298,21 +295,21 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
     }
 
     // disable webserver as default for non-continuous mode
-    if (conf->mode == STATUS || conf->mode == LIMIT) {
-        conf->enable_web_server = 0;
+    if (config->mode == STATUS || config->mode == LIMIT) {
+        config->web_interface_enable = false;
     }
 
     // stop parsing for some modes
-    if (conf->mode == STOPPED || conf->mode == PRINT_DEFAULT ||
-        conf->mode == HELP) {
+    if (config->mode == STOPPED || config->mode == PRINT_DEFAULT ||
+        config->mode == HELP) {
         return SUCCESS;
     }
 
     // reset default configuration
-    if (conf->mode == SET_DEFAULT && isdigit(argv[i][0]) &&
+    if (config->mode == SET_DEFAULT && isdigit(argv[i][0]) &&
         atoi(argv[i]) == 0) {
-        reset_config(conf);
-        conf->mode = SET_DEFAULT;
+        reset_config(config);
+        config->mode = SET_DEFAULT;
         return SUCCESS;
     }
 
@@ -325,13 +322,13 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                 if (argc > ++i) {
                     if (isdigit(argv[i][0]) &&
                         atoi(argv[i]) == 0) { // no file write
-                        no_file = 1;
-                        conf->file_format = NO_FILE;
+                        no_file = true;
+                        config->file_format = RL_FILE_NONE;
                     } else if (strlen(argv[i]) >= MAX_PATH_LENGTH) {
                         rl_log(ERROR, "file name too long");
                         return FAILURE;
                     } else {
-                        strcpy(conf->file_name, argv[i]);
+                        strcpy(config->file_name, argv[i]);
                     }
                 } else {
                     rl_log(ERROR, "no file name given");
@@ -342,11 +339,11 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
             case SAMPLE_RATE:
                 if (argc > ++i && isdigit(argv[i][0])) {
                     if (argv[i][strlen(argv[i]) - 1] == 'k') {
-                        conf->sample_rate = atoi(argv[i]) * KSPS;
+                        config->sample_rate = atoi(argv[i]) * KSPS;
                     } else {
-                        conf->sample_rate = atoi(argv[i]);
+                        config->sample_rate = atoi(argv[i]);
                     }
-                    if (check_sample_rate(conf->sample_rate) ==
+                    if (check_sample_rate(config->sample_rate) ==
                         FAILURE) { // check if rate allowed
                         rl_log(ERROR, "wrong sampling rate");
                         return FAILURE;
@@ -359,8 +356,8 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
 
             case UPDATE_RATE:
                 if (argc > ++i && isdigit(argv[i][0])) {
-                    conf->update_rate = atoi(argv[i]);
-                    if (check_update_rate(conf->update_rate) ==
+                    config->update_rate = atoi(argv[i]);
+                    if (check_update_rate(config->update_rate) ==
                         FAILURE) { // check if rate allowed
                         rl_log(ERROR, "wrong update rate");
                         return FAILURE;
@@ -373,7 +370,7 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
 
             case CHANNEL:
                 if (argc > ++i) {
-                    if (parse_channels(conf->channels, argv[i]) == FAILURE) {
+                    if (parse_channels(config->channels, argv[i]) == FAILURE) {
                         return FAILURE;
                     }
                 } else {
@@ -390,11 +387,10 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                     if (isdigit(c[0]) && atoi(c) < 3 && atoi(c) >= 0) {
 
                         // reset default forced channel selection
-                        memset(conf->force_high_channels, 0,
-                               sizeof(conf->force_high_channels));
+                        memset(config->force_high_channels, 0,
+                               sizeof(config->force_high_channels));
                         if (atoi(c) > 0) {
-                            conf->force_high_channels[atoi(c) - 1] =
-                                CHANNEL_ENABLED;
+                            config->force_high_channels[atoi(c) - 1] = true;
                         }
                     } else {
                         rl_log(ERROR, "wrong force-channel number");
@@ -405,8 +401,7 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
 
                         char *c = &argv[i][2];
                         if (atoi(c) < 3 && atoi(c) > 0) {
-                            conf->force_high_channels[atoi(c) - 1] =
-                                CHANNEL_ENABLED;
+                            config->force_high_channels[atoi(c) - 1] = true;
                         } else {
                             rl_log(ERROR, "wrong force-channel number");
                             return FAILURE;
@@ -422,9 +417,9 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                 if (argc > i + 1 && isdigit(argv[i + 1][0]) &&
                     atoi(argv[i + 1]) == 0) {
                     i++;
-                    conf->enable_web_server = 0;
+                    config->web_interface_enable = false;
                 } else {
-                    conf->enable_web_server = 1;
+                    config->web_interface_enable = true;
                 }
                 break;
 
@@ -432,9 +427,9 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                 if (argc > i + 1 && isdigit(argv[i + 1][0]) &&
                     atoi(argv[i + 1]) == 0) {
                     i++;
-                    conf->digital_inputs = DIGITAL_INPUTS_DISABLED;
+                    config->digital_input_enable = false;
                 } else {
-                    conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
+                    config->digital_input_enable = true;
                 }
                 break;
 
@@ -442,24 +437,24 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                 if (argc > i + 1 && isdigit(argv[i + 1][0]) &&
                     atoi(argv[i + 1]) == 0) {
                     i++;
-                    conf->ambient.enabled = AMBIENT_DISABLED;
+                    config->ambient.enabled = false;
                 } else {
-                    conf->ambient.enabled = AMBIENT_ENABLED;
+                    config->ambient.enabled = true;
                 }
                 break;
 
             case AGGREGATION:
                 if (argc > ++i) {
                     if (isdigit(argv[i][0]) && atoi(argv[i]) == 0) {
-                        conf->aggregation = AGGREGATE_NONE;
-                    } else if (no_file == 0) {
+                        config->aggregation = RL_AGGREGATE_NONE;
+                    } else if (!no_file) {
                         // ignore format, when no file is written
                         if (strcmp(argv[i], "none") == 0) {
-                            conf->aggregation = AGGREGATE_NONE;
+                            config->aggregation = RL_AGGREGATE_NONE;
                         } else if (strcmp(argv[i], "average") == 0) {
-                            conf->aggregation = AGGREGATE_AVERAGE;
+                            config->aggregation = RL_AGGREGATE_AVERAGE;
                         } else if (strcmp(argv[i], "downsample") == 0) {
-                            conf->aggregation = AGGREGATE_DOWNSAMPLE;
+                            config->aggregation = RL_AGGREGATE_DOWNSAMPLE;
                         } else {
                             rl_log(ERROR, "wrong file format");
                             return FAILURE;
@@ -481,15 +476,15 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
                 if (argc > i + 1 && isdigit(argv[i + 1][0]) &&
                     atoi(argv[i + 1]) == 0) {
                     i++;
-                    conf->calibration = CAL_IGNORE;
+                    config->calibration_ignore = true;
                 } else {
-                    conf->calibration = CAL_USE;
+                    config->calibration_ignore = false;
                 }
                 break;
 
             case COMMENT:
                 if (argc > ++i) {
-                    if (no_file == 0) {
+                    if (!no_file) {
                         *file_comment = argv[i];
                     } else {
                         rl_log(INFO, "comment ignored");
@@ -503,11 +498,11 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
             case FILE_FORMAT:
                 if (argc > ++i) {
                     // ignore format, when no file is written
-                    if (no_file == 0) {
+                    if (!no_file) {
                         if (strcmp(argv[i], "csv") == 0) {
-                            conf->file_format = CSV;
+                            config->file_format = RL_FILE_CSV;
                         } else if (strcmp(argv[i], "bin") == 0) {
-                            conf->file_format = BIN;
+                            config->file_format = RL_FILE_BIN;
                         } else {
                             rl_log(ERROR, "wrong file format");
                             return FAILURE;
@@ -523,26 +518,26 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
 
             case FILE_SIZE:
                 if (argc > ++i && isdigit(argv[i][0])) {
-                    conf->max_file_size = atoll(argv[i]);
+                    config->max_file_size = atoll(argv[i]);
                     switch (argv[i][strlen(argv[i]) - 1]) {
                     case 'k':
                     case 'K':
-                        conf->max_file_size *= 1000;
+                        config->max_file_size *= 1000;
                         break;
                     case 'm':
                     case 'M':
-                        conf->max_file_size *= 1000000;
+                        config->max_file_size *= 1000000;
                         break;
                     case 'g':
                     case 'G':
-                        conf->max_file_size *= 1000000000;
+                        config->max_file_size *= 1000000000;
                         break;
                     default:
                         break;
                     }
                     // check file size
-                    if (conf->max_file_size != 0 &&
-                        conf->max_file_size < 5000000) {
+                    if (config->max_file_size != 0 &&
+                        config->max_file_size < 5000000) {
                         rl_log(ERROR, "too small file size (min: 5m)");
                         return FAILURE;
                     }
@@ -567,15 +562,13 @@ int parse_args(int argc, char *argv[], struct rl_conf *const conf,
     }
 
     // ambient file name
-    if (conf->file_format != NO_FILE &&
-        conf->ambient.enabled == AMBIENT_ENABLED) {
-        ambient_set_file_name(conf);
+    if (config->file_format != RL_FILE_NONE && config->ambient.enabled) {
+        ambient_set_file_name(config);
     }
 
     return SUCCESS;
 }
 
-// help
 /**
  * Print help for RocketLogger CLI on command line
  */
@@ -649,57 +642,56 @@ void print_usage(void) {
     printf("\n");
 }
 
-// configuration handling
 /**
  * Print provided configuration to command line
- * @param conf Pointer to {@link rl_conf} configuration
+ * @param config Pointer to {@link rl_config_t} configuration
  */
-void print_config(struct rl_conf const *const conf) {
+void print_config(rl_config_t const *const config) {
     printf("\nRocketLogger Configuration:\n");
-    rl_print_config(conf);
+    rl_print_config(config);
     printf("\n");
 }
 
 /**
  * Reset configuration to standard values
- * @param conf Pointer to {@link rl_conf} configuration
+ * @param config Pointer to {@link rl_config_t} configuration
  */
-void reset_config(struct rl_conf *const conf) {
-    conf->version = RL_CONF_VERSION;
-    conf->mode = CONTINUOUS;
-    conf->sample_rate = 1000;
-    conf->aggregation = AGGREGATE_DOWNSAMPLE;
-    conf->update_rate = 1;
-    conf->sample_limit = 0;
-    conf->digital_inputs = DIGITAL_INPUTS_ENABLED;
-    conf->enable_web_server = 1;
-    conf->calibration = CAL_USE;
-    conf->file_format = BIN;
-    conf->max_file_size = 1000000000;
+void reset_config(rl_config_t *const config) {
+    config->version = RL_CONF_VERSION;
+    config->mode = CONTINUOUS;
+    config->sample_rate = 1000;
+    config->aggregation = RL_AGGREGATE_DOWNSAMPLE;
+    config->update_rate = 1;
+    config->sample_limit = 0;
+    config->digital_input_enable = true;
+    config->web_interface_enable = true;
+    config->calibration_ignore = false;
+    config->file_format = RL_FILE_BIN;
+    config->max_file_size = 1000000000;
 
-    strcpy(conf->file_name, "/var/www/rocketlogger/data/data.rld");
+    strcpy(config->file_name, "/var/www/rocketlogger/data/data.rld");
 
     int i;
     for (i = 0; i < NUM_CHANNELS; i++) {
-        conf->channels[i] = CHANNEL_ENABLED;
+        config->channels[i] = true;
     }
-    memset(conf->force_high_channels, 0, sizeof(conf->force_high_channels));
+    memset(config->force_high_channels, 0, sizeof(config->force_high_channels));
 
-    conf->ambient.enabled = AMBIENT_DISABLED;
-    strcpy(conf->ambient.file_name,
+    config->ambient.enabled = false;
+    strcpy(config->ambient.file_name,
            "/var/www/rocketlogger/data/data-ambient.rld");
 }
 
 /**
  * Read default configuration from file
- * @param conf Pointer to {@link rl_conf} configuration
+ * @param config Pointer to {@link rl_config_t} configuration
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int read_default_config(struct rl_conf *const conf) {
+int read_default_config(rl_config_t *const config) {
 
     // check if config file existing
     if (open(DEFAULT_CONFIG, O_RDWR) <= 0) {
-        reset_config(conf);
+        reset_config(config);
         return UNDEFINED;
     }
 
@@ -710,31 +702,31 @@ int read_default_config(struct rl_conf *const conf) {
         return FAILURE;
     }
     // read values
-    fread(conf, sizeof(struct rl_conf), 1, file);
+    fread(config, sizeof(rl_config_t), 1, file);
 
     // close file
     fclose(file);
 
     // check version
-    if (conf->version != RL_CONF_VERSION) {
+    if (config->version != RL_CONF_VERSION) {
         rl_log(WARNING, "Old or invalid configration file. Using default "
                         "config as fallback.");
-        reset_config(conf);
+        reset_config(config);
         return UNDEFINED;
     }
 
     // reset mode
-    conf->mode = CONTINUOUS;
+    config->mode = CONTINUOUS;
 
     return SUCCESS;
 }
 
 /**
  * Write provided configuration as default to file
- * @param conf Pointer to {@link rl_conf} configuration to write
+ * @param config Pointer to {@link rl_config_t} configuration to write
  * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
  */
-int write_default_config(struct rl_conf const *const conf) {
+int write_default_config(rl_config_t const *const config) {
 
     // open config file
     FILE *file = fopen(DEFAULT_CONFIG, "w");
@@ -743,7 +735,7 @@ int write_default_config(struct rl_conf const *const conf) {
         return FAILURE;
     }
     // write values
-    fwrite(conf, sizeof(struct rl_conf), 1, file);
+    fwrite(config, sizeof(rl_config_t), 1, file);
 
     // close file
     fclose(file);

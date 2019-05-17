@@ -47,10 +47,9 @@ void meter_deinit(void);
 /**
  * Print data buffer in meter window.
  *
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param buffer_addr
+ * @param conf Pointer to current {@link rl_config_t} configuration
+ * @param buffer_addr Pointer to buffer to handle
  */
-void meter_print_buffer(struct rl_conf const *const conf,
-                        void const *virt_addr);
+void meter_print_buffer(rl_config_t const *const conf, void const *buffer_addr);
 
 #endif /* METER_H_ */
