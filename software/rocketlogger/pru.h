@@ -37,77 +37,12 @@
 
 #include "types.h"
 
-/**
- * ADS131E08S command (extended to 32 bits for PRU use) definitions
- */
-#define WAKEUP 0x02000000
-#define STANDBY 0x04000000
-#define RESET 0x06000000
-#define START 0x08000000
-#define STOP 0x0A000000
-#define OFFSETCAL 0x1A000000
-#define RDATAC 0x10000000
-#define SDATAC 0x11000000
-#define RDATA 0x12000000
-#define RREG 0x20000000
-#define WREG 0x40000000
-
-/**
- * ADS131E08S register definitions
- */
-#define ID 0x00000000
-#define CONFIG1 0x01000000
-#define CONFIG2 0x02000000
-#define CONFIG3 0x03000000
-#define CH1SET 0x05000000
-#define CH2SET 0x06000000
-#define CH3SET 0x07000000
-#define CH4SET 0x08000000
-#define CH5SET 0x09000000
-#define CH6SET 0x0A000000
-#define CH7SET 0x0B000000
-#define CH8SET 0x0C000000
-
-/**
- * ADS131E08S gain settings
- */
-#define GAIN1 0x1000
-#define GAIN2 0x2000
-#define GAIN12 0x6000
-
-/**
- * ADS131E08S sampling rates
- */
-#define K1 0x0600
-#define K2 0x0500
-#define K4 0x0400
-#define K8 0x0300
-#define K16 0x0200
-#define K32 0x0100
-#define K64 0x0000
-
-/**
- * ADS131E08S configuration default value defines
- */
-#define CONFIG1DEFAULT 0x9000
-#define CONFIG2DEFAULT 0xE000
-#define CONFIG3DEFAULT 0xE800
-
 /// PRU binary file location
 #define PRU_BINARY_FILE "/lib/firmware/rocketlogger.bin"
 /// Memory map file
 #define PRU_MMAP_SYSFS_PATH "/sys/class/uio/uio0/maps/map1/"
 
-/**
- * ADS131E08S precision defines({@link PRU_PRECISION_HIGH} for low sampling
- * rates, {@link PRU_PRECISION_LOW} for high ones)
- */
-#define PRU_PRECISION_HIGH 24
-#define PRU_PRECISION_LOW 16
-
-/**
- * Sample size definition
- */
+/// Sample size definition
 #define PRU_SAMPLE_SIZE 4
 
 /// Mask for valid bit read from PRU
@@ -118,6 +53,9 @@
 /// PRU time out in seconds
 #define PRU_TIMEOUT 3
 
+/// Number of ADC commands
+#define PRU_ADC_COMMAND_COUNT 12
+
 /**
  * PRU state definition
  */
@@ -127,13 +65,10 @@ typedef enum pru_state {
     PRU_CONTINUOUS = 0x03 //!< Continuous sampling mode
 } pru_state_t;
 
-/// Number of ADC commands
-#define PRU_ADC_COMMAND_COUNT 12
-
 /**
  * Struct for data exchange with PRU
  */
-typedef struct pru_data {
+struct pru_data {
     /// Current PRU state
     pru_state_t state;
     /// Pointer to shared buffer 0
@@ -148,9 +83,10 @@ typedef struct pru_data {
     uint32_t adc_precision;
     /// Number of ADC commands to send
     uint32_t adc_command_count;
-    /// ADC commands to send
+    /// ADC commands to send: command starts in MSB, optional bytes
+    /// (e.g. register address and values) aligned in degreasing byte order
     uint32_t adc_command[PRU_ADC_COMMAND_COUNT];
-}
+};
 
 /**
  * Typedef for PRU data exchange structure

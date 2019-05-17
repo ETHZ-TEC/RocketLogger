@@ -41,6 +41,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 
+#include "ads131e0x.h"
 #include "ambient.h"
 #include "file_handling.h"
 #include "log.h"
@@ -104,51 +105,48 @@ int pru_data_init(pru_data_t *const pru, struct rl_conf const *const conf,
     }
 
     // set sampling rate configuration
-    uint32_t pru_sample_rate;
+    uint32_t adc_sample_rate;
     switch (conf->sample_rate) {
     case 1:
-        pru_sample_rate = K1;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K1;
         break;
     case 10:
-        pru_sample_rate = K1;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K1;
         break;
     case 100:
-        pru_sample_rate = K1;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K1;
         break;
     case 1000:
-        pru_sample_rate = K1;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K1;
         break;
     case 2000:
-        pru_sample_rate = K2;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K2;
         break;
     case 4000:
-        pru_sample_rate = K4;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K4;
         break;
     case 8000:
-        pru_sample_rate = K8;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K8;
         break;
     case 16000:
-        pru_sample_rate = K16;
-        pru->adc_precision = PRU_PRECISION_HIGH;
+        adc_sample_rate = ADS131E0X_K16;
         break;
     case 32000:
-        pru_sample_rate = K32;
-        pru->adc_precision = PRU_PRECISION_LOW;
+        adc_sample_rate = ADS131E0X_K32;
         break;
     case 64000:
-        pru_sample_rate = K64;
-        pru->adc_precision = PRU_PRECISION_LOW;
+        adc_sample_rate = ADS131E0X_K64;
         break;
     default:
-        rl_log(ERROR, "invalid sample rate");
+        rl_log(ERROR, "invalid sample rate %d", conf->sample_rate);
         return FAILURE;
+    }
+
+    // set data format precision depending on sample rate
+    if (adc_sample_rate == ADS131E0X_K32 || adc_sample_rate == ADS131E0X_K64) {
+        pru->adc_precision = ADS131E0X_PRECISION_LOW;
+    } else {
+        pru->adc_precision = ADS131E0X_PRECISION_HIGH;
     }
 
     // set buffer infos
@@ -168,21 +166,35 @@ int pru_data_init(pru_data_t *const pru, struct rl_conf const *const conf,
 
     // setup commands to send for ADC initialization
     pru->adc_command_count = PRU_ADC_COMMAND_COUNT;
-    pru->adc_command[0] = RESET;
-    pru->adc_command[1] = SDATAC;
-    pru->adc_command[2] =
-        WREG | CONFIG3 | CONFIG3DEFAULT; // write configuration
-    pru->adc_command[3] = WREG | CONFIG1 | CONFIG1DEFAULT | pru_sample_rate;
 
-    // set channel gains
-    pru->adc_command[4] = WREG | CH1SET | GAIN2;  // High Range A
-    pru->adc_command[5] = WREG | CH2SET | GAIN2;  // High Range B
-    pru->adc_command[6] = WREG | CH3SET | GAIN1;  // Medium Range
-    pru->adc_command[7] = WREG | CH4SET | GAIN1;  // Low Range A
-    pru->adc_command[8] = WREG | CH5SET | GAIN1;  // Low Range B
-    pru->adc_command[9] = WREG | CH6SET | GAIN1;  // Voltage 1
-    pru->adc_command[10] = WREG | CH7SET | GAIN1; // Voltage 2
-    pru->adc_command[11] = RDATAC;                // continuous reading
+    // reset and stop sampling
+    pru->adc_command[0] = (ADS131E0X_RESET << 24);
+    pru->adc_command[1] = (ADS131E0X_SDATAC << 24);
+
+    // configure registers
+    pru->adc_command[2] = ((ADS131E0X_WREG | ADS131E0X_CONFIG3) << 24) |
+                          (ADS131E0X_CONFIG3_DEFAULT << 8);
+    pru->adc_command[3] = ((ADS131E0X_WREG | ADS131E0X_CONFIG1) << 24) |
+                          ((ADS131E0X_CONFIG1_DEFAULT | adc_sample_rate) << 8);
+
+    // set channel gains (CH1-7, CH8 unused)
+    pru->adc_command[4] = ((ADS131E0X_WREG | ADS131E0X_CH1SET) << 24) |
+                          (ADS131E0X_GAIN2 << 8); // High Range A
+    pru->adc_command[5] = ((ADS131E0X_WREG | ADS131E0X_CH2SET) << 24) |
+                          (ADS131E0X_GAIN2 << 8); // High Range B
+    pru->adc_command[6] = ((ADS131E0X_WREG | ADS131E0X_CH3SET) << 24) |
+                          (ADS131E0X_GAIN1 << 8); // Medium Range
+    pru->adc_command[7] = ((ADS131E0X_WREG | ADS131E0X_CH4SET) << 24) |
+                          (ADS131E0X_GAIN1 << 8); // Low Range A
+    pru->adc_command[8] = ((ADS131E0X_WREG | ADS131E0X_CH5SET) << 24) |
+                          (ADS131E0X_GAIN1 << 8); // Low Range B
+    pru->adc_command[9] = ((ADS131E0X_WREG | ADS131E0X_CH6SET) << 24) |
+                          (ADS131E0X_GAIN1 << 8); // Voltage 1
+    pru->adc_command[10] = ((ADS131E0X_WREG | ADS131E0X_CH7SET) << 24) |
+                           (ADS131E0X_GAIN1 << 8); // Voltage 2
+
+    // start continuous reading
+    pru->adc_command[11] = (ADS131E0X_RDATAC << 24);
 
     return SUCCESS;
 }
@@ -291,7 +303,11 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // initialize PRU data structure
     pru_data_t pru;
-    pru_data_init(&pru, conf, aggregates);
+    res = pru_data_init(&pru, conf, aggregates);
+    if (res != SUCCESS) {
+        rl_log(ERROR, "failed initializing PRU data structure");
+        return FAILURE;
+    }
 
     // check max PRU buffer size
     uint32_t pru_extmem_size = (uint32_t)prussdrv_extmem_size();
@@ -363,16 +379,17 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     __sync_synchronize();
 
     // run SPI on PRU0
-    if (prussdrv_exec_program(0, PRU_BINARY_FILE) < 0) {
-        rl_log(ERROR, "PRU code not found");
-        pru.state = PRU_OFF;
+    res = prussdrv_exec_program(0, PRU_BINARY_FILE);
+    if (res < 0) {
+        rl_log(ERROR, "Failed starting PRU, binary not found");
+        return FAILURE;
     }
 
     // wait for PRU startup event
-    if (pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
-        // timeout occurred
-        rl_log(ERROR, "PRU not responding");
-        pru.state = PRU_OFF;
+    res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
+    if (res == ETIMEDOUT) {
+        rl_log(ERROR, "Failed starting PRU, PRU not responding");
+        return FAILURE;
     }
 
     // clear event
@@ -393,7 +410,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // sampling started
     status.sampling = SAMPLING_ON;
-    write_status(&status);
+    res = write_status(&status);
+    if (res == FAILURE) {
+        rl_log(WARNING, "Failed writing status");
+    }
 
     // continuous sampling loop
     for (uint32_t i = 0;
@@ -449,7 +469,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                     file_store_header_csv(data_file, &file_header);
                 }
 
-                rl_log(INFO, "new datafile: %s", file_name);
+                rl_log(INFO, "Creating new data file: %s", file_name);
 
                 // AMBIENT FILE
                 if (conf->ambient.enabled == AMBIENT_ENABLED) {
@@ -509,8 +529,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // Wait for event completion from PRU
         // only check for timeout on first buffer (else it does not work!)
         if (i == 0) {
-            if (pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) ==
-                ETIMEDOUT) {
+            res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
+            if (res == ETIMEDOUT) {
                 // timeout occurred
                 rl_log(ERROR, "ADC not responding");
                 break;
@@ -605,7 +625,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write state
         status.samples_taken += buffer_samples_count / aggregates;
         status.buffer_number = i + 1 - buffers_lost;
-        write_status(&status);
+        res = write_status(&status);
+        if (res == FAILURE) {
+            rl_log(WARNING, "Failed writing status");
+        }
 
         // notify web clients
         /**

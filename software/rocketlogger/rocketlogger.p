@@ -56,7 +56,7 @@
 #define SAMPLE_LIMIT_OFFSET       0x10
 #define ADC_PRECISION_OFFSET      0x14
 #define ADC_COMMAND_COUNT_OFFSET  0x18
-#define ADC_COMMAND_OFFSET        0x1C
+#define ADC_COMMAND_BASE_OFFSET   0x1C
 
 // buffer data layout
 #define BUFFER_INDEX_SIZE  4
@@ -101,21 +101,21 @@
 
 
 // other registers
-#define STATUS            r0
-#define BASE_ADDRESS      r1
-#define ADC_CMD           r2
-#define PRECISION         r3
-#define LOOP_VAR          r4
-#define BUFFER_INDEX     r5
-#define BUFFER_SIZE       r6
-#define ADC_COMMAND_COUNT r7 // could be reused?
-#define MEM_POINTER       r8
-#define SAMPLES_COUNT    r9
-#define ADC_COMMAND_POS   r11 // is reused by I1M
-// channel input regs        r10-r23
-// status regs               r24-r25
-// unused regs               r26-r28 // unused
-#define WAIT_VAR          r29
+#define STATUS              r0
+#define BASE_ADDRESS        r1
+#define ADC_CMD             r2
+#define PRECISION           r3
+#define LOOP_VAR            r4
+#define BUFFER_INDEX        r5
+#define BUFFER_SIZE         r6
+#define ADC_COMMAND_COUNT   r7 // could be reused?
+#define MEM_POINTER         r8
+#define SAMPLES_COUNT       r9
+#define ADC_COMMAND_OFFSET  r11 // is reused by I1M
+// channel input regs          r10-r23
+// status regs                 r24-r25
+// unused regs                 r26-r28 // unused
+#define WAIT_VAR            r29
 
 
 // nop
@@ -304,7 +304,7 @@ MAIN:
     LBBO ADC_COMMAND_COUNT, BASE_ADDRESS, ADC_COMMAND_COUNT_OFFSET, 4
 
     // load command memory position
-    MOV ADC_COMMAND_POS, ADC_COMMAND_OFFSET
+    MOV ADC_COMMAND_OFFSET, ADC_COMMAND_BASE_OFFSET
 
 CONFIGURE:
     // check if all commands sent
@@ -312,9 +312,9 @@ CONFIGURE:
     SUB ADC_COMMAND_COUNT, ADC_COMMAND_COUNT, 1
 
     // send command
-    LBBO ADC_CMD, BASE_ADDRESS, ADC_COMMAND_POS, 4
+    LBBO ADC_CMD, BASE_ADDRESS, ADC_COMMAND_OFFSET, 4
     send_command ADC_CMD
-    ADD ADC_COMMAND_POS, ADC_COMMAND_POS, 4 // increase command position
+    ADD ADC_COMMAND_OFFSET, ADC_COMMAND_OFFSET, 4 // increase command position
 
     wait 1000 // enough time for cs toggle and command to settle
 
