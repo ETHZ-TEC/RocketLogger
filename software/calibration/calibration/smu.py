@@ -90,6 +90,10 @@ _COMMAND_WAIT_COMPLETE = '''
 waitcomplete()
 '''
 
+_COMMAND_ABORT = '''
+trigger.model.abort()
+'''
+
 _COMMAND_BEEP_START = '''
 beeper.beep(0.2, 600)
 delay(0.3)
@@ -109,13 +113,14 @@ class SMU2450():
     """
     Control the SMU2450 for the calibration source sweeps.
     """
+
     def __init__(self, hostname, port=5025):
         self.hostname = hostname
         self.port = port
-        self.socket_address = 'TCPIP::{}::{}}::SOCKET'.format(self.hostname,
-                                                              self.port)
+        self.socket_address = 'TCPIP::{}::{}::SOCKET'.format(self.hostname,
+                                                             self.port)
         self.rm = visa.ResourceManager('@py')
-    
+
     def connect(self):
         print('Connecting SMU2450 at: {}'.format(self.socket_address))
         self.device = self.rm.open_resource(self.socket_address)

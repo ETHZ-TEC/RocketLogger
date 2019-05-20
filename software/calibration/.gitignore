@@ -20,3 +20,6 @@ dist/
 
 # editor settings
 .vscode/
+
+# 3-rd party documentation
+docs/
