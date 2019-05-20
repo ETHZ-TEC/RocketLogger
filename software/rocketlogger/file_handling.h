@@ -46,8 +46,7 @@ void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
 void file_setup_header(rl_file_header_t *const file_header,
                        rl_config_t const *const config,
                        char const *const comment);
-void file_store_header_bin(FILE *data,
-                           rl_file_header_t *const file_header);
+void file_store_header_bin(FILE *data, rl_file_header_t *const file_header);
 void file_store_header_csv(FILE *data,
                            rl_file_header_t const *const file_header);
 void file_update_header_bin(FILE *data,

@@ -360,8 +360,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         ambient_setup_lead_in(&(ambient_file_header.lead_in), config);
 
         // allocate channel array
-        ambient_file_header.channel = malloc(config->ambient.sensor_count *
-                                             sizeof(rl_file_channel_t));
+        ambient_file_header.channel =
+            malloc(config->ambient.sensor_count * sizeof(rl_file_channel_t));
 
         // complete file header
         ambient_setup_header(&ambient_file_header, config, file_comment);

@@ -69,9 +69,6 @@ void meter_print_buffer(rl_config_t const *const config,
     erase();
 
     // counter variables
-    uint32_t j = 0;
-    uint32_t k = 0;
-    uint32_t l = 0;
     uint32_t i = 0; // currents
     uint32_t v = 0; // voltages
 
@@ -91,10 +88,11 @@ void meter_print_buffer(rl_config_t const *const config,
     buffer_addr += PRU_DIG_SIZE;
 
     // read, average and scale values (if channel selected)
-    for (j = 0; j < NUM_CHANNELS; j++) {
+    int k = 0;
+    for (int j = 0; j < NUM_CHANNELS; j++) {
         if (config->channels[j]) {
             value = 0;
-            for (l = 0; l < avg_number; l++) {
+            for (uint32_t l = 0; l < avg_number; l++) {
                 value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
                                        l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
                                             PRU_DIG_SIZE)));
@@ -110,7 +108,7 @@ void meter_print_buffer(rl_config_t const *const config,
     // display values
     mvprintw(1, 28, "RocketLogger Meter");
 
-    for (j = 0; j < NUM_CHANNELS; j++) {
+    for (int j = 0; j < NUM_CHANNELS; j++) {
         if (config->channels[j]) {
             if (is_current(j)) {
                 // current
@@ -156,13 +154,12 @@ void meter_print_buffer(rl_config_t const *const config,
     if (config->digital_input_enable) {
         mvprintw(20, 10, "Digital Inputs:");
 
-        j = 0;
-        for (; j < 3; j++) {
+        for (int j = 0; j < 3; j++) {
             mvprintw(20 + 2 * j, 30, "%s:", digital_input_names[j]);
             mvprintw(20 + 2 * j, 38, "%d",
                      (dig_data[0] & digital_input_bits[j]) > 0);
         }
-        for (; j < 6; j++) {
+        for (int j = 0; j < 6; j++) {
             mvprintw(20 + 2 * (j - 3), 50, "%s:", digital_input_names[j]);
             mvprintw(20 + 2 * (j - 3), 58, "%d",
                      (dig_data[1] & digital_input_bits[j]) > 0);

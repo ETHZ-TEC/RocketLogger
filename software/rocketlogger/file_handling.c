@@ -233,8 +233,7 @@ void file_store_header_bin(FILE *data_file,
         total_channel_count * sizeof(rl_file_channel_t);
 
     // write lead-in
-    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1,
-           data_file);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
 
     // write comment, add zero bytes for proper header alignment if necessary
     fwrite(file_header->comment, comment_length, 1, data_file);
@@ -244,8 +243,8 @@ void file_store_header_bin(FILE *data_file,
     }
 
     // write channel information
-    fwrite(file_header->channel, sizeof(rl_file_channel_t),
-           total_channel_count, data_file);
+    fwrite(file_header->channel, sizeof(rl_file_channel_t), total_channel_count,
+           data_file);
     fflush(data_file);
 }
 
@@ -332,8 +331,7 @@ void file_update_header_bin(FILE *data_file,
 
     // seek to beginning and rewrite lead_in
     rewind(data_file);
-    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1,
-           data_file);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
     fflush(data_file);
     fseek(data_file, 0, SEEK_END);
 }

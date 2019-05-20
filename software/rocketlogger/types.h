@@ -136,7 +136,6 @@
 /// No flag
 #define NO_FLAG 0
 
-
 /**
  * RocketLogger execution mode definition
  */

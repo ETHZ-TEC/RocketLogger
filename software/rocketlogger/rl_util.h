@@ -69,7 +69,7 @@ void rl_print_version(void);
 
 rl_mode_t get_mode(char const *const mode);
 rl_option_t get_option(char const *const option);
-int parse_args(int argc, char * argv[], rl_config_t *const config,
+int parse_args(int argc, char *argv[], rl_config_t *const config,
                bool *const set_as_default, char **const file_comment);
 
 void print_usage(void);

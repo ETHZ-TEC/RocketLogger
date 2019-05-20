@@ -202,8 +202,7 @@ int sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]) {
  * @param sensors_available List of available (previously initialized) sensors
  */
 void sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]) {
-    int i;
-    for (i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (sensors_available[i] >= 0) {
             sensor_registry[i].deinit(sensor_registry[i].identifier);
         }

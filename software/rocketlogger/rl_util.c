@@ -236,8 +236,7 @@ int parse_channels(bool channels[NUM_CHANNELS], char *value) {
     }
 
     // loop
-    int j;
-    for (j = 1; j < 2 * (NUM_CHANNELS - 1) && value[j] == ','; j = j + 2) {
+    for (int j = 1; j < 2 * (NUM_CHANNELS - 1) && value[j] == ','; j = j + 2) {
 
         // check channel number
         char *c = &value[j + 1];
@@ -671,8 +670,7 @@ void reset_config(rl_config_t *const config) {
 
     strcpy(config->file_name, "/var/www/rocketlogger/data/data.rld");
 
-    int i;
-    for (i = 0; i < NUM_CHANNELS; i++) {
+    for (int i = 0; i < NUM_CHANNELS; i++) {
         config->channels[i] = true;
     }
     memset(config->force_high_channels, 0, sizeof(config->force_high_channels));

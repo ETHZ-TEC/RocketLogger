@@ -58,10 +58,8 @@ void hw_init(rl_config_t *const config) {
     // force high range
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
     gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_FHR1,
-                   (config->force_high_channels[0] ? 0 : 1));
-    gpio_set_value(GPIO_FHR2,
-                   (config->force_high_channels[1] ? 0 : 1));
+    gpio_set_value(GPIO_FHR1, (config->force_high_channels[0] ? 0 : 1));
+    gpio_set_value(GPIO_FHR2, (config->force_high_channels[1] ? 0 : 1));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
@@ -121,7 +119,8 @@ int hw_sample(rl_config_t const *const config, char const *const file_comment) {
     int ret;
     // open data file
     FILE *data = (FILE *)-1;
-    if (config->file_format != RL_FILE_NONE) { // open file only if storing requested
+    if (config->file_format !=
+        RL_FILE_NONE) { // open file only if storing requested
         data = fopen64(config->file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open data-file");
