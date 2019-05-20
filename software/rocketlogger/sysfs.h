@@ -40,14 +40,12 @@
  *
  * @param sysfs_file The sysfs file used to export
  * @param value The resource number of the device to export
- * @return 0 in case of success, -1 otherwise.
+ * @return 0 in case of success, -1 otherwise
  */
 int sysfs_export(char const *const sysfs_file, int value);
 
 /**
  * Unexport (deactivate) a sysfs device.
- *
- * If the ressource is deactivated already, it is not considered an error.
  *
  * @param sysfs_file The sysfs file used to unexport
  * @param value The resource number of the device to unexport
@@ -56,11 +54,49 @@ int sysfs_export(char const *const sysfs_file, int value);
 int sysfs_unexport(char const *const sysfs_file, int value);
 
 /**
+ * Check wether a sysfs device is exported and fully accessible.
+ *
+ * @param sysfs_path The sysfs device path to check
+ * @return 1 if device is exported, 0 if device is not exported, -1 on failure
+ */
+int sysfs_is_exported(char const *const sysfs_path);
+
+/**
+ * Export (activate) a sysfs device if it is not exported already.
+ *
+ * Returns success immediately if the sysfs device is exported already,
+ * otherwise calls and returns {@link sysfs_export} result.
+ *
+ * @param sysfs_path The sysfs device path to check
+ * @param sysfs_export_file The sysfs file to use to export
+ * @param value The resource number of the device to export
+ * @return 0 if device successfully exported, 1 if device was exported already,
+ * -1 on failure
+ */
+int sysfs_export_unexported(char const *const sysfs_path,
+                            char const *const sysfs_export_file, int value);
+
+/**
+ * Unexport (deactivate) a sysfs device if it is exported (active).
+ *
+ * Returns success immediately if the sysfs device is not exported, otherwise
+ * calls and returns {@link sysfs_unexport} result.
+ *
+ * @param sysfs_path The sysfs device path to check
+ * @param sysfs_unexport_file The sysfs file to use to unexport
+ * @param value The resource number of the device to unexport
+ * @return 0 if device successfully unexported, 1 if device was not exported,
+ * -1 on failure
+ */
+int sysfs_unexport_exported(char const *const sysfs_path,
+                            char const *const sysfs_unexport_file, int value);
+
+/**
  * Write a string to a sysfs device file.
  *
  * @param sysfs_file The sysfs file to write to
  * @param value The value to write to write
- * @return 0 in case of success, -1 otherwise.
+ * @return 0 in case of success, -1 otherwise
  */
 int sysfs_write_string(char const *const sysfs_file, char const *const value);
 
@@ -68,9 +104,9 @@ int sysfs_write_string(char const *const sysfs_file, char const *const value);
  * Read a string from a sysfs device file.
  *
  * @param sysfs_file The sysfs file to read from
- * @param value Pointer to the character array to write to.
- * @param length Max length to the string to read.
- * @return Read string length in case of success, -1 on failure.
+ * @param value Pointer to the character array to write to
+ * @param length Max length to the string to read
+ * @return Read string length in case of success, -1 on failure
  */
 int sysfs_read_string(char const *const sysfs_file, char *const value,
                       int length);
@@ -80,7 +116,7 @@ int sysfs_read_string(char const *const sysfs_file, char *const value,
  *
  * @param sysfs_file The sysfs file to write to
  * @param value The value to write to write
- * @return 0 in case of success, -1 otherwise.
+ * @return 0 in case of success, -1 otherwise
  */
 int sysfs_write_int(char const *const sysfs_file, int value);
 
@@ -88,8 +124,8 @@ int sysfs_write_int(char const *const sysfs_file, int value);
  * Write an integer to a sysfs device file.
  *
  * @param sysfs_file The sysfs file to read from
- * @param value Pointer to the integer variable to write to.
- * @return 0 in case of success, -1 otherwise.
+ * @param value Pointer to the integer variable to write to
+ * @return 0 in case of success, -1 otherwise
  */
 int sysfs_read_int(char const *const sysfs_file, int *const value);
 

@@ -52,16 +52,54 @@ int sysfs_export(char const *const sysfs_file, int value) {
 }
 
 int sysfs_unexport(char const *const sysfs_file, int value) {
-    int ret = sysfs_write_int(sysfs_file, value);
+    return sysfs_write_int(sysfs_file, value);
+}
 
-    // do not treat EBUSY as error
+int sysfs_is_exported(char const *const sysfs_path) {
+    int ret = access(sysfs_path, R_OK | W_OK | X_OK);
+    if (ret == 0) {
+        return 1;
+    }
     if (ret < 0) {
-        if (errno == EBUSY) {
+        // inexistent file is unexported
+        if (errno == ENOENT) {
             return 0;
         }
         return -1;
     }
-    return -0;
+
+    // treat insufficient permissions as failure
+    return -1;
+}
+
+int sysfs_export_unexported(char const *const sysfs_path,
+                            char const *const sysfs_export_file, int value) {
+    int exported = sysfs_is_exported(sysfs_path);
+    if (exported < 0) {
+        return -1;
+    }
+
+    // if exported return immediately, otherwise export
+    if (exported == 1) {
+        return 1;
+    } else {
+        return sysfs_export(sysfs_export_file, value);
+    }
+}
+
+int sysfs_unexport_exported(char const *const sysfs_path,
+                            char const *const sysfs_unexport_file, int value) {
+    int exported = sysfs_is_exported(sysfs_path);
+    if (exported < 0) {
+        return -1;
+    }
+
+    // if not exported return immediately, otherwise unexport
+    if (exported == 0) {
+        return 1;
+    } else {
+        return sysfs_unexport(sysfs_unexport_file, value);
+    }
 }
 
 int sysfs_write_string(char const *const sysfs_file, char const *const value) {

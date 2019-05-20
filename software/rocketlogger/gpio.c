@@ -47,16 +47,18 @@
 
 int gpio_init(int gpio_number, gpio_mode_t mode) {
     int ret = 0;
+    char sysfs_file[MAX_PATH_LENGTH];
 
-    // export sysfs GPIO module
-    ret = sysfs_export((GPIO_SYSFS_PATH "export"), gpio_number);
+    // export unexported GPIO
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
+    ret = sysfs_export_unexported(sysfs_file, (GPIO_SYSFS_PATH "export"),
+                                  gpio_number);
     if (ret < 0) {
         rl_log(ERROR, "could not export GPIO pin #%d", gpio_number);
         return FAILURE;
     }
 
     // configure GPIO direction
-    char sysfs_file[MAX_PATH_LENGTH];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/direction"), gpio_number);
     if (mode == GPIO_MODE_IN) {
         ret = sysfs_write_string(sysfs_file, "in");
@@ -76,6 +78,19 @@ int gpio_deinit(int gpio_number) {
     int ret = sysfs_unexport((GPIO_SYSFS_PATH "unexport"), gpio_number);
     if (ret < 0) {
         rl_log(ERROR, "could not unexport GPIO pin #%d", gpio_number);
+        return FAILURE;
+    }
+
+    return SUCCESS;
+}
+
+int gpio_reset(int gpio_number) {
+    char sysfs_file[MAX_PATH_LENGTH];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
+    int ret = sysfs_unexport_exported(sysfs_file, (GPIO_SYSFS_PATH "unexport"),
+                                      gpio_number);
+    if (ret < 0) {
+        rl_log(ERROR, "could not reset GPIO pin #%d", gpio_number);
         return FAILURE;
     }
 

@@ -132,12 +132,12 @@ void button_interrupt_handler(int value) {
  */
 int main(void) {
     // reset all GPIOs to known reset state
-    gpio_deinit(GPIO_POWER);
-    gpio_deinit(GPIO_BUTTON);
-    gpio_deinit(GPIO_FHR1);
-    gpio_deinit(GPIO_FHR2);
-    gpio_deinit(GPIO_LED_STATUS);
-    gpio_deinit(GPIO_LED_ERROR);
+    gpio_reset(GPIO_POWER);
+    gpio_reset(GPIO_BUTTON);
+    gpio_reset(GPIO_FHR1);
+    gpio_reset(GPIO_FHR2);
+    gpio_reset(GPIO_LED_STATUS);
+    gpio_reset(GPIO_LED_ERROR);
 
     sleep(1);
 

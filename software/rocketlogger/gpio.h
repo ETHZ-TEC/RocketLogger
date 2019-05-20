@@ -84,12 +84,22 @@ int gpio_init(int gpio_number, gpio_mode_t mode);
 /**
  * Denitialize a GPIO.
  *
- * Unexport sysfs GPIO resource.
+ * Unexport an exported sysfs GPIO resource.
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
 int gpio_deinit(int gpio_number);
+
+/**
+ * Reset a GPIO.
+ *
+ * Unexport sysfs GPIO resource if not exported.
+ *
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ */
+int gpio_reset(int gpio_number);
 
 /**
  * Set the GPIO value.

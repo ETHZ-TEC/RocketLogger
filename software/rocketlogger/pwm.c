@@ -52,17 +52,20 @@ volatile uint8_t *pwm1_mem = NULL;
 
 int pwm_init(void) {
     // export and enable PWM peripherals via sysfs interface
-    sysfs_export(PWM0_SYSFS_PATH "export", EPWM0A_SYSFS_INDEX);
-    sysfs_export(PWM1_SYSFS_PATH "export", EPWM1A_SYSFS_INDEX);
-    sysfs_export(PWM1_SYSFS_PATH "export", EPWM1B_SYSFS_INDEX);
+    sysfs_export_unexported((EPWM0A_SYSFS_PATH), (PWM0_SYSFS_PATH "export"),
+                            EPWM0A_SYSFS_INDEX);
+    sysfs_export_unexported((EPWM1A_SYSFS_PATH), (PWM1_SYSFS_PATH "export"),
+                            EPWM1A_SYSFS_INDEX);
+    sysfs_export_unexported((EPWM1B_SYSFS_PATH), (PWM1_SYSFS_PATH "export"),
+                            EPWM1B_SYSFS_INDEX);
 
-    sysfs_write_int(EPWM0A_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
-    sysfs_write_int(EPWM1A_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
-    sysfs_write_int(EPWM1B_SYSFS_PATH "period", PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM0A_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM1A_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM1B_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
 
-    sysfs_write_int(EPWM0A_SYSFS_PATH "enable", 1);
-    sysfs_write_int(EPWM1A_SYSFS_PATH "enable", 1);
-    sysfs_write_int(EPWM1B_SYSFS_PATH "enable", 1);
+    sysfs_write_int((EPWM0A_SYSFS_PATH "enable"), 1);
+    sysfs_write_int((EPWM1A_SYSFS_PATH "enable"), 1);
+    sysfs_write_int((EPWM1B_SYSFS_PATH "enable"), 1);
 
     // open /dev/mem for memory mapping
     mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -110,13 +113,13 @@ void pwm_deinit(void) {
     }
 
     // disable and unexport peripheral via sysfs interface
-    sysfs_write_int(EPWM0A_SYSFS_PATH "enable", 0);
-    sysfs_write_int(EPWM1A_SYSFS_PATH "enable", 0);
-    sysfs_write_int(EPWM1B_SYSFS_PATH "enable", 0);
+    sysfs_write_int((EPWM0A_SYSFS_PATH "enable"), 0);
+    sysfs_write_int((EPWM1A_SYSFS_PATH "enable"), 0);
+    sysfs_write_int((EPWM1B_SYSFS_PATH "enable"), 0);
 
-    sysfs_unexport(PWM0_SYSFS_PATH "unexport", EPWM0A_SYSFS_INDEX);
-    sysfs_unexport(PWM1_SYSFS_PATH "unexport", EPWM1A_SYSFS_INDEX);
-    sysfs_unexport(PWM1_SYSFS_PATH "unexport", EPWM1B_SYSFS_INDEX);
+    sysfs_unexport((PWM0_SYSFS_PATH "unexport"), EPWM0A_SYSFS_INDEX);
+    sysfs_unexport((PWM1_SYSFS_PATH "unexport"), EPWM1A_SYSFS_INDEX);
+    sysfs_unexport((PWM1_SYSFS_PATH "unexport"), EPWM1B_SYSFS_INDEX);
 }
 
 void pwm_setup_range_reset(uint32_t sample_rate) {
