@@ -59,9 +59,9 @@ void hw_init(rl_config_t *const config) {
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
     gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
     gpio_set_value(GPIO_FHR1,
-                   (config->force_high_channels[0]));
+                   (config->force_high_channels[0] ? 0 : 1));
     gpio_set_value(GPIO_FHR2,
-                   (config->force_high_channels[1]));
+                   (config->force_high_channels[1] ? 0 : 1));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
