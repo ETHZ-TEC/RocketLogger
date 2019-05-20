@@ -35,9 +35,6 @@ import os.path
 from unittest import TestCase
 
 import numpy as np
-# select matplotlib backend not requiring dispaly _before_ importing pyplot
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 import rocketlogger.data as rld
 
@@ -46,14 +43,14 @@ from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
 
 
 _TEST_FILE_DIR = 'data'
-_FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-full.rld')
-_SINGLE_BLOCK_FILE = os.path.join(_TEST_FILE_DIR, 'test-single-block.rld')
-_ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-analog-only.rld')
-_HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-high-current.rld')
-_STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-steps.rld')
-_INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-unsupported.rld')
-_SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-v3-only.rld')
-_SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test-split.rld')
+_FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_full.rld')
+_SINGLE_BLOCK_FILE = os.path.join(_TEST_FILE_DIR, 'test_single_block.rld')
+_ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_analog_only.rld')
+_HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_high_current.rld')
+_STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_steps.rld')
+_INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_unsupported.rld')
+_SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_v3_only.rld')
+_SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_split.rld')
 
 
 class TestDecimation(TestCase):
