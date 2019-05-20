@@ -29,53 +29,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CALIBRATION_H_
-#define CALIBRATION_H_
-
-#include "types.h"
-
-/// Calibration file name
-#define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
+#ifndef ADS131E0X_H_
+#define ADS131E0X_H_
 
 /**
- * RocketLogger calibration data structure.
+ * ADS131E0x ADC command (extended to 32 bits for PRU use) definitions
  */
-struct rl_calibration {
-    /// Time stamp of calibration run
-    uint64_t time;
-    /// Channel offsets (in bit)
-    int offsets[NUM_CHANNELS];
-    /// Channel scalings
-    double scales[NUM_CHANNELS];
-};
+#define ADS131E0X_WAKEUP 0x02
+#define ADS131E0X_STANDBY 0x04
+#define ADS131E0X_RESET 0x06
+#define ADS131E0X_START 0x08
+#define ADS131E0X_STOP 0x0A
+#define ADS131E0X_OFFSETCAL 0x1A
+#define ADS131E0X_RDATAC 0x10
+#define ADS131E0X_SDATAC 0x11
+#define ADS131E0X_RDATA 0x12
+#define ADS131E0X_RREG 0x20
+#define ADS131E0X_WREG 0x40
 
 /**
- * Typedef for RocketLogger calibration data.
+ * ADS131E0x ADC register definitions
  */
-typedef struct rl_calibration rl_calibration_t;
+#define ADS131E0X_ID 0x00
+#define ADS131E0X_CONFIG1 0x01
+#define ADS131E0X_CONFIG2 0x02
+#define ADS131E0X_CONFIG3 0x03
+#define ADS131E0X_CH1SET 0x05
+#define ADS131E0X_CH2SET 0x06
+#define ADS131E0X_CH3SET 0x07
+#define ADS131E0X_CH4SET 0x08
+#define ADS131E0X_CH5SET 0x09
+#define ADS131E0X_CH6SET 0x0A
+#define ADS131E0X_CH7SET 0x0B
+#define ADS131E0X_CH8SET 0x0C
 
 /**
- * Calibration data structure.
+ * ADS131E0x ADC gain settings
  */
-extern rl_calibration_t calibration_data;
+#define ADS131E0X_GAIN1 0x10
+#define ADS131E0X_GAIN2 0x20
+#define ADS131E0X_GAIN12 0x60
 
 /**
- * Reset all calibration offsets to default state (0).
+ * ADS131E0x ADC sampling rates
  */
-void calibration_reset_offsets(void);
+#define ADS131E0X_K1 0x06
+#define ADS131E0X_K2 0x05
+#define ADS131E0X_K4 0x04
+#define ADS131E0X_K8 0x03
+#define ADS131E0X_K16 0x02
+#define ADS131E0X_K32 0x01
+#define ADS131E0X_K64 0x00
 
 /**
- * Reset all calibration scales to default state (1).
+ * ADS131E0x precision defines ({@link ADS131E0X_PRECISION_HIGH} for low
+ * sampling rates, {@link ADS131E0X_PRECISION_LOW} for high ones)
  */
-void calibration_reset_scales(void);
+#define ADS131E0X_PRECISION_HIGH 24
+#define ADS131E0X_PRECISION_LOW 16
 
 /**
- * Load the calibration values from calibration file.
- *
- * @param config Pointer to {@link rl_config_t} struct.
- * @return {@link FAILURE} if calibration file not existing, {@link SUCCESS}
- * otherwise.
+ * ADS131E0x ADC configuration default value defines
  */
-int calibration_load(rl_config_t const *const config);
+#define ADS131E0X_CONFIG1_DEFAULT 0x90
+#define ADS131E0X_CONFIG2_DEFAULT 0xE0
+#define ADS131E0X_CONFIG3_DEFAULT 0xE8
 
-#endif /* CALIBRATION_H_ */
+#endif /* ADS131E0X_H_ */

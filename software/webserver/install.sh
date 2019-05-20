@@ -1,7 +1,7 @@
 #!/bin/bash
 # RocketLogger webserver setup script
 #
-# Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+# Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -30,48 +30,73 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-WEB_ROOT="/var/www"
+WEB_ROOT="/var/www/rocketlogger"
 WEB_SOURCE=`pwd`"/data"
+WEB_AUTH_FILE=/home/rocketlogger/.htpasswd
 
-# disable apache web server
-rm -f /etc/init.d/apache2
+## package install
 
-# disable bonescript stuff
-systemctl disable bonescript.service
-systemctl disable bonescript.socket
-systemctl disable bonescript-autorun.service
+echo "> Installing web interface dependencies"
+sudo apt install --assume-yes \
+  apache2                     \
+  lighttpd                    \
+  php-cgi
+
+
+## system configuration
+echo "> Configuring system web services"
+
+# disable other web services, enable lighttp
+sudo systemctl stop apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+sudo systemctl disable apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+sudo systemctl enable lighttpd.service
+sudo systemctl start lighttpd.service
 
 # copy lighttpd server configuration
-cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
+sudo cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
+
+
+## webserver configuration
+echo "> Deploying RocketLogger web interface"
 
 # copy webserver data
-mkdir -p ${WEB_ROOT}
-rm -f ${WEB_ROOT}/index.html
-rsync -aP ${WEB_SOURCE}/ ${WEB_ROOT}/
+sudo mkdir -p ${WEB_ROOT}
+sudo rm -f ${WEB_ROOT}/index.html
+sudo rsync -aP ${WEB_SOURCE}/ ${WEB_ROOT}/
 
-# create data and log dirs
-mkdir -p ${WEB_ROOT}/data ${WEB_ROOT}/log
-#rm -rf /var/www/*
-#cp -rf data/* /var/www/
-#mkdir -p /var/www/data /var/www/log
+# create default data and log dirs
+sudo mkdir -p ${WEB_ROOT}/data ${WEB_ROOT}/log
 
 # download and copy dependencies (bootstrap, jquery, flot)
-mkdir -p ${WEB_ROOT}/css/ ${WEB_ROOT}/js/vendor/
+sudo mkdir -p ${WEB_ROOT}/css/ ${WEB_ROOT}/js/vendor/
 
 wget -N https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-dist.zip
 wget -N https://code.jquery.com/jquery-3.1.1.min.js
 wget -N http://www.flotcharts.org/downloads/flot-0.8.3.zip
 
 unzip -o bootstrap-3.3.7-dist.zip
-cp -rf bootstrap-3.3.7-dist/fonts /var/www/
-cp -f bootstrap-3.3.7-dist/css/*.min.css /var/www/css/
-cp -f bootstrap-3.3.7-dist/js/*.min.js /var/www/js/vendor/
+sudo cp -rf bootstrap-3.3.7-dist/fonts ${WEB_ROOT}/
+sudo cp -f bootstrap-3.3.7-dist/css/*.min.css ${WEB_ROOT}/css/
+sudo cp -f bootstrap-3.3.7-dist/js/*.min.js ${WEB_ROOT}/js/vendor/
 rm -r bootstrap-*-dist
 
-cp -f jquery-3.1.1.min.js /var/www/js/vendor/
+sudo cp -f jquery-3.1.1.min.js ${WEB_ROOT}/js/vendor/
 rm jquery-3.1.1.min.js
 
 unzip -o flot-0.8.3.zip
-cp -f flot/jquery.flot*.min.js /var/www/js/vendor/
+sudo cp -f flot/jquery.flot*.min.js ${WEB_ROOT}/js/vendor/
 rm -r flot
 
+# create web interface login if not existing
+if [ -f $WEB_AUTH_FILE ]; then
+  echo "> Found existing web interface authentication config, skipping setup"
+else
+  echo "> Configure the web interface authentication for user 'rocketlogger':"
+  htpasswd -c $WEB_AUTH_FILE rocketlogger
+fi
+
+
+# restart webserver to reload configuration
+sudo systemctl restart lighttpd.service
+
+echo "> Done installing RocketLogger web interface. Reboot as required."

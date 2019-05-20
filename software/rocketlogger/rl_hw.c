@@ -19,98 +19,94 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
+#include "calibration.h"
+#include "gpio.h"
+#include "log.h"
+#include "pru.h"
+#include "pwm.h"
 #include "sensor/sensor.h"
+#include "types.h"
+#include "util.h"
 
 #include "rl_hw.h"
 
-/**
- * Initiate all hardware modules
- * @param conf Pointer to current {@link rl_conf} configuration
- */
-void hw_init(struct rl_conf* conf) {
+void hw_init(rl_config_t *const config) {
 
-    // PWM
-    pwm_setup();
-    if (conf->sample_rate < MIN_ADC_RATE) {
-        pwm_setup_range_clock(MIN_ADC_RATE);
+    // PWM configuration
+    pwm_init();
+
+    if (config->sample_rate < MIN_ADC_RATE) {
+        pwm_setup_range_reset(MIN_ADC_RATE);
     } else {
-        pwm_setup_range_clock(conf->sample_rate);
+        pwm_setup_range_reset(config->sample_rate);
     }
     pwm_setup_adc_clock();
 
-    // GPIO
+    // GPIO configuration
     // force high range
-    gpio_export(FHR1_GPIO);
-    gpio_export(FHR2_GPIO);
-    gpio_dir(FHR1_GPIO, OUT);
-    gpio_dir(FHR2_GPIO, OUT);
-    gpio_set_value(FHR1_GPIO,
-                   (conf->force_high_channels[0] == CHANNEL_DISABLED));
-    gpio_set_value(FHR2_GPIO,
-                   (conf->force_high_channels[1] == CHANNEL_DISABLED));
+    gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
+    gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
+    gpio_set_value(GPIO_FHR1, (config->force_high_channels[0] ? 0 : 1));
+    gpio_set_value(GPIO_FHR2, (config->force_high_channels[1] ? 0 : 1));
     // leds
-    gpio_export(LED_STATUS_GPIO);
-    gpio_export(LED_ERROR_GPIO);
-    gpio_dir(LED_STATUS_GPIO, OUT);
-    gpio_dir(LED_ERROR_GPIO, OUT);
-    gpio_set_value(LED_STATUS_GPIO, 1);
-    gpio_set_value(LED_ERROR_GPIO, 0);
+    gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
+    gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
+    gpio_set_value(GPIO_LED_STATUS, 1);
+    gpio_set_value(GPIO_LED_ERROR, 0);
 
     // PRU
     pru_init();
 
     // SENSORS
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        Sensors_initSharedBus();
-        conf->ambient.sensor_count =
-            Sensors_scan(conf->ambient.available_sensors);
+    if (config->ambient.enabled) {
+        sensors_init();
+        config->ambient.sensor_count =
+            sensors_scan(config->ambient.available_sensors);
     }
 
     // STATE
     status.state = RL_RUNNING;
-    status.sampling = SAMPLING_OFF;
+    status.sampling = RL_SAMPLING_OFF;
     status.samples_taken = 0;
     status.buffer_number = 0;
-    status.conf = *conf;
+    status.config = *config;
     write_status(&status);
 }
 
-/**
- * Close all hardware modules
- * @param conf Pointer to current {@link rl_conf} configuration
- */
-void hw_close(struct rl_conf* conf) {
+void hw_deinit(rl_config_t const *const config) {
 
     // PWM
-    pwm_close();
+    pwm_deinit();
 
     // GPIO
-    // force high range
-    gpio_unexport(FHR1_GPIO);
-    gpio_unexport(FHR2_GPIO);
-    // leds (not unexport!)
-    gpio_set_value(LED_STATUS_GPIO, 0);
+    // deinitialize force high range GPIOS
+    gpio_deinit(GPIO_FHR1);
+    gpio_deinit(GPIO_FHR2);
+    // reset LED (do not unexport)
+    gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
-    if (conf->mode != LIMIT) {
+    if (config->mode != LIMIT) {
         pru_stop();
     }
-    pru_close();
+    pru_deinit();
 
     // SENSORS
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        Sensors_close(conf->ambient.available_sensors);
-        Sensors_closeSharedBus();
+    if (config->ambient.enabled) {
+        sensors_close(config->ambient.available_sensors);
+        sensors_deinit();
     }
 
     // RESET SHARED MEM
@@ -119,18 +115,13 @@ void hw_close(struct rl_conf* conf) {
     write_status(&status);
 }
 
-/**
- * Hardware sampling function
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int hw_sample(struct rl_conf* conf, char* file_comment) {
-
+int hw_sample(rl_config_t const *const config, char const *const file_comment) {
+    int ret;
     // open data file
-    FILE* data = (FILE*)-1;
-    if (conf->file_format != NO_FILE) { // open file only if storing requested
-        data = fopen64(conf->file_name, "w+");
+    FILE *data = (FILE *)-1;
+    if (config->file_format !=
+        RL_FILE_NONE) { // open file only if storing requested
+        data = fopen64(config->file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open data-file");
             return FAILURE;
@@ -138,9 +129,9 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     }
 
     // open ambient file
-    FILE* ambient_file = (FILE*)-1;
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-        ambient_file = fopen64(conf->ambient.file_name, "w+");
+    FILE *ambient_file = (FILE *)-1;
+    if (config->ambient.enabled) {
+        ambient_file = fopen64(config->ambient.file_name, "w+");
         if (data == NULL) {
             rl_log(ERROR, "failed to open ambient-file");
             return FAILURE;
@@ -148,21 +139,23 @@ int hw_sample(struct rl_conf* conf, char* file_comment) {
     }
 
     // read calibration
-    if (read_calibration(conf) == FAILURE) {
+    ret = calibration_load(config);
+    if (ret != SUCCESS) {
         rl_log(WARNING, "no calibration file, returning uncalibrated values");
     }
 
     // SAMPLE
-    if (pru_sample(data, ambient_file, conf, file_comment) == FAILURE) {
-        // error ocurred
-        gpio_set_value(LED_ERROR_GPIO, 1);
+    ret = pru_sample(data, ambient_file, config, file_comment);
+    if (ret != SUCCESS) {
+        // error occurred
+        gpio_set_value(GPIO_LED_ERROR, 1);
     }
 
     // close data file
-    if (conf->file_format != NO_FILE) {
+    if (config->file_format != RL_FILE_NONE) {
         fclose(data);
     }
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+    if (config->ambient.enabled) {
         fclose(ambient_file);
     }
 

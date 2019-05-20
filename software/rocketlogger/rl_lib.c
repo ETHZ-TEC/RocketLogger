@@ -19,47 +19,46 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <stdbool.h>
+#include <string.h>
+
+#include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "calibration.h"
+#include "lib_util.h"
+#include "log.h"
+#include "rl_hw.h"
+#include "util.h"
 
 #include "rl_lib.h"
 
 /**
  * Get status of RocketLogger
- * @return current status {@link rl_state}
+ * @return current status {@link rl_state_t}
  */
-rl_state rl_get_status(void) {
-
-    struct rl_status status;
-
-    // get pid
-    pid_t pid = get_pid();
-    if (pid == FAILURE || kill(pid, 0) < 0) {
-        // process not running
-        status.state = RL_OFF;
-    } else {
-        // read status
-        read_status(&status);
-    }
-
-    return status.state;
+rl_state_t rl_get_status(void) {
+    rl_status_t status;
+    return rl_read_status(&status);
 }
 
 /**
  * Read status of RocketLogger
- * @param status Pointer to {@link rl_status} struct to write to
- * @return current status {@link rl_state}
+ * @param status Pointer to {@link rl_status_t} struct to write to
+ * @return current status {@link rl_state_t}
  */
-int rl_read_status(struct rl_status* status) {
-
-    // get pid
+rl_state_t rl_read_status(rl_status_t *const status) {
     pid_t pid = get_pid();
     if (pid == FAILURE || kill(pid, 0) < 0) {
         // process not running
@@ -68,34 +67,34 @@ int rl_read_status(struct rl_status* status) {
         // read status
         read_status(status);
     }
-
     return status->state;
 }
+
 /**
  * Read calibration file
- * @param calibration_ptr Pointer to {@link rl_calibration} to write to
- * @param conf Current {@link rl_conf} configuration
+ * @param config Current {@link rl_config_t} configuration
+ * @param calibration Pointer to {@link rl_calibration_t} to write to
  */
-void rl_read_calibration(struct rl_calibration* calibration_ptr,
-                         struct rl_conf* conf) {
-    read_calibration(conf);
-    memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
+void rl_read_calibration(rl_config_t const *const config,
+                         rl_calibration_t *const calibration) {
+    calibration_load(config);
+    memcpy(calibration, &calibration_data, sizeof(rl_calibration_t));
 }
 
 /**
  * RocketLogger start function: start sampling
- * @param conf Pointer to desired {@link rl_conf} configuration
+ * @param config Pointer to desired {@link rl_config_t} configuration
  * @param file_comment Comment to store in the file header
  * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
  */
-int rl_start(struct rl_conf* conf, char* file_comment) {
+int rl_start(rl_config_t *const config, char const *const file_comment) {
 
     // check mode
-    switch (conf->mode) {
+    switch (config->mode) {
     case LIMIT:
         break;
     case CONTINUOUS:
-        // create deamon to run in background
+        // create daemon to run in background
         if (daemon(1, 1) < 0) {
             rl_log(ERROR, "failed to create background process");
             return SUCCESS;
@@ -103,13 +102,13 @@ int rl_start(struct rl_conf* conf, char* file_comment) {
         break;
     case METER:
         // set meter config
-        conf->update_rate = METER_UPDATE_RATE;
-        conf->sample_limit = 0;
-        conf->enable_web_server = 0;
-        conf->file_format = NO_FILE;
-        if (conf->sample_rate < MIN_ADC_RATE) {
+        config->update_rate = METER_UPDATE_RATE;
+        config->sample_limit = 0;
+        config->web_interface_enable = false;
+        config->file_format = RL_FILE_NONE;
+        if (config->sample_rate < MIN_ADC_RATE) {
             rl_log(WARNING, "too low sample rate. Setting rate to 1kSps");
-            conf->sample_rate = MIN_ADC_RATE;
+            config->sample_rate = MIN_ADC_RATE;
         }
         break;
     default:
@@ -118,27 +117,26 @@ int rl_start(struct rl_conf* conf, char* file_comment) {
     }
 
     // check input
-    if (check_sample_rate(conf->sample_rate) == FAILURE) {
+    if (check_sample_rate(config->sample_rate) == FAILURE) {
         rl_log(ERROR, "wrong sampling rate");
         return FAILURE;
     }
-    if (check_update_rate(conf->update_rate) == FAILURE) {
+    if (check_update_rate(config->update_rate) == FAILURE) {
         rl_log(ERROR, "wrong update rate");
         return FAILURE;
     }
-    if (conf->update_rate != 1 && conf->enable_web_server == 1) {
+    if (config->update_rate != 1 && config->web_interface_enable) {
         rl_log(WARNING, "webserver plot does not work with update rates >1. "
                         "Disabling webserver ...");
-        conf->enable_web_server = 0;
+        config->web_interface_enable = false;
     }
 
     // check ambient configuration
-    if (conf->ambient.enabled == AMBIENT_ENABLED &&
-        conf->file_format == NO_FILE) {
+    if (config->ambient.enabled && config->file_format == RL_FILE_NONE) {
         rl_log(
             WARNING,
             "Ambient logging not possible without file. Disabling ambient ...");
-        conf->ambient.enabled = AMBIENT_DISABLED;
+        config->ambient.enabled = false;
     }
 
     // store PID to file
@@ -153,22 +151,21 @@ int rl_start(struct rl_conf* conf, char* file_comment) {
     }
 
     // INITIATION
-    hw_init(conf);
+    hw_init(config);
 
     // check ambient sensor available
-    if (conf->ambient.enabled == AMBIENT_ENABLED &&
-        conf->ambient.sensor_count == 0) {
-        conf->ambient.enabled = AMBIENT_DISABLED;
+    if (config->ambient.enabled && config->ambient.sensor_count == 0) {
+        config->ambient.enabled = false;
         rl_log(WARNING, "No ambient sensor found. Disabling ambient ...");
     }
 
     // SAMPLING
     rl_log(INFO, "sampling start");
-    hw_sample(conf, file_comment);
+    hw_sample(config, file_comment);
     rl_log(INFO, "sampling finished");
 
     // FINISH
-    hw_close(conf);
+    hw_deinit(config);
 
     return SUCCESS;
 }

@@ -19,37 +19,42 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef RL_HW_H_
 #define RL_HW_H_
 
-#include "ambient.h"
-#include "gpio.h"
-#include "pru.h"
-#include "pwm.h"
 #include "types.h"
-#include "util.h"
 
-/// Linux GPIO number for forcing I1 high
-#define FHR1_GPIO 30
-/// Linux GPIO number for forcing I2 high
-#define FHR2_GPIO 60
-/// Linux GPIO number of status LED
-#define LED_STATUS_GPIO 45
-/// Linux GPIO number of error LED
-#define LED_ERROR_GPIO 44
+/**
+ * Initialize all hardware modules.
+ *
+ * @param config Pointer to current {@link rl_config_t} configuration
+ */
+void hw_init(rl_config_t *const config);
 
-void hw_init(struct rl_conf* conf);
-void hw_close(struct rl_conf* conf);
-int hw_sample(struct rl_conf* conf, char* file_comment);
+/**
+ * Deinitialize and close all hardware modules.
+ *
+ * @param config Pointer to current {@link rl_config_t} configuration
+ */
+void hw_deinit(rl_config_t const *const config);
+
+/**
+ * Hardware perform samling of data.
+ *
+ * @param config Pointer to current {@link rl_config_t} configuration
+ * @param file_comment Comment to store in the file header
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
+int hw_sample(rl_config_t const *const config, char const *const file_comment);
 
 #endif /* RL_HW_H_ */

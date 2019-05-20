@@ -19,21 +19,28 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libgen.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/statvfs.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include <libgen.h>
+#include <sys/statvfs.h>
+#include <sys/types.h>
+
+#include "calibration.h"
+#include "log.h"
 #include "rl_lib.h"
 #include "rl_util.h"
 #include "sem.h"
@@ -52,14 +59,14 @@
 /// ID of semaphore set
 int sem_id;
 /// Pointer to shared memory data
-struct web_shm* web_data;
+struct web_shm *web_data;
 
 /// Client request id
 uint32_t id;
 /// 1: data requested, 0: no data requested
 uint8_t get_data;
 /// Requested time scale
-uint32_t t_scale;
+web_time_scale_t t_scale;
 /// Last client time stamp
 int64_t last_time;
 /// Time stamp of last buffer stored to shared memory
@@ -68,7 +75,7 @@ int64_t curr_time;
 int8_t num_channels;
 
 /// Current status of RocketLogger
-struct rl_status status;
+rl_status_t status;
 
 /// Buffer sizes for different time scales
 int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
@@ -80,7 +87,7 @@ int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
  * @param path Path to selected directory
  * @return Free disk space in bytes
  */
-static int64_t get_free_space(char* path) {
+static int64_t get_free_space(char *path) {
     struct statvfs stat;
     statvfs(path, &stat);
 
@@ -88,17 +95,17 @@ static int64_t get_free_space(char* path) {
 }
 
 /**
- * Print a 32-bit integer array in JSON format
+ * Print a boolean array in JSON format
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json32(int32_t const* const data, const int length) {
+static void print_json_bool(bool const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
-            printf(",%d", data[i]);
+            printf(",%d", data[i] ? 1 : 0);
         } else {
-            printf("%d", data[i]);
+            printf("%d", data[i] ? 1 : 0);
         }
     }
     printf("]\n");
@@ -109,7 +116,7 @@ static void print_json32(int32_t const* const data, const int length) {
  * @param data Data array to print
  * @param length Length of array
  */
-static void print_json64(int64_t const* const data, const int length) {
+static void print_json_int64(int64_t const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
@@ -128,31 +135,31 @@ static void print_status(void) {
     // STATUS
     printf("%d\n", status.state);
     if (status.state != RL_RUNNING) {
-        read_default_config(&status.conf);
+        read_default_config(&status.config);
 
         // read calibration time
-        struct rl_calibration tmp_calibration;
-        rl_read_calibration(&tmp_calibration, &status.conf);
+        rl_calibration_t tmp_calibration;
+        rl_read_calibration(&status.config, &tmp_calibration);
         status.calibration_time = tmp_calibration.time;
     }
     // copy of filename (for dirname)
     char file_name_copy[MAX_PATH_LENGTH];
-    strcpy(file_name_copy, status.conf.file_name);
+    strcpy(file_name_copy, status.config.file_name);
     printf("%lld\n", get_free_space(dirname(file_name_copy)));
     printf("%llu\n", status.calibration_time);
 
     // CONFIG
-    printf("%u\n", status.conf.sample_rate);
-    printf("%d\n", status.conf.update_rate);
-    printf("%d\n", status.conf.digital_inputs);
-    printf("%d\n", status.conf.calibration);
-    printf("%d\n", status.conf.file_format);
-    printf("%s\n", status.conf.file_name);
-    printf("%llu\n", status.conf.max_file_size);
-    print_json32(status.conf.channels, NUM_CHANNELS);
-    print_json32(status.conf.force_high_channels, NUM_I_CHANNELS);
+    printf("%u\n", status.config.sample_rate);
+    printf("%d\n", status.config.update_rate);
+    printf("%d\n", status.config.digital_input_enable ? 1 : 0);
+    printf("%d\n", status.config.calibration_ignore ? 1 : 0);
+    printf("%d\n", status.config.file_format);
+    printf("%s\n", status.config.file_name);
+    printf("%llu\n", status.config.max_file_size);
+    print_json_bool(status.config.channels, NUM_CHANNELS);
+    print_json_bool(status.config.force_high_channels, NUM_I_CHANNELS);
     printf("%llu\n", status.samples_taken);
-    printf("%d\n", status.conf.enable_web_server);
+    printf("%d\n", status.config.web_interface_enable ? 1 : 0);
 }
 
 /**
@@ -164,11 +171,11 @@ static void print_data(void) {
     int buffer_count = (curr_time - last_time + TIME_MARGIN) / 1000;
 
     // get available buffers
-    if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
         return;
     }
     int buffer_available = web_data->buffer[t_scale].filled;
-    set_sem(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, DATA_SEM, 1);
 
     if (buffer_count > buffer_available) {
         buffer_count = buffer_available;
@@ -196,13 +203,13 @@ static void print_data(void) {
     // read data
     int64_t data[buffer_count][buffer_size][num_channels];
 
-    if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
         return;
     }
     for (int i = 0; i < buffer_count; i++) {
 
         // read data buffer
-        int64_t* shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
+        int64_t *shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
         if (web_data->buffer[t_scale].element_size > sizeof(data)) {
             rl_log(ERROR,
                    "In print_data: memcpy is trying to copy to much data.");
@@ -212,12 +219,12 @@ static void print_data(void) {
                    web_data->buffer[t_scale].element_size);
         }
     }
-    set_sem(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, DATA_SEM, 1);
 
     // print data
     for (int i = buffer_count - 1; i >= 0; i--) {
         for (int j = 0; j < buffer_size; j++) {
-            print_json64(data[i][j], num_channels);
+            print_json_int64(data[i][j], num_channels);
         }
     }
 }
@@ -234,7 +241,7 @@ static void print_data(void) {
  *   - Time stamp in UNIX time (UTC) of most recent data available at web client
  * @return standard Linux return codes
  */
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 
     // parse arguments
     if (argc != ARG_COUNT + 1) {
@@ -243,21 +250,22 @@ int main(int argc, char* argv[]) {
     }
     id = atoi(argv[1]);
     get_data = atoi(argv[2]);
-    t_scale = atoi(argv[3]);
+    t_scale = (web_time_scale_t)atoi(argv[3]);
     last_time = atoll(argv[4]);
 
     // check time scale
-    if (t_scale != S1 && t_scale != S10 && t_scale != S100) {
+    if (t_scale != WEB_TIME_SCALE_1 && t_scale != WEB_TIME_SCALE_10 &&
+        t_scale != WEB_TIME_SCALE_100) {
         rl_log(WARNING, "unknown time scale");
-        t_scale = S1;
+        t_scale = WEB_TIME_SCALE_1;
     }
 
     // get status
     rl_read_status(&status);
 
     // quit, if data not requested or not running or web disabled
-    if (status.state != RL_RUNNING || status.sampling == SAMPLING_OFF ||
-        status.conf.enable_web_server == 0 || get_data == 0) {
+    if (status.state != RL_RUNNING || status.sampling == RL_SAMPLING_OFF ||
+        !status.config.web_interface_enable || get_data == 0) {
         // print request id and status
         printf("%d\n", id);
         print_status();
@@ -266,7 +274,7 @@ int main(int argc, char* argv[]) {
     }
 
     // open semaphore
-    sem_id = open_sem(SEM_KEY, NUM_SEMS);
+    sem_id = sem_open(SEM_KEY, NUM_SEMS);
     if (sem_id < 0) {
         // error already logged
         exit(EXIT_FAILURE);
@@ -280,12 +288,12 @@ int main(int argc, char* argv[]) {
     while (data_read == 0) {
 
         // get current time
-        if (wait_sem(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+        if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
             exit(EXIT_FAILURE);
         }
         curr_time = web_data->time;
         num_channels = web_data->num_channels;
-        set_sem(sem_id, DATA_SEM, 1);
+        sem_set(sem_id, DATA_SEM, 1);
 
         if (curr_time > last_time) {
 
@@ -305,7 +313,7 @@ int main(int argc, char* argv[]) {
 
             // wait on new data
             if (data_read == 0) {
-                if (wait_sem(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
+                if (sem_wait(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
                     // time-out or error -> stop
                     break;
                 }
@@ -314,7 +322,7 @@ int main(int argc, char* argv[]) {
     }
 
     // unmap shared memory
-    shmdt(web_data);
+    web_close_shm(web_data);
 
     exit(EXIT_SUCCESS);
 }

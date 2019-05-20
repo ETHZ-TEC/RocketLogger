@@ -1,6 +1,6 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
-# Usage: ./deploy_system.sh <beaglebone-host-address>
+# Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]
 #
 # Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
 # All rights reserved.
@@ -31,12 +31,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-REBOOT_TIMEOUT=20
+HOSTNAME="rocketlogger"
+REBOOT_TIMEOUT=60
 
-# check argument
+# check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./deploy_system.sh <beaglebone-host-address>"
+  echo "Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]"
   exit -1
+fi
+if [ $# -ge 2 ]; then
+  HOSTNAME=$2
 fi
 
 
@@ -52,7 +56,7 @@ scp -F /dev/null -P 22 -r config debian@${HOST}:
 COPY=$?
 
 if [ $COPY -ne 0 ]; then
-  echo "[ !! ] Copy system configuration scripts failed. CHECK SSH CONFIGURATION."
+  echo "[ !! ] Copy system configuration scripts failed (code $COPY). CHECK SSH CONFIGURATION."
   exit $COPY
 else
   echo "[ OK ] Copy system configuration scripts successful."
@@ -60,15 +64,15 @@ fi
 
 
 # grow file system size and reboot
-echo "Grow file system size. You will be asked twice for the user password, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} 'cd /opt/scripts/tools/ && sudo ./grow_partition.sh; sudo reboot; exit 0'
+echo "Set hostname and grow file system size. You will be asked twice for the user password, which is 'temppwd'."
+ssh -F /dev/null -p 22 -t debian@${HOST} "sudo sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts; cd /opt/scripts/tools/ && sudo ./grow_partition.sh && sudo reboot"
 
 # verify grow file system size worked
-CONFIG=$?
+GROW=$?
 
-if [ $CONFIG -ne 255 ]; then
-  echo "[ !! ] Grow file system size failed. MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
-  exit $CONFIG
+if [ $GROW -ne 0 ]; then
+  echo "[ !! ] Grow file system size failed (code $GROW). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
+  exit $GROW
 else
   echo "[ OK ] Grow file system size was successful."
 fi
@@ -80,7 +84,7 @@ sleep 5
 while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
   REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
   echo -n "."
-  ping -c1 -W2 bb-20.ethz.ch > /dev/null
+  ping -c1 -W2 ${HOST} > /dev/null
   # break timeout loop on success
   if [ $? -eq 0 ]; then
     sleep 2
@@ -92,26 +96,25 @@ done
 # check for connectibity loss
 if [ $REBOOT_TIMEOUT -eq 0 ]; then
   echo ""
-  echo "[ !! ] System reboot failed. MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
+  echo "[ !! ] System reboot timed out. MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
   exit 1
 fi
 
 # waiting for ssh login
 echo "Waiting for ssh connection. You will be aked for the default user password, which is 'temppwd', when the system is ready."
 sleep 5
-ssh -F /dev/null -p 22 -t debian@${HOST} 'exit'
+ssh -F /dev/null -p 22 -t debian@${HOST} "exit"
 
 # perform system configuration
 echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} '(cd config && sudo ./install.sh); exit $?'
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh)"
 
 # verify system configuration worked
 CONFIG=$?
 
 if [ $CONFIG -ne 255 ]; then
-  echo "[ !! ] System configuration failed. MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
+  echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
   exit $CONFIG
 else
   echo "[ OK ] System configuration was successful."
 fi
-

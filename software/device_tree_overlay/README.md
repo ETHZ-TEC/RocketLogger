@@ -1,18 +1,18 @@
-External files and defines used:
---------------------------------
+# RocketLogger Device Tree Overlay
 
-am335x-bbw-bbb-base.h
-  device tree offset definition header downloaded from:
-  https://github.com/RobertCNelson/bb.org-overlays/tree/master/include/dt-bindings/board
-
-linux-dt-backports.h
-  Backport of AM33XX pinctrl and PWM header bindings used in Linux mainline kernel.
-  https://github.com/torvalds/linux/tree/master/include/dt-bindings
-  http://kernel.org/
+Kernel v4.19 documentation for Debian buster
 
 
-More info on device tree configuration when using PRU:
-------------------------------------------------------
+## Device Tree Resources
 
-PRU on Debian Jessie
-  https://groups.google.com/forum/#!msg/beagleboard/l59Dx8ygxNg/GvIzOJSzDAAJ
+- <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/usage-model.txt>
+- <https://github.com/torvalds/linux/tree/v4.19/Documentation/devicetree/bindings>
+- <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/bindings/pwm/pwm.txt>
+- <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/bindings/pwm/pwm-tiehrpwm.txt>
+
+
+## PWM Resources
+- <https://github.com/torvalds/linux/blob/v4.19/Documentation/pwm.txt>
+
+
+## PRU Resources

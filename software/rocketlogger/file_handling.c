@@ -19,33 +19,40 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <time.h>
 
+#include "calibration.h"
+#include "log.h"
 #include "pru.h"
+#include "rl_file.h"
+#include "types.h"
 #include "util.h"
 
 #include "file_handling.h"
 
 /// Channel names
-const char* channel_names[NUM_CHANNELS] = {"I1H", "I1L", "V1", "V2",
-                                           "I2H", "I2L", "V3", "V4"};
+char const *const channel_names[NUM_CHANNELS] = {"I1H", "I1L", "V1", "V2",
+                                                 "I2H", "I2L", "V3", "V4"};
 /// Digital input names
-const char* digital_input_names[NUM_DIGITAL_INPUTS] = {"DI1", "DI2", "DI3",
-                                                       "DI4", "DI5", "DI6"};
+char const *const digital_input_names[NUM_DIGITAL_INPUTS] = {
+    "DI1", "DI2", "DI3", "DI4", "DI5", "DI6"};
 /// Valid channel names
-const char* valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
+char const *const valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
 
 /// Global variable to determine i1l valid channel
 int i1l_valid_channel = 0;
@@ -55,21 +62,22 @@ int i2l_valid_channel = 0;
 /**
  * Set up file header lead-in with current configuration
  * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
- * @param conf Pointer to current {@link rl_conf} struct
+ * @param config Pointer to current {@link rl_config_t} struct
  */
-void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
+void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
+                        rl_config_t const *const config) {
 
     // number channels
-    uint16_t channel_count = count_channels(conf->channels);
+    uint16_t channel_count = count_channels(config->channels);
     // number binary channels
     uint16_t channel_bin_count = 0;
-    if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+    if (config->digital_input_enable) {
         channel_bin_count = NUM_DIGITAL_INPUTS;
     }
-    if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
+    if (config->channels[I1L_INDEX]) {
         i1l_valid_channel = channel_bin_count++;
     }
-    if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
+    if (config->channels[I2L_INDEX]) {
         i2l_valid_channel = channel_bin_count++;
     }
 
@@ -77,20 +85,20 @@ void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
     uint32_t comment_length = RL_FILE_COMMENT_ALIGNMENT_BYTES;
 
     // timestamps
-    struct time_stamp timestamp_realtime;
-    struct time_stamp timestamp_monotonic;
+    rl_timestamp_t timestamp_realtime;
+    rl_timestamp_t timestamp_monotonic;
     create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
 
     // lead_in setup
     lead_in->magic = RL_FILE_MAGIC;
     lead_in->file_version = RL_FILE_VERSION;
     lead_in->header_length =
-        sizeof(struct rl_file_lead_in) + comment_length +
-        (channel_count + channel_bin_count) * sizeof(struct rl_file_channel);
-    lead_in->data_block_size = conf->sample_rate / conf->update_rate;
+        sizeof(rl_file_lead_in_t) + comment_length +
+        (channel_count + channel_bin_count) * sizeof(rl_file_channel_t);
+    lead_in->data_block_size = config->sample_rate / config->update_rate;
     lead_in->data_block_count = 0; // needs to be updated
     lead_in->sample_count = 0;     // needs to be updated
-    lead_in->sample_rate = conf->sample_rate;
+    lead_in->sample_rate = config->sample_rate;
     get_mac_addr(lead_in->mac_address);
     lead_in->start_time = timestamp_realtime;
     lead_in->comment_length = comment_length;
@@ -101,20 +109,20 @@ void file_setup_lead_in(struct rl_file_lead_in* lead_in, struct rl_conf* conf) {
 /**
  * Set up channel information for file header with current configuration
  * @param file_header Pointer to {@link rl_file_header} struct to set up
- * @param conf Pointer to current {@link rl_conf} struct
+ * @param config Pointer to current {@link rl_config_tig_t} configuration
  */
-void file_setup_channels(struct rl_file_header* file_header,
-                         struct rl_conf* conf) {
+void file_setup_channels(rl_file_header_t *const file_header,
+                         rl_config_t const *const config) {
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
 
     // reset channels
     memset(file_header->channel, 0,
-           total_channel_count * sizeof(struct rl_file_channel));
+           total_channel_count * sizeof(rl_file_channel_t));
 
     // digital channels
     int ch = 0;
-    if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
+    if (config->digital_input_enable) {
         for (int i = 0; i < NUM_DIGITAL_INPUTS; i++) {
             file_header->channel[ch].unit = RL_UNIT_BINARY;
             file_header->channel[ch].channel_scale = RL_SCALE_NONE;
@@ -126,7 +134,7 @@ void file_setup_channels(struct rl_file_header* file_header,
     }
 
     // range valid channels
-    if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
+    if (config->channels[I1L_INDEX]) {
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
         file_header->channel[ch].channel_scale = RL_SCALE_NONE;
         file_header->channel[ch].data_size = 0;
@@ -134,7 +142,7 @@ void file_setup_channels(struct rl_file_header* file_header,
         strcpy(file_header->channel[ch].name, valid_info_names[0]);
         ch++;
     }
-    if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
+    if (config->channels[I2L_INDEX]) {
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
         file_header->channel[ch].channel_scale = RL_SCALE_NONE;
         file_header->channel[ch].data_size = 0;
@@ -145,7 +153,7 @@ void file_setup_channels(struct rl_file_header* file_header,
 
     // analog channels
     for (int i = 0; i < NUM_CHANNELS; i++) {
-        if (conf->channels[i] == CHANNEL_ENABLED) {
+        if (config->channels[i]) {
             // current
             if (is_current(i)) {
                 // low
@@ -180,11 +188,12 @@ void file_setup_channels(struct rl_file_header* file_header,
 /**
  * Set up file header with current configuration
  * @param file_header Pointer to {@link rl_file_header} to set up
- * @param conf Pointer to current {@link rl_conf} struct
+ * @param conf Pointer to current {@link rl_config_t} struct
  * @param comment The comment stored in the file header or NULL for default
  */
-void file_setup_header(struct rl_file_header* file_header, struct rl_conf* conf,
-                       char* comment) {
+void file_setup_header(rl_file_header_t *const file_header,
+                       rl_config_t const *const conf,
+                       char const *const comment) {
 
     // comment
     if (comment == NULL) {
@@ -202,8 +211,8 @@ void file_setup_header(struct rl_file_header* file_header, struct rl_conf* conf,
  * @param data File pointer to data file
  * @param file_header Pointer to {@link rl_file_header} struct
  */
-void file_store_header_bin(FILE* data_file,
-                           struct rl_file_header* file_header) {
+void file_store_header_bin(FILE *data_file,
+                           rl_file_header_t *const file_header) {
 
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
@@ -220,12 +229,11 @@ void file_store_header_bin(FILE* data_file,
     file_header->lead_in.comment_length = comment_length + comment_align_bytes;
 
     file_header->lead_in.header_length =
-        sizeof(struct rl_file_lead_in) + file_header->lead_in.comment_length +
-        total_channel_count * sizeof(struct rl_file_channel);
+        sizeof(rl_file_lead_in_t) + file_header->lead_in.comment_length +
+        total_channel_count * sizeof(rl_file_channel_t);
 
     // write lead-in
-    fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1,
-           data_file);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
 
     // write comment, add zero bytes for proper header alignment if necessary
     fwrite(file_header->comment, comment_length, 1, data_file);
@@ -235,8 +243,8 @@ void file_store_header_bin(FILE* data_file,
     }
 
     // write channel information
-    fwrite(file_header->channel, sizeof(struct rl_file_channel),
-           total_channel_count, data_file);
+    fwrite(file_header->channel, sizeof(rl_file_channel_t), total_channel_count,
+           data_file);
     fflush(data_file);
 }
 
@@ -245,8 +253,8 @@ void file_store_header_bin(FILE* data_file,
  * @param data_file File pointer to data file
  * @param file_header Pointer to {@link rl_file_header} struct
  */
-void file_store_header_csv(FILE* data_file,
-                           struct rl_file_header* file_header) {
+void file_store_header_csv(FILE *data_file,
+                           rl_file_header_t const *const file_header) {
     // lead-in
     fprintf(data_file, "RocketLogger CSV File\n");
     fprintf(data_file, "File Version,%u\n",
@@ -318,13 +326,12 @@ void file_store_header_csv(FILE* data_file,
  * @param data_file File pointer to data file
  * @param file_header Pointer to {@link rl_file_header} struct
  */
-void file_update_header_bin(FILE* data_file,
-                            struct rl_file_header* file_header) {
+void file_update_header_bin(FILE *data_file,
+                            rl_file_header_t const *const file_header) {
 
     // seek to beginning and rewrite lead_in
     rewind(data_file);
-    fwrite(&(file_header->lead_in), sizeof(struct rl_file_lead_in), 1,
-           data_file);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
     fflush(data_file);
     fseek(data_file, 0, SEEK_END);
 }
@@ -335,8 +342,8 @@ void file_update_header_bin(FILE* data_file,
  * @param data_file File pointer to data file
  * @param file_header Pointer to {@link rl_file_header} struct
  */
-void file_update_header_csv(FILE* data_file,
-                            struct rl_file_header* file_header) {
+void file_update_header_csv(FILE *data_file,
+                            rl_file_header_t const *const file_header) {
     rewind(data_file);
     fprintf(data_file, "RocketLogger CSV File\n");
     fprintf(data_file, "File Version,%u\n",
@@ -356,30 +363,30 @@ void file_update_header_csv(FILE* data_file,
  * @param data_file File pointer to data file
  * @param buffer_addr Pointer to buffer to handle
  * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
- * @param conf Current {@link rl_conf} configuration.
+ * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
+ * @param timestamp_monotonic {@link rl_timestamp_t} with monotonic clock value
+ * @param conf Current {@link rl_config_tig_t} configuration.
  */
-void file_handle_data(FILE* data_file, void* buffer_addr,
+void file_handle_data(FILE *data_file, void const *buffer_addr,
                       uint32_t samples_count,
-                      struct time_stamp* timestamp_realtime,
-                      struct time_stamp* timestamp_monotonic,
-                      struct rl_conf* conf) {
+                      rl_timestamp_t const *const timestamp_realtime,
+                      rl_timestamp_t const *const timestamp_monotonic,
+                      rl_config_t const *const config) {
 
     // write timestamp to file
-    if (conf->file_format == BIN) {
-        fwrite(timestamp_realtime, sizeof(struct time_stamp), 1, data_file);
-        fwrite(timestamp_monotonic, sizeof(struct time_stamp), 1, data_file);
-    } else if (conf->file_format == CSV) {
+    if (config->file_format == RL_FILE_BIN) {
+        fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, data_file);
+        fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, data_file);
+    } else if (config->file_format == RL_FILE_CSV) {
         fprintf(data_file, "%lli.%09lli", timestamp_realtime->sec,
                 timestamp_realtime->nsec);
     }
 
     // count channels
-    int num_channels = count_channels(conf->channels);
+    int num_channels = count_channels(config->channels);
 
     // aggregation
-    int32_t aggregate_count = MIN_ADC_RATE / conf->sample_rate;
+    int32_t aggregate_count = MIN_ADC_RATE / config->sample_rate;
     int32_t aggregate_channel_data[NUM_CHANNELS] = {0};
     uint32_t aggregate_bin_data = 0xffffffff;
 
@@ -391,20 +398,20 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         uint32_t bin_data = 0x00000000;
 
         // read binary channels
-        uint8_t bin_adc1 = (*((int8_t*)(buffer_addr)));
-        uint8_t bin_adc2 = (*((int8_t*)(buffer_addr + 1)));
+        uint8_t bin_adc1 = (*((int8_t *)(buffer_addr)));
+        uint8_t bin_adc2 = (*((int8_t *)(buffer_addr + 1)));
 
         buffer_addr += PRU_DIG_SIZE;
 
         // read and scale values (if channel selected)
         int ch = 0;
         for (int j = 0; j < NUM_CHANNELS; j++) {
-            if (conf->channels[j] == CHANNEL_ENABLED) {
+            if (config->channels[j]) {
                 int32_t adc_value =
-                    *((int32_t*)(buffer_addr + j * PRU_SAMPLE_SIZE));
+                    *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE));
                 channel_data[ch] =
-                    (int32_t)((adc_value + calibration.offsets[j]) *
-                              calibration.scales[j]);
+                    (int32_t)((adc_value + calibration_data.offsets[j]) *
+                              calibration_data.scales[j]);
                 ch++;
             }
         }
@@ -412,38 +419,38 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
 
         // BINARY CHANNELS //
 
-        // mask and combine digital inputs, if requestet
+        // mask and combine digital inputs, if requested
         int bin_channel_pos = 0;
-        if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-            bin_data = ((bin_adc1 & BINARY_MASK) >> 1) |
-                       ((bin_adc2 & BINARY_MASK) << 2);
+        if (config->digital_input_enable) {
+            bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |
+                       ((bin_adc2 & PRU_BINARY_MASK) << 2);
             bin_channel_pos = NUM_DIGITAL_INPUTS;
         }
 
         // mask and combine valid info
-        uint8_t valid1 = (~bin_adc1) & VALID_MASK;
-        uint8_t valid2 = (~bin_adc2) & VALID_MASK;
+        uint8_t valid1 = (~bin_adc1) & PRU_VALID_MASK;
+        uint8_t valid2 = (~bin_adc2) & PRU_VALID_MASK;
 
-        if (conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
+        if (config->channels[I1L_INDEX]) {
             bin_data = bin_data | (valid1 << bin_channel_pos);
             bin_channel_pos++;
         }
-        if (conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
+        if (config->channels[I2L_INDEX]) {
             bin_data = bin_data | (valid2 << bin_channel_pos);
             bin_channel_pos++;
         }
 
         // handle data aggregation for low sampling rates
-        if (conf->sample_rate < MIN_ADC_RATE) {
+        if (config->sample_rate < MIN_ADC_RATE) {
 
-            switch (conf->aggregation) {
-            case AGGREGATE_NONE:
+            switch (config->aggregation) {
+            case RL_AGGREGATE_NONE:
                 rl_log(ERROR, "Low sampling rates not supported without "
                               "data aggregation.");
                 exit(ERROR);
                 break;
 
-            case AGGREGATE_AVERAGE:
+            case RL_AGGREGATE_AVERAGE:
                 // accumulate intermediate samples only (skip writing)
                 if ((i + 1) % aggregate_count > 0) {
                     for (int i = 0; i < num_channels; i++) {
@@ -464,7 +471,7 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
                 aggregate_bin_data = 0xffffffff;
                 break;
 
-            case AGGREGATE_DOWNSAMPLE:
+            case RL_AGGREGATE_DOWNSAMPLE:
                 // drop intermediate samples (skip writing to file)
                 if (i % aggregate_count > 0) {
                     continue;
@@ -476,9 +483,9 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
 
         // write binary channels if enabled
         if (bin_channel_pos > 0) {
-            if (conf->file_format == BIN) {
+            if (config->file_format == RL_FILE_BIN) {
                 fwrite(&bin_data, sizeof(uint32_t), 1, data_file);
-            } else if (conf->file_format == CSV) {
+            } else if (config->file_format == RL_FILE_CSV) {
                 uint32_t MASK = 0x01;
                 for (int j = 0; j < bin_channel_pos; j++) {
                     fprintf(data_file, (CSV_DELIMITER "%i"),
@@ -489,9 +496,9 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
         }
 
         // write analog channels
-        if (conf->file_format == BIN) {
+        if (config->file_format == RL_FILE_BIN) {
             fwrite(channel_data, sizeof(int32_t), num_channels, data_file);
-        } else if (conf->file_format == CSV) {
+        } else if (config->file_format == RL_FILE_CSV) {
             for (int j = 0; j < num_channels; j++) {
                 fprintf(data_file, (CSV_DELIMITER "%d"), channel_data[j]);
             }
@@ -500,7 +507,7 @@ void file_handle_data(FILE* data_file, void* buffer_addr,
     }
 
     // flush processed data if data is stored
-    if (conf->file_format != NO_FILE && data_file != NULL) {
+    if (config->file_format != RL_FILE_NONE && data_file != NULL) {
         fflush(data_file);
     }
 }

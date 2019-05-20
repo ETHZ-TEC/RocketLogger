@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef RL_FILE_H_
@@ -34,7 +34,6 @@
 
 #include <stdint.h>
 
-#include "types.h"
 #include "util.h"
 
 // Defines
@@ -123,7 +122,7 @@ struct rl_file_lead_in {
     uint8_t mac_address[MAC_ADDRESS_LENGTH];
 
     /// Start time of the measurement in UNIX time, UTC
-    struct time_stamp start_time; // = 0;
+    rl_timestamp_t start_time; // = 0;
 
     /// Comment length
     uint32_t comment_length; // = 0;
@@ -134,6 +133,11 @@ struct rl_file_lead_in {
     /// Analog channel count
     uint16_t channel_count; // = 0;
 };
+
+/**
+ * Typedef for RocketLogger file head lead in
+ */
+typedef struct rl_file_lead_in rl_file_lead_in_t;
 
 /**
  * Channel definition for the binary file header.
@@ -157,18 +161,28 @@ struct rl_file_channel {
 };
 
 /**
+ * Typedef for RocketLogger file header channel description.
+ */
+typedef struct rl_file_channel rl_file_channel_t;
+
+/**
  * File header definition for the binary file.
  */
 struct rl_file_header {
 
     /// File header lead in (constant size)
-    struct rl_file_lead_in lead_in;
+    rl_file_lead_in_t lead_in;
 
     /// Comment field
-    char* comment; // = NULL;
+    char const *comment; // = NULL;
 
     /// Channels definitions (binary and normal)
-    struct rl_file_channel* channel; // = NULL;
+    rl_file_channel_t *channel; // = NULL;
 };
+
+/**
+ * Typedef for RocketLogger file header.
+ */
+typedef struct rl_file_header rl_file_header_t;
 
 #endif /* RL_FILE_H_ */

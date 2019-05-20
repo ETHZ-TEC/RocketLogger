@@ -1,41 +1,40 @@
 /**
- * Device tree overlay for the RocketLogger BeagleBone Green/Black Cape.
- *
- * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /dts-v1/;
 /plugin/;
 
-#include "am335x-bbw-bbb-base.h"
-#include "linux-dt-backports.h"
+#include <dt-bindings/board/am335x-bbw-bbb-base.h>
+#include <dt-bindings/pinctrl/am33xx.h>
+#include <dt-bindings/gpio/gpio.h>
 
 / {
   compatible = "ti,beaglebone", "ti,beaglebone-green", "ti,beaglebone-black";
@@ -44,7 +43,7 @@
   part-number = "ROCKETLOGGER";
   version = "00A0";
 
-  /* ressources used by the rocketlogger cape */
+  /* resources used by the rocketlogger cape */
   exclusive-use =
 
     /* GPIO pins used */
@@ -86,8 +85,40 @@
     "ehrpwm1A", /* EHRPWM1 for Latch reset signal generation */
     "ehrpwm1B";
 
-  /* Pin definitions */
-  fragemnt@0 {
+  /* Free pins used by the pinmux helpers */
+  fragment@0 {
+    target = <&ocp>;
+    __overlay__ {
+      P9_22_pinmux { status = "disabled"; }; /* ADC clock pin, ehrpwm0A controlled */
+      P9_14_pinmux { status = "disabled"; }; /* Latch reset A pin, ehrpwm1A controlled */
+      P9_16_pinmux { status = "disabled"; }; /* Latch reset B pin, ehrpwm1B controlled */
+      P9_24_pinmux { status = "disabled"; }; /* MISO1 pin, PRU0 controlled */
+      P9_25_pinmux { status = "disabled"; }; /* START pin, PRU0 controlled */
+      P9_27_pinmux { status = "disabled"; }; /* CS1 pin, PRU0 controlled */
+      P9_28_pinmux { status = "disabled"; }; /* CS0 pin, PRU0 controlled */
+      P9_29_pinmux { status = "disabled"; }; /* MOSI pin, PRU0 controlled */
+      P9_30_pinmux { status = "disabled"; }; /* MISO0 pin, PRU0 controlled */
+      P9_31_pinmux { status = "disabled"; }; /* SCLK pin, PRU0 controlled */
+      P8_15_pinmux { status = "disabled"; }; /* DR1 pin, PRU0 controlled */
+      P8_16_pinmux { status = "disabled"; }; /* DR0 pin, PRU0 controlled */
+      P9_11_pinmux { status = "disabled"; }; /* nForce high range 1 pin */
+      P9_12_pinmux { status = "disabled"; }; /* nForce high range 2 pin */
+      P8_11_pinmux { status = "disabled"; }; /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+      P8_12_pinmux { status = "disabled"; }; /* Error LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
+      P8_14_pinmux { status = "disabled"; }; /* User button pin */
+      P9_13_pinmux { status = "disabled"; }; /* User button pin */
+      P8_27_pinmux { status = "disabled"; }; /* Digital input 3 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_28_pinmux { status = "disabled"; }; /* Digital input 4 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_29_pinmux { status = "disabled"; }; /* Digital input 5 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_39_pinmux { status = "disabled"; }; /* Digital input 6 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_40_pinmux { status = "disabled"; }; /* Digital input 1 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_41_pinmux { status = "disabled"; }; /* Digital input 2 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
+      P8_13_pinmux { status = "disabled"; }; /* Digital input buffer disable pin */
+    };
+  };
+
+  /* Pin mux configuration */
+  fragment@1 {
     target = <&am33xx_pinmux>;
     __overlay__ {
       rl_pwm0_pins: pinmux_rl_pwm0_pins {
@@ -156,28 +187,28 @@
   fragment@10 {
     target = <&ocp>;
     __overlay__ {
-      rl_range_pinmux {
+      rl_range_pinmux: rl_range_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_range_pins>;
       };
 
-      rl_user_pinmux {
+      rl_user_pinmux: rl_user_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_user_pins>;
       };
 
-      rl_power_pinmux {
+      rl_power_pinmux: rl_power_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_power_pins>;
       };
 
-      rl_digital_pinmux {
+      rl_digital_pinmux: rl_digital_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
@@ -194,8 +225,8 @@
       status = "okay";
       pinctrl-names = "default";
       pinctrl-0 = <&rl_pru0_pins>;
-    };  
-  }; 
+    };
+  };
 
 
   /* PWM hardware modules */
@@ -210,6 +241,8 @@
     target = <&ehrpwm0>;
     __overlay__ {
       status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm0_pins>;
     };
   };
 
@@ -224,40 +257,8 @@
     target = <&ehrpwm1>;
     __overlay__ {
       status = "okay";
-    };
-  };
-
-
-  /* PWM configuration */  
-  fragment@40 {
-    target = <&ocp>;
-    __overlay__ {
-      adc_clock {
-        compatible = "ti,am33xx-ehrpwm";
-        pwms = <&ehrpwm0 0 500000 PWM_POLARITY_INVERTED>;
-        pwm-names = "rl_pwm0";
-        pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm0_pins>;
-        status = "okay";
-//        enabled = <1>;
-//        duty = <0>;
-      };
-    };
-  };
-
-  fragment@41 {
-    target = <&ocp>;
-    __overlay__ {
-      range_switch_clock {
-        compatible = "ti,am33xx-ehrpwm";
-        pwms = <&ehrpwm1 0 500000 PWM_POLARITY_INVERTED>;
-        pwm-names = "rl_pwm1";
-        pinctrl-names = "default";
-        pinctrl-0 = <&rl_pwm1_pins>;
-        status = "okay";
-//        enabled = <1>;
-//        duty = <0>;
-      };
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm1_pins>;
     };
   };
 };

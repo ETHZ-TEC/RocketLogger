@@ -347,9 +347,9 @@ function parseStatus(tempState) {
 	// EXTRACT STATUS INFO
 	var sampleRate = parseInt(tempState[0]);
 	var digitalInputs = tempState[2];
-	var calibration = tempState[3];
+	var calibrationIgnore = tempState[3];
 	var fileFormat = tempState[4];
-	var tempFilename = tempState[5];
+	var sysFilename = tempState[5];
 	var maxFileSize = parseInt(tempState[6]) / MB_SCALE;
 	var tempChannels = JSON.parse(tempState[7]);
 	var tempForceHighChannels = JSON.parse(tempState[8]);
@@ -408,10 +408,10 @@ function parseStatus(tempState) {
 	var digInps = (digitalInputs == "1");
 
 	// calibration
-	if (calibration == "1") {
-		document.getElementById("ignore_calibration").checked = false;
-	} else {
+	if (calibrationIgnore == "1") {
 		document.getElementById("ignore_calibration").checked = true;
+	} else {
+		document.getElementById("ignore_calibration").checked = false;
 	}
 
 	// file format
@@ -429,7 +429,8 @@ function parseStatus(tempState) {
 	}
 
 	// file name
-	filename = tempFilename.slice(14);
+	var temp = sysFilename.split('/');
+	filename = temp[temp.length - 1];
 	$("#filename").val(filename);
 
 	// max file size
@@ -1272,12 +1273,12 @@ function download() {
 }
 
 function showLog() {
-	file = 'log/log.txt';
+	file = 'log/rocketlogger.log';
 	window.open(file);
 }
 
 function browseFiles() {
-	window.open('data');
+	window.open('data/');
 }
 
 function plotsCollapsed() {

@@ -6,9 +6,8 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-allow-hotplug eth0
-auto eth0
-iface eth0 inet dhcp
+#auto eth0
+#iface eth0 inet dhcp
 # Example to keep MAC address between reboots
 #hwaddress ether DE:AD:BE:EF:CA:FE
 

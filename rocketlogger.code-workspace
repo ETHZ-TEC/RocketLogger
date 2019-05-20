@@ -4,7 +4,7 @@
 			"path": "software/rocketlogger"
 		},
 		{
-			"path": "software/webserver/data"
+			"path": "software/webserver"
 		},
 		{
 			"path": "script/python"
@@ -14,7 +14,10 @@
 		},
 		{
 			"path": "software/debian"
-		}
+		},
+		{
+			"path": "software/device_tree_overlay"
+		},
 		{
 			"path": "../rocketlogger.wiki"
 		},

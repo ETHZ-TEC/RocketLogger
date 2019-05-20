@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SENSOR_SENSOR_H_
@@ -57,22 +57,27 @@ struct rl_sensor {
     rl_unit unit;
     int32_t scale;
     int (*init)(int);
-    void (*close)(int);
+    void (*deinit)(int);
     int (*read)(int);
-    int32_t (*getValue)(int, int);
+    int32_t (*get_value)(int, int);
 };
 
-extern const struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE];
+/**
+ * Typedef for tandardized RL sensor interface definition
+ */
+typedef struct rl_sensor rl_sensor_t;
 
-int Sensors_initSharedBus(void);
-void Sensors_closeSharedBus(void);
-int Sensors_getSharedBus(void);
-int Sensors_initSharedComm(uint8_t);
+extern const rl_sensor_t sensor_registry[SENSOR_REGISTRY_SIZE];
 
-int Sensors_openBus(void);
-int Sensors_closeBus(int);
+int sensors_init(void);
+void sensors_deinit(void);
+int sensors_get_bus(void);
+int sensors_init_comm(uint8_t);
 
-int Sensors_scan(int*);
-void Sensors_close(int*);
+int sensors_open_bus(void);
+int sensors_close_bus(int);
+
+int sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]);
+void sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]);
 
 #endif /* SENSOR_SENSOR_H_ */

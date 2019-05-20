@@ -19,33 +19,20 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SENSOR_BME280_H_
 #define SENSOR_BME280_H_
 
-#include <errno.h>
-#include <math.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include <fcntl.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "../log.h"
-#include "../types.h"
 
 #define BME280_I2C_ADDRESS_LEFT 0x76
 
@@ -125,9 +112,9 @@
 #define BME280_SPI_EN 0x01
 
 /*
- * Data Structures
+ * BME280 data structures
  */
-struct BME280_calibration_t {
+struct bme280_calibration {
     // temperature
     uint16_t T1;
     int16_t T2;
@@ -154,24 +141,29 @@ struct BME280_calibration_t {
 };
 
 /*
+ * Typedef for BME280 data structures
+ */
+typedef struct bme280_calibration bme280_calibration_t;
+
+/*
  * API FUNCTIONS
  */
-int BME280_init(int);
-void BME280_close(int);
-int BME280_read(int);
-int32_t BME280_getValue(int, int);
+int bme280_init(int);
+void bme280_deinit(int);
+int bme280_read(int);
+int32_t bme280_get_value(int, int);
 
 /*
  * Helper FUNCTIONS
  */
-int BME280_getID(void);
-int BME280_readCalibration(int);
-int BME280_setParameters(int);
-int BME280_getIndex(int);
+int bme280_get_id(void);
+int bme280_read_calibration(int);
+int bme280_set_parameters(int);
+int bme280_get_index(int);
 
-int32_t BME280_compensate_temperature_fine(int, int32_t);
-int32_t BME280_compensate_temperature(int, int32_t);
-uint32_t BME280_compensate_preasure(int, int32_t, int32_t);
-uint32_t BME280_compensate_humidity(int, int32_t, int32_t);
+int32_t bme280_compensate_temperature_fine(int, int32_t);
+int32_t bme280_compensate_temperature(int, int32_t);
+uint32_t bme280_compensate_preasure(int, int32_t, int32_t);
+uint32_t bme280_compensate_humidity(int, int32_t, int32_t);
 
 #endif /* SENSOR_BME280_H_ */

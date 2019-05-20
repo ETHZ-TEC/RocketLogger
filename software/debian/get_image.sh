@@ -3,21 +3,21 @@
 #
 # Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
-# 
+#
 # * Redistributions in binary form must reproduce the above copyright notice,
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
-# 
+#
 # * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,11 +28,12 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 
-URL_DIRECTORY="http://debian.beagleboard.org/images/rcn-ee.net/rootfs/bb.org/release/2016-06-15/console/"
-IMAGE_FILE="bone-debian-7.11-console-armhf-2016-06-15-2gb.img.xz"
-IMAGE_SHA256="cfceb64083cf63ed49ad75c3b5f5665cef65eaa67c86420a2c4d27bddc22d1ee"
+# Debian buster IoT image
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2019-05-12/buster-iot/"
+IMAGE_FILE="bone-debian-buster-iot-armhf-2019-05-12-4gb.img.xz"
+IMAGE_SHA256="95b8089074db528e2985f8e9ea4af4dc3ccc3a4dc42b1dd37e3a45ba3f885b58"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"
@@ -46,4 +47,3 @@ else
   echo "SHA256 hash verification failed!"
   exit 1
 fi
-

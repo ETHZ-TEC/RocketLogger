@@ -19,38 +19,28 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef RL_UTIL_H_
 #define RL_UTIL_H_
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "rl_lib.h"
 #include "types.h"
 
 /// Default configuration file
 #define DEFAULT_CONFIG "/etc/rocketlogger/default.conf"
 
 /**
- * Available options for RocketLogger CLI
+ * Available command line options of the RocketLogger CLI
  */
-typedef enum option {
+enum rl_option {
     FILE_NAME,      //!< Name of data file to write
     SAMPLE_RATE,    //!< Sampling rate
     UPDATE_RATE,    //!< Data file update rate
@@ -66,22 +56,27 @@ typedef enum option {
     FILE_SIZE,      //!< Maximum data file size
     COMMENT,        //!< File comment
     NO_OPTION       //!< No option
-} rl_option;
+};
 
-void rl_print_config(struct rl_conf* conf);
-void rl_print_status(struct rl_status* status);
+/**
+ * Typedef for RocketLogger command line options
+ */
+typedef enum rl_option rl_option_t;
+
+void rl_print_config(rl_config_t const *const conf);
+void rl_print_status(rl_status_t const *const status);
 void rl_print_version(void);
 
-rl_mode get_mode(char* mode);
-rl_option get_option(char* option);
-int parse_args(int argc, char* argv[], struct rl_conf* conf,
-               int* set_as_default, char** file_comment);
+rl_mode_t get_mode(char const *const mode);
+rl_option_t get_option(char const *const option);
+int parse_args(int argc, char *argv[], rl_config_t *const config,
+               bool *const set_as_default, char **const file_comment);
 
 void print_usage(void);
 
-void print_config(struct rl_conf* conf);
-void reset_config(struct rl_conf* conf);
-int read_default_config(struct rl_conf* conf);
-int write_default_config(struct rl_conf* conf);
+void print_config(rl_config_t const *const conf);
+void reset_config(rl_config_t *const conf);
+int read_default_config(rl_config_t *const conf);
+int write_default_config(rl_config_t const *const conf);
 
 #endif /* RL_UTIL_H_ */

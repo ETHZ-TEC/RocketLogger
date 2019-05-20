@@ -19,14 +19,14 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef WEB_H_
@@ -34,7 +34,6 @@
 
 #include <stdint.h>
 
-#include "log.h"
 #include "types.h"
 #include "util.h"
 
@@ -46,15 +45,6 @@
 #define BUF10_INDEX 1
 /// Index of 100s/div buffer
 #define BUF100_INDEX 2
-
-/**
- * RocketLogger time scale definition
- */
-enum time_scale {
-    S1 = 0,  //!< 100 sample/s
-    S10 = 1, //!< 10 samples/s
-    S100 = 2 //!< 1 samples/s
-};
 
 /// Size of 1s/div buffer
 #define BUFFER1_SIZE 100
@@ -74,9 +64,23 @@ enum time_scale {
 #define H_L_SCALE 100
 
 /**
- * Ring buffer for data exchange to web server
+ * RocketLogger web interface time scale definition
  */
-struct ringbuffer {
+enum web_time_scale {
+    WEB_TIME_SCALE_1 = 0,  //!< 100 sample/s
+    WEB_TIME_SCALE_10 = 1, //!< 10 samples/s
+    WEB_TIME_SCALE_100 = 2 //!< 1 samples/s
+};
+
+/**
+ * Typedef for web interface time scale.
+ */
+typedef enum web_time_scale web_time_scale_t;
+
+/**
+ * Ring buffer data structure for data exchange with web server
+ */
+struct web_buffer {
     /// Size of buffer element
     uint32_t element_size;
     ///  Size of buffer in elements
@@ -90,6 +94,11 @@ struct ringbuffer {
 };
 
 /**
+ * Typedef for web server data buffer
+ */
+typedef struct web_buffer web_buffer_t;
+
+/**
  * Shared memory struct for data exchange to web server
  */
 struct web_shm {
@@ -98,7 +107,7 @@ struct web_shm {
     /// Number of channels sampled
     uint32_t num_channels;
     /// Array of ring buffers for different time scales
-    struct ringbuffer buffer[WEB_RING_BUFFER_COUNT];
+    web_buffer_t buffer[WEB_RING_BUFFER_COUNT];
 };
 
 /**
@@ -106,18 +115,68 @@ struct web_shm {
  */
 typedef struct web_shm web_shm_t;
 
-web_shm_t* web_create_shm(void);
-web_shm_t* web_open_shm(void);
+/**
+ * Create shared memory for data exchange with web server.
+ *
+ * @return pointer to shared memory, NULL in case of failure
+ */
+web_shm_t *web_create_shm(void);
 
-void web_buffer_reset(struct ringbuffer* buffer, int element_size, int length);
+/**
+ * Open existing shared memory for data exchange with web server.
+ *
+ * @return pointer to shared memory, NULL in case of failure
+ */
+web_shm_t *web_open_shm(void);
 
-void web_buffer_add(struct ringbuffer* buffer, int64_t* data);
+/**
+ * Close shared memory mapped for data exchange with web server.
+ *
+ * @param web_shm Pointer to shared memory used for web server data exchange
+ */
+void web_close_shm(web_shm_t const *web_shm);
 
-int64_t* web_buffer_get(struct ringbuffer* buffer, int num);
+/**
+ * Reset web data ring buffer.
+ *
+ * @param buffer Pointer to ring buffer to reset
+ * @param element_size Desired element size in bytes
+ * @param length Buffer length in elements
+ */
+void web_buffer_reset(web_buffer_t *const buffer, int element_size, int length);
 
-void web_handle_data(web_shm_t* web_data_ptr, int sem_id,
-                     void* buffer_addr, uint32_t samples_count,
-                     struct time_stamp* timestamp_realtime,
-                     struct rl_conf* conf);
+/**
+ * Add element to ring buffer.
+ *
+ * @param buffer Pointer to ring buffer
+ * @param data Pointer to data array to add
+ */
+void web_buffer_add(web_buffer_t *const buffer, int64_t const *const data);
+
+/**
+ * Get pointer to a specific element of a ringbuffer.
+ *
+ * @param buffer Pointer to ring buffer
+ * @param num Element number (0 corresponds to the newest element)
+ * @return pointer to desired element
+ */
+int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
+
+/**
+ * Process the data buffer for the web interface.
+ *
+ * @param web_data_ptr Pointer to shared web data
+ * @param sem_id ID of semaphores for shared web data
+ * @param buffer_addr Pointer to buffer to handle
+ * @param samples_count Number of samples to read
+ * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
+ * @param config Current {@link rl_config_t} configuration.
+ * @return {@link SUCCESS} on successful processing, {@link FAILURE} otherwise
+
+ */
+int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
+                    void const *buffer_addr, uint32_t samples_count,
+                    rl_timestamp_t const *const timestamp_realtime,
+                    rl_config_t const *const config);
 
 #endif /* WEB_H_ */

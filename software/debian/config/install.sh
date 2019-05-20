@@ -51,7 +51,7 @@ echo "> Create new user 'rocketlogger'"
 # add new rocketlogger user with home directory and bash shell
 useradd --create-home --shell /bin/bash rocketlogger
 # set default password
-echo "rocketlogger:beaglebone" | chpasswd
+cat user/password | chpasswd
 
 # add rocketlogger user to admin and sudo group for super user commands
 usermod --append --groups admin rocketlogger
@@ -72,8 +72,9 @@ chage -E 1970-01-01 debian
 echo "> Setting user permissions"
 
 # configure sudoers
-cp -f sudo/sudoers /etc/
 cp -f sudo/privacy /etc/sudoers.d/
+#cp -f sudo/rocketlogger_web /etc/sudoers.d/
+chmod 440 /etc/sudoers.d/*
 
 
 ## security
@@ -89,7 +90,7 @@ cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
-echo "RocketLogger v1.99" > /etc/issue.net
+cp -f system/issue.net /etc/issue.net
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/
@@ -101,12 +102,24 @@ echo "> Updating network configuration"
 # copy network interface configuration
 cp -f network/interfaces /etc/network/
 
-# copy dhcp server configuration
-cp -f network/isc-dhcp-server /etc/default/isc-dhcp-server
-cp -f network/dhcpd.conf /etc/dhcp/dhcpd.conf
-
-# create RL folder
+# create RocketLogger system config folder
 mkdir -p /etc/rocketlogger
+
+
+## updates and software dependencies
+echo "> Deactivating and uninstalling potentially conflicting services"
+
+# stop preinstalled web services
+sudo systemctl stop bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+sudo systemctl disable bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+
+# uninstall preinstalled web services
+sudo apt remove --assume-yes --allow-change-held-packages \
+  nginx                                                   \
+  nodejs?                                                 \
+  c9-core-installer                                       \
+  bonescript?
+sudo apt autoremove --assume-yes
 
 
 ## updates and software dependencies
@@ -117,24 +130,32 @@ apt update --assume-yes
 apt upgrade --assume-yes
 
 # install fundamental dependencies
-apt install --assume-yes     \
-  unzip                      \
-  git                        \
-  make                       \
-  gcc                        \
-  g++                        \
-  ti-pru-cgt-installer       \
-  device-tree-compiler       \
-  ntp                        \
-  apache2                    \
-  lighttpd                   \
-  php-cgi                    \
-  libncurses5-dev            \
-  libi2c-dev                 \
+apt install --assume-yes        \
+  unzip                         \
+  git                           \
+  make                          \
+  gcc                           \
+  g++                           \
+  pru-software-support-package  \
+  ti-pru-cgt-installer          \
+  device-tree-compiler          \
+  ntp                           \
+  libncurses5-dev               \
+  i2c-tools                     \
+  libi2c-dev                    \
   linux-headers-$(uname -r)
+
+# install am355x PRU support package from git
+echo "> Manually download, compile and install am335x-pru-package"
+git clone https://github.com/beagleboard/am335x_pru_package.git
+(cd am335x_pru_package && make && make install)
+ldconfig
+
+
+## cleanup
+(cd .. && rm -rf config)
 
 
 ## reboot
 echo "Platform initialized. System will reboot to apply configuration changes."
 reboot && exit 0
-
