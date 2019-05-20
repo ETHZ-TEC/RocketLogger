@@ -90,7 +90,7 @@ cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
 cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
 
 # change ssh welcome message
-echo "RocketLogger v1.99" > /etc/issue.net
+cp -f system/issue.net /etc/issue.net
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/
@@ -104,6 +104,22 @@ cp -f network/interfaces /etc/network/
 
 # create RocketLogger system config folder
 mkdir -p /etc/rocketlogger
+
+
+## updates and software dependencies
+echo "> Deactivating and uninstalling potentially conflicting services"
+
+# stop preinstalled web services
+sudo systemctl stop bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+sudo systemctl disable bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+
+# uninstall preinstalled web services
+sudo apt remove --assume-yes --allow-change-held-packages \
+  nginx                                                   \
+  nodejs?                                                 \
+  c9-core-installer                                       \
+  bonescript?
+sudo apt autoremove --assume-yes
 
 
 ## updates and software dependencies
@@ -128,15 +144,18 @@ apt install --assume-yes        \
   i2c-tools                     \
   libi2c-dev                    \
   linux-headers-$(uname -r)
-  # apache2                       \
-  # lighttpd                      \
-  # php-cgi                       \
 
-echo "WARNING: package am335x-pru-package does not exist anymore. Needs to manually installed from <https://github.com/beagleboard/am335x_pru_package>."
-echo "WARNING: need to manually rund ldconfig after installing  am335x-pru-package PRU libraries."
+# install am355x PRU support package from git
+echo "> Manually download, compile and install am335x-pru-package"
+git clone https://github.com/beagleboard/am335x_pru_package.git
+(cd am335x_pru_package && make && make install)
+ldconfig
+
+
+## cleanup
+(cd .. && rm -rf config)
 
 
 ## reboot
 echo "Platform initialized. System will reboot to apply configuration changes."
 reboot && exit 0
-

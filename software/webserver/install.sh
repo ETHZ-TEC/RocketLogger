@@ -35,16 +35,8 @@ WEB_SOURCE=`pwd`"/data"
 WEB_AUTH_FILE=/home/rocketlogger/.htpasswd
 
 ## package install
-# uninstall preinstalled web services
-echo "uninstalling potentially conflicting packages..."
-sudo apt remove --assume-yes  \
-  nginx                       \
-  nodejs?                     \
-  c9-core-installer           \
-  bonescript?
-sudo apt autoremove --assume-yes
 
-echo "installing web interface dependencies..."
+echo "> Installing web interface dependencies"
 sudo apt install --assume-yes \
   apache2                     \
   lighttpd                    \
@@ -52,10 +44,11 @@ sudo apt install --assume-yes \
 
 
 ## system configuration
-# disable apache web server
-echo "configuring system web services..."
-sudo systemctl stop apache2.service
-sudo systemctl disable apache2.service
+echo "> Configuring system web services"
+
+# disable other web services, enable lighttp
+sudo systemctl stop apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+sudo systemctl disable apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
 sudo systemctl enable lighttpd.service
 sudo systemctl start lighttpd.service
 
@@ -64,7 +57,7 @@ sudo cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
 
 
 ## webserver configuration
-echo "deploying RocketLogger web interface..."
+echo "> Deploying RocketLogger web interface"
 
 # copy webserver data
 sudo mkdir -p ${WEB_ROOT}
@@ -96,9 +89,9 @@ rm -r flot
 
 # create web interface login if not existing
 if [ -f $WEB_AUTH_FILE ]; then
-  echo "found existing web interface authentication config, skipping setup..."
+  echo "> Found existing web interface authentication config, skipping setup"
 else
-  echo "set the web interface authentication for user 'rocketlogger':"
+  echo "> Configure the web interface authentication for user 'rocketlogger':"
   htpasswd -c $WEB_AUTH_FILE rocketlogger
 fi
 
@@ -106,4 +99,4 @@ fi
 # restart webserver to reload configuration
 sudo systemctl restart lighttpd.service
 
-echo "done installing RocketLogger web interface."
+echo "> Done installing RocketLogger web interface. Reboot as required."

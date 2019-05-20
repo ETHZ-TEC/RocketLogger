@@ -65,7 +65,7 @@ fi
 
 # grow file system size and reboot
 echo "Set hostname and grow file system size. You will be asked twice for the user password, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "sudo sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts; cd /opt/scripts/tools/ && sudo ./grow_partition.sh"
+ssh -F /dev/null -p 22 -t debian@${HOST} "sudo sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts; cd /opt/scripts/tools/ && sudo ./grow_partition.sh && sudo reboot"
 
 # verify grow file system size worked
 GROW=$?
@@ -84,7 +84,7 @@ sleep 5
 while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
   REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
   echo -n "."
-  ping -c1 -W2 bb-20.ethz.ch > /dev/null
+  ping -c1 -W2 ${HOST} > /dev/null
   # break timeout loop on success
   if [ $? -eq 0 ]; then
     sleep 2
@@ -107,7 +107,7 @@ ssh -F /dev/null -p 22 -t debian@${HOST} "exit"
 
 # perform system configuration
 echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh); exit \$?"
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh)"
 
 # verify system configuration worked
 CONFIG=$?
