@@ -39,7 +39,6 @@ from os.path import isfile, splitext
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 _ROCKETLOGGER_FILE_MAGIC = 0x444C5225
@@ -922,6 +921,8 @@ class RocketLoggerData:
         """
         Plot the loaded RocketLogger data.
 
+        Requires matplotlib package to be installed
+
         :param channel_names: The names of the channels for which the
             data shall be returned. List of channel names (or combination of):
 
@@ -934,6 +935,8 @@ class RocketLoggerData:
 
         :returns: The matplotlib plot object used for plotting
         """
+        import matplotlib.pyplot as plt
+
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
