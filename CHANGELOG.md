@@ -1,4 +1,20 @@
 
+
+## v1.99 (20xx-xx-xx)
+
+- [CHANGED] Base system: migration to latest Debian buster release (#10, #123)
+- [CHANGED] Base system: simplify system setup procedure
+- [CHANGED] Software: rework low level hardware interfacing for Debian buster compatibility (#123)
+- [CHANGED] Software: update an reorganize API and headers for increased consistency
+- [CHANGED] Python support: make plotting an optional feature to reduce package dependencies
+- [ADDED] Python support: add calibration support (#125)
+
+_Notes:_
+
+This major release updates the base system to run the latest Debian version and includes many internal software changes.
+Calibration feature was added to the Python support library and the updated web interface now allows on-device calibration.
+
+
 ## v1.1.5 (2019-03-04)
 
 - [FIXED] Software: corrupt data when writing files >2 GB (#119)
