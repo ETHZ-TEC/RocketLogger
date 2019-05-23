@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+  {% block head %}
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Language" content="en">
+  <title>{% block title %}RocketLogger Web Interface{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}</title>
+  <meta name="description" content="{% block description %}RocketLogger web interface for remote controlling and observing measurements{% endblock %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="author" content="ETH Zurich, Computer Engineering Group">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-32x32.png') }}" sizes="32x32">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-16x16.png') }}" sizes="16x16">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="mask-icon" href="{{ url_for('static', filename='safari-pinned-tab.svg') }}" color="#f08018">
+  <meta name="apple-mobile-web-app-title" content="RocketLogger">
+  <meta name="application-name" content="RocketLogger">
+  <meta name="theme-color" content="#ff0000">
+  
+  {% block css_head %}
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- Bootstrap CSS local fallback, source: https://stackoverflow.com/questions/26192897/should-i-use-bootstrap-from-cdn-or-make-a-copy-on-my-server/26198380#26198380 -->
+  <script>
+    var test = document.createElement("div")
+    test.className = "hidden d-none"
+    document.head.appendChild(test)
+    var cssLoaded = window.getComputedStyle(test).display === "none"
+    document.head.removeChild(test)
+    if (!cssLoaded) {
+      var link = document.createElement("link");
+      link.type = "text/css";
+      link.rel = "stylesheet";
+      link.href = "{{ url_for('static', filename='css/bootstrap-4.3.1.min.css') }}";
+      document.head.appendChild(link);
+    }
+  </script>
+  <!-- site CSS -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+  {% endblock %}
+  {% block js_head %}{% endblock %}
+  {% endblock %}
+</head>
+
+<body>
+	<div class="container">
+		<!-- Header Container -->
+		<header id="header">
+      {% block header %}
+      {% endblock %}
+    </header>
+
+    <!-- Notifications Bar Section -->
+    {% if error_messages %}
+      {% for error_message in error_messages %}
+      <div class="alert alert-danger alert-dismissible" role="alert">
+        <strong>Error:</strong> {{ error_message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% if warning_messages %}
+      {% for warning_message in warning_messages %}
+      <div class="alert alert-warning alert-dismissible" role="alert">
+        <strong>Warning:</strong> {{ warning_message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <main id="content">
+      {% block content %}
+      <!-- Page Title -->
+      <div class="row justify-content-between align-items-center mb-4">
+        <div class="col">
+          <h1>RocketLogger Web Interface{% if hostname %} ({{ hostname }}){% endif %}</h1>
+        </div>
+      </div>
+
+      <!-- Option List -->
+      <div class="card mb-3">
+        <h2 class="card-header">Welcome!</h2>
+        <div class="card-body">
+          <p>Welcome to the RocketLogger interface. You have the following options to chose from:</p>
+          <p><a href="{{ url_for('control') }}" class="btn btn-primary" role="button">Perform Measurements &gt;</a></p>
+          <p><a href="{{ url_for('calibration') }}" class="btn btn-primary" role="button">Calibrate RocketLogger &gt;</a></p>
+          <p><a href="{{ url_for('data') }}" class="btn btn-primary" role="button">Download Data &gt;</a></p>
+          <p><a href="{{ url_for('log') }}" class="btn btn-primary" role="button">View the Log &gt;</a></p>
+        </div>
+      </div>
+      {% endblock %}
+    </main>
+    <footer id="footer">
+      {% block footer %}
+      <div class="row justify-content-around">
+        <div class="col-auto">
+          <img class="img-fluid float-left" src="{{ url_for('static', filename='img/eth_logo_small.png') }}" alt="Logo ETH Zurich">
+        </div>
+        <div class="col-auto">
+          <img class="img-fluid float-right" src="{{ url_for('static', filename='img/tik_logo_small.png') }}" alt="Logo TIK">
+        </div>
+      </div>
+
+      <p><span {% if version_string %}data-toggle="tooltip" title="{{ version_string }}"{% endif %}>
+        RocketLogger version {% if version %}{{ version }}{% else %}<span class="badge badge-danger" id="warn_calibration">unknown</span>{% endif %}
+        </span> - <a href="https://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
+        &copy; {{ today.year }}, ETH Zurich, Computer Engineering Group.
+      </p>
+      {% endblock %}
+    </footer>
+
+    {% block js_footer %}
+    <!-- jQuery first, then Popper.js, then Bootstrap Javascript -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='js/vendor/jquery-3.2.1.min.js') }}"><\/script>')</script>
+    <script src="https://unpkg.com/popper.js@1.15.0/dist/umd/popper.min.js" integrity="sha384-L2pyEeut/H3mtgCBaUNw7KWzp5n9+4pDQiExs933/5QfaTh8YStYFFkOzSoXjlTb" crossorigin="anonymous"></script>
+    <script>if (typeof (Popper) === 'undefined') { document.write('<script src="{{ url_for('static', filename='js/vendor/popper-1.15.0.min.js') }}"><\/script>') }</script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>if (typeof ($.fn.modal) === 'undefined') { document.write('<script src="{{ url_for('static', filename='js/vendor/bootstrap-4.3.1.min.js') }}"><\/script>') }</script>
+    {% endblock %}
+	</div>
+</body>
+</html>

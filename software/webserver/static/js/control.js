@@ -1,5 +1,4 @@
-<?php
-/*
+/**
  * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  * 
@@ -29,8 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/// Rocket Logger version
-define("PROJECT_VERSION", "1.99");
 
-?>
-
+/// Initilize after document loaded and ready
+$(function () {
+  // activate tooltips
+  $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+})
