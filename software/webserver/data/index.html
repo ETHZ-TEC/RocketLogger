@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Language" content="en">
+  <title>RocketLogger ($hostname;)</title>
+  <meta name="description" content="RocketLogger web interface for remote controlling and observing measurements" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="author" content="Lukas Sigrist">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#f08018">
+  <meta name="apple-mobile-web-app-title" content="RocketLogger">
+  <meta name="application-name" content="RocketLogger">
+  <meta name="theme-color" content="#ff0000">
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- Bootstrap CSS local fallback, source: https://stackoverflow.com/questions/26192897/should-i-use-bootstrap-from-cdn-or-make-a-copy-on-my-server/26198380#26198380 -->
+  <script>
+    var test = document.createElement("div")
+    test.className = "hidden d-none"
+    document.head.appendChild(test)
+    var cssLoaded = window.getComputedStyle(test).display === "none"
+    document.head.removeChild(test)
+    if (!cssLoaded) {
+      var link = document.createElement("link");
+      link.type = "text/css";
+      link.rel = "stylesheet";
+      link.href = "css/bootstrap-4.3.1.min.css";
+      document.head.appendChild(link);
+    }
+  </script>
+  <!-- local CSS -->
+  <link rel="stylesheet" type="text/css" href="css/rocketlogger.css">
+  <link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+
+<body>
+	<div class="container">
+		<!-- Header Container -->
+		<header id="header" class="mb-3">
+      <div class="row justify-content-between align-items-center">
+        <div class="col-auto">
+          <h1>RocketLogger Remote Interface ($hostname;)</h1>
+        </div>
+        <div class="col-auto">
+          <div class="badge badge-info" data-toggle="tooltip" data-placement="bottom" title="RocketLogger Hotkeys:
+s:	Start/Stop
+d:	Store Configuration as Default
+l:	Load Default Configuration
+p:	Un-/Pause Plot Update
+1-3:	Change Plot Time Scale">HELP</div>
+        </div>
+      </div>
+
+			<!-- Notifications Bar Section -->
+			<div class="alert alert-danger alert-dismissible" role="alert">
+        <strong>Error:</strong> ERROR STRING
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+			<div class="alert alert-warning alert-dismissible" role="alert">
+        <strong>Warning:</strong> WARNING STRING
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+      </div>
+		</header>
+
+		<!-- Status Panel Container -->
+    <div class="card mb-3">
+      <h2 class="card-header">Status & Control</h2>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Status</h5>
+            <p id="status">connecting...</p>
+            <h5>Recorded samples</h5>
+            <p id="status_samples">0 samples</p>
+            <h5>Recorded time</h5>
+            <p id="status_time">0 h 0 min 0 sec</p>
+          </div>
+          <div class="col-md-6">
+            <h5>Calibration date</h5>
+            <p id="status_calibration"><span class="badge badge-danger" id="warn_calibration">uncalibrated</span></p>
+            <h5>Disk usage</h5>
+            <p id="status_disk">100 MB <span class="badge badge-warning" id="warn_storage_low">low</span><span class="badge badge-danger" id="warn_storage_critical">critical</span></p>
+            <h5>Remaining recording time</h5>
+            <p id="status_remaining">5 min</p>
+          </div>
+        </div>
+        <hr />
+
+        <h3>Controls</h3>
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div class="form-group">
+              <button id="start" class="btn btn-success">Start</button>
+              <button id="stop" class="btn btn-dark" disabled>Stop</button>
+            </div>
+          </div>
+          <div class="col-sm-1"></div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input class="custom-control-input" type="checkbox" id="status_refresh" checked>
+              <label class="custom-control-label" for="status_refresh">Refresh interface in background</label>
+            </div>
+          </div>
+        </div>
+        <hr />
+
+        <h3>Download & Calibration</h3>
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div class="form-group">
+              <a href="data/" target="_blank" class="btn btn-outline-dark" role="button">Browse measurements</a>
+              <a href="log/rocketlogger.log" target="_blank" class="btn btn-outline-dark" role="button">Open log file</a>
+            </div>
+          </div>
+          <div class="col-sm-1"></div>
+          <div class="col-auto">
+            <div class="form-group">
+              <a href="calibration.html" class="btn btn-outline-danger" role="button" aria-pressed="true">Calibrate</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Panel Container -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h2 class="accordion-toggle" data-toggle="collapse" href="#collapseConfiguration">
+          Measurement Configuration
+        </h2>
+      </div>
+      <div class="card-body collapse show" id="collapseConfiguration">
+        <div class="form-group">
+          <button type="button" class="btn btn-outline-dark" id="button_config_save">Store as default</button>
+          <button type="button" class="btn btn-outline-dark" id="button_config_load">Restore default</button>
+          <hr />
+        </div>
+
+        <h3>Base Configuration</h3>
+        <div class="row">
+          <div class="col">
+            <div class="form-group row justify-content-start">
+              <label class="col-sm-3 col-form-label" for="sample_rate">Sample rate</label>
+              <div class="col-sm-6">
+                <select class="custom-select" id="sample_rate">
+                  <option value="1"> 1 Sps</option>
+                  <option value="10">10 Sps</option>
+                  <option value="100">100 Sps</option>
+                  <option value="1000" selected>1 kSps</option>
+                  <option value="2000">2 kSps</option>
+                  <option value="4000">4 kSps</option>
+                  <option value="8000">8 kSps</option>
+                  <option value="16000">16 kSps</option>
+                  <option value="32000">32 kSps</option>
+                  <option value="64000">64 kSps</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr />
+
+        <h3>Input Channels</h3>
+        <div class="form-group">
+          <button type="button" class="btn btn-outline-dark" id="button_config_all">Enable all channels</button>
+          <button type="button" class="btn btn-outline-dark" id="button_config_none">Disable all channels</button>
+        </div>
+
+        <h5>Voltage</h5>
+        <div class="row justify-content-start">
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_v1" checked>
+              <label class="custom-control-label" for="channel_v1">V1</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_v2" checked>
+              <label class="custom-control-label" for="channel_v2">V2</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_v3" checked>
+              <label class="custom-control-label" for="channel_v3">V3</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_v4" checked>
+              <label class="custom-control-label" for="channel_v4">V4</label>
+            </div>
+          </div>
+        </div>
+  
+        <h5>Current</h5>
+        <div class="row justify-content-start">
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i1h" checked>
+              <label class="custom-control-label" for="channel_i1h">I1 high</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i1l" checked>
+              <label class="custom-control-label" for="channel_i1l">I1 low</label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i1h_force">
+              <label class="custom-control-label" for="channel_i1h_force">I1 force high range</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row justify-content-start">
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i2h" checked>
+              <label class="custom-control-label" for="channel_i2h">I2 high</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i2l" checked>
+              <label class="custom-control-label" for="channel_i2l">I2 low</label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_i2h_force">
+              <label class="custom-control-label" for="channel_i2h_force">I2 force high range</label>
+            </div>
+          </div>
+        </div>
+  
+        <h5>Digital Inputs</h5>
+        <div class="row">
+          <div class="col">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_digital" checked>
+              <label class="custom-control-label" for="channel_digital">Enable digital inputs</label>
+            </div>
+          </div>
+        </div>
+
+        <h5>Ambient Sensors</h5>
+        <div class="row">
+          <div class="col">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="channel_ambient">
+              <label class="custom-control-label" for="channel_ambient">Enable ambient sensors</label>
+            </div>
+          </div>
+        </div>
+        <hr />
+
+        <h3>File Storage</h3>
+        <div class="row">
+          <div class="col">
+            
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="file_enable" checked>
+              <label class="custom-control-label" for="file_enable">Store data to file</label>
+            </div>
+
+            <div id="file_group">
+              <div class="form-group row justify-content-start">
+                <label class="col-sm-3 col-form-label" for="file_filename">Filename</label>
+                <div class="col-sm-9">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <button class="btn btn-outline-secondary" type="button" id="button_prefix">Add date prefix</button>
+                    </div>
+                    <input type="text" class="form-control" id="file_filename" placeholder="filename">
+                    <!-- <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="button_download">Download</button>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group row justify-content-start">
+                <label class="col-sm-3 col-form-label" for="file_format">File format</label>
+                <div class="col-sm-3">
+                  <select class="custom-select" id="file_format">
+                    <option value="bin" selected>RLD</option>
+                    <option value="csv">CSV</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="file_split" checked>
+                <label class="custom-control-label" for="file_split">Split large files</label>
+              </div>
+
+              <div class="form-group row justify-content-start" id="file_group_split">
+                <label class="col-sm-3 col-form-label" for="file_size">File size</label>
+                <div class="input-group col-sm-6">
+                  <input type="text" class="form-control input-group-prepend" id="file_size" placeholder="file size">
+                  <select class="custom-select form-control input-group-append" id="file_size_scale">
+                    <option value="m">MB</option>
+                    <option value="g" selected>GB</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="file_comment">File comment</label>
+                <textarea class="form-control" id="file_comment" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr />
+
+        <h3>Web Interface</h3>
+        <div class="row">
+            <div class="col">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="web_enable" checked>
+                <label class="custom-control-label" for="web_enable">Enable live preview</label>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Data Preview Panel Container -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h2 class="accordion-toggle" data-toggle="collapse" href="#collapsePreview">
+          Live Data Preview
+        </h2>
+      </div>
+      <div class="card-body collapse show" id="collapsePreview">
+        <div class="row justify-content-between align-items-center">
+          <div class="col-sm-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_update">
+              <label class="custom-control-label" for="plot_update">Update plots</label>
+            </div>
+          </div>
+          <div class="col-sm-auto form-group">
+            <div class="row justify-content-end">
+              <label class="col-sm-auto col-form-label" for="plot_time_scale">Time scale</label>
+              <div class="col-sm-auto">
+                <select class="custom-select" id="plot_time_scale">
+                  <option value="0" selected>1 s/div</option>
+                  <option value="1">10 s/div</option>
+                  <option value="2">100 s/div</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="plot_group_voltage">
+          <hr />
+          <h3>Voltage Channels</h3>
+          <div class="row justify-content-between align-items-center">
+            <div class="col-auto">
+              <div class="row justify-content-start align-items-center">
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_voltage_1" checked>
+                    <label class="custom-control-label color-1" for="plot_voltage_1">V1</label>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_voltage_2" checked>
+                    <label class="custom-control-label color-2" for="plot_voltage_2">V2</label>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_voltage_3" checked>
+                    <label class="custom-control-label color-3" for="plot_voltage_3">V3</label>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_voltage_4" checked>
+                    <label class="custom-control-label color-4" for="plot_voltage_4">V4</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-group row justify-content-end">
+                <label class="col-auto col-form-label" for="plot_voltage_range">Range</label>
+                <div class="col-auto">
+                  <select class="custom-select" id="plot_voltage_range">
+                    <option value="0">Auto</option>
+                    <option value="0.1">100 µV</option>
+                    <option value="1">1 mV</option>
+                    <option value="10">10 mV</option>
+                    <option value="100">100 mV</option>
+                    <option value="1000">1 V</option>
+                    <option value="6000">6 V</option>
+                    <option value="10000">10 V</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rl-plot mb-3" id="plot_voltage"></div>
+        </div>
+
+        <div id="plot_group_current">
+          <hr />
+          <h3>Current Channels</h3>
+          <div class="row justify-content-between align-items-center">
+              <div class="col-auto">
+                  <div class="row justify-content-start align-items-center">
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_current_1" checked>
+                    <label class="custom-control-label color-1" for="plot_current_1">I1</label>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="custom-control custom-checkbox mb-3">
+                    <input type="checkbox" class="custom-control-input" id="plot_current_2" checked>
+                    <label class="custom-control-label color-2" for="plot_current_2">I2</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-group row justify-content-start">
+                <label class="col-auto col-form-label" for="plot_current_range">Range</label>
+                <div class="col-auto">
+                  <select class="custom-select" id="plot_current_range">
+                    <option value="0">Auto</option>
+                    <option value="0.01">10 nA</option>
+                    <option value="0.1">100 nA</option>
+                    <option value="1">1 µA</option>
+                    <option value="10">10 µA</option>
+                    <option value="100">100 µA</option>
+                    <option value="1000">1 mA</option>
+                    <option value="10000">10 mA</option>
+                    <option value="100000">100 mA</option>
+                    <option value="1000000">1 A</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rl-plot mb-3" id="plot_current"></div>
+        </div>
+
+        <div id="plot_group_digital">
+          <hr />
+          <h3>Digital Channels</h3>
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_1" checked>
+                <label class="custom-control-label color-1" for="plot_digital_1">DI1</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_2" checked>
+                <label class="custom-control-label color-2" for="plot_digital_2">DI2</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_3" checked>
+                <label class="custom-control-label color-3" for="plot_digital_3">DI3</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_4" checked>
+                <label class="custom-control-label color-4" for="plot_digital_4">DI4</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_5" checked>
+                <label class="custom-control-label color-5" for="plot_digital_5">DI5</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_digital_6" checked>
+                <label class="custom-control-label color-6" for="plot_digital_6">DI6</label>
+              </div>
+            </div>
+          </div>
+          <div class="rl-plot mb-3" id="plot_digital"></div>
+        </div>
+
+        <div id="plot_group_ambient" class="d-none">
+          <hr />
+          <h3>Ambient Sensors</h3>
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_ambient_1" checked>
+                <label class="custom-control-label color-1" for="plot_ambient_1">DI1</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="plot_ambient_2" checked>
+                <label class="custom-control-label color-2" for="plot_ambient_2">DI2</label>
+              </div>
+            </div>
+          </div>
+          <div class="rl-plot mb-3" id="plot_ambient"></div>
+        </div>
+
+      </div>
+    </div>
+    <br />
+
+    <footer id="footer">
+			<div class="row justify-content-around">
+				<div class="col-auto">
+					<img class="img-fluid float-left" src="img/eth_logo_small.png" alt="Logo ETH Zurich">
+				</div>
+				<div class="col-auto">
+					<img class="img-fluid float-right" src="img/tik_logo_small.png" alt="Logo TIK">
+				</div>
+			</div>
+
+      <p><span data-toggle="tooltip" title="$binary_version_details;">
+        RocketLogger version $PROJECT_VERSION;
+        </span> - <a href="https://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
+        &copy; 2019, ETH Zurich, Computer Engineering Group.
+      </p>
+    </footer>
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS, flot.js -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.2.1.min.js"><\/script>')</script>
+    <script src="https://unpkg.com/popper.js@1.15.0/dist/umd/popper.min.js" integrity="sha384-L2pyEeut/H3mtgCBaUNw7KWzp5n9+4pDQiExs933/5QfaTh8YStYFFkOzSoXjlTb" crossorigin="anonymous"></script>
+    <script>if (typeof (Popper) === 'undefined') { document.write('<script src="js/vendor/popper-1.15.0.min.js"><\/script>') }</script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>if (typeof ($.fn.modal) === 'undefined') { document.write('<script src="js/vendor/bootstrap-4.3.1.min.js"><\/script>') }</script>
+		<script src="js/vendor/jquery.flot.js"></script>
+		<script src="js/vendor/jquery.flot.time.js"></script>
+    <script src="js/rocketlogger.js"></script>
+    <script src="js/main.js"></script>
+	</div>
+</body>
+</html>

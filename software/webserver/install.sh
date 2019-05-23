@@ -34,8 +34,12 @@ WEB_ROOT="/var/www/rocketlogger"
 WEB_SOURCE=`pwd`"/data"
 WEB_AUTH_FILE=/home/rocketlogger/.htpasswd
 
-## package install
+BOOTSTRAP_VERSION=4.3.1
+POPPER_VERSION=1.15.0
+JQUERY_VERSION=3.4.1
+FLOT_VERSION=3.0.2
 
+## package install
 echo "> Installing web interface dependencies"
 sudo apt install --assume-yes \
   apache2                     \
@@ -67,25 +71,31 @@ sudo rsync -aP ${WEB_SOURCE}/ ${WEB_ROOT}/
 # create default data and log dirs
 sudo mkdir -p ${WEB_ROOT}/data ${WEB_ROOT}/log
 
-# download and copy dependencies (bootstrap, jquery, flot)
+# download dependencies (bootstrap, popper, jquery, flot)
 sudo mkdir -p ${WEB_ROOT}/css/ ${WEB_ROOT}/js/vendor/
 
-wget -N https://github.com/twbs/bootstrap/releases/download/v3.3.7/bootstrap-3.3.7-dist.zip
-wget -N https://code.jquery.com/jquery-3.1.1.min.js
-wget -N http://www.flotcharts.org/downloads/flot-0.8.3.zip
+wget -N https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
+wget -N https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
+wget -N https://code.jquery.com/jquery-${JQUERY_VERSION}.min.js
+wget -N https://unpkg.com/popper.js@${POPPER_VERSION}/dist/umd/popper.min.js
+wget -N https://github.com/flot/flot/blob/v${FLOT_VERSION}/source/jquery.flot.js
+wget -N https://github.com/flot/flot/blob/v${FLOT_VERSION}/source/jquery.flot.time.js
 
-unzip -o bootstrap-3.3.7-dist.zip
-sudo cp -rf bootstrap-3.3.7-dist/fonts ${WEB_ROOT}/
-sudo cp -f bootstrap-3.3.7-dist/css/*.min.css ${WEB_ROOT}/css/
-sudo cp -f bootstrap-3.3.7-dist/js/*.min.js ${WEB_ROOT}/js/vendor/
-rm -r bootstrap-*-dist
+# copy relevant file and clean up
+unzip -o bootstrap-${BOOTSTRAP_VERSION}-dist.zip
+sudo cp -f bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css ${WEB_ROOT}/css/bootstrap-${BOOTSTRAP_VERSION}.min.css
+sudo cp -f bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js ${WEB_ROOT}/js/vendor/bootstrap-${BOOTSTRAP_VERSION}.min.js
+rm -r bootstrap-${BOOTSTRAP_VERSION}-dist
+rm bootstrap-${BOOTSTRAP_VERSION}-dist.zip
 
-sudo cp -f jquery-3.1.1.min.js ${WEB_ROOT}/js/vendor/
-rm jquery-3.1.1.min.js
+sudo cp -f popper.min.js ${WEB_ROOT}/js/vendor/popper-${POPPER_VERSION}.min.js
+rm popper.min.js
 
-unzip -o flot-0.8.3.zip
-sudo cp -f flot/jquery.flot*.min.js ${WEB_ROOT}/js/vendor/
-rm -r flot
+sudo cp -f jquery-${JQUERY_VERSION}.min.js ${WEB_ROOT}/js/vendor/jquery-${JQUERY_VERSION}.min.js
+rm jquery-${JQUERY_VERSION}.min.js
+
+sudo cp -f jquery.flot*.js ${WEB_ROOT}/js/vendor/
+rm jquery.flot*.js
 
 # create web interface login if not existing
 if [ -f $WEB_AUTH_FILE ]; then
@@ -96,7 +106,8 @@ else
 fi
 
 
-# restart webserver to reload configuration
+## restart webserver to reload configuration
+echo "> Restarting web server"
 sudo systemctl restart lighttpd.service
 
 echo "> Done installing RocketLogger web interface. Reboot as required."

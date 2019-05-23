@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  * 
@@ -31,6 +31,5 @@
 
 /// Initilize after document loaded and ready
 $(function () {
-  // activate tooltips
-  $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+  
 })
