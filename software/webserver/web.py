@@ -1,15 +1,53 @@
+"""
+RocketLogger Data Import Support.
+
+File reading support for RocketLogger data (rld) files.
+
+Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
 import os
+import json
 from datetime import datetime, timezone
 from socket import gethostname
 from subprocess import check_output
-from flask import Flask, render_template, request, send_from_directory, url_for
+from flask import Flask, make_response, render_template, request, \
+    send_from_directory, url_for
+
+import actions
 
 
 ROCKETLOGGER_DATA_DIR = '/var/www/rocketlogger/data'
 ROCKETLOGGER_LOG_FILE = '/var/www/rocketlogger/log/rocketlogger.log'
 WEB_VERSION = 1.99
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 
 def render_page(template_name_or_list, **context):
@@ -27,11 +65,11 @@ def render_page(template_name_or_list, **context):
     except FileNotFoundError:
         version_string = None
         error_messages.append('RocketLogger binary was not found. '
-                              'Check your systems configuration!')
+                              'Check your system configuration!')
     except:
         version_string = None
         error_messages.append('Failed getting RocketLogger binary version. '
-                              'Check your systems configuration!')
+                              'Check your system configuration!')
     context['error_messages'] = (error_messages +
                                  context.get('error_messages', []))
     context['warning_messages'] = (warning_messages +
@@ -46,22 +84,49 @@ def render_page(template_name_or_list, **context):
     )
 
 
-@app.route('/')
+@application.route('/')
 def home():
+    # return render_page('control.html')
     return render_page('base.html')
 
 
-@app.route('/control/')
+@application.route('/control/')
 def control():
     return render_page('control.html')
 
 
-@app.route('/calibration/')
+@application.route('/control/<action>', methods=['POST'])
+def control_action(action):
+    # action is required to be POST requests
+    if action != request.form.get('action', None):
+        return actions.invalid_request('ambiguous action in the request data')
+
+    # check for available request data
+    try:
+        data = json.loads(request.form['data'])
+    except KeyError:
+        return make_response('Invalid request: no data', 400)
+
+    if action == 'start':
+        return actions.start(data)
+    elif action == 'stop':
+        return actions.stop(data)
+    elif action == 'status':
+        return actions.status(data)
+    elif action == 'config':
+        return actions.config(data)
+    elif action == 'calibrate':
+        return actions.calibrate(data)
+
+    return make_response('Invalid request: action {}'.format(action), 400)
+
+
+@application.route('/calibration/')
 def calibration():
     return render_page('calibration.html')
 
 
-@app.route('/data/')
+@application.route('/data/')
 def data():
     error = []
     files = []
@@ -96,7 +161,7 @@ def data():
     return render_page('data.html', files=files, error_messages=error)
 
 
-@app.route('/data/delete/<filename>')
+@application.route('/data/delete/<filename>')
 def data_delete(filename):
     filename_abs = os.path.join(ROCKETLOGGER_DATA_DIR, filename)
     if os.path.isfile(filename_abs):
@@ -106,19 +171,23 @@ def data_delete(filename):
         return 'File {} does not exist!'.format(filename)
 
 
-@app.route('/data/download/<filename>')
+@application.route('/data/download/<filename>')
 def data_download(filename):
     filename_abs = os.path.join(ROCKETLOGGER_DATA_DIR, filename)
     if os.path.isfile(filename_abs):
         return 'download link to {}'.format(filename)
 
 
-@app.route('/log/')
+@application.route('/log/')
 def log():
     return 'Hello log!'
 
 
-@app.route('/robots.txt')
-@app.route('/sitemap.xml')
+@application.route('/robots.txt')
+@application.route('/sitemap.xml')
 def static_from_root():
-    return send_from_directory(app.static_folder, request.path[1:])
+    return send_from_directory(application.static_folder, request.path[1:])
+
+
+if __name__ == "__main__":
+    application.run()

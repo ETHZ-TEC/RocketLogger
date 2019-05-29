@@ -38,19 +38,19 @@ p:	Un-/Pause Plot Update
     <div class="row">
       <div class="col-md-6">
         <h5>Status</h5>
-        <p id="status">connecting...</p>
+        <p><span id="status_message"> </span></p>
         <h5>Recorded samples</h5>
-        <p id="status_samples">0 samples</p>
+        <p><span id="status_samples"> </span></p>
         <h5>Recorded time</h5>
-        <p id="status_time">0 h 0 min 0 sec</p>
+        <p><span id="status_time"> </span></p>
       </div>
       <div class="col-md-6">
         <h5>Calibration date</h5>
-        <p id="status_calibration"><span class="badge badge-danger" id="warn_calibration">uncalibrated</span></p>
+        <p><span id="status_calibration"></span><span class="badge badge-danger d-none" id="warn_calibration">uncalibrated</span></p>
         <h5>Disk usage</h5>
-        <p id="status_disk">100 MB <span class="badge badge-warning" id="warn_storage_low">low</span><span class="badge badge-danger" id="warn_storage_critical">critical</span></p>
+        <p><span class="badge badge-warning d-none" id="warn_storage_low">low</span><span class="badge badge-danger d-none" id="warn_storage_critical">critical</span> <span id="status_disk"> </span></p>
         <h5>Remaining recording time</h5>
-        <p id="status_remaining">5 min</p>
+        <p><span id="status_remaining"> </span></p>
       </div>
     </div>
     <hr />
@@ -59,11 +59,15 @@ p:	Un-/Pause Plot Update
     <div class="row align-items-center">
       <div class="col-auto">
         <div class="form-group">
-          <button id="start" class="btn btn-success">Start</button>
-          <button id="stop" class="btn btn-dark" disabled>Stop</button>
+          <button id="button_start" class="btn btn-success">Start</button>
+          <button id="button_stop" class="btn btn-dark" disabled>Stop</button>
         </div>
       </div>
-      <div class="col-sm-1"></div>
+      <div class="col-sm-auto">
+        <div class="form-group">
+          <button id="button_status" class="btn btn-outline-dark">Force Status Update</button>
+        </div>
+      </div>
       <div class="col-auto">
         <div class="custom-control custom-checkbox mb-3">
           <input class="custom-control-input" type="checkbox" id="status_refresh" checked>
@@ -99,204 +103,214 @@ p:	Un-/Pause Plot Update
     </h2>
   </div>
   <div class="card-body collapse show" id="collapseConfiguration">
-    <div class="form-group">
-      <button type="button" class="btn btn-outline-dark" id="button_config_save">Store as default</button>
-      <button type="button" class="btn btn-outline-dark" id="button_config_load">Restore default</button>
+    <fieldset id="configuration_group">
+      <div class="form-group">
+        <button id="button_config_save" type="button" class="btn btn-outline-dark">Store as default</button>
+        <button id="button_config_load" type="button" class="btn btn-outline-dark">Restore default</button>
+      </div>
+      <div id="alert_config_saved" class="alert alert-primary d-none" role="alert">
+        New defalut configuration successfully stored.
+      </div>
+      <div id="alert_config_loaded" class="alert alert-primary d-none" role="alert">
+        Default configuration sucessfully restored.
+      </div>
       <hr />
-    </div>
 
-    <h3>Base Configuration</h3>
-    <div class="row">
-      <div class="col">
-        <div class="form-group row justify-content-start">
-          <label class="col-sm-3 col-form-label" for="sample_rate">Sample rate</label>
-          <div class="col-sm-6">
-            <select class="custom-select" id="sample_rate">
-              <option value="1"> 1 Sps</option>
-              <option value="10">10 Sps</option>
-              <option value="100">100 Sps</option>
-              <option value="1000" selected>1 kSps</option>
-              <option value="2000">2 kSps</option>
-              <option value="4000">4 kSps</option>
-              <option value="8000">8 kSps</option>
-              <option value="16000">16 kSps</option>
-              <option value="32000">32 kSps</option>
-              <option value="64000">64 kSps</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-    <hr />
-
-    <h3>Input Channels</h3>
-    <div class="form-group">
-      <button type="button" class="btn btn-outline-dark" id="button_config_all">Enable all channels</button>
-      <button type="button" class="btn btn-outline-dark" id="button_config_none">Disable all channels</button>
-    </div>
-
-    <h5>Voltage</h5>
-    <div class="row justify-content-start">
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_v1" checked>
-          <label class="custom-control-label" for="channel_v1">V1</label>
-        </div>
-      </div>
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_v2" checked>
-          <label class="custom-control-label" for="channel_v2">V2</label>
-        </div>
-      </div>
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_v3" checked>
-          <label class="custom-control-label" for="channel_v3">V3</label>
-        </div>
-      </div>
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_v4" checked>
-          <label class="custom-control-label" for="channel_v4">V4</label>
-        </div>
-      </div>
-    </div>
-
-    <h5>Current</h5>
-    <div class="row justify-content-start">
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i1h" checked>
-          <label class="custom-control-label" for="channel_i1h">I1 high</label>
-        </div>
-      </div>
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i1l" checked>
-          <label class="custom-control-label" for="channel_i1l">I1 low</label>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i1h_force">
-          <label class="custom-control-label" for="channel_i1h_force">I1 force high range</label>
-        </div>
-      </div>
-    </div>
-
-    <div class="row justify-content-start">
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i2h" checked>
-          <label class="custom-control-label" for="channel_i2h">I2 high</label>
-        </div>
-      </div>
-      <div class="col-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i2l" checked>
-          <label class="custom-control-label" for="channel_i2l">I2 low</label>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_i2h_force">
-          <label class="custom-control-label" for="channel_i2h_force">I2 force high range</label>
-        </div>
-      </div>
-    </div>
-
-    <h5>Digital Inputs</h5>
-    <div class="row">
-      <div class="col">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_digital" checked>
-          <label class="custom-control-label" for="channel_digital">Enable digital inputs</label>
-        </div>
-      </div>
-    </div>
-
-    <h5>Ambient Sensors</h5>
-    <div class="row">
-      <div class="col">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="channel_ambient">
-          <label class="custom-control-label" for="channel_ambient">Enable ambient sensors</label>
-        </div>
-      </div>
-    </div>
-    <hr />
-
-    <h3>File Storage</h3>
-    <div class="row">
-      <div class="col">
-        
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="file_enable" checked>
-          <label class="custom-control-label" for="file_enable">Store data to file</label>
-        </div>
-
-        <div id="file_group">
+      <h3>Base Configuration</h3>
+      <div class="row">
+        <div class="col">
           <div class="form-group row justify-content-start">
-            <label class="col-sm-3 col-form-label" for="file_filename">Filename</label>
-            <div class="col-sm-9">
-              <div class="input-group">
-                <div class="input-group-prepend">
-                  <button class="btn btn-outline-secondary" type="button" id="button_prefix">Add date prefix</button>
-                </div>
-                <input type="text" class="form-control" id="file_filename" placeholder="filename">
-                <!-- <div class="input-group-append">
-                  <button class="btn btn-outline-secondary" type="button" id="button_download">Download</button>
-                </div> -->
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group row justify-content-start">
-            <label class="col-sm-3 col-form-label" for="file_format">File format</label>
-            <div class="col-sm-3">
-              <select class="custom-select" id="file_format">
-                <option value="bin" selected>RLD</option>
-                <option value="csv">CSV</option>
+            <label class="col-sm-3 col-form-label" for="sample_rate">Sample rate</label>
+            <div class="col-sm-6">
+              <select class="custom-select" id="sample_rate">
+                <option value="1"> 1 Sps</option>
+                <option value="10">10 Sps</option>
+                <option value="100">100 Sps</option>
+                <option value="1000" selected>1 kSps</option>
+                <option value="2000">2 kSps</option>
+                <option value="4000">4 kSps</option>
+                <option value="8000">8 kSps</option>
+                <option value="16000">16 kSps</option>
+                <option value="32000">32 kSps</option>
+                <option value="64000">64 kSps</option>
               </select>
             </div>
           </div>
+        </div>
+      </div>
+      <hr />
 
+      <h3>Input Channels</h3>
+      <div class="form-group">
+        <button type="button" class="btn btn-outline-dark" id="button_config_all">Enable all channels</button>
+        <button type="button" class="btn btn-outline-dark" id="button_config_none">Disable all channels</button>
+      </div>
+
+      <h5>Voltage</h5>
+      <div class="row justify-content-start">
+        <div class="col-auto">
           <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="file_split" checked>
-            <label class="custom-control-label" for="file_split">Split large files</label>
+            <input type="checkbox" class="custom-control-input" id="channel_v1_enable" checked>
+            <label class="custom-control-label" for="channel_v1_enable">V1</label>
           </div>
-
-          <div class="form-group row justify-content-start" id="file_group_split">
-            <label class="col-sm-3 col-form-label" for="file_size">File size</label>
-            <div class="input-group col-sm-6">
-              <input type="text" class="form-control input-group-prepend" id="file_size" placeholder="file size">
-              <select class="custom-select form-control input-group-append" id="file_size_scale">
-                <option value="m">MB</option>
-                <option value="g" selected>GB</option>
-              </select>
-            </div>
+        </div>
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_v2_enable" checked>
+            <label class="custom-control-label" for="channel_v2_enable">V2</label>
           </div>
-
-          <div class="form-group">
-            <label for="file_comment">File comment</label>
-            <textarea class="form-control" id="file_comment" rows="3"></textarea>
+        </div>
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_v3_enable" checked>
+            <label class="custom-control-label" for="channel_v3_enable">V3</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_v4_enable" checked>
+            <label class="custom-control-label" for="channel_v4_enable">V4</label>
           </div>
         </div>
       </div>
-    </div>
-    <hr />
 
-    <h3>Web Interface</h3>
-    <div class="row">
+      <h5>Current</h5>
+      <div class="row justify-content-start">
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i1h_enable" checked>
+            <label class="custom-control-label" for="channel_i1h_enable">I1 high</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i1l_enable" checked>
+            <label class="custom-control-label" for="channel_i1l_enable">I1 low</label>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i1h_force">
+            <label class="custom-control-label" for="channel_i1h_force">I1 force high range</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-content-start">
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i2h_enable" checked>
+            <label class="custom-control-label" for="channel_i2h_enable">I2 high</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i2l_enable" checked>
+            <label class="custom-control-label" for="channel_i2l_enable">I2 low</label>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="channel_i2h_force">
+            <label class="custom-control-label" for="channel_i2h_force">I2 force high range</label>
+          </div>
+        </div>
+      </div>
+
+      <h5>Digital Inputs</h5>
+      <div class="row">
         <div class="col">
           <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="web_enable" checked>
-            <label class="custom-control-label" for="web_enable">Enable live preview</label>
+            <input type="checkbox" class="custom-control-input" id="digital_enable" checked>
+            <label class="custom-control-label" for="digital_enable">Enable digital inputs</label>
           </div>
+        </div>
+      </div>
+
+      <h5>Ambient Sensors</h5>
+      <div class="row">
+        <div class="col">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="ambient_enable">
+            <label class="custom-control-label" for="ambient_enable">Enable ambient sensors</label>
+          </div>
+        </div>
+      </div>
+      <hr />
+
+      <h3>File Storage</h3>
+      <div class="row">
+        <div class="col">
+          
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="file_enable" checked>
+            <label class="custom-control-label" for="file_enable">Store data to file</label>
+          </div>
+
+          <fieldset id="file_group">
+            <div class="form-group row justify-content-start">
+              <label class="col-sm-3 col-form-label" for="file_filename">Filename</label>
+              <div class="col-sm-9">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <button class="btn btn-outline-secondary" type="button" id="button_file_prefix">Add date prefix</button>
+                  </div>
+                  <input type="text" class="form-control" id="file_filename" placeholder="filename" value="data.rld">
+                  <!-- <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="button_download">Download</button>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group row justify-content-start">
+              <label class="col-sm-3 col-form-label" for="file_format">File format</label>
+              <div class="col-sm-3">
+                <select class="custom-select" id="file_format">
+                  <option value="rld" selected>RLD</option>
+                  <option value="csv">CSV</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="file_split" checked>
+              <label class="custom-control-label" for="file_split">Split large files</label>
+            </div>
+
+            <fieldset id="file_split_group">
+              <div class="form-group row justify-content-start">
+                <label class="col-sm-3 col-form-label" for="file_size">File size</label>
+                <div class="input-group col-sm-6">
+                  <input type="text" class="form-control input-group-prepend" id="file_size" placeholder="file size">
+                  <select class="custom-select form-control input-group-append" id="file_size_scale">
+                    <option value="1000000">MB</option>
+                    <option value="1000000000" selected>GB</option>
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+
+            <div class="form-group">
+              <label for="file_comment">File comment</label>
+              <textarea class="form-control" id="file_comment" rows="3"></textarea>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <hr />
+
+      <h3>Web Interface</h3>
+      <div class="row">
+          <div class="col">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="web_enable" checked>
+              <label class="custom-control-label" for="web_enable">Enable live preview</label>
+            </div>
+        </div>
       </div>
     </div>
-  </div>
+  </fieldset>
 </div>
 
 <!-- Live Data Preview Panel Container -->
@@ -307,187 +321,188 @@ p:	Un-/Pause Plot Update
     </h2>
   </div>
   <div class="card-body collapse show" id="collapsePreview">
-    <div class="row justify-content-between align-items-center">
-      <div class="col-sm-auto">
-        <div class="custom-control custom-checkbox mb-3">
-          <input type="checkbox" class="custom-control-input" id="plot_update">
-          <label class="custom-control-label" for="plot_update">Update plots</label>
-        </div>
-      </div>
-      <div class="col-sm-auto form-group">
-        <div class="row justify-content-end">
-          <label class="col-sm-auto col-form-label" for="plot_time_scale">Time scale</label>
-          <div class="col-sm-auto">
-            <select class="custom-select" id="plot_time_scale">
-              <option value="0" selected>1 s/div</option>
-              <option value="1">10 s/div</option>
-              <option value="2">100 s/div</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="plot_group_voltage">
-      <hr />
-      <h3>Voltage Channels</h3>
+    <fieldset id="web_group">
       <div class="row justify-content-between align-items-center">
-        <div class="col-auto">
-          <div class="row justify-content-start align-items-center">
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_voltage_1" checked>
-                <label class="custom-control-label color-1" for="plot_voltage_1">V1</label>
-              </div>
-            </div>
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_voltage_2" checked>
-                <label class="custom-control-label color-2" for="plot_voltage_2">V2</label>
-              </div>
-            </div>
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_voltage_3" checked>
-                <label class="custom-control-label color-3" for="plot_voltage_3">V3</label>
-              </div>
-            </div>
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_voltage_4" checked>
-                <label class="custom-control-label color-4" for="plot_voltage_4">V4</label>
-              </div>
-            </div>
+        <div class="col-sm-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="plot_update">
+            <label class="custom-control-label" for="plot_update">Update plots</label>
           </div>
         </div>
-        <div class="col-auto">
-          <div class="form-group row justify-content-end">
-            <label class="col-auto col-form-label" for="plot_voltage_range">Range</label>
-            <div class="col-auto">
-              <select class="custom-select" id="plot_voltage_range">
-                <option value="0">Auto</option>
-                <option value="0.1">100 µV</option>
-                <option value="1">1 mV</option>
-                <option value="10">10 mV</option>
-                <option value="100">100 mV</option>
-                <option value="1000">1 V</option>
-                <option value="6000">6 V</option>
-                <option value="10000">10 V</option>
+        <div class="col-sm-auto form-group">
+          <div class="row justify-content-end">
+            <label class="col-sm-auto col-form-label" for="plot_time_scale">Time scale</label>
+            <div class="col-sm-auto">
+              <select class="custom-select" id="plot_time_scale">
+                <option value="0" selected>1 s/div</option>
+                <option value="1">10 s/div</option>
+                <option value="2">100 s/div</option>
               </select>
             </div>
           </div>
         </div>
       </div>
-      <div class="rl-plot mb-3" id="plot_voltage"></div>
-    </div>
 
-    <div id="plot_group_current">
-      <hr />
-      <h3>Current Channels</h3>
-      <div class="row justify-content-between align-items-center">
+      <div id="plot_group_voltage">
+        <hr />
+        <h3>Voltage Channels</h3>
+        <div class="row justify-content-between align-items-center">
           <div class="col-auto">
-              <div class="row justify-content-start align-items-center">
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_current_1" checked>
-                <label class="custom-control-label color-1" for="plot_current_1">I1</label>
+            <div class="row justify-content-start align-items-center">
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_voltage_1" checked>
+                  <label class="custom-control-label color-1" for="plot_voltage_1">V1</label>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_voltage_2" checked>
+                  <label class="custom-control-label color-2" for="plot_voltage_2">V2</label>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_voltage_3" checked>
+                  <label class="custom-control-label color-3" for="plot_voltage_3">V3</label>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_voltage_4" checked>
+                  <label class="custom-control-label color-4" for="plot_voltage_4">V4</label>
+                </div>
               </div>
             </div>
-            <div class="col-auto">
-              <div class="custom-control custom-checkbox mb-3">
-                <input type="checkbox" class="custom-control-input" id="plot_current_2" checked>
-                <label class="custom-control-label color-2" for="plot_current_2">I2</label>
+          </div>
+          <div class="col-auto">
+            <div class="form-group row justify-content-end">
+              <label class="col-auto col-form-label" for="plot_voltage_range">Range</label>
+              <div class="col-auto">
+                <select class="custom-select" id="plot_voltage_range">
+                  <option value="0">Auto</option>
+                  <option value="0.1">100 µV</option>
+                  <option value="1">1 mV</option>
+                  <option value="10">10 mV</option>
+                  <option value="100">100 mV</option>
+                  <option value="1000">1 V</option>
+                  <option value="6000">6 V</option>
+                  <option value="10000">10 V</option>
+                </select>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-auto">
-          <div class="form-group row justify-content-start">
-            <label class="col-auto col-form-label" for="plot_current_range">Range</label>
+        <div class="rl-plot mb-3" id="plot_voltage"></div>
+      </div>
+
+      <div id="plot_group_current">
+        <hr />
+        <h3>Current Channels</h3>
+        <div class="row justify-content-between align-items-center">
             <div class="col-auto">
-              <select class="custom-select" id="plot_current_range">
-                <option value="0">Auto</option>
-                <option value="0.01">10 nA</option>
-                <option value="0.1">100 nA</option>
-                <option value="1">1 µA</option>
-                <option value="10">10 µA</option>
-                <option value="100">100 µA</option>
-                <option value="1000">1 mA</option>
-                <option value="10000">10 mA</option>
-                <option value="100000">100 mA</option>
-                <option value="1000000">1 A</option>
-              </select>
+                <div class="row justify-content-start align-items-center">
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_current_1" checked>
+                  <label class="custom-control-label color-1" for="plot_current_1">I1</label>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="plot_current_2" checked>
+                  <label class="custom-control-label color-2" for="plot_current_2">I2</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="form-group row justify-content-start">
+              <label class="col-auto col-form-label" for="plot_current_range">Range</label>
+              <div class="col-auto">
+                <select class="custom-select" id="plot_current_range">
+                  <option value="0">Auto</option>
+                  <option value="0.01">10 nA</option>
+                  <option value="0.1">100 nA</option>
+                  <option value="1">1 µA</option>
+                  <option value="10">10 µA</option>
+                  <option value="100">100 µA</option>
+                  <option value="1000">1 mA</option>
+                  <option value="10000">10 mA</option>
+                  <option value="100000">100 mA</option>
+                  <option value="1000000">1 A</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
+        <div class="rl-plot mb-3" id="plot_current"></div>
       </div>
-      <div class="rl-plot mb-3" id="plot_current"></div>
-    </div>
 
-    <div id="plot_group_digital">
-      <hr />
-      <h3>Digital Channels</h3>
-      <div class="row align-items-center">
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_1" checked>
-            <label class="custom-control-label color-1" for="plot_digital_1">DI1</label>
+      <div id="plot_group_digital">
+        <hr />
+        <h3>Digital Channels</h3>
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_1" checked>
+              <label class="custom-control-label color-1" for="plot_digital_1">DI1</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_2" checked>
+              <label class="custom-control-label color-2" for="plot_digital_2">DI2</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_3" checked>
+              <label class="custom-control-label color-3" for="plot_digital_3">DI3</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_4" checked>
+              <label class="custom-control-label color-4" for="plot_digital_4">DI4</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_5" checked>
+              <label class="custom-control-label color-5" for="plot_digital_5">DI5</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_digital_6" checked>
+              <label class="custom-control-label color-6" for="plot_digital_6">DI6</label>
+            </div>
           </div>
         </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_2" checked>
-            <label class="custom-control-label color-2" for="plot_digital_2">DI2</label>
-          </div>
-        </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_3" checked>
-            <label class="custom-control-label color-3" for="plot_digital_3">DI3</label>
-          </div>
-        </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_4" checked>
-            <label class="custom-control-label color-4" for="plot_digital_4">DI4</label>
-          </div>
-        </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_5" checked>
-            <label class="custom-control-label color-5" for="plot_digital_5">DI5</label>
-          </div>
-        </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_digital_6" checked>
-            <label class="custom-control-label color-6" for="plot_digital_6">DI6</label>
-          </div>
-        </div>
+        <div class="rl-plot mb-3" id="plot_digital"></div>
       </div>
-      <div class="rl-plot mb-3" id="plot_digital"></div>
-    </div>
 
-    <div id="plot_group_ambient" class="d-none">
-      <hr />
-      <h3>Ambient Sensors</h3>
-      <div class="row align-items-center">
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_ambient_1" checked>
-            <label class="custom-control-label color-1" for="plot_ambient_1">DI1</label>
+      <div id="plot_group_ambient" class="d-none">
+        <hr />
+        <h3>Ambient Sensors</h3>
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_ambient_1" checked>
+              <label class="custom-control-label color-1" for="plot_ambient_1">DI1</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="plot_ambient_2" checked>
+              <label class="custom-control-label color-2" for="plot_ambient_2">DI2</label>
+            </div>
           </div>
         </div>
-        <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_ambient_2" checked>
-            <label class="custom-control-label color-2" for="plot_ambient_2">DI2</label>
-          </div>
-        </div>
+        <div class="rl-plot mb-3" id="plot_ambient"></div>
       </div>
-      <div class="rl-plot mb-3" id="plot_ambient"></div>
-    </div>
-
+    </fieldset>
   </div>
 </div>
 {% endblock %}

@@ -74,6 +74,15 @@
       </div>
       {% endfor %}
     {% endif %}
+    {% if notification_messages %}
+      {% for notification_message in notification_messages %}
+      <div class="alert alert-info alert-dismissible" role="alert">
+        {{ notification_message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+      </div>
+      {% endfor %}
+    {% endif %}
 
     <main id="content">
       {% block content %}
@@ -119,7 +128,7 @@
     {% block js_footer %}
     <!-- jQuery first, then Popper.js, then Bootstrap Javascript -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='js/vendor/jquery-3.2.1.min.js') }}"><\/script>')</script>
+    <script>window.jQuery || document.write('<script src="{{ url_for('static', filename='js/vendor/jquery-3.4.1.min.js') }}"><\/script>')</script>
     <script src="https://unpkg.com/popper.js@1.15.0/dist/umd/popper.min.js" integrity="sha384-L2pyEeut/H3mtgCBaUNw7KWzp5n9+4pDQiExs933/5QfaTh8YStYFFkOzSoXjlTb" crossorigin="anonymous"></script>
     <script>if (typeof (Popper) === 'undefined') { document.write('<script src="{{ url_for('static', filename='js/vendor/popper-1.15.0.min.js') }}"><\/script>') }</script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
