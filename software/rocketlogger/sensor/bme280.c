@@ -154,7 +154,7 @@ int32_t BME280_getValue(int sensor_identifier, int channel) {
     case BME280_CHANNEL_HUMIDITY:
         return BME280_humidity[sensor_index];
 
-    case BME280_CHANNEL_PREASURE:
+    case BME280_CHANNEL_PRESSURE:
         return BME280_preasure[sensor_index];
 
     default:
