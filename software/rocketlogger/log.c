@@ -44,14 +44,13 @@
  * @param format Message format.
  */
 void rl_log(rl_log_t type, char const *const format, ...) {
-
     // open/init file
     FILE *log_fp;
     if (access(LOG_FILE, F_OK) == -1) {
         // create file
         log_fp = fopen(LOG_FILE, "w");
         if (log_fp == NULL) {
-            printf("Error: failed to open log file\n");
+            printf("Error: failed to create log file\n");
             return;
         }
         fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
@@ -63,9 +62,9 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         }
     }
 
-    // reset, if file too large
+    // reset file if file is getting too large
     int file_size = ftell(log_fp);
-    if (file_size > MAX_LOG_FILE_SIZE) {
+    if (file_size > LOG_FILE_MAX_SIZE) {
         fclose(log_fp);
         fopen(LOG_FILE, "w");
         fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
@@ -82,8 +81,8 @@ void rl_log(rl_log_t type, char const *const format, ...) {
     va_start(args, format);
 
     // print error message
-    if (type == ERROR) {
-
+    switch (type) {
+    case RL_LOG_ERROR:
         // file
         fprintf(log_fp, "     Error: ");
         vfprintf(log_fp, format, args);
@@ -92,12 +91,8 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         printf("Error: ");
         vprintf(format, args);
         printf("\n\n");
-
-        // set state to error
-        status.state = RL_ERROR;
-
-    } else if (type == WARNING) {
-
+        break;
+    case RL_LOG_WARNING:
         // file
         fprintf(log_fp, "     Warning: ");
         vfprintf(log_fp, format, args);
@@ -106,16 +101,16 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         printf("Warning: ");
         vprintf(format, args);
         printf("\n\n");
-
-    } else if (type == INFO) {
-
+        break;
+    case RL_LOG_INFO:
         fprintf(log_fp, "     Info: ");
         vfprintf(log_fp, format, args);
         fprintf(log_fp, "\n");
-
-    } else {
+        break;
+    default:
         // for debugging purposes
         printf("Error: wrong error-code\n");
+        break;
     }
 
     // facilitate return

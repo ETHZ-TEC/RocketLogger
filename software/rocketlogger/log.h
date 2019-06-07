@@ -32,15 +32,21 @@
 #ifndef LOG_H_
 #define LOG_H_
 
-#include "types.h"
+/// Maximum log file size in bytes
+#define LOG_FILE_MAX_SIZE 1000000
+
+/// Default log file name
+#ifndef LOG_FILE
+#define LOG_FILE "/var/www/rocketlogger/log/rocketlogger.log"
+#endif
 
 /**
  * RocketLogger log type definition
  */
 enum rl_log {
-    ERROR,   //!< Error
-    WARNING, //!< Warning
-    INFO,    //!< Information
+    RL_LOG_ERROR,   //!< Error
+    RL_LOG_WARNING, //!< Warning
+    RL_LOG_INFO,    //!< Information
 };
 
 /**
