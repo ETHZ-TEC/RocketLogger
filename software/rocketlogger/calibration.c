@@ -31,43 +31,63 @@
 
 #include <stdio.h>
 
+#include <unistd.h>
+
+#include "rl.h"
+
 #include "calibration.h"
 
-rl_calibration_t calibration_data;
+/// Global calibration data structure.
+rl_calibration_t rl_calibration;
 
 void calibration_reset_offsets(void) {
-    for (int i = 0; i < NUM_CHANNELS; i++) {
-        calibration_data.offsets[i] = 0;
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        rl_calibration.offsets[i] = 0;
     }
 }
 
 void calibration_reset_scales(void) {
-    for (int i = 0; i < NUM_CHANNELS; i++) {
-        calibration_data.scales[i] = 1;
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        rl_calibration.scales[i] = 1;
     }
 }
 
-int calibration_load(rl_config_t const *const config) {
-    FILE *file = fopen(CALIBRATION_FILE, "r");
+int calibration_load(void) {
+    int ret;
+
+    // check if user/system calibration file existing
+    ret = access(RL_CALIBRATION_USER_FILE, R_OK);
+    if (ret == 0) {
+        rl_calibration.file_name = RL_CALIBRATION_USER_FILE;
+    } else {
+        ret = access(RL_CALIBRATION_SYSTEM_FILE, R_OK);
+        if (ret == 0) {
+            rl_calibration.file_name = RL_CALIBRATION_SYSTEM_FILE;
+        } else {
+            // no calibration file available
+            calibration_reset_offsets();
+            calibration_reset_scales();
+            rl_status.calibration_time = 0;
+            rl_calibration.file_name = NULL;
+            return ERROR;
+        }
+    }
+
+    FILE *file = fopen(rl_calibration.file_name, "r");
     if (file == NULL) {
         // no calibration file available
         calibration_reset_offsets();
         calibration_reset_scales();
-        status.calibration_time = 0;
-        return FAILURE;
+        rl_status.calibration_time = 0;
+        return ERROR;
     }
 
     // read calibration
-    fread(&calibration_data, sizeof(rl_calibration_t), 1, file);
+    fread(&rl_calibration, sizeof(rl_calibration_t), 1, file);
 
-    // reset calibration, if ignored
-    if (config->calibration_ignore) {
-        calibration_reset_offsets();
-        calibration_reset_scales();
-    }
-
-    // store timestamp to config and status
-    status.calibration_time = calibration_data.time;
+    // store informations to status
+    rl_status.calibration_time = rl_calibration.time;
+    rl_status.calibration_file = rl_calibration.file_name;
 
     // close file
     fclose(file);
