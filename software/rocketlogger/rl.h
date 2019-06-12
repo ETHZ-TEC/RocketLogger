@@ -45,39 +45,8 @@
 /// Function return value for errors (use errno to indicate the error)
 #define ERROR (-1)
 
-/// Key for status shared memory (used for creation)
-#define SHMEM_STATUS_KEY 1111
-
-/// Key for web shared memory (used for creation)
-#define SHMEM_DATA_KEY 4443
-
-/// Permissions for shared memory
-#define SHMEM_PERMISSIONS 0666
-
-/// Default system configuration file path
-#define RL_CONFIG_VERSION 0x03
-
-/// Default system configuration file path
-#define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
-
-/// User configuration file path
-#define RL_CONFIG_USER_FILE                                                    \
-    "/home/rocketlogger/.config/rocketlogger/settings.dat"
-
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/var/run/rocketlogger.pid"
-
-/// Configuration channel enable default
-#define RL_CONFIG_DEFAULT_CHANNEL_ENABLE                                       \
-    { true, true, true, true, true, true, true, true }
-/// Configuration channel force range default
-#define RL_CONFIG_DEFAULT_CHANNEL_FORCE_RANGE                                  \
-    { false, false }
-/// Configuration file name default
-#define RL_CONFIG_DEFAULT_FILE "/var/www/rocketlogger/data/data.rld"
-/// Configuration file commment default
-#define RL_CONFIG_DEFAULT_COMMENT "Sampled using the RocketLogger"
-
 /// Maximum path length in characters
 #define RL_PATH_LENGTH_MAX 256
 /// Number of RocketLogger analog channels
@@ -89,6 +58,21 @@
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
 
+/// Key for status shared memory (used for creation)
+#define SHMEM_STATUS_KEY 1111
+/// Key for web shared memory (used for creation)
+#define SHMEM_DATA_KEY 4443
+/// Permissions for shared memory
+#define SHMEM_PERMISSIONS 0666
+
+/// Default system configuration file path
+#define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
+/// User configuration file path
+#define RL_CONFIG_USER_FILE                                                    \
+    "/home/rocketlogger/.config/rocketlogger/settings.dat"
+
+/// Default system configuration file path
+#define RL_CONFIG_VERSION 0x03
 /// Configuration channel indexes
 #define RL_CONFIG_CHANNEL_V1 0
 #define RL_CONFIG_CHANNEL_V2 1
@@ -98,17 +82,30 @@
 #define RL_CONFIG_CHANNEL_I1H 5
 #define RL_CONFIG_CHANNEL_I2L 6
 #define RL_CONFIG_CHANNEL_I2H 7
-
+/// Configuration channel enable default
+#define RL_CONFIG_CHANNEL_ENABLE_DEFAULT                                       \
+    { true, true, true, true, true, true, true, true }
 /// Configuration merged/forced channel indexes
 #define RL_CONFIG_CHANNEL_I1 0
 #define RL_CONFIG_CHANNEL_I2 1
+/// Configuration channel force range default
+#define RL_CONFIG_CHANNEL_FORCE_RANGE_DEFAULT                                  \
+    { false, false }
+/// Configuration file name default
+#define RL_CONFIG_FILE_DEFAULT "/var/www/rocketlogger/data/data.rld"
+/// Minimum measurement split file size (5 MB to fit largest block at max rate)
+#define RL_CONFIG_FILE_SIZE_MIN (5UL * 1000UL * 1000UL)
+/// Configuration file size default
+#define RL_CONFIG_FILE_SIZE_DEFAULT (1000UL * 1000UL * 1000UL)
+/// Configuration file commment default
+#define RL_CONFIG_COMMENT_DEFAULT "Sampled using the RocketLogger"
 
 /**
  * RocketLogger data aggregation modes.
  */
 enum rl_aggregation_mode {
-    RL_AGGREGATION_MODE_DOWNSAMPLE = 1, /// Aggregate using down sampling
-    RL_AGGREGATION_MODE_AVERAGE = 2,    /// Aggregate by averaging samples
+    RL_AGGREGATION_MODE_DOWNSAMPLE, /// Aggregate using down sampling
+    RL_AGGREGATION_MODE_AVERAGE,    /// Aggregate by averaging samples
 };
 
 /**

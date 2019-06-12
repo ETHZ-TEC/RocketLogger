@@ -130,9 +130,10 @@ static struct argp_option options[] = {
                                        "Supported for all measurement "
                                        "configurations.",
      0},
-    {"reset", OPT_RESET_DEFAULT, 0, 0, "Reset default configuration to factory "
-                                       "defaults. Only possible in config "
-                                       "mode.",
+    {"reset", OPT_RESET_DEFAULT, 0, 0,
+     "Reset default configuration to factory defaults and ignores any other "
+     "provided configuration without notice. Only allowed in combination with "
+     "the 'config' action.",
      0},
 
     {0, 0, 0, OPTION_DOC, "Optional arguments for extended sampling features:",
@@ -150,10 +151,9 @@ static struct argp_option options[] = {
      "list of the channel names (I1H and/or I2H) or 'all' to force high range "
      "measurements all channels. Inactive per default.",
      0},
-    {"calibration", OPT_CALIBRATION, 0, 0,
-     "Ignore existing calibration values. "
-     "Use this option for device calibration "
-     "measurements only.",
+    {"calibration", OPT_CALIBRATION, 0, 0, "Ignore existing calibration "
+                                           "values. Use this option for device "
+                                           "calibration measurements only.",
      0},
     {"web", 'w', "BOOL", OPTION_ARG_OPTIONAL,
      "Enable web server plotting. Enabled per default.", 0},
@@ -212,9 +212,14 @@ static struct argp argp = {
  * @return standard Linux return codes
  */
 int main(int argc, char *argv[]) {
-    // load default configuration
     rl_config_t config;
-    rl_config_read_default(&config);
+
+    // load default configuration
+    int res = rl_config_read_default(&config);
+    if (res < 0) {
+        rl_log(RL_LOG_ERROR, "failed reading default configuration file");
+        exit(EXIT_FAILURE);
+    }
 
     // argument structure with default values
     struct arguments arguments = {
@@ -226,35 +231,48 @@ int main(int argc, char *argv[]) {
         .verbose = false,
     };
 
-    // parse CLI arguments using argp
+    // parse CLI arguments and options using argp
     int argp_status = argp_parse(&argp, argc, argv, 0, 0, &arguments);
     if (argp_status != 0) {
         error(0, argp_status, "argument parsing failed");
     }
+    char const *const action = arguments.args[0];
 
     // validate arguments
-    char mode[16];
-    strncpy(mode, arguments.args[0], sizeof(mode) - 1);
-
-    /// @todo validate arguments
+    bool valid_action =
+        (strcmp(action, "start") == 0 || strcmp(action, "stop") == 0 ||
+         strcmp(action, "config") == 0 || strcmp(action, "status") == 0);
+    if (!valid_action) {
+        rl_log(RL_LOG_ERROR, "unknown action '%s'", action);
+        exit(EXIT_FAILURE);
+    }
 
     // validate sampling configuration
-    /// @todo validate configuration system
+    int valid_config = rl_config_validate(&config);
+    if (valid_config < 0) {
+        rl_log(RL_LOG_ERROR, "invalid configuration, check message above");
+        exit(EXIT_FAILURE);
+    }
 
     // reset config if requested
     if (arguments.config_reset) {
+        if (strcmp(action, "config") != 0) {
+            rl_log(RL_LOG_ERROR,
+                   "the --reset option is only allowed for config action.");
+            exit(EXIT_FAILURE);
+        }
         rl_config_reset(&config);
         rl_log(RL_LOG_INFO, "Configuration was reset to factory default.");
     }
     // store config as default
-    if (arguments.config_set_default == 1) {
+    if (arguments.config_set_default) {
         rl_config_write_default(&config);
         printf("The following configuration was saved as new default:\n");
         rl_config_print(&config);
     }
 
     // DEBUG: print parsed configuration
-    printf(">>> mode to run in: %s\n", arguments.args[0]);
+    printf(">>> command action: %s\n", action);
     printf(">>> configuration to use for sampling\n");
     print_config(&config);
     printf(">>> config cmd\n");
@@ -264,7 +282,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     // configure and run system in the requested MODE
-    if (strcmp(mode, "start") == 0) {
+    if (strcmp(action, "start") == 0) {
         // check if already sampling
         if (rl_status.sampling) {
             rl_log(RL_LOG_ERROR, "RocketLogger is still running.\n"
@@ -275,9 +293,8 @@ int main(int argc, char *argv[]) {
         print_config(&config);
         printf("Start sampling.\n");
         rl_run(&config);
-        exit(EXIT_SUCCESS);
     }
-    if (strcmp(mode, "stop") == 0) {
+    if (strcmp(action, "stop") == 0) {
         // exit with error if not sampling
         if (rl_status.sampling == false) {
             rl_log(RL_LOG_ERROR, "RocketLogger is not running.\n");
@@ -286,21 +303,14 @@ int main(int argc, char *argv[]) {
 
         printf("Waiting for running measurement to stop...\n");
         rl_stop();
-        exit(EXIT_SUCCESS);
     }
-    if (strcmp(mode, "config") == 0) {
+    if (strcmp(action, "config") == 0) {
         print_config(&config);
-        exit(EXIT_SUCCESS);
     }
-    if (strcmp(mode, "status") == 0) {
+    if (strcmp(action, "status") == 0) {
         rl_status_print(&rl_status);
-
         // @todo encode status in exit value
-        exit(EXIT_SUCCESS);
     }
-
-    // if not any of the above modes, exit with error and print usage
-    argp_usage(NULL);
     exit(EXIT_SUCCESS);
 }
 
@@ -320,6 +330,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     // parse actual argument
     switch (key) {
     /* options with shortcuts */
+    // {"interactive", 'i', 0, 0,
+    // {"background", 'b', 0, 0,
     // {"channel", 'c', "SELECTION",
     // {"rate", 'r', "RATE",
     // {"update-rate", 'u', "RATE",
@@ -342,6 +354,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'v':
         /* verbose switch: no value */
         arguments->verbose = true;
+        break;
+    case 'b':
+        /* run in background: no value */
+        config->background_enable = true;
+        break;
+    case 'i':
+        /* display measurements interactively: no value */
+        config->interactive_enable = true;
         break;
     case 'c':
         /* channel selection: mandatory SELECTION value */
@@ -433,7 +453,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     // {"size", OPT_FILE_SIZE, "SIZE",
     // {"default", OPT_SET_DEFAULT, 0, 0,
     // {"reset", OPT_RESET_DEFAULT, 0, 0,
-    // {"calibration", OPT_CALIBRATION,0, 0,
+    // {"calibration", OPT_CALIBRATION, 0, 0,
     case OPT_SAMPLES_COUNT:
         /* sample count: mandatory COUNT value */
         parse_uint64(arg, state, &config->sample_limit);

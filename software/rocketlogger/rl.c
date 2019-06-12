@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "ads131e0x.h"
 #include "log.h"
 #include "sensor/sensor.h"
 
@@ -51,21 +52,21 @@ const rl_config_t rl_config_default = {
     .config_version = RL_CONFIG_VERSION,
     .background_enable = false,
     .interactive_enable = false,
-    .sample_limit = 0UL,
-    .sample_rate = 1000UL,
-    .update_rate = 1UL,
-    .channel_enable = RL_CONFIG_DEFAULT_CHANNEL_ENABLE,
-    .channel_force_range = RL_CONFIG_DEFAULT_CHANNEL_FORCE_RANGE,
+    .sample_limit = 0,
+    .sample_rate = ADS131E0X_RATE_MIN,
+    .update_rate = 1,
+    .channel_enable = RL_CONFIG_CHANNEL_ENABLE_DEFAULT,
+    .channel_force_range = RL_CONFIG_CHANNEL_FORCE_RANGE_DEFAULT,
     .aggregation_mode = RL_AGGREGATION_MODE_DOWNSAMPLE,
     .digital_enable = true,
     .web_enable = true,
     .calibration_ignore = false,
     .ambient_enable = false,
     .file_enable = true,
-    .file_name = RL_CONFIG_DEFAULT_FILE,
+    .file_name = RL_CONFIG_FILE_DEFAULT,
     .file_format = RL_FILE_FORMAT_RLD,
-    .file_size = (1000UL * 1000UL * 1000UL),
-    .file_comment = RL_CONFIG_DEFAULT_COMMENT,
+    .file_size = RL_CONFIG_FILE_SIZE_DEFAULT,
+    .file_comment = RL_CONFIG_COMMENT_DEFAULT,
 };
 
 /**
@@ -249,8 +250,8 @@ void rl_config_print_json(rl_config_t const *const config) {
     printf("ambient_enable: %s, ", config->ambient_enable ? "true" : "false");
     printf("background_enable: %s, ",
            config->background_enable ? "true" : "false");
-    print_config_line("interactive_enable: %s, ",
-                      config->interactive_enable ? "true " : "false");
+    printf("interactive_enable: %s, ",
+           config->interactive_enable ? "true " : "false");
 
     printf("calibration_ignore: %s, ",
            config->calibration_ignore ? "true" : "false");
@@ -334,7 +335,8 @@ int rl_config_read_default(rl_config_t *const config) {
     fclose(file);
 
     // reset file comment, as it is not stored yet
-    config->file_comment = RL_CONFIG_DEFAULT_COMMENT;
+    /// @todo drop when comment is stored
+    config->file_comment = RL_CONFIG_COMMENT_DEFAULT;
 
     // check version
     if (config->config_version != RL_CONFIG_VERSION) {
@@ -365,12 +367,76 @@ int rl_config_write_default(rl_config_t const *const config) {
 
 int rl_config_validate(rl_config_t const *const config) {
     // check individual arguments
-    /// @todo parameters individually
-    if (config->background_enable && config->interactive_enable) {
-        rl_log(RL_LOG_ERROR,
-               "Incompatible options: background and interactive.");
+    if (config->config_version != RL_CONFIG_VERSION) {
+        rl_log(RL_LOG_ERROR, "invalid config version (%x, should be %x).",
+               config->config_version, RL_CONFIG_VERSION);
         return ERROR;
     }
+
+    // check supported sample rate (non-zero, natively supported or divisor of
+    // lowest rate for aggregation)
+    bool sample_rate_native =
+        (config->sample_rate == 1000 || config->sample_rate == 2000 ||
+         config->sample_rate == 4000 || config->sample_rate == 8000 ||
+         config->sample_rate == 16000 || config->sample_rate == 32000 ||
+         config->sample_rate == 64000);
+    if (config->sample_rate == 0 ||
+        (!sample_rate_native &&
+         ((ADS131E0X_RATE_MIN % config->sample_rate) > 0))) {
+        rl_log(RL_LOG_ERROR, "invalid sample rate (%u). Needs to be natively "
+                             "supported value, or valid divisor of %u.",
+               config->sample_rate, ADS131E0X_RATE_MIN);
+        return ERROR;
+    }
+
+    // check supported update rate (non-zero, divisor of the sample rate)
+    if (config->update_rate == 0 ||
+        ((config->sample_rate % config->update_rate) > 0)) {
+        rl_log(RL_LOG_ERROR, "invalid update rate (%u). Needs to be a valid "
+                             "divisor of the sample rate (%u).",
+               config->update_rate, config->sample_rate);
+        return ERROR;
+    }
+
+    // check supported file size (either zero or at least minimum value)
+    if (config->file_size > 0 && config->file_size < RL_CONFIG_FILE_SIZE_MIN) {
+        rl_log(RL_LOG_ERROR, "invalid update rate. Needs to be a valid divisor "
+                             "of the sample rate.");
+        return ERROR;
+    }
+
+    // file comment allows only for printable or space characters
+    if (!is_printable_string(config->file_comment)) {
+        rl_log(RL_LOG_ERROR, "invalid character in file comment, supports only "
+                             "printable and white space characters.");
+        return ERROR;
+    }
+
+    // sample limit: accept any positive integer, or zero -> no check needed
+    // .sample_limit = 0UL,
+
+    // checking boolean values not required:
+    // .background_enable = false,
+    // .interactive_enable = false,
+    // .channel_enable = RL_CONFIG_CHANNEL_ENABLE_DEFAULT,
+    // .channel_force_range = RL_CONFIG_CHANNEL_FORCE_RANGE_DEFAULT,
+    // .digital_enable = true,
+    // .web_enable = true,
+    // .calibration_ignore = false,
+    // .ambient_enable = false,
+    // .file_enable = true,
+
+    // checking enum values not required:
+    // .aggregation_mode = RL_AGGREGATION_MODE_DOWNSAMPLE,
+    // .file_format = RL_FILE_FORMAT_RLD,
+
+    // check incompatible/invalid combinations
+    if (config->background_enable && config->interactive_enable) {
+        rl_log(RL_LOG_ERROR,
+               "enabling both background and interactive is unsupported.");
+        return ERROR;
+    }
+
     return SUCCESS;
 }
 
@@ -417,7 +483,7 @@ void rl_status_print(rl_status_t const *const status) {
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < status->sensor_count; i++) {
         if (status->sensor_available[i]) {
-            print_config_line("\"%s\", ", SENSOR_REGISTRY[i].name);
+            print_config_line("", SENSOR_REGISTRY[i].name);
         } else {
             print_config_line("", "unknown");
         }

@@ -75,6 +75,26 @@ bool is_current(int index);
 bool is_low_current(int index);
 
 /**
+ * Check whether a string is empty, i.e. does not contain visible characters.
+ *
+ * Validates to true if none of the characters belongs to either isgraph()
+ *
+ * @param str The string to validate
+ * @return True if string is empty, false otherwise
+ */
+bool is_empty_string(char const *str);
+
+/**
+ * Check whether a string is printable.
+ *
+ * Validates to true if all characters belong to either isspace() or isprint()
+ *
+ * @param str The string to validate
+ * @return True if string is printable, false otherwise
+ */
+bool is_printable_string(char const *str);
+
+/**
  * Counts the number of channels enabled.
  *
  * @param channels Channel enable array

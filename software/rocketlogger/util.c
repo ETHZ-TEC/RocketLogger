@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -125,6 +126,26 @@ int64_t fs_space_total(char *path) {
     statvfs(path, &stat);
 
     return ((uint64_t)stat.f_blocks * (uint64_t)stat.f_frsize);
+}
+
+bool is_empty_string(char const *str) {
+    while (*str) {
+        if (isgraph(*str)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_printable_string(char const *str) {
+    while (*str) {
+        if (isprint(*str) || isspace(*str)) {
+            str++;
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
 
 void print_json_bool(bool const *const data, const int length) {
