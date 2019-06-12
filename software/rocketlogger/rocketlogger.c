@@ -73,16 +73,14 @@ const char *argp_program_bug_address = "<https://rocketlogger.ethz.ch/>";
  */
 static char doc[] =
     "RocketLogger CLI -- manage your RocketLogger measurements.\n"
-    "Perform or configure measurements using the execution mode specified by "
-    "MODE. Supported values for MODE are:\n"
+    "Control or configure measurements using the actions specified by ACTION. "
+    "Supported values for ACTION are:\n"
     "\n"
-    "  Measurement modes:\n"
-    "    finite\tStart measurement for a finite number of samples\n"
-    "    meter\tRun measurement with console measurement view\n"
-    "    cont\tStart continuous measurement in the background\n"
-    "    stop\tStop a running background measurement\n"
+    "  Measurement control:\n"
+    "    start\tStart a new measurement with provided configuration\n"
+    "    stop\tStop measurement running in the background\n"
     "\n"
-    "  Management and configuration modes:\n"
+    "  Measurement configuration and status management:\n"
     "    config\tDisplay configuration, not starting a new or affecting a "
     "running measurement\n"
     "    status\tDisplay the current sampling status\n";
@@ -90,14 +88,17 @@ static char doc[] =
 /**
  * List of arguments the program accepts
  */
-static char args_doc[] = "MODE";
+static char args_doc[] = "ACTION";
 
 /**
  * Summary of program options
  */
 static struct argp_option options[] = {
-    {0, 0, 0, OPTION_DOC,
-     "Options for all measurement run modes (except stop):", 1},
+    {0, 0, 0, OPTION_DOC, "Basic measurement configuration options:", 1},
+    {"samples", OPT_SAMPLES_COUNT, "COUNT", 0,
+     "Number of samples to record before stopping measurement (k, M, G, T "
+     "scaling suffixes can be used).",
+     0},
     {"channel", 'c', "SELECTION", 0, "Channel selection to sample. A comma "
                                      "separated list of the channel names (V1, "
                                      "V2, V3, V4, I1L, I1H, I2L, and/or I2H) "
@@ -110,14 +111,13 @@ static struct argp_option options[] = {
      "Measurement data update rate in Hz. Supported values: 1, 2, 5, 10.", 0},
     {"output", 'o', "FILE", 0,
      "Store data to specified file. Use zero to disable file storage.", 0},
+    {"interactive", 'i', 0, 0,
+     "Display measurement data in the command line interface.", 0},
+    {"background", 'b', 0, 0,
+     "Start measurement in the background and exit after start.", 0},
 
-    {0, 0, 0, OPTION_DOC, "Mandatory option for finite sampling mode:", 2},
-    {"samples", OPT_SAMPLES_COUNT, "COUNT", 0,
-     "Number of samples to record before stopping measurement (k, M, G, T "
-     "scaling suffixes can be used).",
-     0},
-
-    {0, 0, 0, OPTION_DOC, "Options for storing measurement files:", 3},
+    {0, 0, 0, OPTION_DOC,
+     "Measurement configuration options for storing measurement files:", 3},
     {"format", 'f', "FORMAT", 0, "Select file format: 'csv', 'rld'.", 0},
     {"size", OPT_FILE_SIZE, "SIZE", 0,
      "Select max file size (k, M, G, T scaling suffixes can be used).", 0},
@@ -233,8 +233,8 @@ int main(int argc, char *argv[]) {
     }
 
     // validate arguments
-    char mode[10];
-    strncpy(mode, arguments.args[0], sizeof(mode));
+    char mode[16];
+    strncpy(mode, arguments.args[0], sizeof(mode) - 1);
 
     /// @todo validate arguments
 
@@ -264,55 +264,27 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     // configure and run system in the requested MODE
-    if (strcmp(mode, "finite") == 0) {
-        config.sampling_mode = RL_SAMPLING_MODE_FINITE;
-
+    if (strcmp(mode, "start") == 0) {
         // check if already sampling
-        if (status.sampling) {
+        if (rl_status.sampling) {
             rl_log(RL_LOG_ERROR, "RocketLogger is still running.\n"
                                  "Stop with `rocketlogger stop` first.\n");
             exit(EXIT_FAILURE);
         }
 
         print_config(&config);
-        printf("Start sampling in finite mode.\n") rl_start(&config);
-        exit(EXIT_SUCCESS);
-    }
-    if (strcmp(mode, "meter") == 0) {
-        config.sampling_mode = RL_SAMPLING_MODE_METER;
-        // exit with error if already sampling
-        if (status.sampling) {
-            rl_log(RL_LOG_ERROR, "RocketLogger is still running.\n"
-                                 "Stop with `rocketlogger stop` first.\n");
-            exit(EXIT_FAILURE);
-        }
-
-        print_config(&config);
-        printf("Start sampling in meter mode.\n");
-        rl_start(&config);
-        exit(EXIT_SUCCESS);
-    }
-    if (strcmp(mode, "cont") == 0) {
-        config.sampling_mode = RL_SAMPLING_MODE_CONTINUOUS;
-        // exit with error if already sampling
-        if (status.sampling) {
-            rl_log(RL_LOG_ERROR, "RocketLogger is still running.\n"
-                                 "Stop with `rocketlogger stop` first.\n");
-            exit(EXIT_FAILURE);
-        }
-
-        print_config(&config);
-        printf("Start continuous sampling in background.\n") rl_start(&config);
+        printf("Start sampling.\n");
+        rl_run(&config);
         exit(EXIT_SUCCESS);
     }
     if (strcmp(mode, "stop") == 0) {
         // exit with error if not sampling
-        if (status.sampling == false) {
+        if (rl_status.sampling == false) {
             rl_log(RL_LOG_ERROR, "RocketLogger is not running.\n");
             exit(EXIT_FAILURE);
         }
 
-        printf("Waiting for running measurement to stop.\n");
+        printf("Waiting for running measurement to stop...\n");
         rl_stop();
         exit(EXIT_SUCCESS);
     }
@@ -321,14 +293,14 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
     if (strcmp(mode, "status") == 0) {
-        rl_print_status(status);
+        rl_status_print(&rl_status);
 
         // @todo encode status in exit value
         exit(EXIT_SUCCESS);
     }
 
     // if not any of the above modes, exit with error and print usage
-    argp_usage(state);
+    argp_usage(NULL);
     exit(EXIT_SUCCESS);
 }
 

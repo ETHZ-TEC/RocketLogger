@@ -35,6 +35,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <sys/types.h>
+
 #include "version.h"
 
 /// Function return value for successful completion
@@ -42,6 +44,15 @@
 
 /// Function return value for errors (use errno to indicate the error)
 #define ERROR (-1)
+
+/// Key for status shared memory (used for creation)
+#define SHMEM_STATUS_KEY 1111
+
+/// Key for web shared memory (used for creation)
+#define SHMEM_DATA_KEY 4443
+
+/// Permissions for shared memory
+#define SHMEM_PERMISSIONS 0666
 
 /// Default system configuration file path
 #define RL_CONFIG_VERSION 0x03
@@ -52,6 +63,9 @@
 /// User configuration file path
 #define RL_CONFIG_USER_FILE                                                    \
     "/home/rocketlogger/.config/rocketlogger/settings.dat"
+
+/// Process ID file for the RocketLogger process
+#define RL_PID_FILE "/var/run/rocketlogger.pid"
 
 /// Configuration channel enable default
 #define RL_CONFIG_DEFAULT_CHANNEL_ENABLE                                       \
@@ -116,28 +130,15 @@ enum rl_file_format {
 typedef enum rl_file_format rl_file_format_t;
 
 /**
- * RocketLogger sampling modes.
- */
-enum rl_sampling_mode {
-    RL_SAMPLING_MODE_FINITE,     /// Finite sampling mode for sampling a fixed
-                                 /// number of sample
-    RL_SAMPLING_MODE_CONTINUOUS, /// Continuous sampling mode
-    RL_SAMPLING_MODE_METER,      /// Meter mode in console window
-};
-
-/**
- * Type definition for RocketLogger sampling mode.
- */
-typedef enum rl_sampling_mode rl_sampling_mode_t;
-
-/**
  * RocketLogger sampling configuration.
  */
 struct rl_config {
     /// Configuration structure version
     uint8_t config_version;
-    /// Sampling mode
-    rl_sampling_mode_t sampling_mode;
+    /// Put the measurment process in background after successful start
+    bool background_enable;
+    /// Display measurement data interactively in CLI while sampling
+    bool interactive_enable;
     /// Sample limit (0 for continuous)
     uint64_t sample_limit;
     /// Sampling rate
@@ -186,11 +187,11 @@ struct rl_status {
     /// Number of samples taken
     uint64_t sample_count;
     /// Number of buffers taken
-    uint32_t buffer_count;
+    uint64_t buffer_count;
     /// Time stamp of last calibration run
     uint64_t calibration_time;
     /// Time stamp of last calibration run
-    char *const calibration_file;
+    char const *calibration_file;
     /// Time stamp of last calibration run
     uint64_t disk_free;
     /// Time stamp of last calibration run
@@ -200,7 +201,7 @@ struct rl_status {
     /// Number of sensors found connected to the system
     uint16_t sensor_count;
     /// Identifiers of sensors found
-    int32_t sensor_index[RL_SENSOR_COUNT_MAX];
+    bool sensor_available[RL_SENSOR_COUNT_MAX];
     /// Current configuration
     rl_config_t const *config;
 };
@@ -281,6 +282,36 @@ int rl_config_write_default(rl_config_t const *const config);
 int rl_config_validate(rl_config_t const *const config);
 
 /**
+ * Get process ID (PID) of background sampling process.
+ *
+ * @return Returns PID of background process on success, negative on failure
+ * with errno set accordingly
+ */
+pid_t rl_pid_get(void);
+
+/**
+ * Store process ID (PID) of the RocketLogger process.
+ *
+ * @param pid The PID of the running process to sture
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_pid_set(pid_t pid);
+
+/**
+ * Print RocketLogger status as text output.
+ *
+ * @param status Pointer to {@link rl_status_t} status
+ */
+void rl_status_print(rl_status_t const *const status);
+
+/**
+ * Print RocketLogger status as JSON data structure.
+ *
+ * @param status Pointer to {@link rl_status_t} status
+ */
+void rl_status_print_json(rl_status_t const *const status);
+
+/**
  * Reset RocketLogger status to standard values.
  *
  * @param status Pointer to {@link rl_status_t} configuration
@@ -288,6 +319,6 @@ int rl_config_validate(rl_config_t const *const config);
 void rl_status_reset(rl_status_t *const status);
 
 /// Global RocketLogger status variable.
-extern rl_status_t status;
+extern rl_status_t rl_status;
 
 #endif /* RL_H_ */

@@ -36,18 +36,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "log.h"
+#include "sensor/sensor.h"
 
 #include "rl.h"
 
 /**
  * RocketLogger reset configuration definition.
  */
-static const rl_config_t rl_config_default = {
+const rl_config_t rl_config_default = {
     .config_version = RL_CONFIG_VERSION,
-    .sampling_mode = RL_SAMPLING_MODE_CONTINUOUS,
+    .background_enable = false,
+    .interactive_enable = false,
     .sample_limit = 0UL,
     .sample_rate = 1000UL,
     .update_rate = 1UL,
@@ -68,7 +71,7 @@ static const rl_config_t rl_config_default = {
 /**
  * RocketLogger reset status definition.
  */
-static const rl_status_t rl_status_default = {
+const rl_status_t rl_status_default = {
     .sampling = false,
     .error = false,
     .sample_count = 0,
@@ -78,7 +81,7 @@ static const rl_status_t rl_status_default = {
     .disk_free_permille = 0,
     .disk_use_rate = 0,
     .sensor_count = 0,
-    .sensor_index = {-1},
+    .sensor_available = {false},
     .config = (rl_config_t *)NULL,
 };
 
@@ -98,7 +101,7 @@ const char *RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1L_valid",
                                                                  "I2L_valid"};
 
 /// Global RocketLogger status variable.
-rl_status_t status = rl_status_default;
+rl_status_t rl_status = rl_status_default;
 
 /**
  * Print a configuration setting line with formated string value.
@@ -110,21 +113,11 @@ rl_status_t status = rl_status_default;
 static void print_config_line(char const *description, char const *value, ...);
 
 void rl_config_print(rl_config_t const *const config) {
-    // sampling mode and limit
-    switch (config->sampling_mode) {
-    case RL_SAMPLING_MODE_FINITE:
-        print_config_line("Sampling mode", "finite sampling mode");
-        break;
-    case RL_SAMPLING_MODE_CONTINUOUS:
-        print_config_line("Sampling mode", "continuous mode");
-        break;
-    case RL_SAMPLING_MODE_METER:
-        print_config_line("Sampling mode", "console meter mode");
-        break;
-    default:
-        print_config_line("Sampling mode", "undefined");
-        break;
-    }
+    // sampling in background or interactively
+    print_config_line("Run in background",
+                      config->background_enable ? "yes" : "no");
+    print_config_line("Interactive data display",
+                      config->interactive_enable ? "yes" : "no");
     print_config_line("Sample limit", "%llu", config->sample_limit);
 
     // sample rate and aggregation
@@ -189,28 +182,24 @@ void rl_config_print(rl_config_t const *const config) {
 
 void rl_config_print_cmd(rl_config_t const *const config) {
     // start appending command step by step
-    printf("rocketlogger ");
+    printf("rocketlogger start");
 
     // sampling mode and limit
-    switch (config->sampling_mode) {
-    case RL_SAMPLING_MODE_FINITE:
-        printf("sample --samples=%llu ", config->sample_limit);
-        break;
-    default:
-    case RL_SAMPLING_MODE_CONTINUOUS:
-        printf("cont ");
-        break;
-    case RL_SAMPLING_MODE_METER:
-        printf("meter ");
-        break;
+    if (config->background_enable) {
+        printf(" --background");
+    }
+    if (config->interactive_enable) {
+        printf(" --interactive");
     }
 
+    printf(" --samples=%llu", config->sample_limit);
+
     // sample rate and aggregation
-    printf("--rate=%u ", config->sample_rate);
-    printf("--update=%u ", config->update_rate);
+    printf(" --rate=%u", config->sample_rate);
+    printf(" --update=%u", config->update_rate);
 
     // channels
-    printf("--channel=");
+    printf(" --channel=");
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
         if (config->channel_enable[i]) {
             printf("%s,", RL_CHANNEL_NAMES[i]);
@@ -226,38 +215,43 @@ void rl_config_print_cmd(rl_config_t const *const config) {
 
     switch (config->aggregation_mode) {
     case RL_AGGREGATION_MODE_AVERAGE:
-        printf("--aggregate=average ");
+        printf(" --aggregate=average");
         break;
     case RL_AGGREGATION_MODE_DOWNSAMPLE:
     default:
-        printf("--aggregate=downsample ");
+        printf(" --aggregate=downsample");
         break;
     }
 
     // arguments
-    printf("--ambient=%s ", config->ambient_enable ? "true" : "false");
-    printf("--digital=%s ", config->digital_enable ? "true" : "false");
-    printf("--web=%s ", config->web_enable ? "true" : "false");
+    printf(" --ambient=%s", config->ambient_enable ? "true" : "false");
+    printf(" --digital=%s", config->digital_enable ? "true" : "false");
+    printf(" --web=%s", config->web_enable ? "true" : "false");
 
     if (config->calibration_ignore) {
-        printf("--calibration");
+        printf(" --calibration");
     }
 
     // file
     if (config->file_enable) {
-        printf("--output=%s ", config->file_name);
-        printf("--format=%s ",
+        printf(" --output=%s", config->file_name);
+        printf(" --format=%s",
                (config->file_format == RL_FILE_FORMAT_RLD) ? "rld" : "csv");
-        printf("--size=%llu ", config->file_size);
-        printf("--comment='%s'\n", config->file_comment);
+        printf(" --size=%llu", config->file_size);
+        printf(" --comment='%s'\n", config->file_comment);
     } else {
-        printf("--output=0\n");
+        printf(" --output=0\n");
     }
 }
 
 void rl_config_print_json(rl_config_t const *const config) {
     printf("{");
     printf("ambient_enable: %s, ", config->ambient_enable ? "true" : "false");
+    printf("background_enable: %s, ",
+           config->background_enable ? "true" : "false");
+    print_config_line("interactive_enable: %s, ",
+                      config->interactive_enable ? "true " : "false");
+
     printf("calibration_ignore: %s, ",
            config->calibration_ignore ? "true" : "false");
     printf("channel_enable: [");
@@ -372,28 +366,87 @@ int rl_config_write_default(rl_config_t const *const config) {
 int rl_config_validate(rl_config_t const *const config) {
     // check individual arguments
     /// @todo parameters individually
-
-    // check mandatory arguments
-    switch (config->sampling_mode) {
-    case RL_SAMPLING_MODE_CONTINUOUS:
-        /// @todo check mandatory parameters
-        break;
-    case RL_SAMPLING_MODE_FINITE:
-        /// @todo check mandatory parameters
-        break;
-    case RL_SAMPLING_MODE_METER:
-        /// @todo check mandatory parameters
-        break;
-    default:
-        errno = EINVAL;
+    if (config->background_enable && config->interactive_enable) {
+        rl_log(RL_LOG_ERROR,
+               "Incompatible options: background and interactive.");
         return ERROR;
     }
+    return SUCCESS;
+}
+
+pid_t rl_pid_get(void) {
+    pid_t pid;
+    FILE *file = fopen(RL_PID_FILE, "r");
+    if (file == NULL) {
+        return ERROR;
+    }
+
+    fread(&pid, sizeof(pid_t), 1, file);
+    fclose(file);
+
+    return pid;
+}
+
+int rl_pid_set(pid_t pid) {
+    FILE *file = fopen(RL_PID_FILE, "w");
+    if (file == NULL) {
+        rl_log(RL_LOG_ERROR, "Failed to create pid file");
+        return ERROR;
+    }
+
+    fwrite(&pid, sizeof(pid_t), 1, file);
+    fclose(file);
 
     return SUCCESS;
 }
 
 void rl_status_reset(rl_status_t *const status) {
     memcpy(status, &rl_status_default, sizeof(rl_status_t));
+}
+
+void rl_status_print(rl_status_t const *const status) {
+    print_config_line("Sampling", status->sampling ? "yes" : "no");
+    print_config_line("Error", status->error ? "yes" : "no");
+    print_config_line("Sample count", "%llu", status->sample_count);
+    print_config_line("Buffer count", "%llu", status->buffer_count);
+    print_config_line("Calibration time", "%llu", status->calibration_time);
+    print_config_line("Calibration file", status->calibration_file);
+    print_config_line("Disk free", "%llu Bytes", status->disk_free);
+    print_config_line("Disk free", "%u 0/00", status->disk_free_permille);
+    print_config_line("Disk use rate", "%u Bytes/min", status->disk_use_rate);
+    print_config_line("Sensors found", "%u total", status->sensor_count);
+    for (uint16_t i = 0; i < status->sensor_count; i++) {
+        if (status->sensor_available[i]) {
+            print_config_line("\"%s\", ",
+                              SENSOR_REGISTRY[i].name);
+        } else {
+            print_config_line("", "unknown");
+        }
+    }
+}
+
+void rl_status_print_json(rl_status_t const *const status) {
+    printf("{");
+    printf("sampling: %s, ", status->sampling ? "true" : "false");
+    printf("error: %s, ", status->error ? "true" : "false");
+    printf("sample_count: %llu, ", status->sample_count);
+    printf("buffer_count: %llu, ", status->buffer_count);
+    printf("calibration_time: %llu, ", status->calibration_time);
+    printf("calibration_file: \"%s\", ", status->calibration_file);
+    printf("disk_free: %llu, ", status->disk_free);
+    printf("disk_free_permille: %u, ", status->disk_free_permille);
+    printf("disk_use_rate: %u, ", status->disk_use_rate);
+    printf("sensor_count: %u, ", status->sensor_count);
+    printf("sensor_names: [");
+    for (uint16_t i = 0; i < status->sensor_count; i++) {
+        if (status->sensor_available[i]) {
+            printf("\"%s\", ", SENSOR_REGISTRY[i].name);
+        } else {
+            printf("null, ");
+        }
+    }
+    printf("], ");
+    printf("}");
 }
 
 static void print_config_line(char const *description, char const *format,
