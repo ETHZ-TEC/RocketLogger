@@ -417,8 +417,7 @@ void rl_status_print(rl_status_t const *const status) {
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < status->sensor_count; i++) {
         if (status->sensor_available[i]) {
-            print_config_line("\"%s\", ",
-                              SENSOR_REGISTRY[i].name);
+            print_config_line("\"%s\", ", SENSOR_REGISTRY[i].name);
         } else {
             print_config_line("", "unknown");
         }

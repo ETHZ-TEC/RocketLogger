@@ -33,62 +33,58 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "rl.h"
 #include "rl_file.h"
 #include "sensor/sensor.h"
-#include "types.h"
 #include "util.h"
 
 #include "ambient.h"
 
 /**
- * Handle a ambient data buffer, dependent on current configuration
- * @param ambient_file File pointer to ambient file
- * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
- * @param config Current {@link rl_config_t} configuration.
+ * @todo document
  */
-void ambient_store_data(FILE *ambient_file,
-                        rl_timestamp_t const *const timestamp_realtime,
-                        rl_timestamp_t const *const timestamp_monotonic,
-                        rl_config_t const *const config) {
+void ambient_setup_channels(rl_file_header_t *const header);
+
+void ambient_append_data(FILE *ambient_file,
+                         rl_timestamp_t const *const timestamp_realtime,
+                         rl_timestamp_t const *const timestamp_monotonic) {
 
     // store timestamp
     fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, ambient_file);
     fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, ambient_file);
 
     // FETCH VALUES //
-    int32_t sensor_data[config->ambient.sensor_count];
+    int32_t sensor_data[SENSOR_REGISTRY_SIZE];
 
     int ch = 0;
     int mutli_channel_read = -1;
     for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // only read registered sensors
-        if (config->ambient.available_sensors[i] > 0) {
+        if (rl_status.sensor_available[i]) {
             // read multi-channel sensor data only once
-            if (sensor_registry[i].identifier != mutli_channel_read) {
-                sensor_registry[i].read(sensor_registry[i].identifier);
-                mutli_channel_read = sensor_registry[i].identifier;
+            if (SENSOR_REGISTRY[i].identifier != mutli_channel_read) {
+                SENSOR_REGISTRY[i].read(SENSOR_REGISTRY[i].identifier);
+                mutli_channel_read = SENSOR_REGISTRY[i].identifier;
             }
-            sensor_data[ch] = sensor_registry[i].get_value(
-                sensor_registry[i].identifier, sensor_registry[i].channel);
+            sensor_data[ch] = SENSOR_REGISTRY[i].get_value(
+                SENSOR_REGISTRY[i].identifier, SENSOR_REGISTRY[i].channel);
             ch++;
         }
     }
 
     // WRITE VALUES //
-    fwrite(sensor_data, sizeof(int32_t), config->ambient.sensor_count,
-           ambient_file);
+    fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
 }
 
 // FILE HEADER //
 
-void ambient_set_file_name(rl_config_t *const config) {
+char *ambient_get_file_name(char const *const data_file_name) {
+    static char ambient_file_name[RL_PATH_LENGTH_MAX];
 
     // determine new file name
-    char ambient_file_name[MAX_PATH_LENGTH];
-    strcpy(ambient_file_name, config->file_name);
+    strcpy(ambient_file_name, data_file_name);
 
-    // search for last .
+    // search for last . character
     char target = '.';
     char *file_ending = ambient_file_name;
     while (strchr(file_ending, target) != NULL) {
@@ -99,17 +95,17 @@ void ambient_set_file_name(rl_config_t *const config) {
     file_ending--;
 
     // add file ending
-    char ambient_file_ending[9] = "-ambient";
+    char ambient_file_ending[RL_PATH_LENGTH_MAX] = AMBIENT_FILE_NAME_SUFFIX;
     strcat(ambient_file_ending, file_ending);
     strcpy(file_ending, ambient_file_ending);
-    strcpy(config->ambient.file_name, ambient_file_name);
+
+    return ambient_file_name;
 }
 
-void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in,
-                           rl_config_t const *const config) {
+void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in) {
 
     // number channels
-    uint16_t channel_count = config->ambient.sensor_count;
+    uint16_t channel_count = rl_status.sensor_count;
 
     // number binary channels
     uint16_t channel_bin_count = 0;
@@ -139,42 +135,34 @@ void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in,
     lead_in->channel_count = channel_count;
 }
 
-void ambient_setup_channels(struct rl_file_header *const file_header,
-                            rl_config_t const *const config) {
+void ambient_setup_header(struct rl_file_header *const header,
+                          rl_config_t const *const config) {
+    if (config->file_comment == NULL) {
+        header->comment = "";
+    } else {
+        header->comment = config->file_comment;
+    }
 
-    int total_channel_count = file_header->lead_in.channel_bin_count +
-                              file_header->lead_in.channel_count;
+    ambient_setup_channels(header);
+}
+
+void ambient_setup_channels(struct rl_file_header *const header) {
+    int total_channel_count =
+        header->lead_in.channel_bin_count + header->lead_in.channel_count;
 
     // reset channels
-    memset(file_header->channel, 0,
-           total_channel_count * sizeof(rl_file_channel_t));
+    memset(header->channel, 0, total_channel_count * sizeof(rl_file_channel_t));
 
     // write channels
     int ch = 0;
     for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
-        if (config->ambient.available_sensors[i] > 0) {
-
-            file_header->channel[ch].unit = sensor_registry[i].unit;
-            file_header->channel[ch].channel_scale = sensor_registry[i].scale;
-            file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-            file_header->channel[ch].data_size = 4;
-            strcpy(file_header->channel[ch].name, sensor_registry[i].name);
+        if (rl_status.sensor_available[i]) {
+            header->channel[ch].unit = SENSOR_REGISTRY[i].unit;
+            header->channel[ch].channel_scale = SENSOR_REGISTRY[i].scale;
+            header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            header->channel[ch].data_size = 4;
+            strcpy(header->channel[ch].name, SENSOR_REGISTRY[i].name);
             ch++;
         }
     }
-}
-
-void ambient_setup_header(struct rl_file_header *const file_header,
-                          rl_config_t const *const config,
-                          char const *const comment) {
-
-    // comment
-    if (comment == NULL) {
-        file_header->comment = "";
-    } else {
-        file_header->comment = comment;
-    }
-
-    // channels
-    ambient_setup_channels(file_header, config);
 }

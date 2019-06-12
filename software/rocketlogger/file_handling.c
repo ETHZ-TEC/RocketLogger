@@ -36,48 +36,44 @@
 
 #include <time.h>
 
+#include "ads131e0x.h"
 #include "calibration.h"
 #include "log.h"
 #include "pru.h"
+#include "rl.h"
+#include "rl.h"
 #include "rl_file.h"
-#include "types.h"
 #include "util.h"
 
 #include "file_handling.h"
 
-/// Channel names
-char const *const channel_names[NUM_CHANNELS] = {"I1H", "I1L", "V1", "V2",
-                                                 "I2H", "I2L", "V3", "V4"};
-/// Digital input names
-char const *const digital_input_names[NUM_DIGITAL_INPUTS] = {
-    "DI1", "DI2", "DI3", "DI4", "DI5", "DI6"};
-/// Valid channel names
-char const *const valid_info_names[NUM_I_CHANNELS] = {"I1L_valid", "I2L_valid"};
+/**
+ * Set up channel information for file header with current configuration
+ * @param file_header Pointer to {@link rl_file_header} struct to set up
+ * @param config Pointer to current {@link rl_config_tig_t} configuration
+ */
+void file_setup_channels(rl_file_header_t *const file_header,
+                         rl_config_t const *const config);
 
 /// Global variable to determine i1l valid channel
 int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel
 int i2l_valid_channel = 0;
 
-/**
- * Set up file header lead-in with current configuration
- * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
- * @param config Pointer to current {@link rl_config_t} struct
- */
 void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
                         rl_config_t const *const config) {
 
     // number channels
-    uint16_t channel_count = count_channels(config->channels);
+    uint16_t channel_count = count_channels(config->channel_enable);
     // number binary channels
     uint16_t channel_bin_count = 0;
-    if (config->digital_input_enable) {
-        channel_bin_count = NUM_DIGITAL_INPUTS;
+    if (config->digital_enable) {
+        channel_bin_count = RL_CHANNEL_DIGITAL_COUNT;
     }
-    if (config->channels[I1L_INDEX]) {
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
         i1l_valid_channel = channel_bin_count++;
     }
-    if (config->channels[I2L_INDEX]) {
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
         i2l_valid_channel = channel_bin_count++;
     }
 
@@ -106,111 +102,17 @@ void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->channel_count = channel_count;
 }
 
-/**
- * Set up channel information for file header with current configuration
- * @param file_header Pointer to {@link rl_file_header} struct to set up
- * @param config Pointer to current {@link rl_config_tig_t} configuration
- */
-void file_setup_channels(rl_file_header_t *const file_header,
-                         rl_config_t const *const config) {
-    int total_channel_count = file_header->lead_in.channel_bin_count +
-                              file_header->lead_in.channel_count;
-
-    // reset channels
-    memset(file_header->channel, 0,
-           total_channel_count * sizeof(rl_file_channel_t));
-
-    // digital channels
-    int ch = 0;
-    if (config->digital_input_enable) {
-        for (int i = 0; i < NUM_DIGITAL_INPUTS; i++) {
-            file_header->channel[ch].unit = RL_UNIT_BINARY;
-            file_header->channel[ch].channel_scale = RL_SCALE_NONE;
-            file_header->channel[ch].data_size = 0;
-            file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-            strcpy(file_header->channel[ch].name, digital_input_names[i]);
-            ch++;
-        }
-    }
-
-    // range valid channels
-    if (config->channels[I1L_INDEX]) {
-        file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
-        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
-        file_header->channel[ch].data_size = 0;
-        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-        strcpy(file_header->channel[ch].name, valid_info_names[0]);
-        ch++;
-    }
-    if (config->channels[I2L_INDEX]) {
-        file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
-        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
-        file_header->channel[ch].data_size = 0;
-        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-        strcpy(file_header->channel[ch].name, valid_info_names[1]);
-        ch++;
-    }
-
-    // analog channels
-    for (int i = 0; i < NUM_CHANNELS; i++) {
-        if (config->channels[i]) {
-            // current
-            if (is_current(i)) {
-                // low
-                if (is_low_current(i)) {
-                    file_header->channel[ch].channel_scale = RL_SCALE_TEN_PICO;
-                    if (i == I1L_INDEX) {
-                        file_header->channel[ch].valid_data_channel =
-                            i1l_valid_channel;
-                    } else {
-                        file_header->channel[ch].valid_data_channel =
-                            i2l_valid_channel;
-                    }
-                    // high
-                } else {
-                    file_header->channel[ch].channel_scale = RL_SCALE_NANO;
-                    file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-                }
-                file_header->channel[ch].unit = RL_UNIT_AMPERE;
-                // voltage
-            } else {
-                file_header->channel[ch].unit = RL_UNIT_VOLT;
-                file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
-                file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
-            }
-            file_header->channel[ch].data_size = 4;
-            strcpy(file_header->channel[ch].name, channel_names[i]);
-            ch++;
-        }
-    }
-}
-
-/**
- * Set up file header with current configuration
- * @param file_header Pointer to {@link rl_file_header} to set up
- * @param conf Pointer to current {@link rl_config_t} struct
- * @param comment The comment stored in the file header or NULL for default
- */
 void file_setup_header(rl_file_header_t *const file_header,
-                       rl_config_t const *const conf,
-                       char const *const comment) {
-
-    // comment
-    if (comment == NULL) {
+                       rl_config_t const *const config) {
+    if (config->file_comment == NULL) {
         file_header->comment = "";
     } else {
-        file_header->comment = comment;
+        file_header->comment = config->file_comment;
     }
 
-    // channels
-    file_setup_channels(file_header, conf);
+    file_setup_channels(file_header, config);
 }
 
-/**
- * Store file header to file (in binary format)
- * @param data File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
- */
 void file_store_header_bin(FILE *data_file,
                            rl_file_header_t *const file_header) {
 
@@ -248,11 +150,6 @@ void file_store_header_bin(FILE *data_file,
     fflush(data_file);
 }
 
-/**
- * Store file header to file (in CSV format)
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
- */
 void file_store_header_csv(FILE *data_file,
                            rl_file_header_t const *const file_header) {
     // lead-in
@@ -320,12 +217,6 @@ void file_store_header_csv(FILE *data_file,
     fflush(data_file);
 }
 
-/**
- * Update file with new header lead-in (to write current sample count) in binary
- * format
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
- */
 void file_update_header_bin(FILE *data_file,
                             rl_file_header_t const *const file_header) {
 
@@ -336,12 +227,6 @@ void file_update_header_bin(FILE *data_file,
     fseek(data_file, 0, SEEK_END);
 }
 
-/**
- * Update file with new header lead-in (to write current sample count) in CSV
- * format
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
- */
 void file_update_header_csv(FILE *data_file,
                             rl_file_header_t const *const file_header) {
     rewind(data_file);
@@ -358,102 +243,95 @@ void file_update_header_csv(FILE *data_file,
     fseek(data_file, 0, SEEK_END);
 }
 
-/**
- * Handle a data buffer, dependent on current configuration
- * @param data_file File pointer to data file
- * @param buffer_addr Pointer to buffer to handle
- * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
- * @param timestamp_monotonic {@link rl_timestamp_t} with monotonic clock value
- * @param conf Current {@link rl_config_tig_t} configuration.
- */
-void file_handle_data(FILE *data_file, void const *buffer_addr,
+void file_append_data(FILE *data_file, void const *buffer,
                       uint32_t samples_count,
                       rl_timestamp_t const *const timestamp_realtime,
                       rl_timestamp_t const *const timestamp_monotonic,
                       rl_config_t const *const config) {
+    // skip if not storing to file, or invalid file structure
+    if (!config->file_enable) {
+        return;
+    }
+    if (data_file == NULL) {
+        rl_log(RL_LOG_ERROR, "invalid data file provided, skip append data");
+        return;
+    }
 
     // write timestamp to file
-    if (config->file_format == RL_FILE_BIN) {
+    if (config->file_format == RL_FILE_FORMAT_RLD) {
         fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, data_file);
         fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, data_file);
-    } else if (config->file_format == RL_FILE_CSV) {
+    } else if (config->file_format == RL_FILE_FORMAT_CSV) {
         fprintf(data_file, "%lli.%09lli", timestamp_realtime->sec,
                 timestamp_realtime->nsec);
     }
 
     // count channels
-    int num_channels = count_channels(config->channels);
+    int channel_count = count_channels(config->channel_enable);
 
     // aggregation
-    int32_t aggregate_count = MIN_ADC_RATE / config->sample_rate;
-    int32_t aggregate_channel_data[NUM_CHANNELS] = {0};
+    int32_t aggregate_count = ADS131E0X_RATE_MIN / config->sample_rate;
+    int32_t aggregate_channel_data[RL_CHANNEL_COUNT] = {0};
     uint32_t aggregate_bin_data = 0xffffffff;
 
     // HANDLE BUFFER //
     for (uint32_t i = 0; i < samples_count; i++) {
 
         // channel data variables
-        int32_t channel_data[NUM_CHANNELS] = {0};
+        int32_t channel_data[RL_CHANNEL_COUNT] = {0};
         uint32_t bin_data = 0x00000000;
 
         // read binary channels
-        uint8_t bin_adc1 = (*((int8_t *)(buffer_addr)));
-        uint8_t bin_adc2 = (*((int8_t *)(buffer_addr + 1)));
+        uint8_t bin_adc1 = (*((int8_t *)(buffer)));
+        uint8_t bin_adc2 = (*((int8_t *)(buffer + 1)));
 
-        buffer_addr += PRU_DIG_SIZE;
+        buffer += PRU_DIGITAL_SIZE;
 
         // read and scale values (if channel selected)
         int ch = 0;
-        for (int j = 0; j < NUM_CHANNELS; j++) {
-            if (config->channels[j]) {
+        for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+            if (config->channel_enable[j]) {
                 int32_t adc_value =
-                    *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE));
+                    *((int32_t *)(buffer + j * PRU_SAMPLE_SIZE));
                 channel_data[ch] =
-                    (int32_t)((adc_value + calibration_data.offsets[j]) *
-                              calibration_data.scales[j]);
+                    (int32_t)((adc_value + rl_calibration.offsets[j]) *
+                              rl_calibration.scales[j]);
                 ch++;
             }
         }
-        buffer_addr += NUM_CHANNELS * PRU_SAMPLE_SIZE;
+        buffer += RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE;
 
         // BINARY CHANNELS //
 
         // mask and combine digital inputs, if requested
         int bin_channel_pos = 0;
-        if (config->digital_input_enable) {
+        if (config->digital_enable) {
             bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |
                        ((bin_adc2 & PRU_BINARY_MASK) << 2);
-            bin_channel_pos = NUM_DIGITAL_INPUTS;
+            bin_channel_pos = RL_CHANNEL_DIGITAL_COUNT;
         }
 
         // mask and combine valid info
         uint8_t valid1 = (~bin_adc1) & PRU_VALID_MASK;
         uint8_t valid2 = (~bin_adc2) & PRU_VALID_MASK;
 
-        if (config->channels[I1L_INDEX]) {
+        if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
             bin_data = bin_data | (valid1 << bin_channel_pos);
             bin_channel_pos++;
         }
-        if (config->channels[I2L_INDEX]) {
+        if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
             bin_data = bin_data | (valid2 << bin_channel_pos);
             bin_channel_pos++;
         }
 
         // handle data aggregation for low sampling rates
-        if (config->sample_rate < MIN_ADC_RATE) {
+        if (config->sample_rate < ADS131E0X_RATE_MIN) {
 
-            switch (config->aggregation) {
-            case RL_AGGREGATE_NONE:
-                rl_log(ERROR, "Low sampling rates not supported without "
-                              "data aggregation.");
-                exit(ERROR);
-                break;
-
-            case RL_AGGREGATE_AVERAGE:
+            switch (config->aggregation_mode) {
+            case RL_AGGREGATION_MODE_AVERAGE:
                 // accumulate intermediate samples only (skip writing)
                 if ((i + 1) % aggregate_count > 0) {
-                    for (int i = 0; i < num_channels; i++) {
+                    for (int i = 0; i < channel_count; i++) {
                         aggregate_channel_data[i] += channel_data[i];
                     }
                     aggregate_bin_data = aggregate_bin_data & bin_data;
@@ -461,7 +339,7 @@ void file_handle_data(FILE *data_file, void const *buffer_addr,
                 }
 
                 // calculate average for writing to file
-                for (int i = 0; i < num_channels; i++) {
+                for (int i = 0; i < channel_count; i++) {
                     channel_data[i] =
                         aggregate_channel_data[i] / aggregate_count;
                     aggregate_channel_data[i] = 0;
@@ -471,7 +349,7 @@ void file_handle_data(FILE *data_file, void const *buffer_addr,
                 aggregate_bin_data = 0xffffffff;
                 break;
 
-            case RL_AGGREGATE_DOWNSAMPLE:
+            case RL_AGGREGATION_MODE_DOWNSAMPLE:
                 // drop intermediate samples (skip writing to file)
                 if (i % aggregate_count > 0) {
                     continue;
@@ -483,31 +361,102 @@ void file_handle_data(FILE *data_file, void const *buffer_addr,
 
         // write binary channels if enabled
         if (bin_channel_pos > 0) {
-            if (config->file_format == RL_FILE_BIN) {
+            if (config->file_format == RL_FILE_FORMAT_RLD) {
                 fwrite(&bin_data, sizeof(uint32_t), 1, data_file);
-            } else if (config->file_format == RL_FILE_CSV) {
-                uint32_t MASK = 0x01;
+            } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+                uint32_t bin_mask = 0x01;
                 for (int j = 0; j < bin_channel_pos; j++) {
-                    fprintf(data_file, (CSV_DELIMITER "%i"),
-                            (bin_data & MASK) > 0);
-                    MASK = MASK << 1;
+                    fprintf(data_file, (FILE_CSV_DELIMITER "%i"),
+                            (bin_data & bin_mask) > 0);
+                    bin_mask = bin_mask << 1;
                 }
             }
         }
 
         // write analog channels
-        if (config->file_format == RL_FILE_BIN) {
-            fwrite(channel_data, sizeof(int32_t), num_channels, data_file);
-        } else if (config->file_format == RL_FILE_CSV) {
-            for (int j = 0; j < num_channels; j++) {
-                fprintf(data_file, (CSV_DELIMITER "%d"), channel_data[j]);
+        if (config->file_format == RL_FILE_FORMAT_RLD) {
+            fwrite(channel_data, sizeof(int32_t), channel_count, data_file);
+        } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+            for (int j = 0; j < channel_count; j++) {
+                fprintf(data_file, (FILE_CSV_DELIMITER "%d"), channel_data[j]);
             }
             fprintf(data_file, "\n");
         }
     }
 
     // flush processed data if data is stored
-    if (config->file_format != RL_FILE_NONE && data_file != NULL) {
+    if (config->file_enable && data_file != NULL) {
         fflush(data_file);
+    }
+}
+
+void file_setup_channels(rl_file_header_t *const file_header,
+                         rl_config_t const *const config) {
+    int total_channel_count = file_header->lead_in.channel_bin_count +
+                              file_header->lead_in.channel_count;
+
+    // reset channels
+    memset(file_header->channel, 0,
+           total_channel_count * sizeof(rl_file_channel_t));
+
+    // digital channels
+    int ch = 0;
+    if (config->digital_enable) {
+        for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
+            file_header->channel[ch].unit = RL_UNIT_BINARY;
+            file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+            file_header->channel[ch].data_size = 0;
+            file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            strcpy(file_header->channel[ch].name, RL_CHANNEL_DIGITAL_NAMES[i]);
+            ch++;
+        }
+    }
+
+    // range valid channels
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
+        file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
+        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+        file_header->channel[ch].data_size = 0;
+        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+        strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[0]);
+        ch++;
+    }
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
+        file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
+        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+        file_header->channel[ch].data_size = 0;
+        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+        strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[1]);
+        ch++;
+    }
+
+    // analog channels
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        if (config->channel_enable[i]) {
+            if (is_current(i)) {
+                if (is_low_current(i)) {
+                    file_header->channel[ch].channel_scale = RL_SCALE_TEN_PICO;
+                    if (i == RL_CONFIG_CHANNEL_I1L) {
+                        file_header->channel[ch].valid_data_channel =
+                            i1l_valid_channel;
+                    } else {
+                        file_header->channel[ch].valid_data_channel =
+                            i2l_valid_channel;
+                    }
+                } else {
+                    file_header->channel[ch].channel_scale = RL_SCALE_NANO;
+                    file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+                }
+                file_header->channel[ch].unit = RL_UNIT_AMPERE;
+            } else {
+                file_header->channel[ch].unit = RL_UNIT_VOLT;
+                file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
+                file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            }
+            file_header->channel[ch].data_size = 4;
+            strncpy(file_header->channel[ch].name, RL_CHANNEL_NAMES[i],
+                    RL_FILE_CHANNEL_NAME_LENGTH - 1);
+            ch++;
+        }
     }
 }

@@ -189,7 +189,7 @@
  * Map PWM registers into user space (on {@link pwm0_mem} and {@link
  * pwm1_mem} pointer)
  *
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int pwm_init(void);
 

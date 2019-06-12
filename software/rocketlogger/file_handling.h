@@ -34,26 +34,80 @@
 
 #include <stdio.h>
 
+#include "rl.h"
 #include "rl_file.h"
-#include "types.h"
 #include "util.h"
 
 /// CSV value delimiter character
-#define CSV_DELIMITER ","
+#define FILE_CSV_DELIMITER ","
 
+/**
+ * Set up file header lead-in with current configuration.
+ *
+ * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
+ * @param config Pointer to current {@link rl_config_t} struct
+ */
 void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
                         rl_config_t const *const config);
+
+/**
+ * Set up file header with current configuration.
+ *
+ * @param file_header Pointer to {@link rl_file_header} to set up
+ * @param config Pointer to current {@link rl_config_t} struct
+ */
 void file_setup_header(rl_file_header_t *const file_header,
-                       rl_config_t const *const config,
-                       char const *const comment);
-void file_store_header_bin(FILE *data, rl_file_header_t *const file_header);
-void file_store_header_csv(FILE *data,
+                       rl_config_t const *const config);
+
+/**
+ * Store file header to file (in binary format).
+ *
+ * @param data_file File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void file_store_header_bin(FILE *data_file,
+                           rl_file_header_t *const file_header);
+
+/**
+ * Store file header to file (in CSV format).
+ *
+ * @param data_file File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void file_store_header_csv(FILE *data_file,
                            rl_file_header_t const *const file_header);
-void file_update_header_bin(FILE *data,
+
+/**
+ * Update file with new header lead-in (to write current sample count) in binary
+ * format.
+ *
+ * @param data_file File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void file_update_header_bin(FILE *data_file,
                             rl_file_header_t const *const file_header);
-void file_update_header_csv(FILE *data,
+
+/**
+ * Update file with new header lead-in (to write current sample count) in CSV
+ * format.
+ *
+ * @param data_file File pointer to data file
+ * @param file_header Pointer to {@link rl_file_header} struct
+ */
+void file_update_header_csv(FILE *data_file,
                             rl_file_header_t const *const file_header);
-void file_handle_data(FILE *data_file, void const *buffer_addr,
+
+/**
+ * Handle a data buffer, dependent on current configuration.
+ *
+ * @param data_file File pointer to data file
+ * @param buffer Pointer to buffer to handle
+ * @param samples_count Number of samples to read
+ * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
+ * @param timestamp_monotonic {@link rl_timestamp_t} with monotonic clock value
+ * @param config Current {@link rl_config_tig_t} configuration.
+ */
+void file_append_data(FILE *data_file, void const *buffer,
                       uint32_t samples_count,
                       rl_timestamp_t const *const timestamp_realtime,
                       rl_timestamp_t const *const timestamp_monotonic,

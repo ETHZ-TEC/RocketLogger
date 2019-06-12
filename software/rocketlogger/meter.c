@@ -35,20 +35,24 @@
 
 #include "calibration.h"
 #include "pru.h"
-#include "types.h"
+#include "rl.h"
 #include "util.h"
 
 #include "meter.h"
 
 /// Analog channel units
-char *channel_units[NUM_CHANNELS] = {"mA", "uA", "V", "V",
-                                     "mA", "uA", "V", "V"};
+char const *const CHANNEL_UNITS[RL_CHANNEL_COUNT] = {"mA", "uA", "V", "V",
+                                                     "mA", "uA", "V", "V"};
+
 /// Analog channel scales
-uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 100000000, 100000000,
-                                         1000000, 100000, 100000000, 100000000};
+uint32_t const CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
+    1000000, 100000, 100000000, 100000000,
+    1000000, 100000, 100000000, 100000000};
+
 /// Digital input bit location in binary data
-const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {
-    DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
+uint32_t const DIGITAL_INPUT_BITS[RL_CHANNEL_DIGITAL_COUNT] = {
+    PRU_DIGITAL_INPUT1_MASK, PRU_DIGITAL_INPUT2_MASK, PRU_DIGITAL_INPUT3_MASK,
+    PRU_DIGITAL_INPUT4_MASK, PRU_DIGITAL_INPUT5_MASK, PRU_DIGITAL_INPUT6_MASK};
 
 void meter_init(void) {
     // init ncurses mode
@@ -72,7 +76,7 @@ void meter_print_buffer(rl_config_t const *const config,
     uint32_t i = 0; // currents
     uint32_t v = 0; // voltages
 
-    uint32_t num_channels = count_channels(config->channels);
+    uint32_t num_channels = count_channels(config->channel_enable);
 
     // data
     int64_t value = 0;
@@ -85,22 +89,22 @@ void meter_print_buffer(rl_config_t const *const config,
     // read digital channels
     dig_data[0] = (int32_t)(*((int8_t *)(buffer_addr)));
     dig_data[1] = (int32_t)(*((int8_t *)(buffer_addr + 1)));
-    buffer_addr += PRU_DIG_SIZE;
+    buffer_addr += PRU_DIGITAL_SIZE;
 
     // read, average and scale values (if channel selected)
     int k = 0;
-    for (int j = 0; j < NUM_CHANNELS; j++) {
-        if (config->channels[j]) {
+    for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+        if (config->channel_enable[j]) {
             value = 0;
             for (uint32_t l = 0; l < avg_number; l++) {
                 value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
-                                       l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
-                                            PRU_DIG_SIZE)));
+                                       l * (RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE +
+                                            PRU_DIGITAL_SIZE)));
             }
             value = value / (int64_t)avg_number;
             channel_data[k] =
-                (int32_t)(((int32_t)value + calibration_data.offsets[j]) *
-                          calibration_data.scales[j]);
+                (int32_t)(((int32_t)value + rl_calibration.offsets[j]) *
+                          rl_calibration.scales[j]);
             k++;
         }
     }
@@ -108,21 +112,21 @@ void meter_print_buffer(rl_config_t const *const config,
     // display values
     mvprintw(1, 28, "RocketLogger Meter");
 
-    for (int j = 0; j < NUM_CHANNELS; j++) {
-        if (config->channels[j]) {
+    for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+        if (config->channel_enable[j]) {
             if (is_current(j)) {
                 // current
-                mvprintw(i * 2 + 5, 10, "%s:", channel_names[j]);
+                mvprintw(i * 2 + 5, 10, "%s:", RL_CHANNEL_NAMES[j]);
                 mvprintw(i * 2 + 5, 15, "%12.6f%s",
-                         ((float)channel_data[v + i]) / channel_scales[j],
-                         channel_units[j]);
+                         ((float)channel_data[v + i]) / CHANNEL_SCALES[j],
+                         CHANNEL_UNITS[j]);
                 i++;
             } else {
                 // voltage
-                mvprintw(v * 2 + 5, 55, "%s:", channel_names[j]);
+                mvprintw(v * 2 + 5, 55, "%s:", RL_CHANNEL_NAMES[j]);
                 mvprintw(v * 2 + 5, 60, "%9.6f%s",
-                         ((float)channel_data[v + i]) / channel_scales[j],
-                         channel_units[j]);
+                         ((float)channel_data[v + i]) / CHANNEL_SCALES[j],
+                         CHANNEL_UNITS[j]);
                 v++;
             }
         }
@@ -134,12 +138,12 @@ void meter_print_buffer(rl_config_t const *const config,
 
         // display range information
         mvprintw(3, 33, "Low range:");
-        if ((dig_data[0] & I1L_VALID_BIT) > 0) {
+        if ((dig_data[0] & PRU_VALID_MASK) > 0) {
             mvprintw(5, 33, "I1L invalid");
         } else {
             mvprintw(5, 33, "I1L valid");
         }
-        if ((dig_data[1] & I2L_VALID_BIT) > 0) {
+        if ((dig_data[1] & PRU_VALID_MASK) > 0) {
             mvprintw(11, 33, "I2L invalid");
         } else {
             mvprintw(11, 33, "I2L valid");
@@ -151,18 +155,18 @@ void meter_print_buffer(rl_config_t const *const config,
     }
 
     // digital inputs
-    if (config->digital_input_enable) {
+    if (config->digital_enable) {
         mvprintw(20, 10, "Digital Inputs:");
 
         for (int j = 0; j < 3; j++) {
-            mvprintw(20 + 2 * j, 30, "%s:", digital_input_names[j]);
+            mvprintw(20 + 2 * j, 30, "%s:", RL_CHANNEL_DIGITAL_NAMES[j]);
             mvprintw(20 + 2 * j, 38, "%d",
-                     (dig_data[0] & digital_input_bits[j]) > 0);
+                     (dig_data[0] & DIGITAL_INPUT_BITS[j]) > 0);
         }
-        for (int j = 0; j < 6; j++) {
-            mvprintw(20 + 2 * (j - 3), 50, "%s:", digital_input_names[j]);
+        for (int j = 3; j < 6; j++) {
+            mvprintw(20 + 2 * (j - 3), 50, "%s:", RL_CHANNEL_DIGITAL_NAMES[j]);
             mvprintw(20 + 2 * (j - 3), 58, "%d",
-                     (dig_data[1] & digital_input_bits[j]) > 0);
+                     (dig_data[1] & DIGITAL_INPUT_BITS[j]) > 0);
         }
     }
 

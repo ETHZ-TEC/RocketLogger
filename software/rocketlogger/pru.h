@@ -35,20 +35,36 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "types.h"
+#include "rl.h"
 
 /// PRU binary file location
 #define PRU_BINARY_FILE "/lib/firmware/rocketlogger.bin"
 /// Memory map file
 #define PRU_MMAP_SYSFS_PATH "/sys/class/uio/uio0/maps/map1/"
 
-/// Sample size definition
+/// Overall size of FRU digital channels in bytes
+#define PRU_DIGITAL_SIZE 4
+/// Size of PRU channel data in bytes
 #define PRU_SAMPLE_SIZE 4
+/// Size of PRU buffer status in bytes
+#define PRU_BUFFER_STATUS_SIZE 4
 
 /// Mask for valid bit read from PRU
 #define PRU_VALID_MASK 0x1
 /// Mask for binary inputs read from PRU
 #define PRU_BINARY_MASK 0xE
+
+// /**
+//  * Digital channel bit position in PRU digital information
+//  */
+#define PRU_DIGITAL_I1L_VALID_MASK 0x01
+#define PRU_DIGITAL_I2L_VALID_MASK 0x01
+#define PRU_DIGITAL_INPUT1_MASK 0x02
+#define PRU_DIGITAL_INPUT2_MASK 0x04
+#define PRU_DIGITAL_INPUT3_MASK 0x08
+#define PRU_DIGITAL_INPUT4_MASK 0x02
+#define PRU_DIGITAL_INPUT5_MASK 0x04
+#define PRU_DIGITAL_INPUT6_MASK 0x08
 
 /// PRU time out in seconds
 #define PRU_TIMEOUT 3
@@ -116,7 +132,7 @@ void pru_deinit(void);
  * @param config Pointer to current {@link rl_config_t} configuration
  * @param aggregates Number of samples to aggregate for sampling rates smaller
  * than the minimal ADC rate (set 1 for no aggregates)
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int pru_data_init(pru_data_t *const pru_data, rl_config_t const *const config,
                   uint32_t aggregates);
@@ -125,7 +141,8 @@ int pru_data_init(pru_data_t *const pru_data, rl_config_t const *const config,
  * Write a new state to the PRU shared memory.
  *
  * @param state The PRU state to write
- * @return Number of bytes written, negative value on error.
+ * @return Returns number of bytes written, negative on failure with errno set
+ * accordingly
  */
 int pru_set_state(pru_state_t state);
 
@@ -134,7 +151,7 @@ int pru_set_state(pru_state_t state);
  *
  * @param event PRU event to wait for
  * @param timeout Time out in seconds
- * @return Zero on success, error code otherwise, see also
+ * @return Returns 0 on success, error code otherwise, see also
  * pthread_cond_timedwait() documentation
  */
 int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
@@ -146,12 +163,10 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
  *
  * @param data_file File pointer to data file
  * @param ambient_file File pointer to ambient file
- * @param config Pointer to current {@link rl_config_tig_t} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ * @param config Pointer to current {@link rl_config_t} configuration
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int pru_sample(FILE *data, FILE *ambient_file, rl_config_t const *const config,
-               char const *const file_comment);
+int pru_sample(FILE *data, FILE *ambient_file, rl_config_t const *const config);
 
 /**
  * Stop running PRU measurements.

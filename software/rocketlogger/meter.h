@@ -32,7 +32,7 @@
 #ifndef METER_H_
 #define METER_H_
 
-#include "types.h"
+#include "rl.h"
 
 /**
  * Initialize meter window.

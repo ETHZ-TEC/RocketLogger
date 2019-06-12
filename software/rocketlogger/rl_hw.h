@@ -32,14 +32,14 @@
 #ifndef RL_HW_H_
 #define RL_HW_H_
 
-#include "types.h"
+#include "rl.h"
 
 /**
  * Initialize all hardware modules.
  *
  * @param config Pointer to current {@link rl_config_t} configuration
  */
-void hw_init(rl_config_t *const config);
+void hw_init(rl_config_t const *const config);
 
 /**
  * Deinitialize and close all hardware modules.
@@ -52,9 +52,8 @@ void hw_deinit(rl_config_t const *const config);
  * Hardware perform samling of data.
  *
  * @param config Pointer to current {@link rl_config_t} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int hw_sample(rl_config_t const *const config, char const *const file_comment);
+int hw_sample(rl_config_t const *const config);
 
 #endif /* RL_HW_H_ */

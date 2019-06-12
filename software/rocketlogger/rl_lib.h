@@ -33,17 +33,41 @@
 #define RL_LIB_H_
 
 #include "calibration.h"
-#include "types.h"
+#include "rl.h"
 
-rl_state_t rl_get_status(void);
+/**
+ * Check whether RocketLogger is sampling.
+ *
+ * @return current sampling status
+ */
+bool rl_is_sampling(void);
 
-rl_state_t rl_read_status(rl_status_t *const status);
+/**
+ * Read the status of the RocketLogger.
+ *
+ * @param status Pointer to {@link rl_status_t} struct to write to
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_read_status(rl_status_t *const status);
 
-void rl_read_calibration(rl_config_t const *const config,
-                         rl_calibration_t *const calibration);
+/**
+ * Run a new RocketLogger measurement.
+ *
+ * Returns when done unless configured to run in background in which case it
+ * returns after successful start.
+ *
+ * @param config Pointer to desired {@link rl_config_t} configuration
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_run(rl_config_t *const config);
 
-int rl_start(rl_config_t *const config, char const *const file_comment);
-
+/**
+ * RocketLogger stop function (to stop continuous mode).
+ *
+ * Sends stop signal to running RocketLogger process to terminate.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
 int rl_stop(void);
 
 #endif /* RL_LIB_H_ */

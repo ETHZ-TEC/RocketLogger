@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -58,7 +59,7 @@ int sensor_bus = -1;
  *
  * @note The SENSOR_REGISTRY_SIZE needs to be adjusted accordingly.
  */
-const rl_sensor_t sensor_registry[SENSOR_REGISTRY_SIZE] = {
+const rl_sensor_t SENSOR_REGISTRY[SENSOR_REGISTRY_SIZE] = {
     {
         "TSL4531_left", TSL4531_I2C_ADDRESS_LEFT, TSL4531_CHANNEL_DEFAULT,
         RL_UNIT_LUX, RL_SCALE_NONE, &tsl4531_init, &tsl4531_deinit,
@@ -112,7 +113,7 @@ void sensors_deinit(void) {
 int sensors_open_bus(void) {
     int bus = open(I2C_BUS_FILENAME, O_RDWR);
     if (bus < 0) {
-        rl_log(ERROR, "failed to open the I2C bus", bus);
+        rl_log(RL_LOG_ERROR, "failed to open the I2C bus", bus);
     }
     return bus;
 }
@@ -125,7 +126,7 @@ int sensors_open_bus(void) {
 int sensors_close_bus(int bus) {
     int result = close(bus);
     if (result < 0) {
-        rl_log(ERROR, "failed to close the I2C bus", bus);
+        rl_log(RL_LOG_ERROR, "failed to close the I2C bus", bus);
     }
     return result;
 }
@@ -147,51 +148,51 @@ int sensors_init_comm(uint8_t device_address) {
 
 /**
  * Scan the I2C sensor for sensor in the registry and initialize them.
- * @param sensors_available List of sensors of the registry available
+ * @param sensor_available List of sensors of the registry available
  * @return Number of sensors from the registry found on the bus
  */
-int sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]) {
+uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
 
     // log message
     char message[MAX_MESSAGE_LENGTH] =
         "List of available ambient sensors:\n\t- ";
 
     // Scan for available sensors //
-    int sensor_count = 0;
+    uint16_t sensor_count = 0;
 
     // scan
-    int mutli_channel_initialized = -1;
-    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+    int multi_channel_initialized = -1;
+    for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // do not initialize multi channel sensors more than once
         int result = 0;
-        if (sensor_registry[i].identifier != mutli_channel_initialized) {
-            result = sensor_registry[i].init(sensor_registry[i].identifier);
+        if (SENSOR_REGISTRY[i].identifier != multi_channel_initialized) {
+            result = SENSOR_REGISTRY[i].init(SENSOR_REGISTRY[i].identifier);
         } else {
             result = SUCCESS;
         }
 
         if (result == SUCCESS) {
             // sensor available
-            sensors_available[i] = sensor_registry[i].identifier;
-            mutli_channel_initialized = sensor_registry[i].identifier;
+            sensor_available[i] = SENSOR_REGISTRY[i].identifier;
+            multi_channel_initialized = SENSOR_REGISTRY[i].identifier;
             sensor_count++;
 
             // message
-            strcat(message, sensor_registry[i].name);
+            strcat(message, SENSOR_REGISTRY[i].name);
             strcat(message, "\n\t- ");
         } else {
             // sensor not available
-            sensors_available[i] = -1;
-            mutli_channel_initialized = -1;
+            sensor_available[i] = -1;
+            multi_channel_initialized = -1;
         }
     }
 
     // message & return
     if (sensor_count == 0) {
-        rl_log(WARNING, "no ambient sensor found...");
+        rl_log(RL_LOG_WARNING, "no ambient sensor found...");
     } else {
         message[strlen(message) - 3] = 0;
-        rl_log(INFO, "%s", message);
+        rl_log(RL_LOG_INFO, "%s", message);
         printf("\n\n%s\n", message);
     }
     return sensor_count;
@@ -199,12 +200,12 @@ int sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]) {
 
 /**
  * Close all sensors used on the I2C bus.
- * @param sensors_available List of available (previously initialized) sensors
+ * @param sensor_available List of available (previously initialized) sensors
  */
-void sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]) {
-    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
-        if (sensors_available[i] >= 0) {
-            sensor_registry[i].deinit(sensor_registry[i].identifier);
+void sensors_close(bool const sensor_available[SENSOR_REGISTRY_SIZE]) {
+    for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+        if (sensor_available[i]) {
+            SENSOR_REGISTRY[i].deinit(SENSOR_REGISTRY[i].identifier);
         }
     }
 }

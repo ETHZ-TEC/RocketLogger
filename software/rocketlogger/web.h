@@ -34,17 +34,17 @@
 
 #include <stdint.h>
 
-#include "types.h"
+#include "rl.h"
 #include "util.h"
 
 /// Number of ring buffers in shared memory
-#define WEB_RING_BUFFER_COUNT 3
+#define WEB_BUFFER_COUNT 3
 /// Index of 1s/div buffer
-#define BUF1_INDEX 0
+#define WEB_BUFFER1_INDEX 0
 /// Index of 10s/div buffer
-#define BUF10_INDEX 1
+#define WEB_BUFFER10_INDEX 1
 /// Index of 100s/div buffer
-#define BUF100_INDEX 2
+#define WEB_BUFFER100_INDEX 2
 
 /// Size of 1s/div buffer
 #define BUFFER1_SIZE 100
@@ -67,9 +67,9 @@
  * RocketLogger web interface time scale definition
  */
 enum web_time_scale {
-    WEB_TIME_SCALE_1 = 0,  //!< 100 sample/s
-    WEB_TIME_SCALE_10 = 1, //!< 10 samples/s
-    WEB_TIME_SCALE_100 = 2 //!< 1 samples/s
+    WEB_TIME_SCALE_1 = 0,   //!< 100 sample/s
+    WEB_TIME_SCALE_10 = 1,  //!< 10 samples/s
+    WEB_TIME_SCALE_100 = 2, //!< 1 samples/s
 };
 
 /**
@@ -107,7 +107,7 @@ struct web_shm {
     /// Number of channels sampled
     uint32_t num_channels;
     /// Array of ring buffers for different time scales
-    web_buffer_t buffer[WEB_RING_BUFFER_COUNT];
+    web_buffer_t buffer[WEB_BUFFER_COUNT];
 };
 
 /**
@@ -165,17 +165,16 @@ int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
 /**
  * Process the data buffer for the web interface.
  *
- * @param web_data_ptr Pointer to shared web data
+ * @param web_data Pointer to shared web data
  * @param sem_id ID of semaphores for shared web data
- * @param buffer_addr Pointer to buffer to handle
+ * @param buffer Pointer to buffer to handle
  * @param samples_count Number of samples to read
  * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
  * @param config Current {@link rl_config_t} configuration.
- * @return {@link SUCCESS} on successful processing, {@link FAILURE} otherwise
-
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
-                    void const *buffer_addr, uint32_t samples_count,
+int web_handle_data(web_shm_t *const web_data, int sem_id, void const *buffer,
+                    uint32_t samples_count,
                     rl_timestamp_t const *const timestamp_realtime,
                     rl_config_t const *const config);
 

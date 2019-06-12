@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "log.h"
+#include "rl.h"
 #include "sysfs.h"
 
 #include "pwm.h"
@@ -70,8 +71,8 @@ int pwm_init(void) {
     // open /dev/mem for memory mapping
     mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (mem_fd < 0) {
-        rl_log(ERROR, "can't open /dev/mem (%d)", mem_fd);
-        return FAILURE;
+        rl_log(RL_LOG_ERROR, "can't open /dev/mem (%d)", mem_fd);
+        return ERROR;
     }
 
     // map PWM0 registers
@@ -79,8 +80,8 @@ int pwm_init(void) {
                                         MAP_SHARED, mem_fd, PWM0_BASE);
     if ((void *)pwm0_mem == MAP_FAILED) {
         pwm_deinit();
-        rl_log(ERROR, "mmap for PWM0 failed");
-        return FAILURE;
+        rl_log(RL_LOG_ERROR, "mmap for PWM0 failed");
+        return ERROR;
     }
 
     // map PWM1 registers
@@ -88,11 +89,11 @@ int pwm_init(void) {
                                         MAP_SHARED, mem_fd, PWM1_BASE);
     if ((void *)pwm1_mem == MAP_FAILED) {
         pwm_deinit();
-        rl_log(ERROR, "mmap for PWM1 failed");
-        return FAILURE;
+        rl_log(RL_LOG_ERROR, "mmap for PWM1 failed");
+        return ERROR;
     }
 
-    return 0;
+    return SUCCESS;
 }
 
 void pwm_deinit(void) {

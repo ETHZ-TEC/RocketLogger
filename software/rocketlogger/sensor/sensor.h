@@ -32,6 +32,7 @@
 #ifndef SENSOR_SENSOR_H_
 #define SENSOR_SENSOR_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "../rl_file.h"
@@ -42,7 +43,7 @@
 #define I2C_BUS_FILENAME "/dev/i2c-1"
 #endif
 
-/// Number of sensor registred
+/// Number of sensor registered
 #define SENSOR_REGISTRY_SIZE 5
 
 #define SENSOR_NAME_LENGTH (RL_FILE_CHANNEL_NAME_LENGTH)
@@ -63,11 +64,17 @@ struct rl_sensor {
 };
 
 /**
- * Typedef for tandardized RL sensor interface definition
+ * Typedef for standardized RocketLogger sensor interface definition
  */
 typedef struct rl_sensor rl_sensor_t;
 
-extern const rl_sensor_t sensor_registry[SENSOR_REGISTRY_SIZE];
+/**
+ * The sensor registry structure.
+ *
+ * Register your sensor (channels) here. Multiple channels from the same
+ * sensor should be added as consecutive entries.
+ */
+extern const rl_sensor_t SENSOR_REGISTRY[SENSOR_REGISTRY_SIZE];
 
 int sensors_init(void);
 void sensors_deinit(void);
@@ -77,7 +84,7 @@ int sensors_init_comm(uint8_t);
 int sensors_open_bus(void);
 int sensors_close_bus(int);
 
-int sensors_scan(int sensors_available[SENSOR_REGISTRY_SIZE]);
-void sensors_close(int const sensors_available[SENSOR_REGISTRY_SIZE]);
+uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]);
+void sensors_close(bool const sensor_available[SENSOR_REGISTRY_SIZE]);
 
 #endif /* SENSOR_SENSOR_H_ */

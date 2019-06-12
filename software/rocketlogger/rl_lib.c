@@ -29,140 +29,167 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include <signal.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "calibration.h"
-#include "lib_util.h"
 #include "log.h"
+#include "rl.h"
 #include "rl_hw.h"
 #include "util.h"
 
 #include "rl_lib.h"
 
 /**
- * Get status of RocketLogger
- * @return current status {@link rl_state_t}
+ * Signal handler to catch stop signals.
+ *
+ * @todo allow for forced user interrupt (ctrl+C)
+ *
+ * @param signal_number The number of the signal to handle
  */
-rl_state_t rl_get_status(void) {
+static void rl_signal_handler(int signal_number);
+
+bool rl_is_sampling(void) {
     rl_status_t status;
-    return rl_read_status(&status);
+    rl_read_status(&status);
+    return status.sampling;
 }
 
-/**
- * Read status of RocketLogger
- * @param status Pointer to {@link rl_status_t} struct to write to
- * @return current status {@link rl_state_t}
- */
-rl_state_t rl_read_status(rl_status_t *const status) {
-    pid_t pid = get_pid();
-    if (pid == FAILURE || kill(pid, 0) < 0) {
-        // process not running
-        status->state = RL_OFF;
-    } else {
-        // read status
-        read_status(status);
+int rl_read_status(rl_status_t *const status) {
+    pid_t pid = rl_pid_get();
+
+    // if not running, return default status
+    if (pid == 0 || kill(pid, 0) < 0) {
+        rl_status_reset(status);
+        return SUCCESS;
     }
-    return status->state;
+
+    // map shared memory
+    int shm_id =
+        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+    if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR,
+               "In read_status: failed to get shared status memory id; "
+               "%d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+    rl_status_t const *const shm_status =
+        (rl_status_t const *const)shmat(shm_id, NULL, 0);
+
+    if (shm_status == (void *)-1) {
+        rl_log(RL_LOG_ERROR,
+               "In read_status: failed to map shared status memory; %d "
+               "message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+
+    // copy status read from shared memory
+    memcpy(status, shm_status, sizeof(rl_status_t));
+
+    // unmap shared memory
+    shmdt(shm_status);
+
+    return SUCCESS;
 }
 
-/**
- * Read calibration file
- * @param config Current {@link rl_config_t} configuration
- * @param calibration Pointer to {@link rl_calibration_t} to write to
- */
-void rl_read_calibration(rl_config_t const *const config,
-                         rl_calibration_t *const calibration) {
-    calibration_load(config);
-    memcpy(calibration, &calibration_data, sizeof(rl_calibration_t));
-}
+int rl_run(rl_config_t *const config) {
 
-/**
- * RocketLogger start function: start sampling
- * @param config Pointer to desired {@link rl_config_t} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
- */
-int rl_start(rl_config_t *const config, char const *const file_comment) {
+    // // check mode
+    // switch (config->mode) {
+    // case LIMIT:
+    //     break;
+    // case CONTINUOUS:
+    //     // create daemon to run in background
+    //     if (daemon(1, 1) < 0) {
+    //         rl_log(RL_LOG_ERROR, "failed to create background process");
+    //         return SUCCESS;
+    //     }
+    //     break;
+    // case METER:
+    //     // set meter config
+    //     config->update_rate = METER_UPDATE_RATE;
+    //     config->sample_limit = 0;
+    //     config->web_enable = false;
+    //     config->file_enable = false;
+    //     if (config->sample_rate < ADS131E0X_RATE_MIN) {
+    //         rl_log(RL_LOG_WARNING,
+    //                "too low sample rate. Setting rate to 1kSps");
+    //         config->sample_rate = ADS131E0X_RATE_MIN;
+    //     }
+    //     break;
+    // default:
+    //     rl_log(RL_LOG_ERROR, "wrong mode");
+    //     return FAILURE;
+    // }
 
-    // check mode
-    switch (config->mode) {
-    case LIMIT:
-        break;
-    case CONTINUOUS:
-        // create daemon to run in background
-        if (daemon(1, 1) < 0) {
-            rl_log(ERROR, "failed to create background process");
-            return SUCCESS;
-        }
-        break;
-    case METER:
-        // set meter config
-        config->update_rate = METER_UPDATE_RATE;
-        config->sample_limit = 0;
-        config->web_interface_enable = false;
-        config->file_format = RL_FILE_NONE;
-        if (config->sample_rate < MIN_ADC_RATE) {
-            rl_log(WARNING, "too low sample rate. Setting rate to 1kSps");
-            config->sample_rate = MIN_ADC_RATE;
-        }
-        break;
-    default:
-        rl_log(ERROR, "wrong mode");
-        return FAILURE;
-    }
+    // // check input
+    // if (check_sample_rate(config->sample_rate) == FAILURE) {
+    //     rl_log(RL_LOG_ERROR, "wrong sampling rate");
+    //     return FAILURE;
+    // }
+    // if (check_update_rate(config->update_rate) == FAILURE) {
+    //     rl_log(RL_LOG_ERROR, "wrong update rate");
+    //     return FAILURE;
+    // }
+    // if (config->update_rate != 1 && config->web_enable) {
+    //     rl_log(RL_LOG_WARNING,
+    //            "webserver plot does not work with update rates >1. "
+    //            "Disabling webserver ...");
+    //     config->web_enable = false;
+    // }
 
-    // check input
-    if (check_sample_rate(config->sample_rate) == FAILURE) {
-        rl_log(ERROR, "wrong sampling rate");
-        return FAILURE;
-    }
-    if (check_update_rate(config->update_rate) == FAILURE) {
-        rl_log(ERROR, "wrong update rate");
-        return FAILURE;
-    }
-    if (config->update_rate != 1 && config->web_interface_enable) {
-        rl_log(WARNING, "webserver plot does not work with update rates >1. "
-                        "Disabling webserver ...");
-        config->web_interface_enable = false;
-    }
-
-    // check ambient configuration
-    if (config->ambient.enabled && config->file_format == RL_FILE_NONE) {
-        rl_log(
-            WARNING,
-            "Ambient logging not possible without file. Disabling ambient ...");
-        config->ambient.enabled = false;
-    }
+    // // check ambient configuration
+    // if (config->ambient_enable && !(config->file_enable)) {
+    //     rl_log(
+    //         WARNING,
+    //         "Ambient logging not possible without file. Disabling ambient
+    //         ...");
+    //     config->ambient_enable = false;
+    // }
 
     // store PID to file
     pid_t pid = getpid();
-    set_pid(pid);
+    rl_pid_set(pid);
 
-    // register signal handler (for stopping)
-    if (signal(SIGQUIT, sig_handler) == SIG_ERR ||
-        signal(SIGINT, sig_handler) == SIG_ERR) {
-        rl_log(ERROR, "can't register signal handler");
-        return FAILURE;
+    // register signal handler for SIGQUIT and SIGINT (for stopping)
+    struct sigaction signal_action;
+    signal_action.sa_handler = rl_signal_handler;
+    sigemptyset(&signal_action.sa_mask);
+    signal_action.sa_flags = 0;
+
+    int ret;
+    ret = sigaction(SIGQUIT, &signal_action, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGQUIT.");
+        return ERROR;
+    }
+    ret = sigaction(SIGINT, &signal_action, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGINT.");
+        return ERROR;
     }
 
     // INITIATION
     hw_init(config);
 
     // check ambient sensor available
-    if (config->ambient.enabled && config->ambient.sensor_count == 0) {
-        config->ambient.enabled = false;
-        rl_log(WARNING, "No ambient sensor found. Disabling ambient ...");
+    if (config->ambient_enable && rl_status.sensor_count == 0) {
+        config->ambient_enable = false;
+        rl_log(RL_LOG_WARNING, "No ambient sensor found. Disabling ambient...");
     }
 
     // SAMPLING
-    rl_log(INFO, "sampling start");
-    hw_sample(config, file_comment);
-    rl_log(INFO, "sampling finished");
+    rl_log(RL_LOG_INFO, "sampling start");
+    hw_sample(config);
+    rl_log(RL_LOG_INFO, "sampling finished");
 
     // FINISH
     hw_deinit(config);
@@ -170,23 +197,38 @@ int rl_start(rl_config_t *const config, char const *const file_comment) {
     return SUCCESS;
 }
 
-/**
- * RocketLogger stop function (to stop continuous mode)
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
- */
 int rl_stop(void) {
 
     // check if running
-    if (rl_get_status() != RL_RUNNING) {
-        rl_log(ERROR, "RocketLogger not running");
-        return FAILURE;
+    if (!rl_is_sampling()) {
+        rl_log(RL_LOG_ERROR, "RocketLogger not running");
+        return ERROR;
     }
 
     // ged pid
-    pid_t pid = get_pid();
+    pid_t pid = rl_pid_get();
+    if (pid < 0) {
+        rl_log(RL_LOG_ERROR, "RocketLogger PID not found");
+        return ERROR;
+    }
 
     // send stop signal
     kill(pid, SIGQUIT);
 
     return SUCCESS;
+}
+
+static void rl_signal_handler(int signal_number) {
+    // signal generated by stop function
+    if (signal_number == SIGQUIT) {
+        // stop sampling
+        rl_status.sampling = false;
+    }
+
+    // signal generated by user (ctrl+C)
+    if (signal_number == SIGINT) {
+        signal(signal_number, SIG_IGN);
+        // printf("Stopping RocketLogger ...\n");
+        rl_status.sampling = false;
+    }
 }

@@ -33,6 +33,11 @@
 #define ADS131E0X_H_
 
 /**
+ * Minimum ADC rate in samples per second.
+ */
+#define ADS131E0X_RATE_MIN 1000
+
+/**
  * ADS131E0x ADC command (extended to 32 bits for PRU use) definitions
  */
 #define ADS131E0X_WAKEUP 0x02

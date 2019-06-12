@@ -35,7 +35,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "types.h"
+#include "rl.h"
 
 /// MAC address length in bytes
 #define MAC_ADDRESS_LENGTH 6
@@ -58,22 +58,101 @@ struct rl_timestamp {
  */
 typedef struct rl_timestamp rl_timestamp_t;
 
-int is_current(int index);
-int is_low_current(int index);
-int count_channels(bool const channels[NUM_CHANNELS]);
+/**
+ * Checks whether a channel is a current channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a current, false otherwise
+ */
+bool is_current(int index);
 
-int read_status(rl_status_t *const status);
-int write_status(rl_status_t const *const status);
+/**
+ * Checks whether a channel is a low range current channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a low range current, false otherwise
+ */
+bool is_low_current(int index);
 
-int ceil_div(int n, int d);
+/**
+ * Counts the number of channels enabled.
+ *
+ * @param channels Channel enable array
+ * @return The number of enabled channels
+ */
+int count_channels(bool const channels[RL_CHANNEL_COUNT]);
 
-void sig_handler(int signo);
+/**
+ * Integer division with ceiling.
+ *
+ * @param n Numerator
+ * @param d Denominator
+ * @return Division result rounded up to next integer
+ */
+int div_ceil(int n, int d);
 
-int read_file_value(char filename[]);
-
+/**
+ * Create time stamps (real and monotonic).
+ *
+ * @param timestamp_realtime Pointer to {@link rl_timestamp_t} struct
+ * @param timestamp_monotonic Pointer to {@link rl_timestamp_t} struct
+ */
 void create_time_stamp(rl_timestamp_t *const time_real,
                        rl_timestamp_t *const time_monotonic);
 
+/**
+ * Get MAC address of network device.
+ *
+ * @param mac_address Array to write the MAC address to
+ */
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
+
+/**
+ * Get total disk space in a directory in bytes.
+ *
+ * @param path Path to selected directory
+ * @return Total disk space in bytes
+ */
+int64_t fs_space_total(char *path);
+
+/**
+ * Get free disk space in a directory in bytes.
+ *
+ * @param path Path to selected directory
+ * @return Free disk space in bytes
+ */
+int64_t fs_space_free(char *path);
+
+/**
+ * Print a boolean array in JSON format.
+ *
+ * @param data Data array to print
+ * @param length Length of array
+ */
+void print_json_bool(bool const *const data, const int length);
+
+/**
+ * Print a 64-bit integer array in JSON format.
+ *
+ * @param data Data array to print
+ * @param length Length of array
+ */
+void print_json_int64(int64_t const *const data, const int length);
+
+/**
+ * Reads the status of the running measurement from shared memory.
+ *
+ * @param status Pointer to struct array to write the status to.
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int read_status(rl_status_t *const status);
+
+/**
+ * Writes the status to the shared memory.
+ *
+ * @param status Pointer to struct array.
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int write_status(rl_status_t const *const status);
 
 #endif /* UTIL_H_ */

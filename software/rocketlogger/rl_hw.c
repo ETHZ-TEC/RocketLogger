@@ -31,35 +31,36 @@
 
 #include <stdio.h>
 
+#include "ads131e0x.h"
+#include "ambient.h"
 #include "calibration.h"
 #include "gpio.h"
 #include "log.h"
 #include "pru.h"
 #include "pwm.h"
+#include "rl.h"
 #include "sensor/sensor.h"
-#include "types.h"
-#include "util.h"
 
 #include "rl_hw.h"
 
-void hw_init(rl_config_t *const config) {
+void hw_init(rl_config_t const *const config) {
 
     // PWM configuration
     pwm_init();
 
-    if (config->sample_rate < MIN_ADC_RATE) {
-        pwm_setup_range_reset(MIN_ADC_RATE);
+    if (config->sample_rate < ADS131E0X_RATE_MIN) {
+        pwm_setup_range_reset(ADS131E0X_RATE_MIN);
     } else {
         pwm_setup_range_reset(config->sample_rate);
     }
     pwm_setup_adc_clock();
 
     // GPIO configuration
-    // force high range
+    // force high range (negative enable)
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
     gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_FHR1, (config->force_high_channels[0] ? 0 : 1));
-    gpio_set_value(GPIO_FHR2, (config->force_high_channels[1] ? 0 : 1));
+    gpio_set_value(GPIO_FHR1, (config->channel_force_range[0] ? 0 : 1));
+    gpio_set_value(GPIO_FHR2, (config->channel_force_range[1] ? 0 : 1));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
@@ -69,20 +70,16 @@ void hw_init(rl_config_t *const config) {
     // PRU
     pru_init();
 
-    // SENSORS
-    if (config->ambient.enabled) {
+    // SENSORS (if enabled)
+    if (config->ambient_enable) {
         sensors_init();
-        config->ambient.sensor_count =
-            sensors_scan(config->ambient.available_sensors);
+        rl_status.sensor_count = sensors_scan(rl_status.sensor_available);
     }
 
     // STATE
-    status.state = RL_RUNNING;
-    status.sampling = RL_SAMPLING_OFF;
-    status.samples_taken = 0;
-    status.buffer_number = 0;
-    status.config = *config;
-    write_status(&status);
+    rl_status_reset(&rl_status);
+    rl_status.config = config;
+    write_status(&rl_status);
 }
 
 void hw_deinit(rl_config_t const *const config) {
@@ -98,64 +95,71 @@ void hw_deinit(rl_config_t const *const config) {
     gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
-    if (config->mode != LIMIT) {
+    // stop first if running in background
+    if (config->background_enable) {
         pru_stop();
     }
     pru_deinit();
 
-    // SENSORS
-    if (config->ambient.enabled) {
-        sensors_close(config->ambient.available_sensors);
+    // SENSORS (if enabled)
+    if (config->ambient_enable) {
+        sensors_close(rl_status.sensor_available);
         sensors_deinit();
     }
 
     // RESET SHARED MEM
-    status.samples_taken = 0;
-    status.buffer_number = 0;
-    write_status(&status);
+    rl_status.sample_count = 0;
+    rl_status.buffer_count = 0;
+    write_status(&rl_status);
 }
 
-int hw_sample(rl_config_t const *const config, char const *const file_comment) {
+int hw_sample(rl_config_t const *const config) {
     int ret;
-    // open data file
-    FILE *data = (FILE *)-1;
-    if (config->file_format !=
-        RL_FILE_NONE) { // open file only if storing requested
-        data = fopen64(config->file_name, "w+");
-        if (data == NULL) {
-            rl_log(ERROR, "failed to open data-file");
-            return FAILURE;
-        }
-    }
-
-    // open ambient file
+    FILE *data_file = (FILE *)-1;
     FILE *ambient_file = (FILE *)-1;
-    if (config->ambient.enabled) {
-        ambient_file = fopen64(config->ambient.file_name, "w+");
-        if (data == NULL) {
-            rl_log(ERROR, "failed to open ambient-file");
-            return FAILURE;
+
+    // reset calibration if ignored, load otherwise
+    if (config->calibration_ignore) {
+        calibration_reset_offsets();
+        calibration_reset_scales();
+    } else {
+        ret = calibration_load();
+        if (ret < 0) {
+            rl_log(RL_LOG_WARNING,
+                   "no calibration file, returning uncalibrated values");
         }
     }
 
-    // read calibration
-    ret = calibration_load(config);
-    if (ret != SUCCESS) {
-        rl_log(WARNING, "no calibration file, returning uncalibrated values");
+    // create/open measurement files
+    if (config->file_enable) {
+        data_file = fopen64(config->file_name, "w+");
+        if (data_file == NULL) {
+            rl_log(RL_LOG_ERROR, "failed to open data file");
+            return ERROR;
+        }
+    }
+
+    if (config->ambient_enable) {
+        char *ambient_file_name = ambient_get_file_name(config->file_name);
+        ambient_file = fopen64(ambient_file_name, "w+");
+        if (data_file == NULL) {
+            rl_log(RL_LOG_ERROR, "failed to open ambient file");
+            return ERROR;
+        }
     }
 
     // SAMPLE
-    ret = pru_sample(data, ambient_file, config, file_comment);
-    if (ret != SUCCESS) {
+    ret = pru_sample(data_file, ambient_file, config);
+    if (ret < 0) {
         // error occurred
         gpio_set_value(GPIO_LED_ERROR, 1);
     }
 
-    // close data file
-    if (config->file_format != RL_FILE_NONE) {
-        fclose(data);
+    // close data files
+    if (config->file_enable) {
+        fclose(data_file);
     }
-    if (config->ambient.enabled) {
+    if (config->ambient_enable) {
         fclose(ambient_file);
     }
 

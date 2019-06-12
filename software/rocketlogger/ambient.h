@@ -34,9 +34,12 @@
 
 #include <stdio.h>
 
+#include "rl.h"
 #include "rl_file.h"
-#include "types.h"
 #include "util.h"
+
+/// Ambient sensor data file name suffix
+#define AMBIENT_FILE_NAME_SUFFIX "-ambient"
 
 /// Ambient sensor read out rate in samples per second
 #define AMBIENT_SAMPLING_RATE 1
@@ -44,17 +47,35 @@
 /// Ambient sensor data file block size in measurements
 #define AMBIENT_DATA_BLOCK_SIZE 1
 
-void ambient_store_data(FILE *ambient_file,
-                        rl_timestamp_t const *const timestamp_realtime,
-                        rl_timestamp_t const *const timestamp_monotonic,
-                        rl_config_t const *const config);
-void ambient_set_file_name(rl_config_t *const config);
-void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in,
-                           rl_config_t const *const config);
-void ambient_setup_channels(struct rl_file_header *const file_header,
-                            rl_config_t const *const config);
-void ambient_setup_header(struct rl_file_header *const file_header,
-                          rl_config_t const *const config,
-                          char const *const comment);
+/**
+ * Derive the ambient file name from the data file name.
+ *
+ * @param data_file_name The data file name
+ * @return Pointer to the derived ambient file name
+ */
+char *ambient_get_file_name(char const *const data_file_name);
+
+/**
+ * @todo document
+ */
+void ambient_setup_lead_in(rl_file_lead_in_t *const lead_in);
+
+/**
+ * @todo document
+ */
+void ambient_setup_header(rl_file_header_t *const header,
+                          rl_config_t const *const config);
+
+/**
+ * Handle a ambient data buffer, dependent on current configuration.
+ *
+ * @param ambient_file File pointer to ambient file
+ * @param timestamp_realtime {@link time_stamp} with realtime clock value
+ * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
+ * @param config Current {@link rl_config_t} configuration.
+ */
+void ambient_append_data(FILE *ambient_file,
+                         rl_timestamp_t const *const timestamp_realtime,
+                         rl_timestamp_t const *const timestamp_monotonic);
 
 #endif /* AMBIENT_H_ */

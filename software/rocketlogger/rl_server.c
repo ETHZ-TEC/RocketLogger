@@ -36,14 +36,13 @@
 #include <string.h>
 
 #include <libgen.h>
-#include <sys/statvfs.h>
 #include <sys/types.h>
 
 #include "calibration.h"
 #include "log.h"
 #include "rl_lib.h"
-#include "rl_util.h"
 #include "sem.h"
+#include "util.h"
 #include "web.h"
 
 /// Number of input arguments required
@@ -78,89 +77,42 @@ int8_t num_channels;
 rl_status_t status;
 
 /// Buffer sizes for different time scales
-int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
-                                           BUFFER100_SIZE};
+int buffer_sizes[WEB_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
+                                      BUFFER100_SIZE};
 
-// functions
-/**
- * Get free disk space in a directory
- * @param path Path to selected directory
- * @return Free disk space in bytes
- */
-static int64_t get_free_space(char *path) {
-    struct statvfs stat;
-    statvfs(path, &stat);
+// /**
+//  * Print current status in JSON format
+//  */
+// static void print_status(void) {
+//     // STATUS
+//     printf("%d\n", status.state);
+//     if (status.state != RL_RUNNING) {
+//         read_default_config(&status.config);
 
-    return (uint64_t)stat.f_bavail * (uint64_t)stat.f_bsize;
-}
+//         // read calibration time
+//         rl_calibration_t tmp_calibration;
+//         rl_read_calibration(&status.config, &tmp_calibration);
+//         status.calibration_time = tmp_calibration.time;
+//     }
+//     // copy of filename (for dirname)
+//     char file_name_copy[RL_PATH_LENGTH_MAX];
+//     strcpy(file_name_copy, status.config.file_name);
+//     printf("%lld\n", fs_free_space_bytes(dirname(file_name_copy)));
+//     printf("%llu\n", status.calibration_time);
 
-/**
- * Print a boolean array in JSON format
- * @param data Data array to print
- * @param length Length of array
- */
-static void print_json_bool(bool const *const data, const int length) {
-    printf("[");
-    for (int i = 0; i < length; i++) {
-        if (i > 0) {
-            printf(",%d", data[i] ? 1 : 0);
-        } else {
-            printf("%d", data[i] ? 1 : 0);
-        }
-    }
-    printf("]\n");
-}
-
-/**
- * Print a 64-bit integer array in JSON format
- * @param data Data array to print
- * @param length Length of array
- */
-static void print_json_int64(int64_t const *const data, const int length) {
-    printf("[");
-    for (int i = 0; i < length; i++) {
-        if (i > 0) {
-            printf(",%lld", data[i]);
-        } else {
-            printf("%lld", data[i]);
-        }
-    }
-    printf("]\n");
-}
-
-/**
- * Print current status in JSON format
- */
-static void print_status(void) {
-    // STATUS
-    printf("%d\n", status.state);
-    if (status.state != RL_RUNNING) {
-        read_default_config(&status.config);
-
-        // read calibration time
-        rl_calibration_t tmp_calibration;
-        rl_read_calibration(&status.config, &tmp_calibration);
-        status.calibration_time = tmp_calibration.time;
-    }
-    // copy of filename (for dirname)
-    char file_name_copy[MAX_PATH_LENGTH];
-    strcpy(file_name_copy, status.config.file_name);
-    printf("%lld\n", get_free_space(dirname(file_name_copy)));
-    printf("%llu\n", status.calibration_time);
-
-    // CONFIG
-    printf("%u\n", status.config.sample_rate);
-    printf("%d\n", status.config.update_rate);
-    printf("%d\n", status.config.digital_input_enable ? 1 : 0);
-    printf("%d\n", status.config.calibration_ignore ? 1 : 0);
-    printf("%d\n", status.config.file_format);
-    printf("%s\n", status.config.file_name);
-    printf("%llu\n", status.config.max_file_size);
-    print_json_bool(status.config.channels, NUM_CHANNELS);
-    print_json_bool(status.config.force_high_channels, NUM_I_CHANNELS);
-    printf("%llu\n", status.samples_taken);
-    printf("%d\n", status.config.web_interface_enable ? 1 : 0);
-}
+//     // CONFIG
+//     printf("%u\n", status.config.sample_rate);
+//     printf("%d\n", status.config.update_rate);
+//     printf("%d\n", status.config.digital_input_enable ? 1 : 0);
+//     printf("%d\n", status.config.calibration_ignore ? 1 : 0);
+//     printf("%d\n", status.config.file_format);
+//     printf("%s\n", status.config.file_name);
+//     printf("%llu\n", status.config.max_file_size);
+//     print_json_bool(status.config.channels, RL_CHANNEL_COUNT);
+//     print_json_bool(status.config.force_high_channels, NUM_I_CHANNELS);
+//     printf("%llu\n", status.samples_taken);
+//     printf("%d\n", status.config.web_interface_enable ? 1 : 0);
+// }
 
 /**
  * Print requested data in JSON format
@@ -171,11 +123,11 @@ static void print_data(void) {
     int buffer_count = (curr_time - last_time + TIME_MARGIN) / 1000;
 
     // get available buffers
-    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, SEM_INDEX_DATA, SEM_TIMEOUT_READ) < 0) {
         return;
     }
     int buffer_available = web_data->buffer[t_scale].filled;
-    sem_set(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, SEM_INDEX_DATA, 1);
 
     if (buffer_count > buffer_available) {
         buffer_count = buffer_available;
@@ -185,7 +137,6 @@ static void print_data(void) {
 
     // print request id and status
     printf("%d\n", id);
-    print_status();
 
     // data available
     printf("1\n");
@@ -203,7 +154,7 @@ static void print_data(void) {
     // read data
     int64_t data[buffer_count][buffer_size][num_channels];
 
-    if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+    if (sem_wait(sem_id, SEM_INDEX_DATA, SEM_TIMEOUT_READ) < 0) {
         return;
     }
     for (int i = 0; i < buffer_count; i++) {
@@ -211,7 +162,7 @@ static void print_data(void) {
         // read data buffer
         int64_t *shm_data = web_buffer_get(&web_data->buffer[t_scale], i);
         if (web_data->buffer[t_scale].element_size > sizeof(data)) {
-            rl_log(ERROR,
+            rl_log(RL_LOG_ERROR,
                    "In print_data: memcpy is trying to copy to much data.");
             break;
         } else {
@@ -219,7 +170,7 @@ static void print_data(void) {
                    web_data->buffer[t_scale].element_size);
         }
     }
-    sem_set(sem_id, DATA_SEM, 1);
+    sem_set(sem_id, SEM_INDEX_DATA, 1);
 
     // print data
     for (int i = buffer_count - 1; i >= 0; i--) {
@@ -245,8 +196,8 @@ int main(int argc, char *argv[]) {
 
     // parse arguments
     if (argc != ARG_COUNT + 1) {
-        rl_log(ERROR, "in rl_server: not enough arguments");
-        exit(FAILURE);
+        rl_log(RL_LOG_ERROR, "in rl_server: not enough arguments");
+        exit(EXIT_FAILURE);
     }
     id = atoi(argv[1]);
     get_data = atoi(argv[2]);
@@ -256,7 +207,7 @@ int main(int argc, char *argv[]) {
     // check time scale
     if (t_scale != WEB_TIME_SCALE_1 && t_scale != WEB_TIME_SCALE_10 &&
         t_scale != WEB_TIME_SCALE_100) {
-        rl_log(WARNING, "unknown time scale");
+        rl_log(RL_LOG_WARNING, "unknown time scale");
         t_scale = WEB_TIME_SCALE_1;
     }
 
@@ -264,17 +215,16 @@ int main(int argc, char *argv[]) {
     rl_read_status(&status);
 
     // quit, if data not requested or not running or web disabled
-    if (status.state != RL_RUNNING || status.sampling == RL_SAMPLING_OFF ||
-        !status.config.web_interface_enable || get_data == 0) {
+    if (status.sampling || !(status.config->web_enable) || get_data == 0) {
         // print request id and status
         printf("%d\n", id);
-        print_status();
+        rl_status_print_json(&status);
         printf("0\n"); // no data available
         exit(EXIT_SUCCESS);
     }
 
     // open semaphore
-    sem_id = sem_open(SEM_KEY, NUM_SEMS);
+    sem_id = sem_open(SEM_KEY, SEM_SEM_COUNT);
     if (sem_id < 0) {
         // error already logged
         exit(EXIT_FAILURE);
@@ -288,12 +238,12 @@ int main(int argc, char *argv[]) {
     while (data_read == 0) {
 
         // get current time
-        if (sem_wait(sem_id, DATA_SEM, SEM_TIME_OUT) != SUCCESS) {
+        if (sem_wait(sem_id, SEM_INDEX_DATA, SEM_TIMEOUT_READ) < 0) {
             exit(EXIT_FAILURE);
         }
         curr_time = web_data->time;
         num_channels = web_data->num_channels;
-        sem_set(sem_id, DATA_SEM, 1);
+        sem_set(sem_id, SEM_INDEX_DATA, 1);
 
         if (curr_time > last_time) {
 
@@ -313,7 +263,7 @@ int main(int argc, char *argv[]) {
 
             // wait on new data
             if (data_read == 0) {
-                if (sem_wait(sem_id, WAIT_SEM, SEM_TIME_OUT) != SUCCESS) {
+                if (sem_wait(sem_id, SEM_INDEX_WAIT, SEM_TIMEOUT_READ) < 0) {
                     // time-out or error -> stop
                     break;
                 }

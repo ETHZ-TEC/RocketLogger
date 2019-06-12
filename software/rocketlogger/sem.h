@@ -34,57 +34,77 @@
 
 #include <sys/types.h>
 
+/// Semaphore key (used for set creation)
+#define SEM_KEY 2222
+/// Time out time in seconds, waiting on semaphore write
+#define SEM_OPT_NO_FLAG 0
+/// Time out time in seconds, waiting on semaphore read
+#define SEM_TIMEOUT_READ 3
+/// Time out time in seconds, waiting on semaphore write
+#define SEM_TIMEOUT_WRITE 1
+
+/// Total number of semaphores in set
+#define SEM_SEM_COUNT 2
+/// Index of the data semaphore (protects shared memory accesses)
+#define SEM_INDEX_DATA 0
+/// Index of the wait semaphore (blocks until new data is available)
+#define SEM_INDEX_WAIT 1
+
 /**
  * Create RocketLogger semaphore set.
  *
- * @return ID of created set
+ * @param key The key identifying the semaphore set to create
+ * @param count The number of semaphores in the set to create
+ * @return ID of created set on success, negative on failure with errno set
+ * accordingly
  */
-int sem_create(key_t key, int num_sems);
+int sem_create(key_t key, int count);
 
 /**
  * Remove semaphore set.
  *
- * @param sem_id ID of set to remove
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ * @param id ID of set to remove
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int sem_remove(int sem_id);
+int sem_remove(int id);
 
 /**
  * Open existing RocketLogger semaphore set.
  *
- * @return ID of opened set
+ * @param key The key identifying the semaphore set
+ * @param count The number of semaphores in the set
+ * @return ID of opened set, negative on failure with errno set accordingly
  */
-int sem_open(key_t key, int num_sems);
+int sem_open(key_t key, int count);
 
 /**
  * Wait on a semaphore until access granted.
  *
- * @param sem_id ID of semaphore set
- * @param sem_num Number of semaphore in set
- * @param time_out Maximum waiting time
- * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
- * out, {@link FAILURE} otherwise
+ * @param id ID of semaphore set
+ * @param index Index of semaphore in set
+ * @param timeout Maximum waiting time before failing in seconds
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int sem_wait(int sem_id, int sem_num, int time_out);
+int sem_wait(int id, int index, int timeout);
 
 /**
  * Set value to semaphore.
  *
- * @param sem_id ID of semaphore set
- * @param sem_num Number of semaphore in set
- * @param val Value to be set to semaphore
- * @return {@link SUCCESS} on success (access granted), {@link TIME_OUT} on time
- * out, {@link FAILURE} otherwise
+ * @param id ID of semaphore set
+ * @param index Index of semaphore in set
+ * @param value Value to be set to semaphore
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int sem_set(int sem_id, int sem_num, int val);
+int sem_set(int id, int index, int value);
 
 /**
  * Get value of a semaphore.
  *
- * @param sem_id ID of semaphore set
- * @param sem_num Number of semaphore in set
- * @return The semaphore count or -1 on error.
+ * @param id ID of semaphore set
+ * @param index Index of semaphore in set
+ * @return The semaphore count, or negative on failure with errno set
+ * accordingly
  */
-int sem_get(int sem_id, int sem_num);
+int sem_get(int id, int index);
 
 #endif /* SEM_H_ */
