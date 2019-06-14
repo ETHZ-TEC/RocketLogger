@@ -32,7 +32,6 @@
 #ifndef RL_LIB_H_
 #define RL_LIB_H_
 
-#include "calibration.h"
 #include "rl.h"
 
 /**
@@ -43,12 +42,12 @@
 bool rl_is_sampling(void);
 
 /**
- * Read the status of the RocketLogger.
+ * Get the current status of the RocketLogger.
  *
- * @param status Pointer to {@link rl_status_t} struct to write to
+ * @param status Pointer to {@link rl_status_t} struct to write the status to
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int rl_read_status(rl_status_t *const status);
+int rl_get_status(rl_status_t *const status);
 
 /**
  * Run a new RocketLogger measurement.

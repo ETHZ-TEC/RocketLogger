@@ -422,7 +422,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // sampling started
     rl_status.sampling = true;
-    res = write_status(&rl_status);
+    res = rl_status_write(&rl_status);
     if (res < 0) {
         rl_log(RL_LOG_WARNING, "Failed writing status");
     }
@@ -638,7 +638,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write state
         rl_status.sample_count += buffer_samples_count / aggregates;
         rl_status.buffer_count = i + 1 - buffers_lost;
-        res = write_status(&rl_status);
+        res = rl_status_write(&rl_status);
         if (res < 0) {
             rl_log(RL_LOG_WARNING, "Failed writing status");
         }

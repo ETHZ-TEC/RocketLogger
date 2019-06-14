@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
     }
 
     // get status
-    rl_read_status(&status);
+    rl_status_read(&status);
 
     // quit, if data not requested or not running or web disabled
     if (status.sampling || !(status.config->web_enable) || get_data == 0) {
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
         if (curr_time > last_time) {
 
             // re-read status
-            rl_read_status(&status);
+            rl_status_read(&status);
 
             // read and print data
             print_data();

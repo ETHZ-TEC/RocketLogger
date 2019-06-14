@@ -40,7 +40,6 @@
 #include "log.h"
 #include "rl.h"
 #include "rl_lib.h"
-// #include "rl_util.h"
 #include "version.h"
 
 /**
@@ -57,6 +56,10 @@
 #define OPT_RESET_DEFAULT 4
 
 #define OPT_CALIBRATION 5
+
+#define OPT_JSON 6
+
+#define OPT_CLI 7
 
 /**
  * Program version output for GNU standard command line format compliance.
@@ -158,7 +161,13 @@ static struct argp_option options[] = {
     {"web", 'w', "BOOL", OPTION_ARG_OPTIONAL,
      "Enable web server plotting. Enabled per default.", 0},
 
-    {0, 0, 0, OPTION_DOC, "Generic program switches:", 6},
+    {0, 0, 0, OPTION_DOC, "Optional arguments for status and config actions:",
+     6},
+    {"json", OPT_JSON, 0, 0,
+     "Print configuration or status as JSON formatted string.", 0},
+    {"cli", OPT_CLI, 0, 0, "Print configuration as full CLI command.", 0},
+
+    {0, 0, 0, OPTION_DOC, "Generic program switches:", 7},
     {"verbose", 'v', 0, 0, "Produce verbose output", 0},
     {"quiet", 'q', 0, 0, "Do not produce any output", 0},
     {"silent", 's', 0, OPTION_ALIAS, 0, 0},
@@ -174,6 +183,8 @@ struct arguments {
     rl_config_t *config;              /// pointer to sampling configuration
     bool config_reset;       /// whether to reset the stored default config
     bool config_set_default; /// whether to save provided config as default
+    bool cli;                /// flag for CLI command formatted config output
+    bool json;               /// flag for JSON formatted output
     bool silent;             /// flag for silent output
     bool verbose;            /// flag for verbose output
 };
@@ -227,6 +238,8 @@ int main(int argc, char *argv[]) {
         .config = &config,
         .config_reset = false,
         .config_set_default = false,
+        .cli = false,
+        .json = false,
         .silent = false,
         .verbose = false,
     };
@@ -244,6 +257,12 @@ int main(int argc, char *argv[]) {
          strcmp(action, "config") == 0 || strcmp(action, "status") == 0);
     if (!valid_action) {
         rl_log(RL_LOG_ERROR, "unknown action '%s'", action);
+        exit(EXIT_FAILURE);
+    }
+
+    if (arguments.cli && arguments.json) {
+        rl_log(RL_LOG_ERROR, "cannot format in output as JSON and and CLI "
+                             "string at the same time.");
         exit(EXIT_FAILURE);
     }
 
@@ -271,20 +290,10 @@ int main(int argc, char *argv[]) {
         rl_config_print(&config);
     }
 
-    // DEBUG: print parsed configuration
-    printf(">>> command action: %s\n", action);
-    printf(">>> configuration to use for sampling\n");
-    print_config(&config);
-    printf(">>> config cmd\n");
-    rl_config_print_cmd(&config);
-    printf(">>> config json\n");
-    rl_config_print_json(&config);
-    printf("\n");
-
     // configure and run system in the requested MODE
     if (strcmp(action, "start") == 0) {
         // check if already sampling
-        if (rl_status.sampling) {
+        if (rl_is_sampling()) {
             rl_log(RL_LOG_ERROR, "RocketLogger is still running.\n"
                                  "Stop with `rocketlogger stop` first.\n");
             exit(EXIT_FAILURE);
@@ -296,7 +305,7 @@ int main(int argc, char *argv[]) {
     }
     if (strcmp(action, "stop") == 0) {
         // exit with error if not sampling
-        if (rl_status.sampling == false) {
+        if (!rl_is_sampling()) {
             rl_log(RL_LOG_ERROR, "RocketLogger is not running.\n");
             exit(EXIT_FAILURE);
         }
@@ -305,10 +314,22 @@ int main(int argc, char *argv[]) {
         rl_stop();
     }
     if (strcmp(action, "config") == 0) {
-        print_config(&config);
+        if (arguments.json) {
+            rl_config_print_json(&config);
+        } else if (arguments.cli) {
+            rl_config_print_cmd(&config);
+        } else {
+            rl_config_print(&config);
+        }
     }
     if (strcmp(action, "status") == 0) {
-        rl_status_print(&rl_status);
+        rl_status_t status;
+        rl_get_status(&status);
+        if (arguments.json) {
+            rl_status_print_json(&status);
+        } else {
+            rl_status_print(&status);
+        }
         // @todo encode status in exit value
     }
     exit(EXIT_SUCCESS);
@@ -451,6 +472,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     /* options without shortcuts */
     // {"samples", OPT_SAMPLES_COUNT, "COUNT",
     // {"size", OPT_FILE_SIZE, "SIZE",
+    // {"cli", OPT_CLI, 0, 0,
+    // {"json", OPT_JSON, 0, 0,
     // {"default", OPT_SET_DEFAULT, 0, 0,
     // {"reset", OPT_RESET_DEFAULT, 0, 0,
     // {"calibration", OPT_CALIBRATION, 0, 0,
@@ -461,6 +484,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case OPT_FILE_SIZE:
         /* maximum file size: mandatory SIZE value */
         parse_uint64(arg, state, &config->file_size);
+        break;
+    case OPT_CLI:
+        /* CLI format the config output: no value */
+        arguments->cli = true;
+        break;
+    case OPT_JSON:
+        /* JSON format the status and config output: no value */
+        arguments->json = true;
         break;
     case OPT_SET_DEFAULT:
         /* set configuration as default: no value */

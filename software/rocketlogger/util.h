@@ -159,20 +159,4 @@ void print_json_bool(bool const *const data, const int length);
  */
 void print_json_int64(int64_t const *const data, const int length);
 
-/**
- * Reads the status of the running measurement from shared memory.
- *
- * @param status Pointer to struct array to write the status to.
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int read_status(rl_status_t *const status);
-
-/**
- * Writes the status to the shared memory.
- *
- * @param status Pointer to struct array.
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int write_status(rl_status_t const *const status);
-
 #endif /* UTIL_H_ */

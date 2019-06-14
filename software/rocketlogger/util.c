@@ -37,8 +37,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/statvfs.h>
 #include <time.h>
 
@@ -170,65 +168,4 @@ void print_json_int64(int64_t const *const data, const int length) {
         }
     }
     printf("]\n");
-}
-int read_status(rl_status_t *const status) {
-
-    // map shared memory
-    int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
-    if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR,
-               "In read_status: failed to get shared status memory id; "
-               "%d message: %s",
-               errno, strerror(errno));
-        return ERROR;
-    }
-    rl_status_t *shm_status = (rl_status_t *)shmat(shm_id, NULL, 0);
-
-    if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR,
-               "In read_status: failed to map shared status memory; %d "
-               "message: %s",
-               errno, strerror(errno));
-        return ERROR;
-    }
-
-    // read status
-    *status = *shm_status;
-
-    // unmap shared memory
-    shmdt(shm_status);
-
-    return SUCCESS;
-}
-
-int write_status(rl_status_t const *const status) {
-
-    // map shared memory
-    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
-                        IPC_CREAT | SHMEM_PERMISSIONS);
-    if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR,
-               "In write_status: failed to get shared status memory id; "
-               "%d message: %s",
-               errno, strerror(errno));
-        return ERROR;
-    }
-
-    rl_status_t *shm_status = (rl_status_t *)shmat(shm_id, NULL, 0);
-    if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR,
-               "In write_status: failed to map shared status memory; %d "
-               "message: %s",
-               errno, strerror(errno));
-        return ERROR;
-    }
-
-    // write status
-    *shm_status = *status;
-
-    // unmap shared memory
-    shmdt(shm_status);
-
-    return SUCCESS;
 }

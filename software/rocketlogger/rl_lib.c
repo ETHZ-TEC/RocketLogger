@@ -57,11 +57,11 @@ static void rl_signal_handler(int signal_number);
 
 bool rl_is_sampling(void) {
     rl_status_t status;
-    rl_read_status(&status);
+    rl_get_status(&status);
     return status.sampling;
 }
 
-int rl_read_status(rl_status_t *const status) {
+int rl_get_status(rl_status_t *const status) {
     pid_t pid = rl_pid_get();
 
     // if not running, return default status
@@ -70,91 +70,15 @@ int rl_read_status(rl_status_t *const status) {
         return SUCCESS;
     }
 
-    // map shared memory
-    int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
-    if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR,
-               "In read_status: failed to get shared status memory id; "
-               "%d message: %s",
-               errno, strerror(errno));
-        return ERROR;
+    int res = rl_status_read(status);
+    if (res < 0) {
+        return res;
     }
-    rl_status_t const *const shm_status =
-        (rl_status_t const *const)shmat(shm_id, NULL, 0);
-
-    if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR,
-               "In read_status: failed to map shared status memory; %d "
-               "message: %s",
-               errno, strerror(errno));
-        return ERROR;
-    }
-
-    // copy status read from shared memory
-    memcpy(status, shm_status, sizeof(rl_status_t));
-
-    // unmap shared memory
-    shmdt(shm_status);
 
     return SUCCESS;
 }
 
 int rl_run(rl_config_t *const config) {
-
-    // // check mode
-    // switch (config->mode) {
-    // case LIMIT:
-    //     break;
-    // case CONTINUOUS:
-    //     // create daemon to run in background
-    //     if (daemon(1, 1) < 0) {
-    //         rl_log(RL_LOG_ERROR, "failed to create background process");
-    //         return SUCCESS;
-    //     }
-    //     break;
-    // case METER:
-    //     // set meter config
-    //     config->update_rate = METER_UPDATE_RATE;
-    //     config->sample_limit = 0;
-    //     config->web_enable = false;
-    //     config->file_enable = false;
-    //     if (config->sample_rate < ADS131E0X_RATE_MIN) {
-    //         rl_log(RL_LOG_WARNING,
-    //                "too low sample rate. Setting rate to 1kSps");
-    //         config->sample_rate = ADS131E0X_RATE_MIN;
-    //     }
-    //     break;
-    // default:
-    //     rl_log(RL_LOG_ERROR, "wrong mode");
-    //     return FAILURE;
-    // }
-
-    // // check input
-    // if (check_sample_rate(config->sample_rate) == FAILURE) {
-    //     rl_log(RL_LOG_ERROR, "wrong sampling rate");
-    //     return FAILURE;
-    // }
-    // if (check_update_rate(config->update_rate) == FAILURE) {
-    //     rl_log(RL_LOG_ERROR, "wrong update rate");
-    //     return FAILURE;
-    // }
-    // if (config->update_rate != 1 && config->web_enable) {
-    //     rl_log(RL_LOG_WARNING,
-    //            "webserver plot does not work with update rates >1. "
-    //            "Disabling webserver ...");
-    //     config->web_enable = false;
-    // }
-
-    // // check ambient configuration
-    // if (config->ambient_enable && !(config->file_enable)) {
-    //     rl_log(
-    //         WARNING,
-    //         "Ambient logging not possible without file. Disabling ambient
-    //         ...");
-    //     config->ambient_enable = false;
-    // }
-
     // store PID to file
     pid_t pid = getpid();
     rl_pid_set(pid);

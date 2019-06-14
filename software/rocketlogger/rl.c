@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -470,6 +472,68 @@ void rl_status_reset(rl_status_t *const status) {
     memcpy(status, &rl_status_default, sizeof(rl_status_t));
 }
 
+int rl_status_read(rl_status_t *const status) {
+    // map shared memory
+    int shm_id =
+        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+    if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR,
+               "In read_status: failed to get shared status memory id; "
+               "%d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+    rl_status_t const *const shm_status =
+        (rl_status_t const *const)shmat(shm_id, NULL, 0);
+
+    if (shm_status == (void *)-1) {
+        rl_log(RL_LOG_ERROR,
+               "In read_status: failed to map shared status memory; %d "
+               "message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+
+    // copy status read from shared memory
+    memcpy(status, shm_status, sizeof(rl_status_t));
+
+    // unmap shared memory
+    shmdt(shm_status);
+
+    return SUCCESS;
+}
+
+int rl_status_write(rl_status_t const *const status) {
+
+    // map shared memory
+    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
+                        IPC_CREAT | SHMEM_PERMISSIONS);
+    if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR,
+               "In write_status: failed to get shared status memory id; "
+               "%d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+
+    rl_status_t *shm_status = (rl_status_t *)shmat(shm_id, NULL, 0);
+    if (shm_status == (void *)-1) {
+        rl_log(RL_LOG_ERROR,
+               "In write_status: failed to map shared status memory; %d "
+               "message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+
+    // write status
+    *shm_status = *status;
+
+    // unmap shared memory
+    shmdt(shm_status);
+
+    return SUCCESS;
+}
+
 void rl_status_print(rl_status_t const *const status) {
     print_config_line("Sampling", status->sampling ? "yes" : "no");
     print_config_line("Error", status->error ? "yes" : "no");
@@ -478,7 +542,7 @@ void rl_status_print(rl_status_t const *const status) {
     print_config_line("Calibration time", "%llu", status->calibration_time);
     print_config_line("Calibration file", status->calibration_file);
     print_config_line("Disk free", "%llu Bytes", status->disk_free);
-    print_config_line("Disk free", "%u 0/00", status->disk_free_permille);
+    print_config_line("Disk free", "%u %%0", status->disk_free_permille);
     print_config_line("Disk use rate", "%u Bytes/min", status->disk_use_rate);
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < status->sensor_count; i++) {
@@ -497,7 +561,11 @@ void rl_status_print_json(rl_status_t const *const status) {
     printf("sample_count: %llu, ", status->sample_count);
     printf("buffer_count: %llu, ", status->buffer_count);
     printf("calibration_time: %llu, ", status->calibration_time);
-    printf("calibration_file: \"%s\", ", status->calibration_file);
+    if (status->calibration_file == NULL) {
+        printf("calibration_file: null, ");
+    } else {
+        printf("calibration_file: \"%s\", ", status->calibration_file);
+    }
     printf("disk_free: %llu, ", status->disk_free);
     printf("disk_free_permille: %u, ", status->disk_free_permille);
     printf("disk_use_rate: %u, ", status->disk_use_rate);

@@ -79,7 +79,7 @@ void hw_init(rl_config_t const *const config) {
     // STATE
     rl_status_reset(&rl_status);
     rl_status.config = config;
-    write_status(&rl_status);
+    rl_status_write(&rl_status);
 }
 
 void hw_deinit(rl_config_t const *const config) {
@@ -110,7 +110,7 @@ void hw_deinit(rl_config_t const *const config) {
     // RESET SHARED MEM
     rl_status.sample_count = 0;
     rl_status.buffer_count = 0;
-    write_status(&rl_status);
+    rl_status_write(&rl_status);
 }
 
 int hw_sample(rl_config_t const *const config) {

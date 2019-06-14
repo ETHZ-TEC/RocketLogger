@@ -295,6 +295,36 @@ pid_t rl_pid_get(void);
 int rl_pid_set(pid_t pid);
 
 /**
+ * Reset RocketLogger status to standard values.
+ *
+ * @param status Pointer to {@link rl_status_t} configuration
+ */
+void rl_status_reset(rl_status_t *const status);
+
+/**
+ * Update RocketLogger status with current system state.
+ *
+ * @param status Pointer to {@link rl_status_t} configuration
+ */
+void rl_status_update(rl_status_t *const status);
+
+/**
+ * Read the status of the RocketLogger from shared memory.
+ *
+ * @param status Pointer to {@link rl_status_t} struct to write to
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_read(rl_status_t *const status);
+
+/**
+ * Write new status of the RocketLogger to shared memory.
+ *
+ * @param status Pointer to {@link rl_status_t} struct to copy to shared memory
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_write(rl_status_t const *const status);
+
+/**
  * Print RocketLogger status as text output.
  *
  * @param status Pointer to {@link rl_status_t} status
@@ -307,13 +337,6 @@ void rl_status_print(rl_status_t const *const status);
  * @param status Pointer to {@link rl_status_t} status
  */
 void rl_status_print_json(rl_status_t const *const status);
-
-/**
- * Reset RocketLogger status to standard values.
- *
- * @param status Pointer to {@link rl_status_t} configuration
- */
-void rl_status_reset(rl_status_t *const status);
 
 /// Global RocketLogger status variable.
 extern rl_status_t rl_status;
