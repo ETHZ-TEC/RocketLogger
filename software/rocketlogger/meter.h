@@ -35,21 +35,27 @@
 #include "rl.h"
 
 /**
- * Initialize meter window.
+ * Initialize interactive console window.
  */
 void meter_init(void);
 
 /**
- * Deinitialize meter window.
+ * Deinitialize interactive console window.
  */
 void meter_deinit(void);
 
 /**
- * Print data buffer in meter window.
+ * Print data buffer in interactive console window.
  *
- * @param conf Pointer to current {@link rl_config_t} configuration
- * @param buffer_addr Pointer to buffer to handle
+ * @param buffer PRU data buffer to process
+ * @param samples_count Number of samples in the buffer
+ * @param timestamp_realtime Timestamp sampled from realtime clock
+ * @param timestamp_monotonic Timestamp sampled from monotonic clock
+ * @param config Current measurement configuration
  */
-void meter_print_buffer(rl_config_t const *const conf, void const *buffer_addr);
+void meter_print_buffer(void const *const buffer, uint32_t samples_count,
+                        rl_timestamp_t const *const timestamp_realtime,
+                        rl_timestamp_t const *const timestamp_monotonic,
+                        rl_config_t const *const config);
 
 #endif /* METER_H_ */

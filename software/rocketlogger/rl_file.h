@@ -79,7 +79,7 @@
 /**
  * Data unit definition
  */
-typedef enum unit {
+enum rl_unit {
     RL_UNIT_UNITLESS = 0,           //!< Unitless
     RL_UNIT_VOLT = 1,               //!< Voltage (electric)
     RL_UNIT_AMPERE = 2,             //!< Current (electric)
@@ -91,47 +91,41 @@ typedef enum unit {
     RL_UNIT_PERCENT = 8,            //!< Percent (numeric, humidity)
     RL_UNIT_PASCAL = 9,             //!< Pascal (preasure)
     RL_UNIT_UNDEFINED = 0xffffffff, //!< Undefined unit
-} rl_unit;
+};
+
+/**
+ * Type definition for RocketLogger data unit.
+ */
+typedef enum rl_unit rl_unit_t;
 
 /**
  * File header lead in (constant size) definition for the binary file.
  */
 struct rl_file_lead_in {
     /// File magic constant
-    uint32_t magic; // = RL_FILE_MAGIC;
-
+    uint32_t magic;
     /// File version number
-    uint16_t file_version; // = RL_FILE_VERSION;
-
+    uint16_t file_version;
     /// Total size of the header in bytes
-    uint16_t header_length; // = 0;
-
+    uint16_t header_length;
     /// Size of the data blocks in the file in rows
-    uint32_t data_block_size; // = 0;
-
+    uint32_t data_block_size;
     /// Number of data blocks stored in the file
-    uint32_t data_block_count; // = 0;
-
+    uint32_t data_block_count;
     /// Total sample count
-    uint64_t sample_count; // = 0;
-
+    uint64_t sample_count;
     /// Sampling rate of the measurement
-    uint16_t sample_rate; // = 0;
-
+    uint16_t sample_rate;
     /// Instrument ID (mac address)
     uint8_t mac_address[MAC_ADDRESS_LENGTH];
-
     /// Start time of the measurement in UNIX time, UTC
-    rl_timestamp_t start_time; // = 0;
-
+    rl_timestamp_t start_time;
     /// Comment length
-    uint32_t comment_length; // = 0;
-
+    uint32_t comment_length;
     /// Binary channel count
-    uint16_t channel_bin_count; // = 0;
-
+    uint16_t channel_bin_count;
     /// Analog channel count
-    uint16_t channel_count; // = 0;
+    uint16_t channel_count;
 };
 
 /**
@@ -143,19 +137,14 @@ typedef struct rl_file_lead_in rl_file_lead_in_t;
  * Channel definition for the binary file header.
  */
 struct rl_file_channel {
-
     /// Channel unit
-    rl_unit unit; // = RL_UNIT_UNDEFINED;
-
+    rl_unit_t unit;
     /// Channel scale (in power of ten, for voltage and current)
-    int32_t channel_scale; // = RL_SCALE_NONE;
-
+    int32_t channel_scale;
     /// Datum size in bytes (for voltage and current)
-    uint16_t data_size; // = 0;
-
+    uint16_t data_size;
     /// Link to channel valid data (for low-range current channels)
-    uint16_t valid_data_channel; // = NO_VALID_DATA;
-
+    uint16_t valid_data_channel;
     /// Channel name/description
     char name[RL_FILE_CHANNEL_NAME_LENGTH];
 };
@@ -169,15 +158,12 @@ typedef struct rl_file_channel rl_file_channel_t;
  * File header definition for the binary file.
  */
 struct rl_file_header {
-
     /// File header lead in (constant size)
     rl_file_lead_in_t lead_in;
-
     /// Comment field
-    char const *comment; // = NULL;
-
+    char const *comment;
     /// Channels definitions (binary and normal)
-    rl_file_channel_t *channel; // = NULL;
+    rl_file_channel_t *channel;
 };
 
 /**

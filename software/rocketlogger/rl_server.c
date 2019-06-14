@@ -73,46 +73,9 @@ int64_t curr_time;
 /// Number of channels sampled
 int8_t num_channels;
 
-/// Current status of RocketLogger
-rl_status_t status;
-
 /// Buffer sizes for different time scales
 int buffer_sizes[WEB_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
                                       BUFFER100_SIZE};
-
-// /**
-//  * Print current status in JSON format
-//  */
-// static void print_status(void) {
-//     // STATUS
-//     printf("%d\n", status.state);
-//     if (status.state != RL_RUNNING) {
-//         read_default_config(&status.config);
-
-//         // read calibration time
-//         rl_calibration_t tmp_calibration;
-//         rl_read_calibration(&status.config, &tmp_calibration);
-//         status.calibration_time = tmp_calibration.time;
-//     }
-//     // copy of filename (for dirname)
-//     char file_name_copy[RL_PATH_LENGTH_MAX];
-//     strcpy(file_name_copy, status.config.file_name);
-//     printf("%lld\n", fs_free_space_bytes(dirname(file_name_copy)));
-//     printf("%llu\n", status.calibration_time);
-
-//     // CONFIG
-//     printf("%u\n", status.config.sample_rate);
-//     printf("%d\n", status.config.update_rate);
-//     printf("%d\n", status.config.digital_input_enable ? 1 : 0);
-//     printf("%d\n", status.config.calibration_ignore ? 1 : 0);
-//     printf("%d\n", status.config.file_format);
-//     printf("%s\n", status.config.file_name);
-//     printf("%llu\n", status.config.max_file_size);
-//     print_json_bool(status.config.channels, RL_CHANNEL_COUNT);
-//     print_json_bool(status.config.force_high_channels, NUM_I_CHANNELS);
-//     printf("%llu\n", status.samples_taken);
-//     printf("%d\n", status.config.web_interface_enable ? 1 : 0);
-// }
 
 /**
  * Print requested data in JSON format
@@ -212,14 +175,12 @@ int main(int argc, char *argv[]) {
     }
 
     // get status
+    rl_status_t status;
     rl_status_read(&status);
 
     // quit, if data not requested or not running or web disabled
     if (status.sampling || get_data == 0) {
-        // print request id and status
-        printf("%d\n", id);
         rl_status_print_json(&status);
-        printf("0\n"); // no data available
         exit(EXIT_SUCCESS);
     }
 

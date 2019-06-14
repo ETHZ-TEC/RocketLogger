@@ -125,7 +125,7 @@ web_shm_t *web_create_shm(void);
 /**
  * Open existing shared memory for data exchange with web server.
  *
- * @return pointer to shared memory, NULL in case of failure
+ * @return Pointer to shared memory, NULL in case of failure
  */
 web_shm_t *web_open_shm(void);
 
@@ -139,7 +139,7 @@ void web_close_shm(web_shm_t const *web_shm);
 /**
  * Reset web data ring buffer.
  *
- * @param buffer Pointer to ring buffer to reset
+ * @param buffer The ring buffer data structure to reset
  * @param element_size Desired element size in bytes
  * @param length Buffer length in elements
  */
@@ -148,7 +148,7 @@ void web_buffer_reset(web_buffer_t *const buffer, int element_size, int length);
 /**
  * Add element to ring buffer.
  *
- * @param buffer Pointer to ring buffer
+ * @param buffer The ring buffer data structure to add an element to
  * @param data Pointer to data array to add
  */
 void web_buffer_add(web_buffer_t *const buffer, int64_t const *const data);
@@ -156,21 +156,21 @@ void web_buffer_add(web_buffer_t *const buffer, int64_t const *const data);
 /**
  * Get pointer to a specific element of a ringbuffer.
  *
- * @param buffer Pointer to ring buffer
+ * @param buffer The ring buffer data structure to read an element from
  * @param num Element number (0 corresponds to the newest element)
- * @return pointer to desired element
+ * @return Pointer to desired element in the buffer
  */
 int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
 
 /**
  * Process the data buffer for the web interface.
  *
- * @param web_data Pointer to shared web data
- * @param sem_id ID of semaphores for shared web data
- * @param buffer Pointer to buffer to handle
- * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
- * @param config Current {@link rl_config_t} configuration.
+ * @param web_data The shared web data buffer
+ * @param sem_id ID of semaphore set for shared web data
+ * @param buffer PRU data buffer to process
+ * @param samples_count Number of samples in the buffer
+ * @param timestamp_realtime Timestamp sampled from realtime clock
+ * @param config Current measurement configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int web_handle_data(web_shm_t *const web_data, int sem_id, void const *buffer,

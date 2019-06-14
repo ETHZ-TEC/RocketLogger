@@ -33,7 +33,7 @@
 #define LOG_H_
 
 /// Maximum log file size in bytes
-#define LOG_FILE_MAX_SIZE 1000000
+#define LOG_FILE_MAX_SIZE (1000 * 1000)
 
 /// Default log file name
 #ifndef LOG_FILE
@@ -54,6 +54,13 @@ enum rl_log {
  */
 typedef enum rl_log rl_log_t;
 
+/**
+ * Write a new log message.
+ *
+ * @param type Log type/level of the message
+ * @param format The message format string passed to fprintf()
+ * @param ... Variables used to format value string
+ */
 void rl_log(rl_log_t type, char const *const format, ...);
 
 #endif /* LOG_H_ */

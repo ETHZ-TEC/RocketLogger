@@ -44,8 +44,8 @@
 /**
  * Set up file header lead-in with current configuration.
  *
- * @param lead_in Pointer to {@link rl_file_lead_in} struct to set up
- * @param config Pointer to current {@link rl_config_t} struct
+ * @param lead_in The file lead in data structure to set up
+ * @param config Current measurement configuration
  */
 void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
                         rl_config_t const *const config);
@@ -53,8 +53,8 @@ void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
 /**
  * Set up file header with current configuration.
  *
- * @param file_header Pointer to {@link rl_file_header} to set up
- * @param config Pointer to current {@link rl_config_t} struct
+ * @param file_header The file header data structure to set up
+ * @param config Current measurement configuration
  */
 void file_setup_header(rl_file_header_t *const file_header,
                        rl_config_t const *const config);
@@ -62,8 +62,8 @@ void file_setup_header(rl_file_header_t *const file_header,
 /**
  * Store file header to file (in binary format).
  *
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
+ * @param data_file Data file to write to
+ * @param file_header The file header data structure to store to the file
  */
 void file_store_header_bin(FILE *data_file,
                            rl_file_header_t *const file_header);
@@ -71,8 +71,8 @@ void file_store_header_bin(FILE *data_file,
 /**
  * Store file header to file (in CSV format).
  *
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
+ * @param data_file Data file to write to
+ * @param file_header The file header data structure to store to the file
  */
 void file_store_header_csv(FILE *data_file,
                            rl_file_header_t const *const file_header);
@@ -81,8 +81,8 @@ void file_store_header_csv(FILE *data_file,
  * Update file with new header lead-in (to write current sample count) in binary
  * format.
  *
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
+ * @param data_file Data file to write to
+ * @param file_header The file header data structure to store to the file
  */
 void file_update_header_bin(FILE *data_file,
                             rl_file_header_t const *const file_header);
@@ -91,8 +91,8 @@ void file_update_header_bin(FILE *data_file,
  * Update file with new header lead-in (to write current sample count) in CSV
  * format.
  *
- * @param data_file File pointer to data file
- * @param file_header Pointer to {@link rl_file_header} struct
+ * @param data_file Data file to write to
+ * @param file_header The file header data structure to store to the file
  */
 void file_update_header_csv(FILE *data_file,
                             rl_file_header_t const *const file_header);
@@ -100,14 +100,14 @@ void file_update_header_csv(FILE *data_file,
 /**
  * Handle a data buffer, dependent on current configuration.
  *
- * @param data_file File pointer to data file
- * @param buffer Pointer to buffer to handle
- * @param samples_count Number of samples to read
- * @param timestamp_realtime {@link rl_timestamp_t} with realtime clock value
- * @param timestamp_monotonic {@link rl_timestamp_t} with monotonic clock value
- * @param config Current {@link rl_config_tig_t} configuration.
+ * @param data_file Data file to write to
+ * @param buffer PRU data buffer to process
+ * @param samples_count Number of samples in the buffer
+ * @param timestamp_realtime Timestamp sampled from realtime clock
+ * @param timestamp_monotonic Timestamp sampled from monotonic clock
+ * @param config Current measurement configuration
  */
-void file_append_data(FILE *data_file, void const *buffer,
+void file_append_data(FILE *data_file, void const *const buffer,
                       uint32_t samples_count,
                       rl_timestamp_t const *const timestamp_realtime,
                       rl_timestamp_t const *const timestamp_monotonic,

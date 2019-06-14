@@ -48,16 +48,17 @@
 #include "file_handling.h"
 
 /**
- * Set up channel information for file header with current configuration
- * @param file_header Pointer to {@link rl_file_header} struct to set up
- * @param config Pointer to current {@link rl_config_tig_t} configuration
+ * Set up channel information of the data file header.
+ *
+ * @param file_header The file header structure to configure
+ * @param config Current measurement configuration
  */
 void file_setup_channels(rl_file_header_t *const file_header,
                          rl_config_t const *const config);
 
-/// Global variable to determine i1l valid channel
+/// Global variable to determine i1l valid channel index
 int i1l_valid_channel = 0;
-/// Global variable to determine i2l valid channel
+/// Global variable to determine i2l valid channel index
 int i2l_valid_channel = 0;
 
 void file_setup_lead_in(rl_file_lead_in_t *const lead_in,

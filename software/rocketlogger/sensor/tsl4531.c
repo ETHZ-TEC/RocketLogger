@@ -148,7 +148,7 @@ int tsl4531_init(int sensor_identifier) {
 }
 
 void tsl4531_deinit(int sensor_identifier) {
-    (void)sensor_identifier; // suppress unused warning
+    (void)sensor_identifier; // suppress unused parameter warning
 }
 
 int tsl4531_read(int sensor_identifier) {

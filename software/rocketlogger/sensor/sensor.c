@@ -103,7 +103,7 @@ int sensors_init(void) {
 void sensors_deinit(void) {
     sensors_close_bus(sensor_bus);
     int sensor_bus = -1;
-    (void)sensor_bus; // suppress unused warning
+    (void)sensor_bus; // suppress unused parameter warning
 }
 
 /**

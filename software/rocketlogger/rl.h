@@ -209,9 +209,6 @@ typedef struct rl_status rl_status_t;
 /// RocketLogger channel names sorted by name
 extern const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT];
 
-/// RocketLogger channel names sorted by internally used index
-// extern const char *RL_CHANNEL_INDEX_NAMES[RL_CHANNEL_COUNT];
-
 /// RocketLogger force range channel names
 extern const char *RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT];
 
@@ -224,7 +221,7 @@ extern const char *RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT];
 /**
  * Print RocketLogger configuration as text output.
  *
- * @param config Pointer to {@link rl_config_t} configuration
+ * @param config The measurement configuration to print
  */
 void rl_config_print(rl_config_t const *const config);
 
@@ -232,21 +229,21 @@ void rl_config_print(rl_config_t const *const config);
  * Print RocketLogger command line string correpsinding to the current
  * configuration.
  *
- * @param config Pointer to {@link rl_config_t} configuration
+ * @param config The measurement configuration to print
  */
 void rl_config_print_cmd(rl_config_t const *const config);
 
 /**
  * Print RocketLogger configuration as JSON data structure.
  *
- * @param config Pointer to {@link rl_config_t} configuration
+ * @param config The measurement configuration to print
  */
 void rl_config_print_json(rl_config_t const *const config);
 
 /**
  * Reset configuration to standard values.
  *
- * @param config Pointer to {@link rl_config_t} configuration
+ * @param config The measurement configuration to reset
  */
 void rl_config_reset(rl_config_t *const config);
 
@@ -255,7 +252,7 @@ void rl_config_reset(rl_config_t *const config);
  *
  * Try to read user configuration otherwis fallback to system configuration.
  *
- * @param config Pointer to {@link rl_config_t} configuration to write to
+ * @param config The measurement configuration structure to store the default to
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_config_read_default(rl_config_t *const config);
@@ -263,7 +260,7 @@ int rl_config_read_default(rl_config_t *const config);
 /**
  * Write provided configuration as default to file.
  *
- * @param config Pointer to {@link rl_config_t} configuration to write
+ * @param config The measurement configuration write as default configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_config_write_default(rl_config_t const *const config);
@@ -271,7 +268,7 @@ int rl_config_write_default(rl_config_t const *const config);
 /**
  * Validate RocketLogger configuration.
  *
- * @param config Pointer to {@link rl_config_t} configuration to write
+ * @param config The measurement configuration to validate
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_config_validate(rl_config_t const *const config);
@@ -295,21 +292,14 @@ int rl_pid_set(pid_t pid);
 /**
  * Reset RocketLogger status to standard values.
  *
- * @param status Pointer to {@link rl_status_t} configuration
+ * @param status The status data strcuture to reset
  */
 void rl_status_reset(rl_status_t *const status);
 
 /**
- * Update RocketLogger status with current system state.
- *
- * @param status Pointer to {@link rl_status_t} configuration
- */
-void rl_status_update(rl_status_t *const status);
-
-/**
  * Read the status of the RocketLogger from shared memory.
  *
- * @param status Pointer to {@link rl_status_t} struct to write to
+ * @param status The status data structure to write to
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_status_read(rl_status_t *const status);
@@ -317,7 +307,7 @@ int rl_status_read(rl_status_t *const status);
 /**
  * Write new status of the RocketLogger to shared memory.
  *
- * @param status Pointer to {@link rl_status_t} struct to copy to shared memory
+ * @param status The status data structure to copy to the shared memory
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_status_write(rl_status_t const *const status);
@@ -325,14 +315,14 @@ int rl_status_write(rl_status_t const *const status);
 /**
  * Print RocketLogger status as text output.
  *
- * @param status Pointer to {@link rl_status_t} status
+ * @param status The status data strcuture to print
  */
 void rl_status_print(rl_status_t const *const status);
 
 /**
  * Print RocketLogger status as JSON data structure.
  *
- * @param status Pointer to {@link rl_status_t} status
+ * @param status The status data strcuture to print
  */
 void rl_status_print_json(rl_status_t const *const status);
 

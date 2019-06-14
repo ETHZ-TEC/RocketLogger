@@ -700,7 +700,7 @@ static void parse_uint64(char const *arg, struct argp_state *state,
  * @param state The argp state
  */
 static void print_version(FILE *stream, struct argp_state *state) {
-    (void)state; // suppress unused argument warning
+    (void)state; // suppress unused parameter warning
     fprintf(stream, "%s %s\n", argp_program_version, PROJECT_VERSION);
     fprintf(stream, "  git@%s (%s)\n", GIT_DESCRIPTION, GIT_DATE);
     fprintf(stream, "  compiled at %s\n", COMPILE_DATE);

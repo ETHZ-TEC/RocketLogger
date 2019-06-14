@@ -415,10 +415,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     rl_timestamp_t timestamp_monotonic;
     rl_timestamp_t timestamp_realtime;
     uint32_t buffers_lost = 0;
-    uint32_t buffer_samples_count;     // number of samples per buffer
-    uint32_t num_files = 1;            // number of files stored
-    uint32_t skipped_buffer_count = 0; // skipped buffers for ambient reading
-    bool web_server_skip = false;
+    uint32_t buffer_samples_count; // number of samples per buffer
+    uint32_t num_files = 1;        // number of files stored
+    bool web_failure_disable = false;
 
     // buffers to read in finite mode
     uint32_t buffer_read_count =
@@ -588,27 +587,44 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             i = buffer_index;
         }
 
-        // handle the buffer
-        file_append_data(data_file, buffer_addr + PRU_BUFFER_STATUS_SIZE,
-                         buffer_samples_count, &timestamp_realtime,
-                         &timestamp_monotonic, config);
+        // update and write state
+        rl_status.sample_count += buffer_samples_count / aggregates;
+        rl_status.buffer_count = i + 1 - buffers_lost;
+        res = rl_status_write(&rl_status);
+        if (res < 0) {
+            rl_log(RL_LOG_WARNING, "Failed writing status");
+        }
 
         // process data for web when enabled
-        if (config->web_enable && !web_server_skip) {
+        if (config->web_enable && !web_failure_disable) {
             res = web_handle_data(
                 web_data, sem_id, buffer_addr + PRU_BUFFER_STATUS_SIZE,
                 buffer_samples_count, &timestamp_realtime, config);
             if (res < 0) {
                 // disable web interface on failure, but continue sampling
-                web_server_skip = true;
+                web_failure_disable = true;
                 rl_log(RL_LOG_WARNING, "Web server connection failed. "
                                        "Disabling web interface.");
+            } else {
+                // notify web clients
+                /**
+                 * @todo: There is a possible race condition here, which might
+                 * result in one web client not getting notified once, do we
+                 * care?
+                 */
+                int num_web_clients = sem_get(sem_id, SEM_INDEX_WAIT);
+                sem_set(sem_id, SEM_INDEX_WAIT, num_web_clients);
             }
         }
 
         // update and write header
         if (config->file_enable) {
-            // update the number of samples stored
+            // write the data buffer to file
+            file_append_data(data_file, buffer_addr + PRU_BUFFER_STATUS_SIZE,
+                             buffer_samples_count, &timestamp_realtime,
+                             &timestamp_monotonic, config);
+
+            // update and store data file header
             data_file_header.lead_in.data_block_count += 1;
             data_file_header.lead_in.sample_count +=
                 buffer_samples_count / aggregates;
@@ -621,45 +637,25 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         }
 
         // handle ambient data
-        if (skipped_buffer_count + 1 >= config->update_rate) { // always 1 Sps
-            if (config->ambient_enable) {
+        if (config->ambient_enable) {
 
-                // fetch and write data
-                ambient_append_data(ambient_file, &timestamp_realtime,
-                                    &timestamp_monotonic);
+            // fetch and write data
+            ambient_append_data(ambient_file,
+                                buffer_addr + PRU_BUFFER_STATUS_SIZE,
+                                buffer_samples_count, &timestamp_realtime,
+                                &timestamp_monotonic, config);
 
-                // update and write header
-                ambient_file_header.lead_in.data_block_count += 1;
-                ambient_file_header.lead_in.sample_count +=
-                    AMBIENT_DATA_BLOCK_SIZE;
-                file_update_header_bin(ambient_file, &ambient_file_header);
-            }
-            skipped_buffer_count = 0;
-        } else {
-            skipped_buffer_count++;
-        }
-
-        // update and write state
-        rl_status.sample_count += buffer_samples_count / aggregates;
-        rl_status.buffer_count = i + 1 - buffers_lost;
-        res = rl_status_write(&rl_status);
-        if (res < 0) {
-            rl_log(RL_LOG_WARNING, "Failed writing status");
-        }
-
-        // notify web clients
-        if (config->web_enable) {
-            /**
-             * @todo: There is a possible race condition here, which might
-             * result in one web client not getting notified once, do we care?
-             */
-            int num_web_clients = sem_get(sem_id, SEM_INDEX_WAIT);
-            sem_set(sem_id, SEM_INDEX_WAIT, num_web_clients);
+            // update and write header
+            ambient_file_header.lead_in.data_block_count += 1;
+            ambient_file_header.lead_in.sample_count += AMBIENT_DATA_BLOCK_SIZE;
+            file_update_header_bin(ambient_file, &ambient_file_header);
         }
 
         // print meter output if enabled
         if (config->interactive_enable) {
-            meter_print_buffer(config, buffer_addr + PRU_BUFFER_STATUS_SIZE);
+            meter_print_buffer(buffer_addr + PRU_BUFFER_STATUS_SIZE,
+                               buffer_samples_count, &timestamp_realtime,
+                               &timestamp_monotonic, config);
         }
     }
 

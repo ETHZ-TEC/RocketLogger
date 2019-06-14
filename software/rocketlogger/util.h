@@ -112,12 +112,14 @@ int count_channels(bool const channels[RL_CHANNEL_COUNT]);
 int div_ceil(int n, int d);
 
 /**
- * Create time stamps (real and monotonic).
+ * Create time stamps (real-time and monotonic).
  *
- * @param timestamp_realtime Pointer to {@link rl_timestamp_t} struct
- * @param timestamp_monotonic Pointer to {@link rl_timestamp_t} struct
+ * @param timestamp_realtime Timestamp data structure to store the time value
+ * read from the real-time clock to
+ * @param timestamp_monotonic Timestamp data structure to store the time value
+ * read from the monotonic clock to
  */
-void create_time_stamp(rl_timestamp_t *const time_real,
+void create_time_stamp(rl_timestamp_t *const time_realtime,
                        rl_timestamp_t *const time_monotonic);
 
 /**

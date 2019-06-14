@@ -55,7 +55,7 @@ struct rl_sensor {
     char name[SENSOR_NAME_LENGTH];
     int identifier;
     int channel;
-    rl_unit unit;
+    rl_unit_t unit;
     int32_t scale;
     int (*init)(int);
     void (*deinit)(int);

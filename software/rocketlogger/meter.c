@@ -66,8 +66,15 @@ void meter_init(void) {
 
 void meter_deinit(void) { endwin(); }
 
-void meter_print_buffer(rl_config_t const *const config,
-                        void const *buffer_addr) {
+void meter_print_buffer(void const *const buffer, uint32_t samples_count,
+                        rl_timestamp_t const *const timestamp_realtime,
+                        rl_timestamp_t const *const timestamp_monotonic,
+                        rl_config_t const *const config) {
+
+    // suppress unused parameter warning
+    (void)samples_count;
+    (void)timestamp_realtime;
+    (void)timestamp_monotonic;
 
     // clear screen
     erase();
@@ -87,9 +94,8 @@ void meter_print_buffer(rl_config_t const *const config,
     uint32_t avg_number = config->sample_rate / config->update_rate;
 
     // read digital channels
-    dig_data[0] = (int32_t)(*((int8_t *)(buffer_addr)));
-    dig_data[1] = (int32_t)(*((int8_t *)(buffer_addr + 1)));
-    buffer_addr += PRU_DIGITAL_SIZE;
+    dig_data[0] = (int32_t)(*((int8_t *)(buffer)));
+    dig_data[1] = (int32_t)(*((int8_t *)(buffer + 1)));
 
     // read, average and scale values (if channel selected)
     int k = 0;
@@ -97,7 +103,8 @@ void meter_print_buffer(rl_config_t const *const config,
         if (config->channel_enable[j]) {
             value = 0;
             for (uint32_t l = 0; l < avg_number; l++) {
-                value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
+                value += *((int32_t *)(buffer + PRU_DIGITAL_SIZE +
+                                       j * PRU_SAMPLE_SIZE +
                                        l * (RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE +
                                             PRU_DIGITAL_SIZE)));
             }
@@ -110,7 +117,7 @@ void meter_print_buffer(rl_config_t const *const config,
     }
 
     // display values
-    mvprintw(1, 28, "RocketLogger Meter");
+    mvprintw(1, 28, "RocketLogger Interactive");
 
     for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
         if (config->channel_enable[j]) {

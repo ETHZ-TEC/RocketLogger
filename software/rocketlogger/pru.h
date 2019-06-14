@@ -128,8 +128,8 @@ void pru_deinit(void);
 /**
  * PRU data structure initialization.
  *
- * @param pru_data {@link pru_data_t} data structure to initialize
- * @param config Pointer to current {@link rl_config_t} configuration
+ * @param pru_data PRU data structure to initialize
+ * @param config Current measurement configuration
  * @param aggregates Number of samples to aggregate for sampling rates smaller
  * than the minimal ADC rate (set 1 for no aggregates)
  * @return Returns 0 on success, negative on failure with errno set accordingly
@@ -147,7 +147,7 @@ int pru_data_init(pru_data_t *const pru_data, rl_config_t const *const config,
 int pru_set_state(pru_state_t state);
 
 /**
- * Wait for a PRU event with timeout
+ * Wait for a PRU event with timeout.
  *
  * @param event PRU event to wait for
  * @param timeout Time out in seconds
@@ -159,14 +159,15 @@ int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 /**
  * Main PRU sampling routine.
  *
- * Configures and runs the actual RocketLogger measurements
+ * Configures and runs the actual RocketLogger measurements.
  *
- * @param data_file File pointer to data file
- * @param ambient_file File pointer to ambient file
- * @param config Pointer to current {@link rl_config_t} configuration
+ * @param data_file Data file to write to
+ * @param ambient_file Ambient file to write to
+ * @param config Current measurement configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int pru_sample(FILE *data, FILE *ambient_file, rl_config_t const *const config);
+int pru_sample(FILE *data_file, FILE *ambient_file,
+               rl_config_t const *const config);
 
 /**
  * Stop running PRU measurements.

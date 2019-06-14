@@ -38,11 +38,6 @@
 
 #include "log.h"
 
-/**
- * Log a message.
- * @param type Type of message.
- * @param format Message format.
- */
 void rl_log(rl_log_t type, char const *const format, ...) {
     // open/init file
     FILE *log_fp;
@@ -90,7 +85,7 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         // terminal
         printf("Error: ");
         vprintf(format, args);
-        printf("\n\n");
+        printf("\n");
         break;
     case RL_LOG_WARNING:
         // file
@@ -100,7 +95,7 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         // terminal
         printf("Warning: ");
         vprintf(format, args);
-        printf("\n\n");
+        printf("\n");
         break;
     case RL_LOG_INFO:
         fprintf(log_fp, "     Info: ");
@@ -109,7 +104,7 @@ void rl_log(rl_log_t type, char const *const format, ...) {
         break;
     default:
         // for debugging purposes
-        printf("Error: wrong error-code\n");
+        printf("Error: wrong log message type.\n");
         break;
     }
 

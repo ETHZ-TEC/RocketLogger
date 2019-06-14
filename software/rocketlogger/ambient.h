@@ -51,7 +51,7 @@
  * Derive the ambient file name from the data file name.
  *
  * @param data_file_name The data file name
- * @return Pointer to the derived ambient file name
+ * @return Pointer to the buffer of the derived ambient file name
  */
 char *ambient_get_file_name(char const *const data_file_name);
 
@@ -69,13 +69,17 @@ void ambient_setup_header(rl_file_header_t *const header,
 /**
  * Handle a ambient data buffer, dependent on current configuration.
  *
- * @param ambient_file File pointer to ambient file
- * @param timestamp_realtime {@link time_stamp} with realtime clock value
- * @param timestamp_monotonic {@link time_stamp} with monotonic clock value
- * @param config Current {@link rl_config_t} configuration.
+ * @param ambient_file Ambient file to write to
+ * @param buffer PRU data buffer to process
+ * @param samples_count Number of samples in the buffer
+ * @param timestamp_realtime Timestamp sampled from realtime clock
+ * @param timestamp_monotonic Timestamp sampled from monotonic clock
+ * @param config Current measurement configuration
  */
-void ambient_append_data(FILE *ambient_file,
+void ambient_append_data(FILE *ambient_file, void const *buffer,
+                         uint32_t samples_count,
                          rl_timestamp_t const *const timestamp_realtime,
-                         rl_timestamp_t const *const timestamp_monotonic);
+                         rl_timestamp_t const *const timestamp_monotonic,
+                         rl_config_t const *const config);
 
 #endif /* AMBIENT_H_ */

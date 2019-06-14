@@ -37,14 +37,14 @@
 /**
  * Check whether RocketLogger is sampling.
  *
- * @return current sampling status
+ * @return The current sampling status
  */
 bool rl_is_sampling(void);
 
 /**
  * Get the current status of the RocketLogger.
  *
- * @param status Pointer to {@link rl_status_t} struct to write the status to
+ * @param status The status data structure to write to
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_get_status(rl_status_t *const status);
@@ -55,13 +55,13 @@ int rl_get_status(rl_status_t *const status);
  * Returns when done unless configured to run in background in which case it
  * returns after successful start.
  *
- * @param config Pointer to desired {@link rl_config_t} configuration
+ * @param config Configuration of the measurement to run
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_run(rl_config_t *const config);
 
 /**
- * RocketLogger stop function (to stop continuous mode).
+ * RocketLogger stop function (to stop a measurement run in background).
  *
  * Sends stop signal to running RocketLogger process to terminate.
  *

@@ -178,7 +178,7 @@ int bme280_init(int sensor_identifier) {
 }
 
 void bme280_deinit(int sensor_identifier) {
-    (void)sensor_identifier; // suppress unsued variable warning
+    (void)sensor_identifier; // suppress unused parameter warning
 }
 
 int bme280_read(int sensor_identifier) {
@@ -316,7 +316,7 @@ int bme280_read_calibration(int sensor_identifier) {
 }
 
 int bme280_set_parameters(int sensor_identifier) {
-    (void)sensor_identifier; // suppress unsued variable warning
+    (void)sensor_identifier; // suppress unused parameter warning
     int sensor_bus = sensors_get_bus();
 
     int result;

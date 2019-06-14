@@ -37,21 +37,21 @@
 /**
  * Initialize all hardware modules.
  *
- * @param config Pointer to current {@link rl_config_t} configuration
+ * @param config Current measurement configuration
  */
 void hw_init(rl_config_t const *const config);
 
 /**
  * Deinitialize and close all hardware modules.
  *
- * @param config Pointer to current {@link rl_config_t} configuration
+ * @param config Current measurement configuration
  */
 void hw_deinit(rl_config_t const *const config);
 
 /**
  * Hardware perform samling of data.
  *
- * @param config Pointer to current {@link rl_config_t} configuration
+ * @param config Current measurement configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int hw_sample(rl_config_t const *const config);

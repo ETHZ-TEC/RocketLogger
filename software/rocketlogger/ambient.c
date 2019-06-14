@@ -41,15 +41,34 @@
 #include "ambient.h"
 
 /**
- * @todo document
+ * Set up channel information of the ambient file header.
+ *
+ * @param file_header The ambient file header structure to configure
  */
 void ambient_setup_channels(rl_file_header_t *const header);
 
-void ambient_append_data(FILE *ambient_file,
-                         rl_timestamp_t const *const timestamp_realtime,
-                         rl_timestamp_t const *const timestamp_monotonic) {
+// counter to control ambient sample rate
+static uint32_t ambient_rate_counter = 0;
 
-    // store timestamp
+void ambient_append_data(FILE *ambient_file, void const *buffer,
+                         uint32_t samples_count,
+                         rl_timestamp_t const *const timestamp_realtime,
+                         rl_timestamp_t const *const timestamp_monotonic,
+                         rl_config_t const *const config) {
+    // suppress unused parameter warning
+    (void)buffer;
+    (void)samples_count;
+
+    // rate limit ambient sample generation and storage
+    if (ambient_rate_counter < config->update_rate) {
+        ambient_rate_counter++;
+        return;
+    }
+
+    // reset rate control counter
+    ambient_rate_counter = 0;
+
+    // store timestamps
     fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, ambient_file);
     fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, ambient_file);
 
@@ -76,8 +95,6 @@ void ambient_append_data(FILE *ambient_file,
     fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
 }
 
-// FILE HEADER //
-
 char *ambient_get_file_name(char const *const data_file_name) {
     static char ambient_file_name[RL_PATH_LENGTH_MAX];
 
@@ -102,7 +119,7 @@ char *ambient_get_file_name(char const *const data_file_name) {
     return ambient_file_name;
 }
 
-void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in) {
+void ambient_setup_lead_in(rl_file_lead_in_t *const lead_in) {
 
     // number channels
     uint16_t channel_count = rl_status.sensor_count;
@@ -122,7 +139,7 @@ void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in) {
     lead_in->magic = RL_FILE_MAGIC;
     lead_in->file_version = RL_FILE_VERSION;
     lead_in->header_length =
-        sizeof(struct rl_file_lead_in) + comment_length +
+        sizeof(rl_file_lead_in_t) + comment_length +
         (channel_count + channel_bin_count) * sizeof(rl_file_channel_t);
     lead_in->data_block_size = AMBIENT_DATA_BLOCK_SIZE;
     lead_in->data_block_count = 0; // needs to be updated
@@ -135,7 +152,7 @@ void ambient_setup_lead_in(struct rl_file_lead_in *const lead_in) {
     lead_in->channel_count = channel_count;
 }
 
-void ambient_setup_header(struct rl_file_header *const header,
+void ambient_setup_header(rl_file_header_t *const header,
                           rl_config_t const *const config) {
     if (config->file_comment == NULL) {
         header->comment = "";
@@ -146,7 +163,7 @@ void ambient_setup_header(struct rl_file_header *const header,
     ambient_setup_channels(header);
 }
 
-void ambient_setup_channels(struct rl_file_header *const header) {
+void ambient_setup_channels(rl_file_header_t *const header) {
     int total_channel_count =
         header->lead_in.channel_bin_count + header->lead_in.channel_count;
 
