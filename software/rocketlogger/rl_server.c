@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
     rl_status_read(&status);
 
     // quit, if data not requested or not running or web disabled
-    if (status.sampling || !(status.config->web_enable) || get_data == 0) {
+    if (status.sampling || get_data == 0) {
         // print request id and status
         printf("%d\n", id);
         rl_status_print_json(&status);

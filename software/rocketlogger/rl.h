@@ -188,7 +188,7 @@ struct rl_status {
     /// Time stamp of last calibration run
     uint64_t calibration_time;
     /// Time stamp of last calibration run
-    char const *calibration_file;
+    char calibration_file[RL_PATH_LENGTH_MAX];
     /// Time stamp of last calibration run
     uint64_t disk_free;
     /// Time stamp of last calibration run
@@ -199,8 +199,6 @@ struct rl_status {
     uint16_t sensor_count;
     /// Identifiers of sensors found
     bool sensor_available[RL_SENSOR_COUNT_MAX];
-    /// Current configuration
-    rl_config_t const *config;
 };
 
 /**

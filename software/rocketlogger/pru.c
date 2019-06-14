@@ -404,6 +404,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         }
     }
 
+    // write PID in file (only after potential forking using daemon)
+    pid_t pid = getpid();
+    rl_pid_set(pid);
+
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 

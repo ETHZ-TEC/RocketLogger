@@ -49,8 +49,6 @@
 struct rl_calibration {
     /// Time stamp of calibration run
     uint64_t time;
-    /// Calibration filename of the file loaded
-    char const *file_name;
     /// Channel offsets (in bit)
     int offsets[RL_CHANNEL_COUNT];
     /// Channel scalings

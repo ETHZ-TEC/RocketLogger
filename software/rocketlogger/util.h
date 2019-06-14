@@ -133,7 +133,7 @@ void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
  * @param path Path to selected directory
  * @return Total disk space in bytes
  */
-int64_t fs_space_total(char *path);
+int64_t fs_space_total(char const *const path);
 
 /**
  * Get free disk space in a directory in bytes.
@@ -141,7 +141,7 @@ int64_t fs_space_total(char *path);
  * @param path Path to selected directory
  * @return Free disk space in bytes
  */
-int64_t fs_space_free(char *path);
+int64_t fs_space_free(char const *const path);
 
 /**
  * Print a boolean array in JSON format.

@@ -42,6 +42,7 @@
 #include <unistd.h>
 
 #include "ads131e0x.h"
+#include "calibration.h"
 #include "log.h"
 #include "sensor/sensor.h"
 
@@ -80,12 +81,12 @@ const rl_status_t rl_status_default = {
     .sample_count = 0,
     .buffer_count = 0,
     .calibration_time = 0,
+    .calibration_file = RL_CALIBRATION_SYSTEM_FILE,
     .disk_free = 0,
     .disk_free_permille = 0,
     .disk_use_rate = 0,
     .sensor_count = 0,
     .sensor_available = {false},
-    .config = (rl_config_t *)NULL,
 };
 
 /// RocketLogger channel names
@@ -449,7 +450,7 @@ pid_t rl_pid_get(void) {
         return ERROR;
     }
 
-    fread(&pid, sizeof(pid_t), 1, file);
+    fscanf(file, "%d", &pid);
     fclose(file);
 
     return pid;
@@ -462,7 +463,7 @@ int rl_pid_set(pid_t pid) {
         return ERROR;
     }
 
-    fwrite(&pid, sizeof(pid_t), 1, file);
+    fprintf(file, "%d", pid);
     fclose(file);
 
     return SUCCESS;
@@ -477,20 +478,15 @@ int rl_status_read(rl_status_t *const status) {
     int shm_id =
         shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR,
-               "In read_status: failed to get shared status memory id; "
-               "%d message: %s",
-               errno, strerror(errno));
         return ERROR;
     }
+
     rl_status_t const *const shm_status =
         (rl_status_t const *const)shmat(shm_id, NULL, 0);
-
     if (shm_status == (void *)-1) {
         rl_log(RL_LOG_ERROR,
-               "In read_status: failed to map shared status memory; %d "
-               "message: %s",
-               errno, strerror(errno));
+               "failed to map shared status memory; %d message: %s", errno,
+               strerror(errno));
         return ERROR;
     }
 
@@ -504,7 +500,6 @@ int rl_status_read(rl_status_t *const status) {
 }
 
 int rl_status_write(rl_status_t const *const status) {
-
     // map shared memory
     int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
                         IPC_CREAT | SHMEM_PERMISSIONS);
@@ -516,7 +511,7 @@ int rl_status_write(rl_status_t const *const status) {
         return ERROR;
     }
 
-    rl_status_t *shm_status = (rl_status_t *)shmat(shm_id, NULL, 0);
+    rl_status_t *const shm_status = (rl_status_t * const)shmat(shm_id, NULL, 0);
     if (shm_status == (void *)-1) {
         rl_log(RL_LOG_ERROR,
                "In write_status: failed to map shared status memory; %d "
@@ -526,7 +521,7 @@ int rl_status_write(rl_status_t const *const status) {
     }
 
     // write status
-    *shm_status = *status;
+    memcpy(shm_status, status, sizeof(rl_status_t));
 
     // unmap shared memory
     shmdt(shm_status);
@@ -540,9 +535,13 @@ void rl_status_print(rl_status_t const *const status) {
     print_config_line("Sample count", "%llu", status->sample_count);
     print_config_line("Buffer count", "%llu", status->buffer_count);
     print_config_line("Calibration time", "%llu", status->calibration_time);
-    print_config_line("Calibration file", status->calibration_file);
+    if (status->calibration_time > 0) {
+        print_config_line("Calibration file", status->calibration_file);
+    } else {
+        print_config_line("Calibration file", "calibration ignored!");
+    }
     print_config_line("Disk free", "%llu Bytes", status->disk_free);
-    print_config_line("Disk free", "%u %%0", status->disk_free_permille);
+    print_config_line("Disk free", "%u/1000", status->disk_free_permille);
     print_config_line("Disk use rate", "%u Bytes/min", status->disk_use_rate);
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < status->sensor_count; i++) {
@@ -561,10 +560,10 @@ void rl_status_print_json(rl_status_t const *const status) {
     printf("sample_count: %llu, ", status->sample_count);
     printf("buffer_count: %llu, ", status->buffer_count);
     printf("calibration_time: %llu, ", status->calibration_time);
-    if (status->calibration_file == NULL) {
-        printf("calibration_file: null, ");
-    } else {
+    if (status->calibration_time > 0) {
         printf("calibration_file: \"%s\", ", status->calibration_file);
+    } else {
+        printf("calibration_file: null, ");
     }
     printf("disk_free: %llu, ", status->disk_free);
     printf("disk_free_permille: %u, ", status->disk_free_permille);

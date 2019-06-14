@@ -30,6 +30,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <unistd.h>
 
@@ -54,26 +55,27 @@ void calibration_reset_scales(void) {
 
 int calibration_load(void) {
     int ret;
+    char const *calibration_file_name = NULL;
 
     // check if user/system calibration file existing
     ret = access(RL_CALIBRATION_USER_FILE, R_OK);
     if (ret == 0) {
-        rl_calibration.file_name = RL_CALIBRATION_USER_FILE;
+        calibration_file_name = RL_CALIBRATION_USER_FILE;
     } else {
         ret = access(RL_CALIBRATION_SYSTEM_FILE, R_OK);
         if (ret == 0) {
-            rl_calibration.file_name = RL_CALIBRATION_SYSTEM_FILE;
+            calibration_file_name = RL_CALIBRATION_SYSTEM_FILE;
         } else {
             // no calibration file available
             calibration_reset_offsets();
             calibration_reset_scales();
             rl_status.calibration_time = 0;
-            rl_calibration.file_name = NULL;
+            rl_status.calibration_file[0] = 0; // empty string
             return ERROR;
         }
     }
 
-    FILE *file = fopen(rl_calibration.file_name, "r");
+    FILE *file = fopen(calibration_file_name, "r");
     if (file == NULL) {
         // no calibration file available
         calibration_reset_offsets();
@@ -85,9 +87,10 @@ int calibration_load(void) {
     // read calibration
     fread(&rl_calibration, sizeof(rl_calibration_t), 1, file);
 
-    // store informations to status
+    // store calibration info information to status
     rl_status.calibration_time = rl_calibration.time;
-    rl_status.calibration_file = rl_calibration.file_name;
+    strncpy(rl_status.calibration_file, calibration_file_name,
+            sizeof(rl_status.calibration_file) - 1);
 
     // close file
     fclose(file);

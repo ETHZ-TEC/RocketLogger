@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
         }
 
         print_config(&config);
-        printf("Start sampling.\n");
+        printf("Starting measurement...\n");
         rl_run(&config);
     }
     if (strcmp(action, "stop") == 0) {
@@ -310,8 +310,9 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        printf("Waiting for running measurement to stop...\n");
+        printf("Wait for measurement to stop...\n");
         rl_stop();
+        /// @todo wait for measurement process to stop
     }
     if (strcmp(action, "config") == 0) {
         if (arguments.json) {

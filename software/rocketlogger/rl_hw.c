@@ -78,7 +78,24 @@ void hw_init(rl_config_t const *const config) {
 
     // STATE
     rl_status_reset(&rl_status);
-    rl_status.config = config;
+    if (config->file_enable) {
+        rl_status.disk_free = fs_space_free(config->file_name);
+        rl_status.disk_free_permille =
+            1000 * rl_status.disk_free / fs_space_total(config->file_name);
+
+        // calculate disk use rate in bytes per second:
+        // - int32_t/channel + uint32_t bytes/sample for digital at sample rate
+        // - 2 timestamp at update rate
+        // - int32_t/sensor channel + 2 timestamps at 1 Hz
+        rl_status.disk_use_rate =
+            (sizeof(int32_t) * count_channels(config->channel_enable) *
+             config->sample_rate) +
+            (sizeof(rl_timestamp_t) * 2 * config->update_rate) +
+            (sizeof(uint32_t) * (config->digital_enable ? 1 : 0) *
+             config->sample_rate) +
+            (sizeof(int32_t) * rl_status.sensor_count) +
+            (sizeof(rl_timestamp_t) * 2 * (rl_status.sensor_count > 0 ? 1 : 0));
+    }
     rl_status_write(&rl_status);
 }
 
@@ -91,6 +108,7 @@ void hw_deinit(rl_config_t const *const config) {
     // deinitialize force high range GPIOS
     gpio_deinit(GPIO_FHR1);
     gpio_deinit(GPIO_FHR2);
+
     // reset LED (do not unexport)
     gpio_set_value(GPIO_LED_STATUS, 0);
 

@@ -112,14 +112,14 @@ void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
     fclose(fp);
 }
 
-int64_t fs_space_free(char *path) {
+int64_t fs_space_free(char const *const path) {
     struct statvfs stat;
     statvfs(path, &stat);
 
     return (uint64_t)stat.f_bavail * (uint64_t)stat.f_bsize;
 }
 
-int64_t fs_space_total(char *path) {
+int64_t fs_space_total(char const *const path) {
     struct statvfs stat;
     statvfs(path, &stat);
 
