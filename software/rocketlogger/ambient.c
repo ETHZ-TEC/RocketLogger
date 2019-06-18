@@ -78,7 +78,7 @@ void ambient_store_data(FILE* ambient_file,
 void ambient_set_file_name(struct rl_conf* conf) {
 
     // determine new file name
-    char ambient_file_name[MAX_PATH_LENGTH];
+    char ambient_file_name[MAX_PATH_LENGTH] = {0};
     strcpy(ambient_file_name, conf->file_name);
 
     // search for last .
@@ -92,7 +92,7 @@ void ambient_set_file_name(struct rl_conf* conf) {
     file_ending--;
 
     // add file ending
-    char ambient_file_ending[9] = "-ambient";
+    char ambient_file_ending[MAX_PATH_LENGTH] = "-ambient";
     strcat(ambient_file_ending, file_ending);
     strcpy(file_ending, ambient_file_ending);
     strcpy(conf->ambient.file_name, ambient_file_name);
