@@ -123,7 +123,7 @@ int hw_sample(rl_config_t const *const config, char const *const file_comment) {
         RL_FILE_NONE) { // open file only if storing requested
         data = fopen64(config->file_name, "w+");
         if (data == NULL) {
-            rl_log(ERROR, "failed to open data-file");
+            rl_log(ERROR, "failed to open data-file '%s'", config->file_name);
             return FAILURE;
         }
     }
@@ -132,8 +132,9 @@ int hw_sample(rl_config_t const *const config, char const *const file_comment) {
     FILE *ambient_file = (FILE *)-1;
     if (config->ambient.enabled) {
         ambient_file = fopen64(config->ambient.file_name, "w+");
-        if (data == NULL) {
-            rl_log(ERROR, "failed to open ambient-file");
+        if (ambient_file == NULL) {
+            rl_log(ERROR, "failed to open ambient-file '%s'",
+                   config->ambient.file_name);
             return FAILURE;
         }
     }
