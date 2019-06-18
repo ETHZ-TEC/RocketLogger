@@ -67,7 +67,7 @@ int bme280_init(int sensor_identifier) {
         return FAILURE;
     }
 
-    uint8_t sensor_id = bme280_get_id();
+    int sensor_id = bme280_get_id();
     if (sensor_id != BME280_ID) {
         rl_log(ERROR, "BME280 with wrong sensor ID: %d", sensor_id);
         return FAILURE;
