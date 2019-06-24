@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
-from datetime import datetime, timezone
 from math import ceil, floor
 from os.path import isfile, splitext
 import warnings
@@ -217,28 +216,15 @@ def _read_str(file_handle, length):
 
 def _read_timestamp(file_handle):
     """
-    Read a timestamp from the file and convert to datetime object.
-
-    :param file_handle: The file handle to read from at current position
-
-    :returns: The read date and time as datetime object
-    """
-    seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
-    nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
-    return datetime.fromtimestamp(seconds + 1e-9 * nanoseconds, timezone.utc)
-
-
-def _read_timestamp_datetime64(file_handle):
-    """
     Read a timestamp from the file as nano second datetime64 (numpy)
 
     :param file_handle: The file handle to read from at current position
 
-    :returns: The read date and time as datetime object
+    :returns: The read date and time as nano second datetime64 (numpy)
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
-    timestamp_ns = (np.datetime64(np.datetime64(seconds, 's'), 'ns') +
+    timestamp_ns = (np.datetime64(seconds, 's') +
                     np.timedelta64(nanoseconds, 'ns'))
     return timestamp_ns
 

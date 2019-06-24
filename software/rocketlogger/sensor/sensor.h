@@ -40,7 +40,7 @@
 #define MAX_MESSAGE_LENGTH 1000
 
 #ifndef I2C_BUS_FILENAME
-#define I2C_BUS_FILENAME "/dev/i2c-1"
+#define I2C_BUS_FILENAME "/dev/i2c-2"
 #endif
 
 /// Number of sensor registered

@@ -132,7 +132,7 @@ int tsl4531_init(int sensor_identifier) {
         return result;
     }
 
-    uint8_t sensor_id = tsl4531_get_id();
+    int sensor_id = tsl4531_get_id();
     if (sensor_id != TSL4531_ID) {
         rl_log(RL_LOG_ERROR, "TSL4531 with wrong sensor ID: %d", sensor_id);
         return result;
