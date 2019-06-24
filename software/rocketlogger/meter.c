@@ -66,13 +66,12 @@ void meter_init(void) {
 
 void meter_deinit(void) { endwin(); }
 
-void meter_print_buffer(void const *const buffer, uint32_t samples_count,
+void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
                         rl_timestamp_t const *const timestamp_realtime,
                         rl_timestamp_t const *const timestamp_monotonic,
                         rl_config_t const *const config) {
 
     // suppress unused parameter warning
-    (void)samples_count;
     (void)timestamp_realtime;
     (void)timestamp_monotonic;
 
@@ -80,67 +79,62 @@ void meter_print_buffer(void const *const buffer, uint32_t samples_count,
     erase();
 
     // counter variables
-    uint32_t i = 0; // currents
-    uint32_t v = 0; // voltages
-
-    uint32_t num_channels = count_channels(config->channel_enable);
+    uint32_t current_index = 0;
+    uint32_t voltage_index = 0;
 
     // data
-    int64_t value = 0;
-    int32_t dig_data[2];
-    int32_t channel_data[num_channels];
-
-    // number of samples to average
-    uint32_t avg_number = config->sample_rate / config->update_rate;
+    uint8_t dig_data[2] = {0};
+    int32_t channel_data[RL_CHANNEL_COUNT] = {0};
 
     // read digital channels
-    dig_data[0] = (int32_t)(*((int8_t *)(buffer)));
-    dig_data[1] = (int32_t)(*((int8_t *)(buffer + 1)));
+    for (uint32_t i = 0; i < buffer_size; i++) {
+        dig_data[0] |= (uint8_t)(buffer->data[i].channel_digital & 0xff);
+        dig_data[1] |= (uint8_t)((buffer->data[i].channel_digital >> 8) & 0xff);
+    }
 
     // read, average and scale values (if channel selected)
-    int k = 0;
-    for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-        if (config->channel_enable[j]) {
-            value = 0;
-            for (uint32_t l = 0; l < avg_number; l++) {
-                value += *((int32_t *)(buffer + PRU_DIGITAL_SIZE +
-                                       j * PRU_SAMPLE_SIZE +
-                                       l * (RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE +
-                                            PRU_DIGITAL_SIZE)));
+    int channel_index = 0;
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        if (config->channel_enable[i]) {
+            int64_t value = 0;
+            for (uint32_t j = 0; j < buffer_size; j++) {
+                value += buffer->data[j].channel_analog[i];
             }
-            value = value / (int64_t)avg_number;
-            channel_data[k] =
-                (int32_t)(((int32_t)value + rl_calibration.offsets[j]) *
-                          rl_calibration.scales[j]);
-            k++;
+            value = value / (int64_t)buffer_size;
+
+            channel_data[channel_index] = (int32_t)(
+                (value + rl_calibration.offsets[i]) * rl_calibration.scales[i]);
+            channel_index++;
         }
     }
 
     // display values
     mvprintw(1, 28, "RocketLogger Interactive");
 
-    for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-        if (config->channel_enable[j]) {
-            if (is_current(j)) {
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        if (config->channel_enable[i]) {
+            if (is_current(i)) {
                 // current
-                mvprintw(i * 2 + 5, 10, "%s:", RL_CHANNEL_NAMES[j]);
-                mvprintw(i * 2 + 5, 15, "%12.6f%s",
-                         ((float)channel_data[v + i]) / CHANNEL_SCALES[j],
-                         CHANNEL_UNITS[j]);
-                i++;
+                mvprintw(current_index * 2 + 5, 10, "%s:", RL_CHANNEL_NAMES[i]);
+                mvprintw(current_index * 2 + 5, 15, "%12.6f%s",
+                         ((float)channel_data[voltage_index + current_index]) /
+                             CHANNEL_SCALES[i],
+                         CHANNEL_UNITS[i]);
+                current_index++;
             } else {
                 // voltage
-                mvprintw(v * 2 + 5, 55, "%s:", RL_CHANNEL_NAMES[j]);
-                mvprintw(v * 2 + 5, 60, "%9.6f%s",
-                         ((float)channel_data[v + i]) / CHANNEL_SCALES[j],
-                         CHANNEL_UNITS[j]);
-                v++;
+                mvprintw(voltage_index * 2 + 5, 55, "%s:", RL_CHANNEL_NAMES[i]);
+                mvprintw(voltage_index * 2 + 5, 60, "%9.6f%s",
+                         ((float)channel_data[voltage_index + current_index]) /
+                             CHANNEL_SCALES[i],
+                         CHANNEL_UNITS[i]);
+                voltage_index++;
             }
         }
     }
 
     // display titles, range information
-    if (i > 0) { // currents
+    if (current_index > 0) { // currents
         mvprintw(3, 10, "Currents:");
 
         // display range information
@@ -157,7 +151,7 @@ void meter_print_buffer(void const *const buffer, uint32_t samples_count,
         }
     }
 
-    if (v > 0) { // voltages
+    if (voltage_index > 0) { // voltages
         mvprintw(3, 55, "Voltages:");
     }
 
@@ -165,15 +159,15 @@ void meter_print_buffer(void const *const buffer, uint32_t samples_count,
     if (config->digital_enable) {
         mvprintw(20, 10, "Digital Inputs:");
 
-        for (int j = 0; j < 3; j++) {
-            mvprintw(20 + 2 * j, 30, "%s:", RL_CHANNEL_DIGITAL_NAMES[j]);
-            mvprintw(20 + 2 * j, 38, "%d",
-                     (dig_data[0] & DIGITAL_INPUT_BITS[j]) > 0);
+        for (int i = 0; i < 3; i++) {
+            mvprintw(20 + 2 * i, 30, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
+            mvprintw(20 + 2 * i, 38, "%d",
+                     (dig_data[0] & DIGITAL_INPUT_BITS[i]) > 0);
         }
-        for (int j = 3; j < 6; j++) {
-            mvprintw(20 + 2 * (j - 3), 50, "%s:", RL_CHANNEL_DIGITAL_NAMES[j]);
-            mvprintw(20 + 2 * (j - 3), 58, "%d",
-                     (dig_data[1] & DIGITAL_INPUT_BITS[j]) > 0);
+        for (int i = 3; i < 6; i++) {
+            mvprintw(20 + 2 * (i - 3), 50, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
+            mvprintw(20 + 2 * (i - 3), 58, "%d",
+                     (dig_data[1] & DIGITAL_INPUT_BITS[i]) > 0);
         }
     }
 

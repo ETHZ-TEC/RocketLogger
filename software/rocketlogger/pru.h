@@ -72,25 +72,33 @@
 /// Number of ADC commands
 #define PRU_ADC_COMMAND_COUNT 12
 
+// #define PRU_STATE_OFF 0x00
+// #define PRU_STATE_SAMPLING 0x01
+
 /**
  * PRU state definition
  */
-typedef enum pru_state {
-    PRU_OFF = 0x00,       //!< PRU off
-    PRU_FINITE = 0x01,    //!< Finite sampling mode
-    PRU_CONTINUOUS = 0x03 //!< Continuous sampling mode
-} pru_state_t;
+enum pru_state {
+    PRU_STATE_OFF = 0x00,               /// PRU off
+    PRU_STATE_SAMPLE_FINITE = 0x01,     /// PRU sampling in finite mode
+    PRU_STATE_SAMPLE_CONTINUOUS = 0x03, /// PRU sampling in coninuous mode
+};
 
 /**
- * Struct for data exchange with PRU
+ * Typedef for PRU state
  */
-struct pru_data {
+typedef enum pru_state pru_state_t;
+
+/**
+ * Struct for controlling the PRU
+ */
+struct pru_control {
     /// Current PRU state
     pru_state_t state;
-    /// Pointer to shared buffer 0
-    uint32_t buffer0_ptr;
-    /// Pointer to shared buffer 1
-    uint32_t buffer1_ptr;
+    /// Memory address of the shared buffer 0
+    uint32_t buffer0_addr;
+    /// Memory address of the shared buffer 1
+    uint32_t buffer1_addr;
     /// Shared buffer length in number of data elements
     uint32_t buffer_length;
     /// Samples to take (0 for continuous)
@@ -105,9 +113,39 @@ struct pru_data {
 };
 
 /**
- * Typedef for PRU data exchange structure
+ * Typedef for PRU control data structure
+ */
+typedef struct pru_control pru_control_t;
+
+/**
+ * PRU channel data block structure
+ */
+struct pru_data {
+    /// bit map of digital channels
+    uint32_t channel_digital;
+    /// analog channel data
+    int32_t channel_analog[RL_CHANNEL_COUNT];
+};
+
+/**
+ * Typedef for PRU channel data block structure
  */
 typedef struct pru_data pru_data_t;
+
+/**
+ * PRU data buffer structure
+ */
+struct pru_buffer {
+    /// buffer index
+    uint32_t index;
+    /// the data blocks
+    pru_data_t const data[];
+};
+
+/**
+ * Typedef for PRU data buffer structure
+ */
+typedef struct pru_buffer pru_buffer_t;
 
 /**
  * Initialize PRU driver.
@@ -128,14 +166,14 @@ void pru_deinit(void);
 /**
  * PRU data structure initialization.
  *
- * @param pru_data PRU data structure to initialize
+ * @param pru_control PRU data structure to initialize
  * @param config Current measurement configuration
  * @param aggregates Number of samples to aggregate for sampling rates smaller
  * than the minimal ADC rate (set 1 for no aggregates)
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int pru_data_init(pru_data_t *const pru_data, rl_config_t const *const config,
-                  uint32_t aggregates);
+int pru_control_init(pru_control_t *const pru_control,
+                     rl_config_t const *const config, uint32_t aggregates);
 
 /**
  * Write a new state to the PRU shared memory.

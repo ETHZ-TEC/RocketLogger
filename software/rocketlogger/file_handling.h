@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 
+#include "pru.h"
 #include "rl.h"
 #include "rl_file.h"
 #include "util.h"
@@ -102,13 +103,13 @@ void file_update_header_csv(FILE *data_file,
  *
  * @param data_file Data file to write to
  * @param buffer PRU data buffer to process
- * @param samples_count Number of samples in the buffer
+ * @param buffer_size Number of samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
  * @param config Current measurement configuration
  */
-void file_append_data(FILE *data_file, void const *const buffer,
-                      uint32_t samples_count,
+void file_append_data(FILE *data_file, pru_buffer_t const *const buffer,
+                      uint32_t buffer_size,
                       rl_timestamp_t const *const timestamp_realtime,
                       rl_timestamp_t const *const timestamp_monotonic,
                       rl_config_t const *const config);

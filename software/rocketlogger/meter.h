@@ -32,6 +32,7 @@
 #ifndef METER_H_
 #define METER_H_
 
+#include "pru.h"
 #include "rl.h"
 
 /**
@@ -48,12 +49,12 @@ void meter_deinit(void);
  * Print data buffer in interactive console window.
  *
  * @param buffer PRU data buffer to process
- * @param samples_count Number of samples in the buffer
+ * @param buffer_size Number of samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
  * @param config Current measurement configuration
  */
-void meter_print_buffer(void const *const buffer, uint32_t samples_count,
+void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
                         rl_timestamp_t const *const timestamp_realtime,
                         rl_timestamp_t const *const timestamp_monotonic,
                         rl_config_t const *const config);

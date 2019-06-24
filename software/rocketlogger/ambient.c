@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "pru.h"
 #include "rl.h"
 #include "rl_file.h"
 #include "sensor/sensor.h"
@@ -50,14 +51,14 @@ void ambient_setup_channels(rl_file_header_t *const header);
 // counter to control ambient sample rate
 static uint32_t ambient_rate_counter = 0;
 
-void ambient_append_data(FILE *ambient_file, void const *buffer,
-                         uint32_t samples_count,
+void ambient_append_data(FILE *ambient_file, pru_buffer_t const *const buffer,
+                         uint32_t buffer_size,
                          rl_timestamp_t const *const timestamp_realtime,
                          rl_timestamp_t const *const timestamp_monotonic,
                          rl_config_t const *const config) {
     // suppress unused parameter warning
     (void)buffer;
-    (void)samples_count;
+    (void)buffer_size;
 
     // rate limit ambient sample generation and storage
     if (ambient_rate_counter < config->update_rate) {

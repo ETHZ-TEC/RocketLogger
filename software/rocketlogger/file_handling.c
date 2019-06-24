@@ -244,8 +244,8 @@ void file_update_header_csv(FILE *data_file,
     fseek(data_file, 0, SEEK_END);
 }
 
-void file_append_data(FILE *data_file, void const *buffer,
-                      uint32_t samples_count,
+void file_append_data(FILE *data_file, pru_buffer_t const *const buffer,
+                      uint32_t buffer_size,
                       rl_timestamp_t const *const timestamp_realtime,
                       rl_timestamp_t const *const timestamp_monotonic,
                       rl_config_t const *const config) {
@@ -276,31 +276,31 @@ void file_append_data(FILE *data_file, void const *buffer,
     uint32_t aggregate_bin_data = 0xffffffff;
 
     // HANDLE BUFFER //
-    for (uint32_t i = 0; i < samples_count; i++) {
+    for (uint32_t i = 0; i < buffer_size; i++) {
 
         // channel data variables
         int32_t channel_data[RL_CHANNEL_COUNT] = {0};
         uint32_t bin_data = 0x00000000;
 
-        // read binary channels
-        uint8_t bin_adc1 = (*((int8_t *)(buffer)));
-        uint8_t bin_adc2 = (*((int8_t *)(buffer + 1)));
+        pru_data_t const pru_data = buffer->data[i];
 
-        buffer += PRU_DIGITAL_SIZE;
+        // read digital channels
+        uint8_t bin_adc1 = (uint8_t)(pru_data.channel_digital & 0xff);
+        uint8_t bin_adc2 = (uint8_t)((pru_data.channel_digital >> 8) & 0xff);
+        // uint8_t bin_adc1 = (*((int8_t *)(buffer)));
+        // uint8_t bin_adc2 = (*((int8_t *)(buffer + 1)));
+        // buffer += PRU_DIGITAL_SIZE;
 
         // read and scale values (if channel selected)
-        int ch = 0;
+        int channel_index = 0;
         for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
             if (config->channel_enable[j]) {
-                int32_t adc_value =
-                    *((int32_t *)(buffer + j * PRU_SAMPLE_SIZE));
-                channel_data[ch] =
-                    (int32_t)((adc_value + rl_calibration.offsets[j]) *
-                              rl_calibration.scales[j]);
-                ch++;
+                channel_data[channel_index] = (int32_t)(
+                    (pru_data.channel_analog[j] + rl_calibration.offsets[j]) *
+                    rl_calibration.scales[j]);
+                channel_index++;
             }
         }
-        buffer += RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE;
 
         // BINARY CHANNELS //
 
@@ -327,8 +327,15 @@ void file_append_data(FILE *data_file, void const *buffer,
 
         // handle data aggregation for low sampling rates
         if (config->sample_rate < ADS131E0X_RATE_MIN) {
-
             switch (config->aggregation_mode) {
+            case RL_AGGREGATION_MODE_DOWNSAMPLE:
+                // drop intermediate samples (skip writing to file)
+                if (i % aggregate_count > 0) {
+                    // aggregate this sample only, skip file writing for now
+                    continue;
+                }
+                break;
+
             case RL_AGGREGATION_MODE_AVERAGE:
                 // accumulate intermediate samples only (skip writing)
                 if ((i + 1) % aggregate_count > 0) {
@@ -336,6 +343,8 @@ void file_append_data(FILE *data_file, void const *buffer,
                         aggregate_channel_data[i] += channel_data[i];
                     }
                     aggregate_bin_data = aggregate_bin_data & bin_data;
+
+                    // aggregate this sample only, skip file writing for now
                     continue;
                 }
 
@@ -349,12 +358,6 @@ void file_append_data(FILE *data_file, void const *buffer,
                 bin_data = aggregate_bin_data;
                 aggregate_bin_data = 0xffffffff;
                 break;
-
-            case RL_AGGREGATION_MODE_DOWNSAMPLE:
-                // drop intermediate samples (skip writing to file)
-                if (i % aggregate_count > 0) {
-                    continue;
-                }
             }
         }
 
