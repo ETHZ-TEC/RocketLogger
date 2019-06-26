@@ -45,6 +45,9 @@
 
 void hw_init(rl_config_t const *const config) {
 
+    // STATUS reset
+    rl_status_reset(&rl_status);
+
     // PWM configuration
     pwm_init();
 
@@ -77,7 +80,6 @@ void hw_init(rl_config_t const *const config) {
     }
 
     // STATE
-    rl_status_reset(&rl_status);
     if (config->file_enable) {
         rl_status.disk_free = fs_space_free(config->file_name);
         rl_status.disk_free_permille =

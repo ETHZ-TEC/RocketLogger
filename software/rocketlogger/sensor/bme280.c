@@ -159,7 +159,7 @@ int bme280_init(int sensor_identifier) {
     int sensor_id = bme280_get_id();
     if (sensor_id != BME280_ID) {
         rl_log(RL_LOG_ERROR, "BME280 with wrong sensor ID: %d", sensor_id);
-        return result;
+        return sensor_id;
     }
 
     result = bme280_read_calibration(sensor_identifier);

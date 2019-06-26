@@ -135,7 +135,7 @@ int tsl4531_init(int sensor_identifier) {
     int sensor_id = tsl4531_get_id();
     if (sensor_id != TSL4531_ID) {
         rl_log(RL_LOG_ERROR, "TSL4531 with wrong sensor ID: %d", sensor_id);
-        return result;
+        return sensor_id;
     }
 
     result = tsl4531_set_parameters(sensor_identifier);
@@ -169,7 +169,7 @@ int tsl4531_read(int sensor_identifier) {
         sensor_bus, TSL4531_COMMAND | TSL4531_REG_DATALOW);
     if (data < 0) {
         rl_log(RL_LOG_ERROR, "TSL4531 reading data word failed");
-        return result;
+        return data;
     }
 
     tsl4531_values[sensor_index] =
@@ -200,7 +200,7 @@ int tsl4531_read(int sensor_identifier) {
             break;
         default:
             rl_log(RL_LOG_ERROR, "TSL4531 auto range logic failure");
-            return result;
+            return ERROR;
         }
 
         int result = tsl4531_send_range(sensor_identifier,

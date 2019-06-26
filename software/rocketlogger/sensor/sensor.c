@@ -164,36 +164,34 @@ uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
     int multi_channel_initialized = -1;
     for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // do not initialize multi channel sensors more than once
-        int result = 0;
+        int result = SUCCESS;
         if (SENSOR_REGISTRY[i].identifier != multi_channel_initialized) {
             result = SENSOR_REGISTRY[i].init(SENSOR_REGISTRY[i].identifier);
-        } else {
-            result = SUCCESS;
         }
 
         if (result == SUCCESS) {
             // sensor available
-            sensor_available[i] = SENSOR_REGISTRY[i].identifier;
+            sensor_available[i] = true;
             multi_channel_initialized = SENSOR_REGISTRY[i].identifier;
             sensor_count++;
 
             // message
-            strcat(message, SENSOR_REGISTRY[i].name);
-            strcat(message, "\n\t- ");
+            strncat(message, SENSOR_REGISTRY[i].name, sizeof(message) - 1);
+            strncat(message, "\n\t- ", sizeof(message) - 1);
         } else {
             // sensor not available
-            sensor_available[i] = -1;
+            sensor_available[i] = false;
             multi_channel_initialized = -1;
         }
     }
 
     // message & return
-    if (sensor_count == 0) {
-        rl_log(RL_LOG_WARNING, "no ambient sensor found...");
-    } else {
+    if (sensor_count > 0) {
         message[strlen(message) - 3] = 0;
         rl_log(RL_LOG_INFO, "%s", message);
         printf("\n\n%s\n", message);
+    } else {
+        rl_log(RL_LOG_WARNING, "no ambient sensor found...");
     }
     return sensor_count;
 }
