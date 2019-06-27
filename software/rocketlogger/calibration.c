@@ -34,6 +34,7 @@
 
 #include <unistd.h>
 
+#include "log.h"
 #include "rl.h"
 
 #include "calibration.h"
@@ -85,7 +86,23 @@ int calibration_load(void) {
     }
 
     // read calibration
-    fread(&rl_calibration, sizeof(rl_calibration_t), 1, file);
+    rl_calibration_file_t calibration_file;
+    fread(&calibration_file, sizeof(rl_calibration_file_t), 1, file);
+
+    // check data
+    if (calibration_file.file_magic != RL_CALIBRATION_FILE_MAGIC) {
+        rl_log(RL_LOG_ERROR, "invalid calibration file magic %x",
+               calibration_file.file_magic);
+        return ERROR;
+    }
+    if (calibration_file.file_version != RL_CALIBRATION_FILE_VERSION) {
+        rl_log(RL_LOG_ERROR, "unsupported calibration file version %d",
+               calibration_file.file_version);
+        return ERROR;
+    }
+
+    memcpy(&rl_calibration, &(calibration_file.data),
+           sizeof(rl_calibration_t));
 
     // store calibration info information to status
     rl_status.calibration_time = rl_calibration.time;

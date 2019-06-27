@@ -42,16 +42,16 @@ import sys
 import numpy as np
 # import matplotlib.pyplot as plt
 
-from .data import RocketLoggerData
+from .data import RocketLoggerData, RocketLoggerFileError
 
 ROCKETLOGGER_CALIBRATION_FILE = '/etc/rocketlogger/calibration.dat'
 """Default RocketLogger calibration file location."""
 
 # channel count and indexes
 _ROCKETLOGGER_CHANNELS_COUNT = 8
-_ROCKETLOGGER_CHANNELS_VOLTAGE = [2, 3, 6, 7]
-_ROCKETLOGGER_CHANNELS_CURRENT_LOW = [1, 5]
-_ROCKETLOGGER_CHANNELS_CURRENT_HIGH = [0, 4]
+_ROCKETLOGGER_CHANNELS_VOLTAGE = [0, 1, 2, 3]
+_ROCKETLOGGER_CHANNELS_CURRENT_LOW = [4, 6]
+_ROCKETLOGGER_CHANNELS_CURRENT_HIGH = [5, 7]
 
 # scales (per bit) for the values, that are stored in the binary files
 _ROCKETLOGGER_FILE_SCALE_V = 1e-8
@@ -65,14 +65,24 @@ _ROCKETLOGGER_ADC_STEP_IH = 3.18e-08
 
 # data format of the calibration file
 _CALIBRATION_FILE_DTYPE = np.dtype([
+    ('file_magic', '<u4'),
+    ('file_version', '<u2'),
     ('timestamp', '<M8[s]'),
     ('offset', ('<i4', 8)),
     ('scale', ('<f8', 8)),
 ])
 
+# caliration file format magic
+_CALIBRATION_FILE_MAGIC = 0x434C5225
+
+# caliration file format magic
+_CALIBRATION_FILE_VERSION = 0x02
+
 # data format channel name sequence
-_CALIBRATION_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
-                              'I2H', 'I2L', 'V3', 'V4']
+# _CALIBRATION_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
+#                               'I2H', 'I2L', 'V3', 'V4']
+_CALIBRATION_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4',
+                              'I1L', 'I1H', 'I2L', 'I2H']
 
 # RocketLogger data file scales for channels
 _CALIBRATION_CHANNEL_SCALES = [
@@ -438,8 +448,8 @@ class RocketLoggerCalibration:
 
         # extract mesurement information
         measurement_data = [
-            self._data_i1h, self._data_i1l, self._data_v, self._data_v,
-            self._data_i2h, self._data_i2l, self._data_v, self._data_v]
+            self._data_v, self._data_v, self._data_v, self._data_v,
+            self._data_i1l, self._data_i1h, self._data_i2l, self._data_i2h]
         measurement_traces = [data.get_data(channel).squeeze() / scale
                               for data, channel, scale
                               in zip(measurement_data,
@@ -522,6 +532,17 @@ class RocketLoggerCalibration:
         """
         data = np.fromfile(filename, dtype=_CALIBRATION_FILE_DTYPE).squeeze()
 
+        # file consistency check
+        if data['file_magic'] != _CALIBRATION_FILE_MAGIC:
+            raise RocketLoggerFileError(
+                'Invalid RocketLogger calibration file, file magic missmatch {:x}.'
+                .format(data['file_magic']))
+
+        if data['file_version'] != _CALIBRATION_FILE_VERSION:
+            raise RocketLoggerFileError(
+                'Unsupported RocketLogger data file version {}.'
+                .format(data['file_version']))
+
         self._calibration_timestamp = data['timestamp']
         self._calibration_offset = data['offset']
         self._calibration_scale = data['scale']
@@ -550,7 +571,9 @@ class RocketLoggerCalibration:
         self._check_calibration_exists()
 
         # assemble file data write to file
-        filedata = np.array([(self._calibration_timestamp,
+        filedata = np.array([(_CALIBRATION_FILE_MAGIC,
+                              _CALIBRATION_FILE_VERSION,
+                              self._calibration_timestamp,
                               self._calibration_offset,
                               self._calibration_scale)],
                             dtype=_CALIBRATION_FILE_DTYPE)

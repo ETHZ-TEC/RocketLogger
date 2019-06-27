@@ -87,7 +87,7 @@ void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
     create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
 
     // lead_in setup
-    lead_in->magic = RL_FILE_MAGIC;
+    lead_in->file_magic = RL_FILE_MAGIC;
     lead_in->file_version = RL_FILE_VERSION;
     lead_in->header_length =
         sizeof(rl_file_lead_in_t) + comment_length +

@@ -302,16 +302,16 @@ class RocketLoggerData:
         header['file_magic'] = _read_uint(file_handle, _FILE_MAGIC_BYTES)
         header['file_version'] = _read_uint(file_handle, _FILE_VERSION_BYTES)
 
-        if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
-            raise RocketLoggerFileError(
-                'RocketLogger file version {} is not supported!'
-                .format(header['file_version']))
-
         # file consistency check
         if header['file_magic'] != _ROCKETLOGGER_FILE_MAGIC:
             raise RocketLoggerFileError(
                 'Invalid RocketLogger data file, file magic missmatch {:x}.'
                 .format(header['file_magic']))
+
+        if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
+            raise RocketLoggerFileError(
+                'Unsupported RocketLogger data file version {}.'
+                .format(header['file_version']))
 
         # read static header fields
         header['header_length'] = _read_uint(file_handle, _HEADER_LENGHT_BYTES)

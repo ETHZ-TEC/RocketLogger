@@ -103,7 +103,7 @@ typedef enum rl_unit rl_unit_t;
  */
 struct rl_file_lead_in {
     /// File magic constant
-    uint32_t magic;
+    uint32_t file_magic;
     /// File version number
     uint16_t file_version;
     /// Total size of the header in bytes

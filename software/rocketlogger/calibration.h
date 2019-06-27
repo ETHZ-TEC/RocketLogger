@@ -43,6 +43,12 @@
 #define RL_CALIBRATION_USER_FILE                                               \
     "/home/rocketlogger/.config/rocketlogger/calibration.dat"
 
+/// Calibraiton file header magic
+#define RL_CALIBRATION_FILE_MAGIC 0x434C5225
+
+/// Calibraiton file header version
+#define RL_CALIBRATION_FILE_VERSION 0x02
+
 /**
  * RocketLogger calibration data structure.
  */
@@ -59,6 +65,23 @@ struct rl_calibration {
  * Typedef for RocketLogger calibration data.
  */
 typedef struct rl_calibration rl_calibration_t;
+
+/**
+ * RocketLogger calibration file data structure.
+ */
+struct rl_calibration_file {
+    /// File magic constant
+    uint32_t file_magic;
+    /// File version number
+    uint16_t file_version;
+    /// The actual calibration data
+    rl_calibration_t data;
+};
+
+/**
+ * Typedef for RocketLogger calibration file structure.
+ */
+typedef struct rl_calibration_file rl_calibration_file_t;
 
 /**
  * Reset all calibration offsets to default state (0).
