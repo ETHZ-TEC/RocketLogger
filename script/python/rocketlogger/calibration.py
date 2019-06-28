@@ -529,6 +529,8 @@ class RocketLoggerCalibration:
     def read_calibration_file(self, filename=ROCKETLOGGER_CALIBRATION_FILE):
         """
         Load an existing calibration file.
+
+        :param filename: Name of the file to read the calibration values from
         """
         data = np.fromfile(filename, dtype=_CALIBRATION_FILE_DTYPE).squeeze()
 
