@@ -41,8 +41,8 @@
 #include "log.h"
 #include "pru.h"
 #include "rl.h"
-#include "rl.h"
 #include "rl_file.h"
+#include "sensor/sensor.h"
 #include "util.h"
 
 #include "file_handling.h"
@@ -50,19 +50,54 @@
 /**
  * Set up channel information of the data file header.
  *
- * @param file_header The file header structure to configure
+ * @param header The file header structure to configure
  * @param config Current measurement configuration
  */
-void file_setup_channels(rl_file_header_t *const file_header,
-                         rl_config_t const *const config);
+void file_setup_data_channels(rl_file_header_t *const header,
+                              rl_config_t const *const config);
+
+/**
+ * Set up channel information of the ambient file header.
+ *
+ * @param header The ambient file header structure to configure
+ * @param config Current measurement configuration
+ */
+void file_setup_ambient_channels(rl_file_header_t *const header);
+
+// counter to control ambient sample rate
+static uint32_t ambient_rate_counter = 0;
 
 /// Global variable to determine i1l valid channel index
 int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel index
 int i2l_valid_channel = 0;
 
-void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
-                        rl_config_t const *const config) {
+char *file_get_ambient_file_name(char const *const data_file_name) {
+    static char ambient_file_name[RL_PATH_LENGTH_MAX];
+
+    // determine new file name
+    strcpy(ambient_file_name, data_file_name);
+
+    // search for last . character
+    char target = '.';
+    char *file_ending = ambient_file_name;
+    while (strchr(file_ending, target) != NULL) {
+        file_ending = strchr(file_ending, target);
+        file_ending++; // Increment file_ending, otherwise we'll find target at
+                       // the same location
+    }
+    file_ending--;
+
+    // add file ending
+    char ambient_file_ending[RL_PATH_LENGTH_MAX] = FILE_AMBIENT_SUFFIX;
+    strcat(ambient_file_ending, file_ending);
+    strcpy(file_ending, ambient_file_ending);
+
+    return ambient_file_name;
+}
+
+void file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
+                             rl_config_t const *const config) {
 
     // number channels
     uint16_t channel_count = count_channels(config->channel_enable);
@@ -103,18 +138,65 @@ void file_setup_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->channel_count = channel_count;
 }
 
-void file_setup_header(rl_file_header_t *const file_header,
-                       rl_config_t const *const config) {
-    if (config->file_comment == NULL) {
-        file_header->comment = "";
-    } else {
-        file_header->comment = config->file_comment;
-    }
+void file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
+                                rl_config_t const *const config) {
 
-    file_setup_channels(file_header, config);
+    // number channels
+    uint16_t channel_count = rl_status.sensor_count;
+
+    // number binary channels
+    uint16_t channel_bin_count = 0;
+
+    // comment length
+    uint32_t comment_length = RL_FILE_COMMENT_ALIGNMENT_BYTES;
+
+    // timestamps
+    rl_timestamp_t time_real;
+    rl_timestamp_t time_monotonic;
+    create_time_stamp(&time_real, &time_monotonic);
+
+    // lead_in setup
+    lead_in->file_magic = RL_FILE_MAGIC;
+    lead_in->file_version = RL_FILE_VERSION;
+    lead_in->header_length =
+        sizeof(rl_file_lead_in_t) + comment_length +
+        (channel_count + channel_bin_count) * sizeof(rl_file_channel_t);
+    lead_in->data_block_size = FILE_AMBIENT_DATA_BLOCK_SIZE;
+    lead_in->data_block_count = 0; // needs to be updated
+    lead_in->sample_count = 0;     // needs to be updated
+    lead_in->sample_rate = (config->update_rate < FILE_AMBIENT_SAMPLING_RATE
+                                ? config->update_rate
+                                : FILE_AMBIENT_SAMPLING_RATE);
+    get_mac_addr(lead_in->mac_address);
+    lead_in->start_time = time_real;
+    lead_in->comment_length = comment_length;
+    lead_in->channel_bin_count = channel_bin_count;
+    lead_in->channel_count = channel_count;
 }
 
-void file_store_header_bin(FILE *data_file,
+void file_setup_data_header(rl_file_header_t *const header,
+                            rl_config_t const *const config) {
+    if (config->file_comment == NULL) {
+        header->comment = "";
+    } else {
+        header->comment = config->file_comment;
+    }
+
+    file_setup_data_channels(header, config);
+}
+
+void file_setup_ambient_header(rl_file_header_t *const header,
+                               rl_config_t const *const config) {
+    if (config->file_comment == NULL) {
+        header->comment = "";
+    } else {
+        header->comment = config->file_comment;
+    }
+
+    file_setup_ambient_channels(header);
+}
+
+void file_store_header_bin(FILE *file_handle,
                            rl_file_header_t *const file_header) {
 
     int total_channel_count = file_header->lead_in.channel_bin_count +
@@ -136,119 +218,119 @@ void file_store_header_bin(FILE *data_file,
         total_channel_count * sizeof(rl_file_channel_t);
 
     // write lead-in
-    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, file_handle);
 
     // write comment, add zero bytes for proper header alignment if necessary
-    fwrite(file_header->comment, comment_length, 1, data_file);
+    fwrite(file_header->comment, comment_length, 1, file_handle);
     if (comment_align_bytes > 0) {
         uint8_t zero_bytes[RL_FILE_COMMENT_ALIGNMENT_BYTES] = {0};
-        fwrite(zero_bytes, comment_align_bytes, 1, data_file);
+        fwrite(zero_bytes, comment_align_bytes, 1, file_handle);
     }
 
     // write channel information
     fwrite(file_header->channel, sizeof(rl_file_channel_t), total_channel_count,
-           data_file);
-    fflush(data_file);
+           file_handle);
+    fflush(file_handle);
 }
 
-void file_store_header_csv(FILE *data_file,
+void file_store_header_csv(FILE *file_handle,
                            rl_file_header_t const *const file_header) {
     // lead-in
-    fprintf(data_file, "RocketLogger CSV File\n");
-    fprintf(data_file, "File Version,%u\n",
+    fprintf(file_handle, "RocketLogger CSV File\n");
+    fprintf(file_handle, "File Version,%u\n",
             (uint32_t)file_header->lead_in.file_version);
-    fprintf(data_file, "Block Size,%u\n",
+    fprintf(file_handle, "Block Size,%u\n",
             (uint32_t)file_header->lead_in.data_block_size);
-    fprintf(data_file, "Block Count,%-20u\n",
+    fprintf(file_handle, "Block Count,%-20u\n",
             (uint32_t)file_header->lead_in.data_block_count);
-    fprintf(data_file, "Sample Count,%-20llu\n",
+    fprintf(file_handle, "Sample Count,%-20llu\n",
             (uint64_t)file_header->lead_in.sample_count);
-    fprintf(data_file, "Sample Rate,%u\n",
+    fprintf(file_handle, "Sample Rate,%u\n",
             (uint32_t)file_header->lead_in.sample_rate);
-    fprintf(data_file, "MAC Address,%02x",
+    fprintf(file_handle, "MAC Address,%02x",
             (uint32_t)file_header->lead_in.mac_address[0]);
 
     for (int i = 1; i < MAC_ADDRESS_LENGTH; i++) {
-        fprintf(data_file, ":%02x",
+        fprintf(file_handle, ":%02x",
                 (uint32_t)file_header->lead_in.mac_address[i]);
     }
-    fprintf(data_file, "\n");
+    fprintf(file_handle, "\n");
 
     time_t time = (time_t)file_header->lead_in.start_time.sec;
-    fprintf(data_file, "Start Time,%s", ctime(&time));
-    fprintf(data_file, "Comment,%s\n", file_header->comment);
-    fprintf(data_file, "\n");
+    fprintf(file_handle, "Start Time,%s", ctime(&time));
+    fprintf(file_handle, "Comment,%s\n", file_header->comment);
+    fprintf(file_handle, "\n");
 
     // channels
     for (int i = 0; i < (file_header->lead_in.channel_count +
                          file_header->lead_in.channel_bin_count);
          i++) {
-        fprintf(data_file, ",%s", file_header->channel[i].name);
+        fprintf(file_handle, ",%s", file_header->channel[i].name);
         switch (file_header->channel[i].channel_scale) {
         case RL_SCALE_MILLI:
-            fprintf(data_file, " [m");
+            fprintf(file_handle, " [m");
             break;
         case RL_SCALE_MICRO:
-            fprintf(data_file, " [u");
+            fprintf(file_handle, " [u");
             break;
         case RL_SCALE_TEN_NANO:
-            fprintf(data_file, " [10n");
+            fprintf(file_handle, " [10n");
             break;
         case RL_SCALE_NANO:
-            fprintf(data_file, " [n");
+            fprintf(file_handle, " [n");
             break;
         case RL_SCALE_TEN_PICO:
-            fprintf(data_file, " [10p");
+            fprintf(file_handle, " [10p");
             break;
         default:
             break;
         }
         switch (file_header->channel[i].unit) {
         case RL_UNIT_VOLT:
-            fprintf(data_file, "V]");
+            fprintf(file_handle, "V]");
             break;
         case RL_UNIT_AMPERE:
-            fprintf(data_file, "A]");
+            fprintf(file_handle, "A]");
             break;
         default:
             break;
         }
     }
-    fprintf(data_file, "\n");
-    fflush(data_file);
+    fprintf(file_handle, "\n");
+    fflush(file_handle);
 }
 
-void file_update_header_bin(FILE *data_file,
+void file_update_header_bin(FILE *file_handle,
                             rl_file_header_t const *const file_header) {
 
     // seek to beginning and rewrite lead_in
-    rewind(data_file);
-    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, data_file);
-    fflush(data_file);
-    fseek(data_file, 0, SEEK_END);
+    rewind(file_handle);
+    fwrite(&(file_header->lead_in), sizeof(rl_file_lead_in_t), 1, file_handle);
+    fflush(file_handle);
+    fseek(file_handle, 0, SEEK_END);
 }
 
-void file_update_header_csv(FILE *data_file,
+void file_update_header_csv(FILE *file_handle,
                             rl_file_header_t const *const file_header) {
-    rewind(data_file);
-    fprintf(data_file, "RocketLogger CSV File\n");
-    fprintf(data_file, "File Version,%u\n",
+    rewind(file_handle);
+    fprintf(file_handle, "RocketLogger CSV File\n");
+    fprintf(file_handle, "File Version,%u\n",
             (uint32_t)file_header->lead_in.file_version);
-    fprintf(data_file, "Block Size,%u\n",
+    fprintf(file_handle, "Block Size,%u\n",
             (uint32_t)file_header->lead_in.data_block_size);
-    fprintf(data_file, "Block Count,%-20u\n",
+    fprintf(file_handle, "Block Count,%-20u\n",
             (uint32_t)file_header->lead_in.data_block_count);
-    fprintf(data_file, "Sample Count,%-20llu\n",
+    fprintf(file_handle, "Sample Count,%-20llu\n",
             (uint64_t)file_header->lead_in.sample_count);
-    fflush(data_file);
-    fseek(data_file, 0, SEEK_END);
+    fflush(file_handle);
+    fseek(file_handle, 0, SEEK_END);
 }
 
-void file_append_data(FILE *data_file, pru_buffer_t const *const buffer,
-                      uint32_t buffer_size,
-                      rl_timestamp_t const *const timestamp_realtime,
-                      rl_timestamp_t const *const timestamp_monotonic,
-                      rl_config_t const *const config) {
+void file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
+                         uint32_t buffer_size,
+                         rl_timestamp_t const *const timestamp_realtime,
+                         rl_timestamp_t const *const timestamp_monotonic,
+                         rl_config_t const *const config) {
     // skip if not storing to file, or invalid file structure
     if (!config->file_enable) {
         return;
@@ -394,8 +476,54 @@ void file_append_data(FILE *data_file, pru_buffer_t const *const buffer,
     }
 }
 
-void file_setup_channels(rl_file_header_t *const file_header,
-                         rl_config_t const *const config) {
+void file_add_ambient_block(FILE *ambient_file,
+                            pru_buffer_t const *const buffer,
+                            uint32_t buffer_size,
+                            rl_timestamp_t const *const timestamp_realtime,
+                            rl_timestamp_t const *const timestamp_monotonic,
+                            rl_config_t const *const config) {
+    // suppress unused parameter warning
+    (void)buffer;
+    (void)buffer_size;
+
+    // rate limit sampling of the ambient sensors
+    if (ambient_rate_counter < config->update_rate) {
+        ambient_rate_counter += FILE_AMBIENT_SAMPLING_RATE;
+        return;
+    }
+
+    // reset rate control counter
+    ambient_rate_counter = 0;
+
+    // store timestamps
+    fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, ambient_file);
+    fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, ambient_file);
+
+    // FETCH VALUES //
+    int32_t sensor_data[SENSOR_REGISTRY_SIZE];
+
+    int ch = 0;
+    int mutli_channel_read = -1;
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+        // only read registered sensors
+        if (rl_status.sensor_available[i]) {
+            // read multi-channel sensor data only once
+            if (SENSOR_REGISTRY[i].identifier != mutli_channel_read) {
+                SENSOR_REGISTRY[i].read(SENSOR_REGISTRY[i].identifier);
+                mutli_channel_read = SENSOR_REGISTRY[i].identifier;
+            }
+            sensor_data[ch] = SENSOR_REGISTRY[i].get_value(
+                SENSOR_REGISTRY[i].identifier, SENSOR_REGISTRY[i].channel);
+            ch++;
+        }
+    }
+
+    // WRITE VALUES //
+    fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
+}
+
+void file_setup_data_channels(rl_file_header_t *const file_header,
+                              rl_config_t const *const config) {
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
 
@@ -460,6 +588,27 @@ void file_setup_channels(rl_file_header_t *const file_header,
             file_header->channel[ch].data_size = 4;
             strncpy(file_header->channel[ch].name, RL_CHANNEL_NAMES[i],
                     RL_FILE_CHANNEL_NAME_LENGTH - 1);
+            ch++;
+        }
+    }
+}
+
+void file_setup_ambient_channels(rl_file_header_t *const header) {
+    int total_channel_count =
+        header->lead_in.channel_bin_count + header->lead_in.channel_count;
+
+    // reset channels
+    memset(header->channel, 0, total_channel_count * sizeof(rl_file_channel_t));
+
+    // write channels
+    int ch = 0;
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+        if (rl_status.sensor_available[i]) {
+            header->channel[ch].unit = SENSOR_REGISTRY[i].unit;
+            header->channel[ch].channel_scale = SENSOR_REGISTRY[i].scale;
+            header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            header->channel[ch].data_size = 4;
+            strcpy(header->channel[ch].name, SENSOR_REGISTRY[i].name);
             ch++;
         }
     }

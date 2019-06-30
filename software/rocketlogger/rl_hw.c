@@ -32,8 +32,8 @@
 #include <stdio.h>
 
 #include "ads131e0x.h"
-#include "ambient.h"
 #include "calibration.h"
+#include "file_handling.h"
 #include "gpio.h"
 #include "log.h"
 #include "pru.h"
@@ -160,7 +160,7 @@ int hw_sample(rl_config_t const *const config) {
     }
 
     if (config->ambient_enable) {
-        char *ambient_file_name = ambient_get_file_name(config->file_name);
+        char *ambient_file_name = file_get_ambient_file_name(config->file_name);
         ambient_file = fopen64(ambient_file_name, "w+");
         if (data_file == NULL) {
             rl_log(RL_LOG_ERROR, "failed to open ambient file '%s'",

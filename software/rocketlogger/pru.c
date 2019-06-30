@@ -43,7 +43,6 @@
 #include <unistd.h>
 
 #include "ads131e0x.h"
-#include "ambient.h"
 #include "file_handling.h"
 #include "log.h"
 #include "meter.h"
@@ -330,7 +329,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // data file header lead-in
     rl_file_header_t data_file_header;
-    file_setup_lead_in(&(data_file_header.lead_in), config);
+    file_setup_data_lead_in(&(data_file_header.lead_in), config);
 
     // channel array
     int total_channel_count = data_file_header.lead_in.channel_bin_count +
@@ -339,7 +338,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     data_file_header.channel = file_channel;
 
     // complete file header
-    file_setup_header(&data_file_header, config);
+    file_setup_data_header(&data_file_header, config);
 
     // store header
     if (config->file_format == RL_FILE_FORMAT_RLD) {
@@ -355,14 +354,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     if (config->ambient_enable) {
 
-        ambient_setup_lead_in(&(ambient_file_header.lead_in));
+        file_setup_ambient_lead_in(&(ambient_file_header.lead_in), config);
 
         // allocate channel array
         ambient_file_header.channel =
             malloc(rl_status.sensor_count * sizeof(rl_file_channel_t));
 
         // complete file header
-        ambient_setup_header(&ambient_file_header, config);
+        file_setup_ambient_header(&ambient_file_header, config);
 
         // store header
         file_store_header_bin(ambient_file, &ambient_file_header);
@@ -493,7 +492,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
                     // determine new file name
                     char *ambient_file_name =
-                        ambient_get_file_name(config->file_name);
+                        file_get_ambient_file_name(config->file_name);
                     strcpy(file_name, ambient_file_name);
 
                     // search for last .
@@ -619,8 +618,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write header
         if (config->file_enable) {
             // write the data buffer to file
-            file_append_data(data_file, buffer, buffer_size,
-                             &timestamp_realtime, &timestamp_monotonic, config);
+            file_add_data_block(data_file, buffer, buffer_size,
+                                &timestamp_realtime, &timestamp_monotonic,
+                                config);
 
             // update and store data file header
             data_file_header.lead_in.data_block_count += 1;
@@ -637,13 +637,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->ambient_enable) {
 
             // fetch and write data
-            ambient_append_data(ambient_file, buffer, buffer_size,
-                                &timestamp_realtime, &timestamp_monotonic,
-                                config);
+            file_add_ambient_block(ambient_file, buffer, buffer_size,
+                                   &timestamp_realtime, &timestamp_monotonic,
+                                   config);
 
             // update and write header
             ambient_file_header.lead_in.data_block_count += 1;
-            ambient_file_header.lead_in.sample_count += AMBIENT_DATA_BLOCK_SIZE;
+            ambient_file_header.lead_in.sample_count +=
+                FILE_AMBIENT_DATA_BLOCK_SIZE;
             file_update_header_bin(ambient_file, &ambient_file_header);
         }
 
