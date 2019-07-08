@@ -34,6 +34,7 @@
 
 #include "pru.h"
 #include "rl.h"
+#include "util.h"
 
 /**
  * Initialize interactive console window.

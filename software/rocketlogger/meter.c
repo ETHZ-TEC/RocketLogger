@@ -41,13 +41,13 @@
 #include "meter.h"
 
 /// Analog channel units
-char const *const CHANNEL_UNITS[RL_CHANNEL_COUNT] = {"mA", "uA", "V", "V",
-                                                     "mA", "uA", "V", "V"};
+char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {"V",  "V",  "V",  "V",
+                                                        "uA", "mA", "uA", "mA"};
 
 /// Analog channel scales
-uint32_t const CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
-    1000000, 100000, 100000000, 100000000,
-    1000000, 100000, 100000000, 100000000};
+double const RL_CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
+    100000000, 100000000, 100000000, 100000000,
+    100000,    1000000,   100000,    1000000};
 
 /// Digital input bit location in binary data
 uint32_t const DIGITAL_INPUT_BITS[RL_CHANNEL_DIGITAL_COUNT] = {
@@ -71,25 +71,15 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
                         rl_timestamp_t const *const timestamp_monotonic,
                         rl_config_t const *const config) {
 
-    // suppress unused parameter warning
-    (void)timestamp_realtime;
-    (void)timestamp_monotonic;
-
-    // clear screen
-    erase();
-
-    // counter variables
-    uint32_t current_index = 0;
-    uint32_t voltage_index = 0;
-
     // data
     uint8_t dig_data[2] = {0};
-    int32_t channel_data[RL_CHANNEL_COUNT] = {0};
+    double channel_data[RL_CHANNEL_COUNT] = {0};
 
     // read digital channels
     for (uint32_t i = 0; i < buffer_size; i++) {
-        dig_data[0] |= (uint8_t)(buffer->data[i].channel_digital & 0xff);
-        dig_data[1] |= (uint8_t)((buffer->data[i].channel_digital >> 8) & 0xff);
+        pru_data_t const pru_data = buffer->data[i];
+        dig_data[0] |= (uint8_t)(pru_data.channel_digital & 0xff);
+        dig_data[1] |= (uint8_t)((pru_data.channel_digital >> 8) & 0xff);
     }
 
     // read, average and scale values (if channel selected)
@@ -98,61 +88,62 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
         if (config->channel_enable[i]) {
             int64_t value = 0;
             for (uint32_t j = 0; j < buffer_size; j++) {
-                value += buffer->data[j].channel_analog[i];
+                pru_data_t const pru_data = buffer->data[j];
+                value += pru_data.channel_analog[i];
             }
             value = value / (int64_t)buffer_size;
 
-            channel_data[channel_index] = (int32_t)(
-                (value + rl_calibration.offsets[i]) * rl_calibration.scales[i]);
+            channel_data[i] =
+                (double)(value + (int64_t)rl_calibration.offsets[i]) *
+                rl_calibration.scales[i];
             channel_index++;
         }
     }
 
-    // display values
-    mvprintw(1, 28, "RocketLogger Interactive");
+    // clear screen
+    erase();
 
+    // display values
+    mvprintw(1, 28, "RocketLogger CLI Monitor");
+
+    mvprintw(3, 10, "Time:");
+    mvprintw(3, 20, "% 12lld.%09lld (monotonic)", timestamp_monotonic->sec,
+             timestamp_monotonic->nsec);
+    mvprintw(4, 20, "% 12lld.%09lld (realtime)", timestamp_realtime->sec,
+             timestamp_realtime->nsec);
+
+    int current_index = 0;
+    int voltage_index = 0;
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
-        if (config->channel_enable[i]) {
-            if (is_current(i)) {
-                // current
-                mvprintw(current_index * 2 + 5, 10, "%s:", RL_CHANNEL_NAMES[i]);
-                mvprintw(current_index * 2 + 5, 15, "%12.6f%s",
-                         ((float)channel_data[voltage_index + current_index]) /
-                             CHANNEL_SCALES[i],
-                         CHANNEL_UNITS[i]);
-                current_index++;
-            } else {
-                // voltage
-                mvprintw(voltage_index * 2 + 5, 55, "%s:", RL_CHANNEL_NAMES[i]);
-                mvprintw(voltage_index * 2 + 5, 60, "%9.6f%s",
-                         ((float)channel_data[voltage_index + current_index]) /
-                             CHANNEL_SCALES[i],
-                         CHANNEL_UNITS[i]);
-                voltage_index++;
-            }
+        if (is_current(i)) {
+            // current
+            mvprintw(9 + 2 * current_index, 40, "%s:", RL_CHANNEL_NAMES[i]);
+            mvprintw(9 + 2 * current_index, 50, "%12.6f %s",
+                     (channel_data[i] / RL_CHANNEL_SCALES[i]),
+                     RL_CHANNEL_UNITS[i]);
+            current_index++;
+        } else {
+            // voltage
+            mvprintw(9 + 2 * voltage_index, 10, "%s:", RL_CHANNEL_NAMES[i]);
+            mvprintw(9 + 2 * voltage_index, 20, "%9.6f %s",
+                     (channel_data[i] / RL_CHANNEL_SCALES[i]),
+                     RL_CHANNEL_UNITS[i]);
+            voltage_index++;
         }
     }
 
     // display titles, range information
-    if (current_index > 0) { // currents
-        mvprintw(3, 10, "Currents:");
-
-        // display range information
-        mvprintw(3, 33, "Low range:");
-        if ((dig_data[0] & PRU_VALID_MASK) > 0) {
-            mvprintw(5, 33, "I1L invalid");
-        } else {
-            mvprintw(5, 33, "I1L valid");
-        }
-        if ((dig_data[1] & PRU_VALID_MASK) > 0) {
-            mvprintw(11, 33, "I2L invalid");
-        } else {
-            mvprintw(11, 33, "I2L valid");
-        }
+    mvprintw(7, 10, "Voltages:");
+    mvprintw(7, 40, "Currents:");
+    if ((dig_data[0] & PRU_VALID_MASK) > 0) {
+        mvprintw(9, 70, "I1L invalid");
+    } else {
+        mvprintw(9, 70, "I1L valid");
     }
-
-    if (voltage_index > 0) { // voltages
-        mvprintw(3, 55, "Voltages:");
+    if ((dig_data[1] & PRU_VALID_MASK) > 0) {
+        mvprintw(13, 70, "I2L invalid");
+    } else {
+        mvprintw(13, 70, "I2L valid");
     }
 
     // digital inputs
@@ -169,6 +160,8 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
             mvprintw(20 + 2 * (i - 3), 58, "%d",
                      (dig_data[1] & DIGITAL_INPUT_BITS[i]) > 0);
         }
+    } else {
+        mvprintw(20, 10, "Digital inputs disabled.");
     }
 
     refresh();
