@@ -43,10 +43,10 @@
 #include <unistd.h>
 
 #include "ads131e0x.h"
-#include "file_handling.h"
 #include "log.h"
 #include "meter.h"
 #include "rl.h"
+#include "rl_file.h"
 #include "sem.h"
 #include "util.h"
 #include "web.h"
@@ -329,7 +329,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // data file header lead-in
     rl_file_header_t data_file_header;
-    file_setup_data_lead_in(&(data_file_header.lead_in), config);
+    rl_file_setup_data_lead_in(&(data_file_header.lead_in), config);
 
     // channel array
     int total_channel_count = data_file_header.lead_in.channel_bin_count +
@@ -338,13 +338,13 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     data_file_header.channel = file_channel;
 
     // complete file header
-    file_setup_data_header(&data_file_header, config);
+    rl_file_setup_data_header(&data_file_header, config);
 
     // store header
     if (config->file_format == RL_FILE_FORMAT_RLD) {
-        file_store_header_bin(data_file, &data_file_header);
+        rl_file_store_header_bin(data_file, &data_file_header);
     } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-        file_store_header_csv(data_file, &data_file_header);
+        rl_file_store_header_csv(data_file, &data_file_header);
     }
 
     // AMBIENT FILE STORING
@@ -354,17 +354,17 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     if (config->ambient_enable) {
 
-        file_setup_ambient_lead_in(&(ambient_file_header.lead_in), config);
+        rl_file_setup_ambient_lead_in(&(ambient_file_header.lead_in), config);
 
         // allocate channel array
         ambient_file_header.channel =
             malloc(rl_status.sensor_count * sizeof(rl_file_channel_t));
 
         // complete file header
-        file_setup_ambient_header(&ambient_file_header, config);
+        rl_file_setup_ambient_header(&ambient_file_header, config);
 
         // store header
-        file_store_header_bin(ambient_file, &ambient_file_header);
+        rl_file_store_header_bin(ambient_file, &ambient_file_header);
     }
 
     // EXECUTION
@@ -478,9 +478,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
                 // store header
                 if (config->file_format == RL_FILE_FORMAT_RLD) {
-                    file_store_header_bin(data_file, &data_file_header);
+                    rl_file_store_header_bin(data_file, &data_file_header);
                 } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-                    file_store_header_csv(data_file, &data_file_header);
+                    rl_file_store_header_csv(data_file, &data_file_header);
                 }
 
                 rl_log(RL_LOG_INFO, "Creating new data file: %s", file_name);
@@ -492,7 +492,7 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
                     // determine new file name
                     char *ambient_file_name =
-                        file_get_ambient_file_name(config->file_name);
+                        rl_file_get_ambient_file_name(config->file_name);
                     strcpy(file_name, ambient_file_name);
 
                     // search for last .
@@ -517,7 +517,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                     ambient_file_header.lead_in.sample_count = 0;
 
                     // store header
-                    file_store_header_bin(ambient_file, &ambient_file_header);
+                    rl_file_store_header_bin(ambient_file,
+                                             &ambient_file_header);
 
                     rl_log(RL_LOG_INFO, "new ambient-file: %s", file_name);
                 }
@@ -618,18 +619,18 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write header
         if (config->file_enable) {
             // write the data buffer to file
-            file_add_data_block(data_file, buffer, buffer_size,
-                                &timestamp_realtime, &timestamp_monotonic,
-                                config);
+            rl_file_add_data_block(data_file, buffer, buffer_size,
+                                   &timestamp_realtime, &timestamp_monotonic,
+                                   config);
 
             // update and store data file header
             data_file_header.lead_in.data_block_count += 1;
             data_file_header.lead_in.sample_count += buffer_size / aggregates;
 
             if (config->file_format == RL_FILE_FORMAT_RLD) {
-                file_update_header_bin(data_file, &data_file_header);
+                rl_file_update_header_bin(data_file, &data_file_header);
             } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-                file_update_header_csv(data_file, &data_file_header);
+                rl_file_update_header_csv(data_file, &data_file_header);
             }
         }
 
@@ -637,15 +638,15 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->ambient_enable) {
 
             // fetch and write data
-            file_add_ambient_block(ambient_file, buffer, buffer_size,
-                                   &timestamp_realtime, &timestamp_monotonic,
-                                   config);
+            rl_file_add_ambient_block(ambient_file, buffer, buffer_size,
+                                      &timestamp_realtime, &timestamp_monotonic,
+                                      config);
 
             // update and write header
             ambient_file_header.lead_in.data_block_count += 1;
             ambient_file_header.lead_in.sample_count +=
-                FILE_AMBIENT_DATA_BLOCK_SIZE;
-            file_update_header_bin(ambient_file, &ambient_file_header);
+                RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
+            rl_file_update_header_bin(ambient_file, &ambient_file_header);
         }
 
         // print meter output if enabled

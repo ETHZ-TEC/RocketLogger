@@ -45,7 +45,7 @@
 #include "sensor/sensor.h"
 #include "util.h"
 
-#include "file_handling.h"
+#include "rl_file.h"
 
 /**
  * Set up channel information of the data file header.
@@ -53,8 +53,8 @@
  * @param header The file header structure to configure
  * @param config Current measurement configuration
  */
-void file_setup_data_channels(rl_file_header_t *const header,
-                              rl_config_t const *const config);
+void rl_file_setup_data_channels(rl_file_header_t *const header,
+                                 rl_config_t const *const config);
 
 /**
  * Set up channel information of the ambient file header.
@@ -62,7 +62,7 @@ void file_setup_data_channels(rl_file_header_t *const header,
  * @param header The ambient file header structure to configure
  * @param config Current measurement configuration
  */
-void file_setup_ambient_channels(rl_file_header_t *const header);
+void rl_file_setup_ambient_channels(rl_file_header_t *const header);
 
 // counter to control ambient sample rate
 static uint32_t ambient_rate_counter = 0;
@@ -72,7 +72,7 @@ int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel index
 int i2l_valid_channel = 0;
 
-char *file_get_ambient_file_name(char const *const data_file_name) {
+char *rl_file_get_ambient_file_name(char const *const data_file_name) {
     static char ambient_file_name[RL_PATH_LENGTH_MAX];
 
     // determine new file name
@@ -89,15 +89,15 @@ char *file_get_ambient_file_name(char const *const data_file_name) {
     file_ending--;
 
     // add file ending
-    char ambient_file_ending[RL_PATH_LENGTH_MAX] = FILE_AMBIENT_SUFFIX;
+    char ambient_file_ending[RL_PATH_LENGTH_MAX] = RL_FILE_AMBIENT_SUFFIX;
     strcat(ambient_file_ending, file_ending);
     strcpy(file_ending, ambient_file_ending);
 
     return ambient_file_name;
 }
 
-void file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
-                             rl_config_t const *const config) {
+void rl_file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
+                                rl_config_t const *const config) {
 
     // number channels
     uint16_t channel_count = count_channels(config->channel_enable);
@@ -138,8 +138,8 @@ void file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->channel_count = channel_count;
 }
 
-void file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
-                                rl_config_t const *const config) {
+void rl_file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
+                                   rl_config_t const *const config) {
 
     // number channels
     uint16_t channel_count = rl_status.sensor_count;
@@ -161,12 +161,12 @@ void file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->header_length =
         sizeof(rl_file_lead_in_t) + comment_length +
         (channel_count + channel_bin_count) * sizeof(rl_file_channel_t);
-    lead_in->data_block_size = FILE_AMBIENT_DATA_BLOCK_SIZE;
+    lead_in->data_block_size = RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
     lead_in->data_block_count = 0; // needs to be updated
     lead_in->sample_count = 0;     // needs to be updated
-    lead_in->sample_rate = (config->update_rate < FILE_AMBIENT_SAMPLING_RATE
+    lead_in->sample_rate = (config->update_rate < RL_FILE_AMBIENT_SAMPLING_RATE
                                 ? config->update_rate
-                                : FILE_AMBIENT_SAMPLING_RATE);
+                                : RL_FILE_AMBIENT_SAMPLING_RATE);
     get_mac_addr(lead_in->mac_address);
     lead_in->start_time = time_real;
     lead_in->comment_length = comment_length;
@@ -174,18 +174,7 @@ void file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->channel_count = channel_count;
 }
 
-void file_setup_data_header(rl_file_header_t *const header,
-                            rl_config_t const *const config) {
-    if (config->file_comment == NULL) {
-        header->comment = "";
-    } else {
-        header->comment = config->file_comment;
-    }
-
-    file_setup_data_channels(header, config);
-}
-
-void file_setup_ambient_header(rl_file_header_t *const header,
+void rl_file_setup_data_header(rl_file_header_t *const header,
                                rl_config_t const *const config) {
     if (config->file_comment == NULL) {
         header->comment = "";
@@ -193,11 +182,22 @@ void file_setup_ambient_header(rl_file_header_t *const header,
         header->comment = config->file_comment;
     }
 
-    file_setup_ambient_channels(header);
+    rl_file_setup_data_channels(header, config);
 }
 
-void file_store_header_bin(FILE *file_handle,
-                           rl_file_header_t *const file_header) {
+void rl_file_setup_ambient_header(rl_file_header_t *const header,
+                                  rl_config_t const *const config) {
+    if (config->file_comment == NULL) {
+        header->comment = "";
+    } else {
+        header->comment = config->file_comment;
+    }
+
+    rl_file_setup_ambient_channels(header);
+}
+
+void rl_file_store_header_bin(FILE *file_handle,
+                              rl_file_header_t *const file_header) {
 
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
@@ -233,8 +233,8 @@ void file_store_header_bin(FILE *file_handle,
     fflush(file_handle);
 }
 
-void file_store_header_csv(FILE *file_handle,
-                           rl_file_header_t const *const file_header) {
+void rl_file_store_header_csv(FILE *file_handle,
+                              rl_file_header_t const *const file_header) {
     // lead-in
     fprintf(file_handle, "RocketLogger CSV File\n");
     fprintf(file_handle, "File Version,%u\n",
@@ -300,8 +300,8 @@ void file_store_header_csv(FILE *file_handle,
     fflush(file_handle);
 }
 
-void file_update_header_bin(FILE *file_handle,
-                            rl_file_header_t const *const file_header) {
+void rl_file_update_header_bin(FILE *file_handle,
+                               rl_file_header_t const *const file_header) {
 
     // seek to beginning and rewrite lead_in
     rewind(file_handle);
@@ -310,8 +310,8 @@ void file_update_header_bin(FILE *file_handle,
     fseek(file_handle, 0, SEEK_END);
 }
 
-void file_update_header_csv(FILE *file_handle,
-                            rl_file_header_t const *const file_header) {
+void rl_file_update_header_csv(FILE *file_handle,
+                               rl_file_header_t const *const file_header) {
     rewind(file_handle);
     fprintf(file_handle, "RocketLogger CSV File\n");
     fprintf(file_handle, "File Version,%u\n",
@@ -326,11 +326,11 @@ void file_update_header_csv(FILE *file_handle,
     fseek(file_handle, 0, SEEK_END);
 }
 
-void file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
-                         uint32_t buffer_size,
-                         rl_timestamp_t const *const timestamp_realtime,
-                         rl_timestamp_t const *const timestamp_monotonic,
-                         rl_config_t const *const config) {
+void rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
+                            uint32_t buffer_size,
+                            rl_timestamp_t const *const timestamp_realtime,
+                            rl_timestamp_t const *const timestamp_monotonic,
+                            rl_config_t const *const config) {
     // skip if not storing to file, or invalid file structure
     if (!config->file_enable) {
         return;
@@ -452,7 +452,7 @@ void file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
             } else if (config->file_format == RL_FILE_FORMAT_CSV) {
                 uint32_t bin_mask = 0x01;
                 for (int j = 0; j < bin_channel_pos; j++) {
-                    fprintf(data_file, (FILE_CSV_DELIMITER "%i"),
+                    fprintf(data_file, (RL_FILE_CSV_DELIMITER "%i"),
                             (bin_data & bin_mask) > 0);
                     bin_mask = bin_mask << 1;
                 }
@@ -464,7 +464,8 @@ void file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
             fwrite(channel_data, sizeof(int32_t), channel_count, data_file);
         } else if (config->file_format == RL_FILE_FORMAT_CSV) {
             for (int j = 0; j < channel_count; j++) {
-                fprintf(data_file, (FILE_CSV_DELIMITER "%d"), channel_data[j]);
+                fprintf(data_file, (RL_FILE_CSV_DELIMITER "%d"),
+                        channel_data[j]);
             }
             fprintf(data_file, "\n");
         }
@@ -476,19 +477,19 @@ void file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
     }
 }
 
-void file_add_ambient_block(FILE *ambient_file,
-                            pru_buffer_t const *const buffer,
-                            uint32_t buffer_size,
-                            rl_timestamp_t const *const timestamp_realtime,
-                            rl_timestamp_t const *const timestamp_monotonic,
-                            rl_config_t const *const config) {
+void rl_file_add_ambient_block(FILE *ambient_file,
+                               pru_buffer_t const *const buffer,
+                               uint32_t buffer_size,
+                               rl_timestamp_t const *const timestamp_realtime,
+                               rl_timestamp_t const *const timestamp_monotonic,
+                               rl_config_t const *const config) {
     // suppress unused parameter warning
     (void)buffer;
     (void)buffer_size;
 
     // rate limit sampling of the ambient sensors
     if (ambient_rate_counter < config->update_rate) {
-        ambient_rate_counter += FILE_AMBIENT_SAMPLING_RATE;
+        ambient_rate_counter += RL_FILE_AMBIENT_SAMPLING_RATE;
         return;
     }
 
@@ -522,8 +523,8 @@ void file_add_ambient_block(FILE *ambient_file,
     fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
 }
 
-void file_setup_data_channels(rl_file_header_t *const file_header,
-                              rl_config_t const *const config) {
+void rl_file_setup_data_channels(rl_file_header_t *const file_header,
+                                 rl_config_t const *const config) {
     int total_channel_count = file_header->lead_in.channel_bin_count +
                               file_header->lead_in.channel_count;
 
@@ -538,7 +539,8 @@ void file_setup_data_channels(rl_file_header_t *const file_header,
             file_header->channel[ch].unit = RL_UNIT_BINARY;
             file_header->channel[ch].channel_scale = RL_SCALE_NONE;
             file_header->channel[ch].data_size = 0;
-            file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            file_header->channel[ch].valid_data_channel =
+                RL_FILE_CHANNEL_NO_LINK;
             strcpy(file_header->channel[ch].name, RL_CHANNEL_DIGITAL_NAMES[i]);
             ch++;
         }
@@ -549,7 +551,7 @@ void file_setup_data_channels(rl_file_header_t *const file_header,
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
         file_header->channel[ch].channel_scale = RL_SCALE_NONE;
         file_header->channel[ch].data_size = 0;
-        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+        file_header->channel[ch].valid_data_channel = RL_FILE_CHANNEL_NO_LINK;
         strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[0]);
         ch++;
     }
@@ -557,7 +559,7 @@ void file_setup_data_channels(rl_file_header_t *const file_header,
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
         file_header->channel[ch].channel_scale = RL_SCALE_NONE;
         file_header->channel[ch].data_size = 0;
-        file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+        file_header->channel[ch].valid_data_channel = RL_FILE_CHANNEL_NO_LINK;
         strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[1]);
         ch++;
     }
@@ -577,13 +579,15 @@ void file_setup_data_channels(rl_file_header_t *const file_header,
                     }
                 } else {
                     file_header->channel[ch].channel_scale = RL_SCALE_NANO;
-                    file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+                    file_header->channel[ch].valid_data_channel =
+                        RL_FILE_CHANNEL_NO_LINK;
                 }
                 file_header->channel[ch].unit = RL_UNIT_AMPERE;
             } else {
                 file_header->channel[ch].unit = RL_UNIT_VOLT;
                 file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
-                file_header->channel[ch].valid_data_channel = NO_VALID_DATA;
+                file_header->channel[ch].valid_data_channel =
+                    RL_FILE_CHANNEL_NO_LINK;
             }
             file_header->channel[ch].data_size = 4;
             strncpy(file_header->channel[ch].name, RL_CHANNEL_NAMES[i],
@@ -593,7 +597,7 @@ void file_setup_data_channels(rl_file_header_t *const file_header,
     }
 }
 
-void file_setup_ambient_channels(rl_file_header_t *const header) {
+void rl_file_setup_ambient_channels(rl_file_header_t *const header) {
     int total_channel_count =
         header->lead_in.channel_bin_count + header->lead_in.channel_count;
 
@@ -606,7 +610,7 @@ void file_setup_ambient_channels(rl_file_header_t *const header) {
         if (rl_status.sensor_available[i]) {
             header->channel[ch].unit = SENSOR_REGISTRY[i].unit;
             header->channel[ch].channel_scale = SENSOR_REGISTRY[i].scale;
-            header->channel[ch].valid_data_channel = NO_VALID_DATA;
+            header->channel[ch].valid_data_channel = RL_FILE_CHANNEL_NO_LINK;
             header->channel[ch].data_size = 4;
             strcpy(header->channel[ch].name, SENSOR_REGISTRY[i].name);
             ch++;
