@@ -100,12 +100,16 @@ int calibration_load(void) {
                calibration_file.file_version);
         return ERROR;
     }
+    if (calibration_file.header_length != RL_CALIBRATION_FILE_HEADER_LENGTH) {
+        rl_log(RL_LOG_ERROR, "invalid calibration file header length %d",
+               calibration_file.header_length);
+        return ERROR;
+    }
 
-    memcpy(&rl_calibration, &(calibration_file.data),
-           sizeof(rl_calibration_t));
+    memcpy(&rl_calibration, &(calibration_file.data), sizeof(rl_calibration_t));
 
     // store calibration info information to status
-    rl_status.calibration_time = rl_calibration.time;
+    rl_status.calibration_time = calibration_file.calibration_time;
     strncpy(rl_status.calibration_file, calibration_file_name,
             sizeof(rl_status.calibration_file) - 1);
 

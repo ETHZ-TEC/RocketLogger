@@ -49,12 +49,13 @@
 /// Calibraiton file header version
 #define RL_CALIBRATION_FILE_VERSION 0x02
 
+/// Calibration file header length
+#define RL_CALIBRATION_FILE_HEADER_LENGTH 0x10
+
 /**
  * RocketLogger calibration data structure.
  */
 struct rl_calibration {
-    /// Time stamp of calibration run
-    uint64_t time;
     /// Channel offsets (in bit)
     int offsets[RL_CHANNEL_COUNT];
     /// Channel scalings
@@ -74,6 +75,10 @@ struct rl_calibration_file {
     uint32_t file_magic;
     /// File version number
     uint16_t file_version;
+    /// Total size of the header in bytes
+    uint16_t header_length;
+    /// Timestamp of the measurements used for calibration generation
+    uint64_t calibration_time;
     /// The actual calibration data
     rl_calibration_t data;
 };
@@ -95,6 +100,9 @@ void calibration_reset_scales(void);
 
 /**
  * Load the calibration values from calibration file.
+ *
+ * @note Updates the RocketLogger status. Manually update shared status after
+ * loading the calibraion as needed.
  *
  * @param config Pointer to {@link rl_config_t} struct.
  * @return Returns 0 on success, negative on failure with errno set accordingly

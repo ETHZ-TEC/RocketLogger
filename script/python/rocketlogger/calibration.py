@@ -67,27 +67,29 @@ _ROCKETLOGGER_ADC_STEP_IH = 3.18e-08
 _CALIBRATION_FILE_DTYPE = np.dtype([
     ('file_magic', '<u4'),
     ('file_version', '<u2'),
-    ('timestamp', '<M8[s]'),
+    ('header_length', '<u2'),
+    ('calibration_time', '<M8[s]'),
     ('offset', ('<i4', 8)),
     ('scale', ('<f8', 8)),
 ])
 
-# caliration file format magic
+# calibration file format magic
 _CALIBRATION_FILE_MAGIC = 0x434C5225
 
-# caliration file format magic
+# calibration file format version
 _CALIBRATION_FILE_VERSION = 0x02
 
+# calibration file header length
+_CALIBRATION_FILE_HEADER_LENGTH = 0x10
+
 # data format channel name sequence
-# _CALIBRATION_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
-#                               'I2H', 'I2L', 'V3', 'V4']
 _CALIBRATION_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4',
                               'I1L', 'I1H', 'I2L', 'I2H']
 
 # RocketLogger data file scales for channels
-_CALIBRATION_CHANNEL_SCALES = [
-    _ROCKETLOGGER_FILE_SCALE_IH, _ROCKETLOGGER_FILE_SCALE_IL,
-    _ROCKETLOGGER_FILE_SCALE_V, _ROCKETLOGGER_FILE_SCALE_V] * 2
+_CALIBRATION_CHANNEL_SCALES = ([_ROCKETLOGGER_FILE_SCALE_V] * 4 +
+                               [_ROCKETLOGGER_FILE_SCALE_IL,
+                                _ROCKETLOGGER_FILE_SCALE_IH] * 2)
 
 # channels with positive scales
 _CALIBRATION_POSITIVE_SCALE_CHANNELS = (_ROCKETLOGGER_CHANNELS_CURRENT_LOW +
@@ -351,7 +353,7 @@ class RocketLoggerCalibration:
         self._data_i2l = None
         self._data_i2h = None
 
-        self._calibration_timestamp = None
+        self._calibration_time = None
         self._calibration_scale = None
         self._calibration_offset = None
         self._calibration_residuals = None
@@ -439,12 +441,12 @@ class RocketLoggerCalibration:
         v_ref = setup.get_voltage_setpoints()
         ih_ref = setup.get_current_high_setpoints()
         il_ref = setup.get_current_low_setpoints()
-        reference = [ih_ref, il_ref, v_ref, v_ref] * 2
+        reference = [v_ref] * 4 + [il_ref, ih_ref] * 2
 
         v_step = setup.get_voltage_step(calibration=True)
         ih_step = setup.get_current_high_step(calibration=True)
         il_step = setup.get_current_low_step(calibration=True)
-        reference_steps = [ih_step, il_step, v_step, v_step] * 2
+        reference_steps = [v_step] * 4 + [il_step, ih_step] * 2
 
         # extract mesurement information
         measurement_data = [
@@ -483,8 +485,7 @@ class RocketLoggerCalibration:
         self._calibration_scale = np.array(
             [scale / file_scale for scale, file_scale
              in zip(scales, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
-        self._calibration_timestamp = np.array(timestamp,
-                                               dtype='datetime64[s]')
+        self._calibration_time = np.array(timestamp, dtype='datetime64[s]')
         self._error_offset = np.array(offset_errors)
         self._error_scale = np.array(
             [np.max(scale_error[np.abs(ref) > 0.1 * np.abs(np.max(ref))])
@@ -504,7 +505,7 @@ class RocketLoggerCalibration:
         print('RocketLogger Calibration Statistics')
         try:
             self._check_calibration_exists()
-            print('Measurement time:   {}'.format(self._calibration_timestamp))
+            print('Measurement time:   {}'.format(self._calibration_time))
             print()
             print('Calibration values:')
             print('  Channel  :  Offset [bit]  :  Scale [unit/bit]')
@@ -545,13 +546,18 @@ class RocketLoggerCalibration:
                 'Unsupported RocketLogger data file version {}.'
                 .format(data['file_version']))
 
-        self._calibration_timestamp = data['timestamp']
+        if data['header_length'] != _CALIBRATION_FILE_HEADER_LENGTH:
+            raise RocketLoggerFileError(
+                'Invalid RocketLogger calibration file, invalid header length {:x}.'
+                .format(data['header_length']))
+
+        self._calibration_time = data['calibration_time']
         self._calibration_offset = data['offset']
         self._calibration_scale = data['scale']
 
-        if self._calibration_timestamp > np.datetime64('now'):
+        if self._calibration_time > np.datetime64('now'):
             raise RocketLoggerCalibrationError(
-                'Invalid timestamp in calibration file')
+                'Invalid calibration time in calibration file')
         if len(self._calibration_offset) != 8:
             raise RocketLoggerCalibrationError(
                 'Invalid offset data in calibration file')
@@ -575,7 +581,8 @@ class RocketLoggerCalibration:
         # assemble file data write to file
         filedata = np.array([(_CALIBRATION_FILE_MAGIC,
                               _CALIBRATION_FILE_VERSION,
-                              self._calibration_timestamp,
+                              _CALIBRATION_FILE_HEADER_LENGTH,
+                              self._calibration_time,
                               self._calibration_offset,
                               self._calibration_scale)],
                             dtype=_CALIBRATION_FILE_DTYPE)
@@ -605,7 +612,7 @@ class RocketLoggerCalibration:
 
     def _check_calibration_exists(self):
         """Check for existing calibration data, raise error if not."""
-        if any([self._calibration_timestamp is None,
+        if any([self._calibration_time is None,
                 self._calibration_offset is None,
                 self._calibration_scale is None]):
             raise RocketLoggerCalibrationError(
@@ -623,7 +630,7 @@ class RocketLoggerCalibration:
         """Return True if other is the same calibration."""
         if isinstance(other, RocketLoggerCalibration):
             return all(
-                [self._calibration_timestamp == other._calibration_timestamp,
+                [self._calibration_time == other._calibration_time,
                  np.array_equal(self._calibration_scale,
                                 other._calibration_scale),
                  np.array_equal(self._calibration_offset,
