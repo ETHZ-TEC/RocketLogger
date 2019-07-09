@@ -37,14 +37,15 @@ from unittest import TestCase
 import numpy as np
 import rocketlogger.calibration as rlc
 
-from rocketlogger.data import RocketLoggerData
+from rocketlogger.data import RocketLoggerData, RocketLoggerFileError
 from rocketlogger.calibration import RocketLoggerCalibration, \
     RocketLoggerCalibrationSetup, RocketLoggerCalibrationError, \
     CALIBRATION_SETUP_SMU2450, CALIBRATION_SETUP_BASIC
 
 
 _TEST_FILE_DIR = 'data'
-_CALIBRATION_FILE = os.path.join(_TEST_FILE_DIR, 'test_calibration_sample.dat')
+_CALIBRATION_FILE = os.path.join(_TEST_FILE_DIR, 'test_calibration_v2.dat')
+_CALIBRATION_FILE_V1 = os.path.join(_TEST_FILE_DIR, 'test_calibration_v1.dat')
 _VOLTAGE_FILE = os.path.join(_TEST_FILE_DIR, 'test_calibration_v.rld')
 _CURRENT_LO1_FILE = os.path.join(_TEST_FILE_DIR, 'test_calibration_i1l.rld')
 _CURRENT_LO2_FILE = os.path.join(_TEST_FILE_DIR, 'test_calibration_i2l.rld')
@@ -104,6 +105,18 @@ class TestCalibrationFile(TestCase):
             os.remove(_TEMP_FILE)
         except FileNotFoundError:
             pass
+
+
+class TestUnsupportedCalibrationFile(TestCase):
+
+    def test_file_read(self):
+        cal = RocketLoggerCalibration()
+        with self.assertRaises(RocketLoggerFileError):
+            cal.read_calibration_file(_CALIBRATION_FILE_V1)
+
+    def test_file_read_direct(self):
+        with self.assertRaises(RocketLoggerFileError):
+            RocketLoggerCalibration(_CALIBRATION_FILE_V1)
 
 
 class TestCalibrationSetup(TestCase):

@@ -536,6 +536,9 @@ class RocketLoggerCalibration:
         data = np.fromfile(filename, dtype=_CALIBRATION_FILE_DTYPE).squeeze()
 
         # file consistency check
+        if not data:
+            raise RocketLoggerFileError(
+                'Invalid RocketLogger calibration file, unable to read data.')
         if data['file_magic'] != _CALIBRATION_FILE_MAGIC:
             raise RocketLoggerFileError(
                 'Invalid RocketLogger calibration file, file magic missmatch {:x}.'
