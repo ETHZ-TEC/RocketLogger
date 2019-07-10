@@ -95,23 +95,23 @@ int tsl4531_send_range(int sensor_identifier, int range);
 int tsl4531_get_index(int sensor_identifier);
 
 /**
- * @todo document
+ * The currently configured measurement range.
  */
 tsl4531_range_t tsl4531_range[sizeof(tsl4531_sensors)] = {TSL4531_RANGE_AUTO};
 
 /**
- * @todo document
+ * Dynamic sensor range currently set if auto ranging is used.
  */
 tsl4531_range_t tsl4531_auto_range[sizeof(tsl4531_sensors)] = {
     TSL4531_RANGE_MEDIUM};
 
 /**
- * @todo document
+ * The measurement range dependent sensor value multiplier to use.
  */
 uint8_t tsl4531_multiplier[sizeof(tsl4531_sensors)] = {TSL4531_MULT_200};
 
 /**
- * @todo document
+ * The sensor value data buffer.
  */
 int32_t tsl4531_values[sizeof(tsl4531_sensors)] = {0};
 
