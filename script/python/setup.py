@@ -35,7 +35,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='rocketlogger',
-      version='1.99a2',
+      version='1.99a3',
       description='RocketLogger Python Support',
       url='https://rocketlogger.ethz.ch/',
       author='Computer Engineering Group, ETH Zurich',
@@ -61,6 +61,7 @@ setup(name='rocketlogger',
       ],
       extras_require={
           'plot': 'matplotlib',
+          'dataframe': 'pandas',
       },
       test_suite='nose.collector',
       tests_require=[

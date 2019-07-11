@@ -71,6 +71,15 @@ class TestCalibrationFile(TestCase):
         cal2 = RocketLoggerCalibration()
         self.assertEqual(cal1, cal2)
 
+    def test_compare_different(self):
+        cal1 = RocketLoggerCalibration()
+        cal2 = RocketLoggerCalibration(_CALIBRATION_FILE)
+        self.assertNotEqual(cal1, cal2)
+
+    def test_compare_different_type(self):
+        cal = RocketLoggerCalibration()
+        self.assertNotEqual('cal', cal)
+
     def test_compare_read(self):
         cal1 = RocketLoggerCalibration()
         cal2 = RocketLoggerCalibration()
@@ -294,9 +303,9 @@ class TestCalibrationProcedure(TestCase):
         reference_time = np.datetime64('2017-05-09T07:37:49', dtype='M8[s]')
         reference_offset = np.array(
             [1079, 860, 967, 910, 1769, 7978, 1990, -3652])
-        reference_scale = np.array(
-            [-1.22411163e+02, -1.22087393e+02, -1.22223889e+02, -1.22244353e+02,
-             1.75362819e+01, 3.15541961e+01, 1.75031048e+01, 3.15646990e+01])
+        reference_scale = np.array([
+            -1.22411163e+02, -1.22087393e+02, -1.22223889e+02, -1.22244353e+02,
+            1.75362819e+01, 3.15541961e+01, 1.75031048e+01, 3.15646990e+01])
         self.assertEqual(calibration._calibration_time, reference_time)
         self.assertTrue(np.allclose(calibration._calibration_offset,
                                     reference_offset))

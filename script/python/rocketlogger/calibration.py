@@ -121,8 +121,8 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
     """
     Extract aggregated setpoints from a measurement trace.
 
-    :param measurement_data: vector of measurement data to extract
-                                setpoints from
+    :param measurement_data: vector of measurement data to extract setpoints
+                             from
 
     :param setpoint_step: the setpoint step (in measurement units)
 
@@ -410,9 +410,9 @@ class RocketLoggerCalibration:
         self._error_rmse = None
 
     def recalibrate(self, setup, fix_signs=True, target_offset_error=1,
-                    regression_alorithm=regression_linear, **kwargs):
+                    regression_algorithm=regression_linear, **kwargs):
         """
-        Perform channel calibration with loaded measeurement data, overwriting
+        Perform channel calibration with loaded measurement data, overwriting
         any loaded calibration parameters.
 
         :param setup: Calibration setup used for the measurements using the
@@ -425,10 +425,11 @@ class RocketLoggerCalibration:
                                     of the zero error to use as offset error
                                     for the error calculations
 
-        :param regression_alorithm: Alorithm to use for the regression, taking
-                                    the setpoint measurement and reference
-                                    values as arguments and providing the
-                                    resulting offset and scale as output
+        :param regression_algorithm: Algorithm to use for the regression,
+                                     taking the setpoint measurement and
+                                     reference values as arguments and
+                                     providing the resulting offset and scale
+                                     as output
 
         :param kwargs: Optional names arguments passed to the regression
                        algorithm function
@@ -463,7 +464,7 @@ class RocketLoggerCalibration:
                        for t, s in zip(measurement_traces, reference_steps)]
 
         # perform regression
-        regression_result = [regression_alorithm(x, y)
+        regression_result = [regression_algorithm(x, y)
                              for x, y in zip(measurement, reference)]
         offsets, scales = zip(*regression_result)
 
@@ -541,8 +542,8 @@ class RocketLoggerCalibration:
                 'Invalid RocketLogger calibration file, unable to read data.')
         if data['file_magic'] != _CALIBRATION_FILE_MAGIC:
             raise RocketLoggerFileError(
-                'Invalid RocketLogger calibration file, file magic missmatch {:x}.'
-                .format(data['file_magic']))
+                ('Invalid RocketLogger calibration file, invalid file magic {:x}.'
+                 .format(data['file_magic'])))
 
         if data['file_version'] != _CALIBRATION_FILE_VERSION:
             raise RocketLoggerFileError(

@@ -68,16 +68,16 @@ _CHANNEL_VALID_LINK_BYTES = 2
 _CHANNEL_NAME_BYTES = 16
 
 _CHANNEL_UNIT_NAMES = {
-    0: 'unitless',
+    0: 'unit-less',
     1: 'voltage',
     2: 'current',
     3: 'binary',
-    4: 'range valid (binary)',
+    4: 'data valid (binary)',
     5: 'illuminance',
-    6: 'temerature',
+    6: 'temperature',
     7: 'integer',
     8: 'percent',
-    9: 'preasure',
+    9: 'pressure',
     0xffffffff: 'undefined',
 }
 _CHANNEL_IS_BINARY = {
@@ -123,7 +123,7 @@ def _decimate_binary(values, decimation_factor, threshold_value=0.5):
 
 def _decimate_min(values, decimation_factor):
     """
-    Decimate binary values, forcing False if occuring.
+    Decimate binary values, forcing False if occurring.
 
     :param values: Numpy vector of the values to decimate
 
@@ -140,7 +140,7 @@ def _decimate_min(values, decimation_factor):
 
 def _decimate_max(values, decimation_factor):
     """
-    Decimate binary values, forcing True if occuring.
+    Decimate binary values, forcing True if occurring.
 
     :param values: Numpy vector of the values to decimate
 
@@ -255,15 +255,17 @@ class RocketLoggerData:
     files.
     """
 
-    def __init__(self, filename=None, join_files=True, decimation_factor=1,
-                 memory_mapped=True):
+    def __init__(self, filename=None, join_files=True, header_only=False,
+                 decimation_factor=1, memory_mapped=True):
         """
         Constructor to create a RockerLoggerData object form data file.
 
         :param filename: The filename of the file to import
 
-        :param join_files: Enalbe joining of multiple files if numbered files
+        :param join_files: Enable joining of multiple files if numbered files
             following the "<filename>_p#.rld" convention are found.
+
+        :param header_only: Enable to import only header info without data.
 
         :param decimation_factor: Decimation factor for values read
 
@@ -282,8 +284,10 @@ class RocketLoggerData:
             raise NotImplementedError('RocketLogger data file creation '
                                       'currently unsupported.')
         if isfile(filename):
-            self.load_file(filename, join_files, decimation_factor,
-                           memory_mapped)
+            self.load_file(filename, join_files=join_files,
+                           header_only=header_only,
+                           decimation_factor=decimation_factor,
+                           memory_mapped=memory_mapped)
         else:
             raise FileNotFoundError('File "{}" does not exist.'.format(
                                     filename))
@@ -305,7 +309,7 @@ class RocketLoggerData:
         # file consistency check
         if header['file_magic'] != _ROCKETLOGGER_FILE_MAGIC:
             raise RocketLoggerFileError(
-                'Invalid RocketLogger data file, file magic missmatch {:x}.'
+                'Invalid RocketLogger data file, file magic mismatch {:x}.'
                 .format(header['file_magic']))
 
         if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
@@ -372,7 +376,7 @@ class RocketLoggerData:
 
             try:
                 channel['unit'] = _CHANNEL_UNIT_NAMES[channel['unit_index']]
-            except:
+            except KeyError:
                 raise RocketLoggerDataError('Undefined channel unit {}'.format(
                     channel['unit_index']))
 
@@ -644,8 +648,8 @@ class RocketLoggerData:
             self._header['channel_analog_count'] =\
                 self._header['channel_analog_count'] - 1
 
-    def load_file(self, filename, join_files=True, decimation_factor=1,
-                  memory_mapped=True):
+    def load_file(self, filename, join_files=True, header_only=False,
+                  decimation_factor=1, memory_mapped=True):
         """
         Read a RocketLogger data file and return an RLD object.
 
@@ -653,10 +657,12 @@ class RocketLoggerData:
             files following the "<filename>_p#.rld" convention are found, they
             can be joined during import using the `join_files` flag.
 
-        :param join_files: Enalbe joining of multiple files if numbered files
+        :param join_files: Enable joining of multiple files if numbered files
             following the "<filename>_p#.rld" convention are found.
 
-        :param decimation_factor: Decimation factor for values read
+        :param header_only: Enable to import only header info without data.
+
+        :param decimation_factor: Decimation factor for values read.
 
         :param memory_mapped: Set False to fall back to read entire file to
             memory at once, instead of using memory mapped reading. Might
@@ -701,24 +707,32 @@ class RocketLoggerData:
                         (self._header['data_block_count'] +
                          header['data_block_count'])
 
-                # channels: read actual sampled data
-                timestamps_realtime, timestamps_monotonic, data =\
-                    self._read_file_data(file_handle, header,
-                                         decimation_factor=decimation_factor,
-                                         memory_mapped=memory_mapped)
-
-                # create on first file, append on following
-                if file_number > 0:
-                    self._timestamps_realtime = np.hstack(
-                        (self._timestamps_realtime, timestamps_realtime))
-                    self._timestamps_monotonic = np.hstack(
-                        (self._timestamps_monotonic, timestamps_monotonic))
-                    for i in range(len(self._data)):
-                        self._data[i] = np.hstack((self._data[i], data[i]))
+                if header_only is True:
+                    # set data arrays to None on header only import
+                    self._timestamps_realtime = None
+                    self._timestamps_monotonic = None
+                    self._data = None
+                    print('header only')
                 else:
-                    self._timestamps_realtime = timestamps_realtime
-                    self._timestamps_monotonic = timestamps_monotonic
-                    self._data = data
+                    # channels: read actual sampled data
+                    timestamps_realtime, timestamps_monotonic, data =\
+                        self._read_file_data(
+                            file_handle, header,
+                            decimation_factor=decimation_factor,
+                            memory_mapped=memory_mapped)
+
+                    # store new data array on first file, append on following
+                    if file_number > 0:
+                        self._timestamps_realtime = np.hstack(
+                            (self._timestamps_realtime, timestamps_realtime))
+                        self._timestamps_monotonic = np.hstack(
+                            (self._timestamps_monotonic, timestamps_monotonic))
+                        for i in range(len(self._data)):
+                            self._data[i] = np.hstack((self._data[i], data[i]))
+                    else:
+                        self._timestamps_realtime = timestamps_realtime
+                        self._timestamps_monotonic = timestamps_monotonic
+                        self._data = data
 
             file_number = file_number + 1
             file_name = '{}_p{}{}'.format(file_basename, file_number,
@@ -758,6 +772,29 @@ class RocketLoggerData:
         """
         return self._header['comment']
 
+    def get_header(self):
+        """
+        Get a dictionary with the header information.
+
+        The relevant fields include: 'data_block_count', 'data_block_size',
+        'file_version', 'mac_address', 'sample_count','sample_rate'.
+
+        To get the file comment use get_comment().
+
+        :returns: Dictionary of relevant header information
+        """
+
+        header_dict = {}
+        for key, value in self._header.items():
+            if key in ['data_block_count', 'data_block_size', 'file_version',
+                       'sample_count', 'sample_rate']:
+                header_dict[key] = value
+            elif key == 'mac_address':
+                header_dict[key] = ':'.join(['{:02x}'.format(v)
+                                             for v in value])
+
+        return header_dict
+
     def get_data(self, channel_names=['all']):
         """
         Get the data of the specified channels, by default of all channels.
@@ -774,15 +811,18 @@ class RocketLoggerData:
         if 'all' in channel_names:
             channel_names = self.get_channel_names()
 
+        if self._data is None:
+            raise TypeError('No data to access for header only imported file.')
+
         values = np.empty((self._header['sample_count'], len(channel_names)))
 
         for channel_name in channel_names:
-            data_index = self._get_channel_index(channel_name)
-            if data_index is None:
+            index = self._get_channel_index(channel_name)
+            if index is None:
                 raise KeyError('Channel "{}" not found.'.format(channel_name))
             values[:, channel_names.index(channel_name)] = (
-                self._data[data_index] *
-                10**(self._header['channels'][data_index]['scale']))
+                self._data[index] *
+                10**(self._header['channels'][index]['scale']))
 
         return values
 
@@ -793,7 +833,7 @@ class RocketLoggerData:
         Using simple linear interpolation to generating the sample from the
         block timestamps.
 
-        :param absolute_time: Wether the returned timestamps are relative to
+        :param absolute_time: Whether the returned timestamps are relative to
             the start time in seconds (default) or absolute timestamps
 
         :param time_reference: Which clock data to get (for absolute time only,
@@ -804,12 +844,15 @@ class RocketLoggerData:
 
         :returns: A numpy array containing the timestamps
         """
+        if self._timestamps_monotonic is None:
+            raise TypeError('No data to access for header only imported file.')
+
         # transform value to absolute time if requested
         if absolute_time:
             # get requested timer data as numbers
-            if time_reference is 'local':
+            if time_reference == 'local':
                 block_timestamps = self._timestamps_monotonic.astype('<i8')
-            elif time_reference is 'network':
+            elif time_reference == 'network':
                 block_timestamps = self._timestamps_realtime.astype('<i8')
             else:
                 raise KeyError('Time reference "{}" undefined.'.format(
@@ -831,14 +874,76 @@ class RocketLoggerData:
 
         return timestamps
 
+    def get_unit(self, channel_names=['all']):
+        """
+        Get the unit of the specified channels, by default of all channels.
+
+        :param channel_names: The names of the channels for which the unit
+            shall be returned. List of channel names or 'all' to select all
+            channels.
+
+        :returns: List of channel units sorted by channel_names list
+        """
+        if not isinstance(channel_names, list):
+            channel_names = [channel_names]
+
+        if 'all' in channel_names:
+            channel_names = self.get_channel_names()
+
+        channel_units = []
+        for channel_name in channel_names:
+            index = self._get_channel_index(channel_name)
+            if index is None:
+                raise KeyError('Channel "{}" not found.'.format(channel_name))
+            channel_units.append(self._header['channels'][index]['unit'])
+
+        return channel_units
+
+    def get_validity(self, channel_names=['all']):
+        """
+        Get the validity of the specified channels, by default of all channels.
+
+        :param channel_names: The names of the channels for which the validity
+            shall be returned. List of channel names or 'all' to select all
+            channels.
+
+        :returns: A numpy array containing the channel's validity vectors
+        """
+        if not isinstance(channel_names, list):
+            channel_names = [channel_names]
+
+        if 'all' in channel_names:
+            channel_names = self.get_channel_names()
+
+        if self._data is None:
+            raise TypeError('No data to access for header only imported file.')
+
+        validity = np.ones((self._header['sample_count'], len(channel_names)),
+                           dtype=np.bool)
+
+        for channel_name in channel_names:
+            data_index = self._get_channel_index(channel_name)
+            if data_index is None:
+                raise KeyError('Channel "{}" not found.'.format(channel_name))
+            valid_link = self._header['channels'][data_index]['valid_link']
+            if valid_link != _CHANNEL_VALID_UNLINKED:
+                validity[:, channel_names.index(channel_name)] = \
+                    self._data[valid_link]
+
+        return validity
+
     def merge_channels(self, keep_channels=False):
         """
-        Merge seemlessly switched current channels into a combined channel.
+        Merge seamlessly switched current channels into a combined channel.
 
         :param keep_channels: Whether the merged channels are kept
 
         :returns: Self reference to data object
         """
+        if self._data is None:
+            raise TypeError(
+                'Data operations not permitted for header only imported file.')
+
         merged_channels = False
         for candidate in _CHANNEL_MERGE_CANDIDATES:
             # check if inputs available and linked
@@ -903,17 +1008,59 @@ class RocketLoggerData:
 
         return self
 
+    def get_dataframe(self, channel_names=['all'], absolute_time=False,
+                      time_reference='local'):
+        """
+        Shortcut to get a pandas dataframe of selected channels indexed with
+        timestamps.
+
+        By default all channels are exported and relative timestamps are used
+        for indexing. See also get_data() and get_time() functions.
+
+        Requires pandas package to be installed.
+
+        :param channel_names: The names of the channels for which the data
+            shall be returned. List of channel names or 'all' to select all
+            channels.
+
+        :param absolute_time: Whether the returned timestamps are relative to
+            the start time in seconds (default) or absolute timestamps
+
+        :param time_reference: Which clock data to get (for absolute time only,
+            i.e. when `absolute_time=True`)
+
+            - 'local' The local oscillator clock (default)
+            - 'network' The network synchronized clock
+
+        :returns: A pandas dataframe the channel's data as columns, indexed
+                  by the timestamps of the selected format.
+        """
+        import pandas as pd
+
+        if not isinstance(channel_names, list):
+            channel_names = [channel_names]
+
+        if 'all' in channel_names:
+            channel_names = self.get_channel_names()
+
+        df = pd.DataFrame(
+            self.get_data(channel_names=channel_names),
+            index=self.get_time(absolute_time=absolute_time,
+                                time_reference=time_reference),
+            columns=channel_names)
+        return df
+
     def plot(self, channel_names=['all'], show=True):
         """
         Plot the loaded RocketLogger data.
 
-        Requires matplotlib package to be installed
+        Requires matplotlib package to be installed.
 
         :param channel_names: The names of the channels for which the
             data shall be returned. List of channel names (or combination of):
 
             - 'all' to select all channels,
-            - 'voltages' to select voltag channels,
+            - 'voltages' to select voltage channels,
             - 'currents' to select current channels,
             - 'digital' to select digital channels.
 
@@ -929,9 +1076,9 @@ class RocketLoggerData:
         channels_digital = self._header['channels'][0:self._header[
             'channel_binary_count']]
         channels_current = [channel for channel in self._header['channels']
-                            if channel['unit'] is 'current']
+                            if channel['unit'] == 'current']
         channels_voltage = [channel for channel in self._header['channels']
-                            if channel['unit'] is 'voltage']
+                            if channel['unit'] == 'voltage']
         channels_others = [channel for channel in self._header[
             'channels'][self._header['channel_binary_count']:]
             if channel['unit'] not in ['voltage', 'current']]
@@ -943,17 +1090,17 @@ class RocketLoggerData:
 
         # get and group channels to plot
         for channel_name in channel_names:
-            if channel_name is 'all':
+            if channel_name == 'all':
                 plot_current_channels = channels_current
                 plot_digital_channels = channels_digital
                 plot_voltage_channels = channels_voltage
                 plot_other_channels = channels_others
                 break
-            elif channel_name is 'voltages':
+            elif channel_name == 'voltages':
                 plot_voltage_channels = channels_voltage
-            elif channel_name is 'currents':
+            elif channel_name == 'currents':
                 plot_current_channels = channels_current
-            elif channel_name is 'digital':
+            elif channel_name == 'digital':
                 plot_digital_channels = channels_digital
             else:
                 channel_index = self._get_channel_index(channel_name)
