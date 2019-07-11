@@ -35,7 +35,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='rocketlogger',
-      version='1.99a3',
+      version='1.99a4',
       description='RocketLogger Python Support',
       url='https://rocketlogger.ethz.ch/',
       author='Computer Engineering Group, ETH Zurich',
@@ -48,20 +48,19 @@ setup(name='rocketlogger',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
       ],
       keywords='rocketlogger data analysis',
       packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-      python_requires='>=3.4, <4',
+      python_requires='>=3.5, <4',
       install_requires=[
           'numpy',
       ],
       extras_require={
-          'plot': 'matplotlib',
-          'dataframe': 'pandas',
+          'plot': ['matplotlib'],
+          'dataframe': ['pandas'],
       },
       test_suite='nose.collector',
       tests_require=[

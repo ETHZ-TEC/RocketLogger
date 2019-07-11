@@ -31,16 +31,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
-import os.path
-from unittest import TestCase
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import rocketlogger.data as rld
-
 from rocketlogger.data import RocketLoggerData, RocketLoggerDataError, \
     RocketLoggerDataWarning, RocketLoggerFileError
+import os.path
+from unittest import TestCase
+import unittest
+import numpy as np
+import rocketlogger.data as rld
+
+import os
+if os.environ.get("MATPLOTLIB_AVAILABLE") == "true":
+    import matplotlib.pyplot as plt
+if os.environ.get("PANDAS_AVAILABLE") == "true":
+    import pandas as pd
 
 
 _TEST_FILE_DIR = 'data'
@@ -712,6 +715,8 @@ class TestHeaderOnlyImport(TestCase):
             data.get_validity()
 
 
+@unittest.skipUnless(os.environ.get("PANDAS_AVAILABLE") == "true",
+                     "requires optional pandas dependency")
 class TestDataframe(TestCase):
 
     def setUp(self):
@@ -778,6 +783,8 @@ class TestDataframe(TestCase):
         self.assertEqual(index.dtype, np.dtype('<M8[ns]'))
 
 
+@unittest.skipUnless(os.environ.get("MATPLOTLIB_AVAILABLE") == "true",
+                     "requires optional matplotlib dependency")
 class TestDataPlot(TestCase):
 
     def setUp(self):
@@ -823,6 +830,8 @@ class TestDataPlot(TestCase):
         self.data.plot(['V1', 'I1L', 'DI1'])
 
 
+@unittest.skipUnless(os.environ.get("MATPLOTLIB_AVAILABLE") == "true",
+                     "requires optional matplotlib dependency")
 class TestDataPlotDecimate(TestCase):
 
     def setUp(self):

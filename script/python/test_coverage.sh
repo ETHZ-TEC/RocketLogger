@@ -29,9 +29,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
+export MATPLOTLIB_AVAILABLE="true"
+export PANDAS_AVAILABLE="true"
+
 python setup.py nosetests \
   --with-coverage \
   --cover-package=rocketlogger \
   --cover-html \
   --cover-html-dir=build/coverage
-  
