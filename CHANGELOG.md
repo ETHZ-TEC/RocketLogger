@@ -7,7 +7,7 @@
 - [CHANGED] Software: rework low level hardware interfacing for Debian buster compatibility (#123)
 - [CHANGED] Software: update an reorganize API and headers for increased consistency
 - [CHANGED] Python support: make plotting an optional feature to reduce package dependencies
-- [ADDED] Python support: add header only import and extend data API (#109)
+- [ADDED] Python support: add header only import, recovery mode for truncated file import, and extended data access API (#109)
 - [ADDED] Python support: add calibration support (#125)
 
 _Notes:_

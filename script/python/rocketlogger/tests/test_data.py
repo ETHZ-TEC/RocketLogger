@@ -54,6 +54,7 @@ _HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_high_current.rld')
 _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_steps.rld')
 _INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_unsupported.rld')
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_v3_only.rld')
+_TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_truncated.rld')
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_split.rld')
 
 
@@ -139,7 +140,7 @@ class TestFileImport(TestCase):
         self.assertEqual(data._header['data_block_size'], 100)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             RocketLoggerData(_FULL_TEST_FILE, decimation_factor=3)
 
     def test_direct_import(self):
@@ -195,6 +196,30 @@ class TestFullFile(TestCase):
                                  'I1L_valid', 'I2L_valid',
                                  'V1', 'V2', 'V3', 'V4',
                                  'I1L', 'I1H', 'I2L', 'I2H']))
+
+
+class TestSingleChannelFile(TestCase):
+
+    def setUp(self):
+        self.data = RocketLoggerData(_SINGLE_TEST_FILE)
+
+    def tearDown(self):
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_header_field_count(self):
+        self.assertEqual(len(self.data._header), 14)
+
+    def test_header_channel_count(self):
+        self.assertEqual(len(self.data._header['channels']), 1)
+
+    def test_data_size(self):
+        self.assertEqual(self.data.get_data().shape, (5000, 1))
+
+    def test_channel_names(self):
+        self.assertEqual(self.data.get_channel_names(), ['V3'])
 
 
 class TestJoinFile(TestCase):
@@ -253,6 +278,62 @@ class TestNoJoinFile(TestCase):
                                  'I1L', 'I1H', 'I2L', 'I2H']))
 
 
+class TestRecoveryFile(TestCase):
+
+    def test_no_recovery(self):
+        with self.assertRaises(RocketLoggerDataError):
+            RocketLoggerData(_TRUNCATED_TEST_FILE)
+
+    def test_header_dict(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True)
+        header = {'data_block_count': 4,
+                  'data_block_size': 1000,
+                  'file_version': 2,
+                  'mac_address': '12:34:56:78:90:ab',
+                  'sample_count': 4000,
+                  'sample_rate': 1000}
+        self.assertDictEqual(data.get_header(), header)
+
+    def test_header_dict_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True,
+                                    decimation_factor=10)
+        header = {'data_block_count': 4,
+                  'data_block_size': 100,
+                  'file_version': 2,
+                  'mac_address': '12:34:56:78:90:ab',
+                  'sample_count': 400,
+                  'sample_rate': 100}
+        self.assertDictEqual(data.get_header(), header)
+
+    def test_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True,
+                                    decimation_factor=10)
+        self.assertEqual(data._header['data_block_size'], 100)
+
+    def test_with_invalid_decimation(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True,
+                             decimation_factor=3)
+
+    def test_direct_import(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True,
+                                    memory_mapped=False)
+        self.assertEqual(data.get_data('V3').shape, (4000, 1))
+
+    def test_direct_import_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True,
+                                    memory_mapped=False, decimation_factor=10)
+        self.assertEqual(data._header['data_block_size'], 100)
+        self.assertEqual(data._header['sample_count'], 400)
+        self.assertEqual(data._header['sample_rate'], 100)
+        self.assertEqual(data.get_data('V3').shape, (400, 1))
+
+
 class TestChannelHandling(TestCase):
 
     def setUp(self):
@@ -293,7 +374,7 @@ class TestChannelHandling(TestCase):
 
     def test_channel_add_existing(self):
         channel_info = self.data._header['channels'][10].copy()
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -301,7 +382,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_unit(self):
         channel_info = self.data._header['channels'][10].copy()
         del(channel_info['unit_index'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -309,7 +390,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_scale(self):
         channel_info = self.data._header['channels'][10].copy()
         del(channel_info['scale'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -317,7 +398,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_data_size(self):
         channel_info = self.data._header['channels'][10].copy()
         del(channel_info['data_size'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -325,7 +406,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_name(self):
         channel_info = self.data._header['channels'][10].copy()
         del(channel_info['name'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -333,13 +414,13 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_link(self):
         channel_info = self.data._header['channels'][10].copy()
         del(channel_info['valid_link'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
 
     def test_channel_add_invalid_info(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(TypeError):
             self.data.add_channel(
                 None,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -348,7 +429,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'A1'
         channel_info['unit_index'] = -1
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -357,7 +438,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'A1'
         channel_info['scale'] = 'micro'
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(TypeError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -366,7 +447,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'A1'
         channel_info['data_size'] = 'int8'
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(TypeError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -375,7 +456,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'A1'
         channel_info['valid_link'] = None
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(TypeError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -384,7 +465,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'A1'
         channel_info['valid_link'] = len(self.data._header['channels'])
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -392,7 +473,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_invalid_name(self):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 100
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(TypeError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -400,7 +481,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_overlength_name(self):
         channel_info = self.data._header['channels'][10].copy()
         channel_info['name'] = 'over_length_channel_name'
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             self.data.add_channel(
                 channel_info,
                 np.ones_like(self.data.get_data('V1').squeeze()))
@@ -652,7 +733,7 @@ class TestHeaderOnlyImport(TestCase):
         self.assertEqual(data._header['data_block_size'], 100)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(ValueError):
             RocketLoggerData(
                 _FULL_TEST_FILE, decimation_factor=3, header_only=True)
 
@@ -811,7 +892,7 @@ class TestDataPlot(TestCase):
         self.data.plot()
 
     def test_plot_invalid(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(KeyError):
             self.data.plot(['A'])
 
     def test_plot_voltage(self):
@@ -858,7 +939,7 @@ class TestDataPlotDecimate(TestCase):
         self.data.plot()
 
     def test_plot_invalid(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaises(KeyError):
             self.data.plot(['A'])
 
     def test_plot_voltage(self):

@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from math import ceil, floor
+import os
 from os.path import isfile, splitext
 import warnings
 
@@ -256,7 +257,7 @@ class RocketLoggerData:
     """
 
     def __init__(self, filename=None, join_files=True, header_only=False,
-                 decimation_factor=1, memory_mapped=True):
+                 decimation_factor=1, recovery=False, memory_mapped=True):
         """
         Constructor to create a RockerLoggerData object form data file.
 
@@ -268,6 +269,11 @@ class RocketLoggerData:
         :param header_only: Enable to import only header info without data.
 
         :param decimation_factor: Decimation factor for values read
+
+        :param recovery: Attempt recovery of damaged files that have lost or
+                         incomplete data blocks at the end of the file.
+                         This might be caused by power supply failures during
+                         measurements.
 
         :param memory_mapped: Set False to fall back to read entire file to
             memory at once, instead of using memory mapped reading. Might
@@ -287,9 +293,9 @@ class RocketLoggerData:
             self.load_file(filename, join_files=join_files,
                            header_only=header_only,
                            decimation_factor=decimation_factor,
-                           memory_mapped=memory_mapped)
+                           recovery=recovery, memory_mapped=memory_mapped)
         else:
-            raise FileNotFoundError('File "{}" does not exist.'.format(
+            raise FileNotFoundError('File "{:s}" does not exist.'.format(
                                     filename))
 
     def _read_file_header(self, file_handle):
@@ -314,8 +320,8 @@ class RocketLoggerData:
 
         if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
             raise RocketLoggerFileError(
-                'Unsupported RocketLogger data file version {}.'
-                .format(header['file_version']))
+                'Unsupported RocketLogger data file version {:d}.'.format(
+                    header['file_version']))
 
         # read static header fields
         header['header_length'] = _read_uint(file_handle, _HEADER_LENGHT_BYTES)
@@ -338,11 +344,11 @@ class RocketLoggerData:
 
         # header consistency checks
         if header['comment_length'] % 4 > 0:
-            print('WARNING: Comment length unaligned {}.'.format(
-                  header['comment_length']))
+            warnings.warn('comment length unaligned {:d}.'.format(
+                header['comment_length']), RocketLoggerDataWarning)
         if (ceil(header['sample_count'] / header['data_block_size']) !=
                 header['data_block_count']):
-            raise RocketLoggerFileError('Inconsistency in number of samples '
+            raise RocketLoggerFileError('inconsistent number of samples '
                                         'taken!')
         elif (header['sample_count'] < header['data_block_size'] *
                 header['data_block_count']):
@@ -351,8 +357,10 @@ class RocketLoggerData:
                                                header['data_block_size'])
             header['sample_count'] = (header['data_block_count'] *
                                       header['data_block_size'])
-            print('Skipping incomplete data block at end of file '
-                  '({} samples)'.format(old_count - header['sample_count']))
+            warnings.warn(
+                'Skipping incomplete data block at end of file ({:d} samples).'
+                .format(old_count - header['sample_count']),
+                RocketLoggerDataWarning)
 
         # read comment field
         header['comment'] = _read_str(file_handle, header['comment_length'])
@@ -377,8 +385,8 @@ class RocketLoggerData:
             try:
                 channel['unit'] = _CHANNEL_UNIT_NAMES[channel['unit_index']]
             except KeyError:
-                raise RocketLoggerDataError('Undefined channel unit {}'.format(
-                    channel['unit_index']))
+                raise KeyError('Undefined channel unit with index {:d}.'
+                               .format(channel['unit_index']))
 
             # FILE VERSION DEPENDENT FIXES (BACKWARD COMPATIBILITY)
             # fix 1 based indexing of valid channel links for file version <= 2
@@ -397,7 +405,7 @@ class RocketLoggerData:
         Read data block at the current position in the RocketLogger data file.
 
         :param file_handle: The file handle to read from, with pointer
-            positioned at the begining of the block
+            positioned at the beginning of the block
 
         :param file_header: The file's header with the data alignment details.
 
@@ -425,11 +433,11 @@ class RocketLoggerData:
 
         if total_bin_bytes > 0:
             data_names = ['bin']
-            data_formats = ['<u{}'.format(total_bin_bytes)]
+            data_formats = ['<u{:d}'.format(total_bin_bytes)]
 
         for channel in file_header['channels']:
             if not _CHANNEL_IS_BINARY[channel['unit_index']]:
-                data_format = '<i{}'.format(channel['data_size'])
+                data_format = '<i{:d}'.format(channel['data_size'])
                 analog_data_formats.append(data_format)
                 data_formats.append(data_format)
                 analog_data_names.append(channel['name'])
@@ -438,13 +446,15 @@ class RocketLoggerData:
         # read raw data from file
         data_dtype = np.dtype({'names': data_names, 'formats': data_formats})
         block_dtype = np.dtype([
-            ('realtime_sec', '<M{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
-            ('realtime_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
-            ('monotonic_sec', '<M{}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
-            ('monotonic_ns', '<m{}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
+            ('realtime_sec', '<M{:d}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('realtime_ns', '<m{:d}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
+            ('monotonic_sec', '<M{:d}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
+            ('monotonic_ns', '<m{:d}[ns]'.format(
+                _TIMESTAMP_NANOSECONDS_BYTES)),
             ('data', (data_dtype, file_header['data_block_size']))])
 
         # access file data, either memory mapped or direct read to memory
+        file_handle.seek(file_header['header_length'])
         if memory_mapped:
             file_data = np.memmap(file_handle,
                                   offset=file_header['header_length'],
@@ -555,43 +565,43 @@ class RocketLoggerData:
         :param channel_data: The actual channel data to add, numpy array
         """
         if not isinstance(channel_info, dict):
-            raise RocketLoggerDataError('Channel info structure is expected '
-                                        'to be a dictionary.')
+            raise TypeError('Channel info structure is expected '
+                            'to be a dictionary.')
 
         # check full channel info available
         if 'unit_index' not in channel_info:
-            raise RocketLoggerDataError('Channel info: unit not defined.')
+            raise ValueError('Channel info: unit not defined.')
         if channel_info['unit_index'] not in _CHANNEL_UNIT_NAMES:
-            raise RocketLoggerDataError('Channel info: invalid channel unit.')
+            raise ValueError('Channel info: invalid channel unit.')
 
         if 'scale' not in channel_info:
-            raise RocketLoggerDataError('Channel info: scale not defined.')
+            raise ValueError('Channel info: scale not defined.')
         if not isinstance(channel_info['scale'], int):
-            raise RocketLoggerDataError('Channel info: invalid scale type.')
+            raise TypeError('Channel info: invalid scale type.')
 
         if 'data_size' not in channel_info:
-            raise RocketLoggerDataError('Channel info: data size not defined.')
+            raise ValueError('Channel info: data size not defined.')
         if not isinstance(channel_info['data_size'], int):
-            raise RocketLoggerDataError('Channel info: invalid scale type.')
+            raise TypeError('Channel info: invalid scale type.')
 
         if 'valid_link' not in channel_info:
-            raise RocketLoggerDataError('Channel info: link not defined.')
+            raise ValueError('Channel info: link not defined.')
         if not isinstance(channel_info['valid_link'], int):
-            raise RocketLoggerDataError('Channel info: invalid link type.')
+            raise TypeError('Channel info: invalid link type.')
         if ((channel_info['valid_link'] >= len(self._header['channels'])) &
                 (channel_info['valid_link'] != _CHANNEL_VALID_UNLINKED)):
-            raise RocketLoggerDataError('Channel info: invalid link.')
+            raise ValueError('Channel info: invalid link.')
 
         if 'name' not in channel_info:
-            raise RocketLoggerDataError('Channel info: name undefined.')
+            raise ValueError('Channel info: name undefined.')
         if not isinstance(channel_info['name'], str):
-            raise RocketLoggerDataError('Channel info: invalid name type.')
+            raise TypeError('Channel info: invalid name type.')
         if len(channel_info['name']) > _CHANNEL_NAME_BYTES:
-            raise RocketLoggerDataError('Channel info: name too long.')
+            raise ValueError('Channel info: name too long.')
         if channel_info['name'] in self.get_channel_names():
-            raise RocketLoggerDataError('Cannot add channel, another channel '
-                                        'with name "{}" already exists.'
-                                        .format(channel_info['name']))
+            raise ValueError(
+                'Cannot add channel with name "{:s}", name already in use.'
+                .format(channel_info['name']))
 
         # check data
         if len(self._header['channels']) > 0:
@@ -627,7 +637,7 @@ class RocketLoggerData:
         """
         channel_index = self._get_channel_index(channel_name)
         if channel_index is None:
-            raise KeyError('Channel "{}" not found.'.format(channel_name))
+            raise KeyError('Channel "{:s}" not found.'.format(channel_name))
 
         # update links of channels affected by indexing change
         for channel_info in self._header['channels']:
@@ -649,7 +659,7 @@ class RocketLoggerData:
                 self._header['channel_analog_count'] - 1
 
     def load_file(self, filename, join_files=True, header_only=False,
-                  decimation_factor=1, memory_mapped=True):
+                  decimation_factor=1, recovery=False, memory_mapped=True):
         """
         Read a RocketLogger data file and return an RLD object.
 
@@ -663,6 +673,11 @@ class RocketLoggerData:
         :param header_only: Enable to import only header info without data.
 
         :param decimation_factor: Decimation factor for values read.
+
+        :param recovery: Attempt recovery of damaged files that have lost or
+                         incomplete data blocks at the end of the file.
+                         This might be caused by power supply failures during
+                         measurements.
 
         :param memory_mapped: Set False to fall back to read entire file to
             memory at once, instead of using memory mapped reading. Might
@@ -689,13 +704,12 @@ class RocketLoggerData:
                 stream_position = file_handle.tell()
                 if stream_position != header['header_length']:
                     raise RocketLoggerFileError(
-                        'File position {} does not match header size {}'
+                        'File position {:d} does not match header size {:d}'
                         .format(stream_position, header['header_length']))
 
                 if (header['data_block_size'] % decimation_factor) > 0:
-                    raise RocketLoggerDataError(
-                        'Decimation factor needs to be divider of the buffer '
-                        'size.')
+                    raise ValueError('Decimation factor needs to be divider '
+                                     'of the buffer size.')
 
                 # multi-file header
                 if file_number == 0:
@@ -712,8 +726,44 @@ class RocketLoggerData:
                     self._timestamps_realtime = None
                     self._timestamps_monotonic = None
                     self._data = None
-                    print('header only')
                 else:
+                    # calculate file and data block sizes
+                    file_size = file_handle.seek(0, os.SEEK_END)
+                    block_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * \
+                        ceil(header['channel_binary_count'] /
+                             (_BINARY_CHANNEL_STUFF_BYTES * 8))
+                    block_analog_bytes = sum(
+                        [c['data_size'] for c in header['channels']
+                         if not _CHANNEL_IS_BINARY[c['unit_index']]])
+                    block_size_bytes = 2 * _TIMESTAMP_BYTES + \
+                        header['data_block_size'] * \
+                        (block_bin_bytes + block_analog_bytes)
+
+                    # file size and header consistency check and recovery
+                    if file_size != header['header_length'] + \
+                            header['data_block_count'] * block_size_bytes:
+                        data_blocks_recovered = \
+                            floor((file_size - header['header_length']) /
+                                  block_size_bytes)
+                        data_blocks_truncated = (header['data_block_count'] -
+                                                 data_blocks_recovered)
+                        if recovery:
+                            header['data_block_count'] = data_blocks_recovered
+                            header['sample_count'] = (data_blocks_recovered *
+                                                      header['data_block_size'])
+                            warnings.warn(
+                                'corrupt data: recovered {:d} data blocks, '
+                                'truncating {:d} incomplete data blocks.'
+                                .format(data_blocks_recovered,
+                                        data_blocks_truncated),
+                                RocketLoggerDataWarning)
+
+                        else:
+                            raise RocketLoggerDataError(
+                                'corrupt data: file size and header info '
+                                'mismatch, or {:d} truncated data blocks at '
+                                'the file end.'.format(data_blocks_truncated))
+
                     # channels: read actual sampled data
                     timestamps_realtime, timestamps_monotonic, data =\
                         self._read_file_data(
@@ -735,8 +785,8 @@ class RocketLoggerData:
                         self._data = data
 
             file_number = file_number + 1
-            file_name = '{}_p{}{}'.format(file_basename, file_number,
-                                          file_extension)
+            file_name = '{:s}_p{:d}{:s}'.format(file_basename, file_number,
+                                                file_extension)
 
             # skip looking for next file if joining not enabled
             if not join_files:
@@ -751,7 +801,7 @@ class RocketLoggerData:
             round(self._header['sample_rate'] / decimation_factor)
 
         self._filename = filename
-        print('Read {} file(s)'.format(file_number))
+        print('Read {:d} file(s)'.format(file_number))
 
     def get_channel_names(self):
         """
@@ -819,7 +869,8 @@ class RocketLoggerData:
         for channel_name in channel_names:
             index = self._get_channel_index(channel_name)
             if index is None:
-                raise KeyError('Channel "{}" not found.'.format(channel_name))
+                raise KeyError('Channel "{:s}" not found.'
+                               .format(channel_name))
             values[:, channel_names.index(channel_name)] = (
                 self._data[index] *
                 10**(self._header['channels'][index]['scale']))
@@ -855,8 +906,8 @@ class RocketLoggerData:
             elif time_reference == 'network':
                 block_timestamps = self._timestamps_realtime.astype('<i8')
             else:
-                raise KeyError('Time reference "{}" undefined.'.format(
-                               time_reference))
+                raise ValueError('Time reference "{:s}" undefined.'
+                                 .format(time_reference))
 
             # interpolate
             block_points = np.arange(0, self._header['sample_count'],
@@ -894,7 +945,8 @@ class RocketLoggerData:
         for channel_name in channel_names:
             index = self._get_channel_index(channel_name)
             if index is None:
-                raise KeyError('Channel "{}" not found.'.format(channel_name))
+                raise KeyError('Channel "{:s}" not found.'
+                               .format(channel_name))
             channel_units.append(self._header['channels'][index]['unit'])
 
         return channel_units
@@ -924,7 +976,8 @@ class RocketLoggerData:
         for channel_name in channel_names:
             data_index = self._get_channel_index(channel_name)
             if data_index is None:
-                raise KeyError('Channel "{}" not found.'.format(channel_name))
+                raise KeyError('Channel "{:s}" not found.'
+                               .format(channel_name))
             valid_link = self._header['channels'][data_index]['valid_link']
             if valid_link != _CHANNEL_VALID_UNLINKED:
                 validity[:, channel_names.index(channel_name)] = \
@@ -957,8 +1010,8 @@ class RocketLoggerData:
             # error if merge target exists
             if self._get_channel_index(candidate['merged']) is not None:
                 raise RocketLoggerDataError('Name of merged output channel '
-                                            '"{}" already in use.'.format(
-                                                candidate['merged']))
+                                            '"{:s}" already in use.'
+                                            .format(candidate['merged']))
 
             # check for channel valid link
             low_channel = self._header['channels'][low_index]
@@ -966,8 +1019,8 @@ class RocketLoggerData:
             low_valid_index = low_channel['valid_link']
             if low_valid_index > len(self._header['channels']):
                 raise RocketLoggerDataError(
-                    'Channel "{}" has invalid link ({}).'.format(
-                        low_channel['name'], low_valid_index))
+                    'Channel "{:s}" has invalid link ({:s}).'
+                    .format(low_channel['name'], low_valid_index))
 
             # build merged channel info and data
             merged_channel_info = {}
@@ -984,7 +1037,7 @@ class RocketLoggerData:
                            self._data[low_index] +
                            (1 * np.logical_not(self._data[low_valid_index])) *
                            self._data[high_index].astype(
-                               np.dtype('<i{}'.format(
+                               np.dtype('<i{:d}'.format(
                                    merged_channel_info['data_size']))) *
                            10**(high_channel['scale'] - low_channel['scale']))
 
@@ -998,7 +1051,7 @@ class RocketLoggerData:
                 self.remove_channel(candidate['low'])
                 self.remove_channel(candidate['high'])
 
-            print('Merged channels "{}" and "{}" to "{}".'.format(
+            print('Merged channels "{:s}" and "{:s}" to "{:s}".'.format(
                 candidate['low'], candidate['high'], candidate['merged']))
             merged_channels = True
 
@@ -1105,8 +1158,8 @@ class RocketLoggerData:
             else:
                 channel_index = self._get_channel_index(channel_name)
                 if channel_index is None:
-                    raise RocketLoggerDataError('Channel {} not found'.format(
-                        channel_name))
+                    raise KeyError(
+                        'Channel {:s} not found.'.format(channel_name))
                 if channel_name in [ch['name'] for ch in channels_voltage]:
                     plot_voltage_channels.append(self._header['channels'][
                         channel_index])
