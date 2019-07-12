@@ -62,12 +62,12 @@ int sensor_bus = -1;
 const rl_sensor_t SENSOR_REGISTRY[SENSOR_REGISTRY_SIZE] = {
     {
         "TSL4531_left", TSL4531_I2C_ADDRESS_LEFT, TSL4531_CHANNEL_DEFAULT,
-        RL_UNIT_LUX, RL_SCALE_NONE, &tsl4531_init, &tsl4531_deinit,
+        RL_UNIT_LUX, RL_SCALE_UNIT, &tsl4531_init, &tsl4531_deinit,
         &tsl4531_read, &tsl4531_get_value,
     },
     {
         "TSL4531_right", TSL4531_I2C_ADDRESS_RIGHT, TSL4531_CHANNEL_DEFAULT,
-        RL_UNIT_LUX, RL_SCALE_NONE, &tsl4531_init, &tsl4531_deinit,
+        RL_UNIT_LUX, RL_SCALE_UNIT, &tsl4531_init, &tsl4531_deinit,
         &tsl4531_read, &tsl4531_get_value,
     },
     {

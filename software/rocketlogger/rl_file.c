@@ -537,7 +537,7 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
     if (config->digital_enable) {
         for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
             file_header->channel[ch].unit = RL_UNIT_BINARY;
-            file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+            file_header->channel[ch].channel_scale = RL_SCALE_UNIT;
             file_header->channel[ch].data_size = 0;
             file_header->channel[ch].valid_data_channel =
                 RL_FILE_CHANNEL_NO_LINK;
@@ -549,7 +549,7 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
     // range valid channels
     if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
-        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+        file_header->channel[ch].channel_scale = RL_SCALE_UNIT;
         file_header->channel[ch].data_size = 0;
         file_header->channel[ch].valid_data_channel = RL_FILE_CHANNEL_NO_LINK;
         strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[0]);
@@ -557,7 +557,7 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
     }
     if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
         file_header->channel[ch].unit = RL_UNIT_RANGE_VALID;
-        file_header->channel[ch].channel_scale = RL_SCALE_NONE;
+        file_header->channel[ch].channel_scale = RL_SCALE_UNIT;
         file_header->channel[ch].data_size = 0;
         file_header->channel[ch].valid_data_channel = RL_FILE_CHANNEL_NO_LINK;
         strcpy(file_header->channel[ch].name, RL_CHANNEL_VALID_NAMES[1]);
@@ -588,6 +588,11 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
                 file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
                 file_header->channel[ch].valid_data_channel =
                     RL_FILE_CHANNEL_NO_LINK;
+            }
+            // if calibration measurement, set unit to undefined
+            if (config->calibration_ignore) {
+                file_header->channel[ch].unit = RL_UNIT_UNDEFINED;
+                file_header->channel[ch].channel_scale = RL_SCALE_UNIT;
             }
             file_header->channel[ch].data_size = 4;
             strncpy(file_header->channel[ch].name, RL_CHANNEL_NAMES[i],

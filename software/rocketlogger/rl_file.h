@@ -76,7 +76,7 @@
 #define RL_SCALE_TEN_NANO -8
 #define RL_SCALE_MICRO -6
 #define RL_SCALE_MILLI -3
-#define RL_SCALE_NONE 0
+#define RL_SCALE_UNIT 0
 #define RL_SCALE_KILO 3
 #define RL_SCALE_MEGA 6
 #define RL_SCALE_GIGA 9

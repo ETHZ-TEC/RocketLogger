@@ -35,12 +35,12 @@ import os.path
 from unittest import TestCase
 
 import numpy as np
-import rocketlogger.calibration as rlc
 
 from rocketlogger.data import RocketLoggerData, RocketLoggerFileError
 from rocketlogger.calibration import RocketLoggerCalibration, \
     RocketLoggerCalibrationSetup, RocketLoggerCalibrationError, \
-    CALIBRATION_SETUP_SMU2450, CALIBRATION_SETUP_BASIC
+    CALIBRATION_SETUP_SMU2450, CALIBRATION_SETUP_BASIC, \
+    _extract_setpoint_measurement
 
 
 _TEST_FILE_DIR = 'data'
@@ -188,21 +188,17 @@ class TestCalibrationSetup(TestCase):
         self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_setpoint_detection_size(self):
-        data_measure = \
-            (RocketLoggerData(_VOLTAGE_FILE).get_data('V1').squeeze() /
-             rlc._ROCKETLOGGER_FILE_SCALE_V)
-        setpoint = rlc._extract_setpoint_measurement(
+        data_measure = RocketLoggerData(_VOLTAGE_FILE).get_data('V1').squeeze()
+        setpoint = _extract_setpoint_measurement(
             data_measure,
             CALIBRATION_SETUP_SMU2450.get_voltage_step(calibration=True))
         self.assertEqual(len(setpoint),
                          CALIBRATION_SETUP_SMU2450.get_setpoint_count())
 
     def test_setpoint_detection_invalid_scale(self):
-        data_measure = \
-            (RocketLoggerData(_VOLTAGE_FILE).get_data('V1').squeeze() /
-             rlc._ROCKETLOGGER_FILE_SCALE_V)
+        data_measure = RocketLoggerData(_VOLTAGE_FILE).get_data('V1').squeeze()
         with self.assertRaises(Warning):
-            rlc._extract_setpoint_measurement(
+            _extract_setpoint_measurement(
                 data_measure,
                 CALIBRATION_SETUP_SMU2450.get_voltage_step())
 
@@ -299,7 +295,6 @@ class TestCalibrationProcedure(TestCase):
             pass
 
     def _check_reference_calibration(self, calibration):
-        # reference_time = np.datetime64('2017-05-09T07:36:21', dtype='M8[s]')
         reference_time = np.datetime64('2017-05-09T07:37:49', dtype='M8[s]')
         reference_offset = np.array(
             [1079, 860, 967, 910, 1769, 7978, 1990, -3652])
