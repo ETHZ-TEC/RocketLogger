@@ -114,14 +114,24 @@ void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]) {
 
 int64_t fs_space_free(char const *const path) {
     struct statvfs stat;
-    statvfs(path, &stat);
+    int ret = statvfs(path, &stat);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING,
+               "failed getting free file system size;%d message: %s", errno,
+               strerror(errno));
+    }
 
     return (uint64_t)stat.f_bavail * (uint64_t)stat.f_bsize;
 }
 
 int64_t fs_space_total(char const *const path) {
     struct statvfs stat;
-    statvfs(path, &stat);
+    int ret = statvfs(path, &stat);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING,
+               "failed getting total file system size;%d message: %s", errno,
+               strerror(errno));
+    }
 
     return ((uint64_t)stat.f_blocks * (uint64_t)stat.f_frsize);
 }

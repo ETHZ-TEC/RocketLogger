@@ -88,8 +88,15 @@ int rl_get_status(rl_status_t *const status) {
     }
 
     // get file system state
-    status->disk_free = fs_space_free("/");
-    status->disk_free_permille = 1000 * status->disk_free / fs_space_total("/");
+    int64_t disk_free = fs_space_free(FS_ROOT_PATH);
+    int64_t disk_total = fs_space_total(FS_ROOT_PATH);
+
+    rl_status.disk_free = disk_free;
+    if (disk_total > 0) {
+        rl_status.disk_free_permille = (1000 * disk_free) / disk_total;
+    } else {
+        rl_status.disk_free_permille = 0;
+    }
 
     return SUCCESS;
 }
