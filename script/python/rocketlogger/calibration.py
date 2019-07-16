@@ -103,8 +103,7 @@ def regression_linear(measurement, reference, zero_weight=1):
 
 
 def _extract_setpoint_measurement(measurement_data, setpoint_step,
-                                  filter_window_length=150,
-                                  filter_threshold_relative=0.01):
+                                  filter_window_length=150):
     """
     Extract aggregated set-points from a measurement trace.
 
@@ -116,23 +115,35 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
     :param filter_window_length: width of the square filter window used for
                                  set-point filtering
 
-    :param filter_threshold_relative: set-point step relative threshold for
-                                      stable measurement detection
-
     :returns: vector of the extracted set-point measurements
     """
-    # find stable measurement intervals
-    measurement_diff_abs = np.abs(np.diff(np.hstack([0, measurement_data])))
-    measurement_stable = (np.abs(measurement_diff_abs) <
-                          filter_threshold_relative * setpoint_step)
-    filter_window = np.ones(filter_window_length) / filter_window_length
-    measurement_filtered = (np.convolve(measurement_stable, filter_window,
-                                        mode='same') >= np.sum(filter_window))
 
-    # if no set-point is found report error
-    if not np.any(measurement_filtered):
-        raise Warning('No set-points found. You might want to check the '
-                      'set-point step scale?')
+    # locate calibration sweep
+    measurement_sweep_bound = np.nonzero(np.abs(np.diff(measurement_data)) >
+                                         2 * setpoint_step)
+    measurement_sweep_start = np.min(measurement_sweep_bound)
+    measurement_sweep_end = np.max(measurement_sweep_bound)
+
+    # smooth raw measurements
+    smoothing_window_length = filter_window_length // 100
+    if smoothing_window_length > 0:
+        smoothing_window = \
+            np.ones(smoothing_window_length) / smoothing_window_length
+        measurement_smooth = np.convolve(
+            measurement_data, smoothing_window, mode='same')
+    else:
+        measurement_smooth = measurement_data
+
+    # find stable measurement intervals using rms of smoothed signal signals
+    measurement_diff_abs = np.abs(np.diff(np.hstack([0, measurement_smooth])))
+    measurement_diff_rms = np.sqrt(np.mean(
+        measurement_diff_abs[measurement_diff_abs < setpoint_step]**2))
+    measurement_stable = (measurement_diff_abs < 2 * measurement_diff_rms)
+
+    filter_window = np.ones(filter_window_length) / filter_window_length
+    measurement_filtered = \
+        np.convolve(measurement_stable, filter_window,
+                    mode='same') > np.sum(filter_window[:-1])
 
     # extract set-point measurement intervals
     setpoint_boundary = np.diff(np.hstack([0, measurement_filtered]))
@@ -141,10 +152,16 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
     setpoint_end = np.array((setpoint_boundary < 0).nonzero()) + \
         int(filter_window_length / 2)
 
-    setpoint_trim = (setpoint_start > filter_window_length) & \
-        (setpoint_end < len(measurement_data) - filter_window_length)
+    setpoint_trim = (setpoint_start > measurement_sweep_start -
+                     filter_window_length // 2) & \
+        (setpoint_end < measurement_sweep_end + filter_window_length // 2)
     setpoint_intervals = zip(setpoint_start[setpoint_trim],
                              setpoint_end[setpoint_trim])
+
+    # if no set-point was found report error
+    if not np.any(setpoint_trim):
+        raise Warning('No set-points found. You might want to check the '
+                      'set-point step scale?')
 
     # aggregate measurements by set-point interval
     setpoint_mean = [np.mean(measurement_data[start:end])
@@ -165,7 +182,7 @@ class RocketLoggerCalibrationSetup:
 
     def __init__(self, setpoint_count, setpoint_step_voltage,
                  setpoint_step_current_low, setpoint_step_current_high,
-                 dual_sweep):
+                 setpoint_delay, dual_sweep):
         """
         Initialize RocketLogger calibration setup class.
 
@@ -177,7 +194,8 @@ class RocketLoggerCalibrationSetup:
 
         :param setpoint_step_current_high: high current step between set-points
 
-        :param min_stable_samples: min number of stable samples required
+        :param setpoint_delay: minimum delay in seconds between switching the
+                               set-point
 
         :param dual_sweep: set True if dual sweep (up/down) is used
         """
@@ -194,6 +212,7 @@ class RocketLoggerCalibrationSetup:
         self._step_voltage = setpoint_step_voltage
         self._step_current_low = setpoint_step_current_low
         self._step_current_high = setpoint_step_current_high
+        self._delay = setpoint_delay
         self._dual_sweep = dual_sweep
 
     def get_voltage_setpoints(self, calibration=False):
@@ -259,6 +278,14 @@ class RocketLoggerCalibrationSetup:
             return abs(self._step_current_high / _ROCKETLOGGER_ADC_STEP_IH)
         return abs(self._step_current_high)
 
+    def get_delay(self):
+        """
+        Get the minimal delay between changing a set-point.
+
+        :returns: the minimal delay in seconds.
+        """
+        return self._delay
+
     def get_setpoint_count(self):
         """
         Get the number of set-points used in the setup set-point.
@@ -303,6 +330,7 @@ CALIBRATION_SETUP_SMU2450 = RocketLoggerCalibrationSetup(
     setpoint_step_voltage=100e-3,
     setpoint_step_current_low=20e-6,
     setpoint_step_current_high=2e-3,
+    setpoint_delay=250e-3,
     dual_sweep=True,
 )
 """Reference calibration setup using the Keithley 2450 SMU setup."""
@@ -312,6 +340,7 @@ CALIBRATION_SETUP_BASIC = RocketLoggerCalibrationSetup(
     setpoint_step_voltage=5.0,
     setpoint_step_current_low=2e-3,
     setpoint_step_current_high=0.5,
+    setpoint_delay=250e-3,
     dual_sweep=False,
 )
 """Basic calibration setup with 3 point measurements (min, zero, max)."""
@@ -391,6 +420,9 @@ class RocketLoggerCalibration:
         self._data_i2l = _rld_copy_or_load(data_i2l)
         self._data_i2h = _rld_copy_or_load(data_i2h)
 
+        # validate consistency of data
+        self._validate_data()
+
         # reset existing error calculations, keep calibration values if loaded
         self._error_offset = None
         self._error_scale = None
@@ -446,8 +478,13 @@ class RocketLoggerCalibration:
                                      _CALIBRATION_CHANNEL_NAMES)]
         timestamp = np.datetime64(min([x._header['start_time']
                                        for x in measurement_data]))
-        measurement = [_extract_setpoint_measurement(t, s)
-                       for t, s in zip(measurement_traces, reference_steps)]
+
+        # filter window length: 150 ms (=250-100 ms),
+        sample_rate = self._data_v.get_header()['sample_rate']
+        setpoint_filter_window = int(0.75 * sample_rate * setup.get_delay())
+        measurement = [_extract_setpoint_measurement(
+            t, s, filter_window_length=setpoint_filter_window)
+            for t, s in zip(measurement_traces, reference_steps)]
 
         # perform regression
         regression_result = [regression_algorithm(x, y)
@@ -615,6 +652,15 @@ class RocketLoggerCalibration:
             raise RocketLoggerCalibrationError(
                 'No error calculation data available. '
                 'Perform calculation first.')
+
+    def _validate_data(self):
+        """Validate loaded measurement data for consistency."""
+        data = [self._data_v, self._data_i1l, self._data_i1h, self._data_i2l,
+                self._data_i2h]
+        sample_rates = [d.get_header()['sample_rate'] for d in data]
+        if not all(x == sample_rates[0] for x in sample_rates):
+            raise RocketLoggerCalibrationError(
+                'inconsistent sample rate across measurements!')
 
     def __eq__(self, other):
         """Return True if other is the same calibration."""
