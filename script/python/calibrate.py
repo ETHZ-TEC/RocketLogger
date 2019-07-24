@@ -2,7 +2,7 @@
 """
 RocketLogger calibration script.
 
-Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2019, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
