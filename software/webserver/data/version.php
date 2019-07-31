@@ -30,7 +30,7 @@
  */
 
 /// Rocket Logger version
-define("PROJECT_VERSION", "1.1.5");
+define("PROJECT_VERSION", "1.1.6");
 
 ?>
 

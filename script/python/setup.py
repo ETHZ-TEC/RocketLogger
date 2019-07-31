@@ -40,7 +40,7 @@ def readme():
 
 
 setup(name='rocketlogger',
-      version='1.1.5',
+      version='1.1.6',
       description='RocketLogger Python Support',
       long_description=readme(),
       url='https://rocketlogger.ethz.ch/',
