@@ -72,7 +72,7 @@ const struct rl_sensor sensor_registry[SENSOR_REGISTRY_SIZE] = {
         &BME280_read, &BME280_getValue,
     },
     {
-        "BME280_preas", BME280_I2C_ADDRESS_LEFT, BME280_CHANNEL_PREASURE,
+        "BME280_press", BME280_I2C_ADDRESS_LEFT, BME280_CHANNEL_PRESSURE,
         RL_UNIT_PASCAL, RL_SCALE_MILLI, &BME280_init, &BME280_close,
         &BME280_read, &BME280_getValue,
     },

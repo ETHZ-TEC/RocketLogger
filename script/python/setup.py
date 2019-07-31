@@ -34,9 +34,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from setuptools import setup, find_packages
 
 
+def readme():
+    with open('README.rst', 'r') as file_handle:
+        return file_handle.read()
+
+
 setup(name='rocketlogger',
-      version='1.1.5',
+      version='1.1.6',
       description='RocketLogger Python Support',
+      long_description=readme(),
       url='https://rocketlogger.ethz.ch/',
       author='Computer Engineering Group, ETH Zurich',
       author_email='lukas.sigrist@tik.ee.ethz.ch',
