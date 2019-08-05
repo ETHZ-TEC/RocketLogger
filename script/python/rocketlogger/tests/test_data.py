@@ -49,6 +49,7 @@ if os.environ.get("PANDAS_AVAILABLE") == "true":
 _TEST_FILE_DIR = 'data'
 _FULL_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_full.rld')
 _SINGLE_BLOCK_FILE = os.path.join(_TEST_FILE_DIR, 'test_single_block.rld')
+_MIN_BLOCK_SIZE_FILE = os.path.join(_TEST_FILE_DIR, 'test_min_block_size.rld')
 _ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_analog_only.rld')
 _HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_high_current.rld')
 _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_steps.rld')
@@ -168,6 +169,11 @@ class TestFileImport(TestCase):
         data = RocketLoggerData(_SINGLE_BLOCK_FILE, memory_mapped=False)
         self.assertEqual(data._header['data_block_count'], 1)
         self.assertEqual(data.get_data('V1').shape, (1000, 1))
+
+    def test_min_block_size_import(self):
+        data = RocketLoggerData(_MIN_BLOCK_SIZE_FILE, memory_mapped=False)
+        self.assertEqual(data._header['data_block_size'], 1)
+        self.assertEqual(data.get_data('V1').shape, (5, 1))
 
 
 class TestFullFile(TestCase):
