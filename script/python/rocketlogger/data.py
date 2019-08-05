@@ -451,7 +451,7 @@ class RocketLoggerData:
             ('monotonic_sec', '<M{:d}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
             ('monotonic_ns', '<m{:d}[ns]'.format(
                 _TIMESTAMP_NANOSECONDS_BYTES)),
-            ('data', (data_dtype, file_header['data_block_size']))])
+            ('data', (data_dtype, (file_header['data_block_size'],)))])
 
         # access file data, either memory mapped or direct read to memory
         file_handle.seek(file_header['header_length'])
