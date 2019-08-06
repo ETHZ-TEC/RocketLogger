@@ -827,7 +827,8 @@ class RocketLoggerData:
         Get a dictionary with the header information.
 
         The relevant fields include: 'data_block_count', 'data_block_size',
-        'file_version', 'mac_address', 'sample_count','sample_rate'.
+        'file_version', 'mac_address', 'sample_count','sample_rate', and
+        'start_time'.
 
         To get the file comment use get_comment().
 
@@ -837,13 +838,21 @@ class RocketLoggerData:
         header_dict = {}
         for key, value in self._header.items():
             if key in ['data_block_count', 'data_block_size', 'file_version',
-                       'sample_count', 'sample_rate']:
+                       'sample_count', 'sample_rate', 'start_time']:
                 header_dict[key] = value
             elif key == 'mac_address':
                 header_dict[key] = ':'.join(['{:02x}'.format(v)
                                              for v in value])
 
         return header_dict
+
+    def get_filename(self):
+        """
+        Get the filename of the loaded data file.
+
+        :returns: The absolute filename of the loaded data file
+        """
+        return os.path.abspath(self._filename)
 
     def get_data(self, channel_names=['all']):
         """
@@ -877,39 +886,40 @@ class RocketLoggerData:
 
         return values
 
-    def get_time(self, absolute_time=False, time_reference='local'):
+    def get_time(self, time_reference='relative'):
         """
         Get the timestamp of the data.
 
         Using simple linear interpolation to generating the sample from the
         block timestamps.
 
-        :param absolute_time: Whether the returned timestamps are relative to
-            the start time in seconds (default) or absolute timestamps
-
         :param time_reference: Which clock data to get (for absolute time only,
             i.e. when `absolute_time=True`)
 
-            - 'local' The local oscillator clock (default)
-            - 'network' The network synchronized clock
+            - 'relative' Calculate timestamp from sample rate, the sample index
+              and the measurement start time (default)
+            - 'local' Get the timestamp of the local oscillator clock
+            - 'network' Get the timestamp of the network synchronized clock
 
         :returns: A numpy array containing the timestamps
         """
         if self._timestamps_monotonic is None:
             raise TypeError('No data to access for header only imported file.')
 
-        # transform value to absolute time if requested
-        if absolute_time:
-            # get requested timer data as numbers
-            if time_reference == 'local':
-                block_timestamps = self._timestamps_monotonic.astype('<i8')
-            elif time_reference == 'network':
-                block_timestamps = self._timestamps_realtime.astype('<i8')
-            else:
-                raise ValueError('Time reference "{:s}" undefined.'
-                                 .format(time_reference))
+        # get requested timer data as numbers
+        if time_reference == 'relative':
+            timestamps = (np.arange(0, self._header['sample_count']) /
+                          self._header['sample_rate'])
+        elif time_reference == 'local':
+            block_timestamps = self._timestamps_monotonic.astype('<i8')
+        elif time_reference == 'network':
+            block_timestamps = self._timestamps_realtime.astype('<i8')
+        else:
+            raise ValueError('Time reference "{:s}" undefined.'
+                             .format(time_reference))
 
-            # interpolate
+        # interpolate absolute time if requested
+        if time_reference in ['local', 'network']:
             block_points = np.arange(0, self._header['sample_count'],
                                      self._header['data_block_size'])
             data_points = np.arange(0, self._header['sample_count'])
@@ -919,9 +929,6 @@ class RocketLoggerData:
 
             # convert to datetime again
             timestamps = data_timestamp.astype('<M8[ns]')
-        else:
-            timestamps = (np.arange(0, self._header['sample_count']) /
-                          self._header['sample_rate'])
 
         return timestamps
 
@@ -1061,8 +1068,7 @@ class RocketLoggerData:
 
         return self
 
-    def get_dataframe(self, channel_names=['all'], absolute_time=False,
-                      time_reference='local'):
+    def get_dataframe(self, channel_names=['all'], time_reference='relative'):
         """
         Shortcut to get a pandas dataframe of selected channels indexed with
         timestamps.
@@ -1076,14 +1082,13 @@ class RocketLoggerData:
             shall be returned. List of channel names or 'all' to select all
             channels.
 
-        :param absolute_time: Whether the returned timestamps are relative to
-            the start time in seconds (default) or absolute timestamps
-
         :param time_reference: Which clock data to get (for absolute time only,
             i.e. when `absolute_time=True`)
 
-            - 'local' The local oscillator clock (default)
-            - 'network' The network synchronized clock
+            - 'relative' Calculate timestamp from sample rate, the sample index
+              and the measurement start time (default)
+            - 'local' Get the timestamp of the local oscillator clock
+            - 'network' Get the timestamp of the network synchronized clock
 
         :returns: A pandas dataframe the channel's data as columns, indexed
                   by the timestamps of the selected format.
@@ -1098,8 +1103,7 @@ class RocketLoggerData:
 
         df = pd.DataFrame(
             self.get_data(channel_names=channel_names),
-            index=self.get_time(absolute_time=absolute_time,
-                                time_reference=time_reference),
+            index=self.get_time(time_reference=time_reference),
             columns=channel_names)
         return df
 

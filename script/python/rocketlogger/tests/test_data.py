@@ -123,7 +123,8 @@ class TestFileImport(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 5000,
-                  'sample_rate': 1000}
+                  'sample_rate': 1000,
+                  'start_time': np.datetime64('2017-05-10T09:05:17.438817080')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_header_dict_with_decimation(self):
@@ -133,7 +134,8 @@ class TestFileImport(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 500,
-                  'sample_rate': 100}
+                  'sample_rate': 100,
+                  'start_time': np.datetime64('2017-05-10T09:05:17.438817080')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_with_decimation(self):
@@ -298,7 +300,8 @@ class TestRecoveryFile(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 4000,
-                  'sample_rate': 1000}
+                  'sample_rate': 1000,
+                  'start_time': np.datetime64('2017-05-10T09:09:33.455293012')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_header_dict_with_decimation(self):
@@ -310,7 +313,8 @@ class TestRecoveryFile(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 400,
-                  'sample_rate': 100}
+                  'sample_rate': 100,
+                  'start_time': np.datetime64('2017-05-10T09:09:33.455293012')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_with_decimation(self):
@@ -609,7 +613,8 @@ class TestDataHandling(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 5000,
-                  'sample_rate': 1000}
+                  'sample_rate': 1000,
+                  'start_time': np.datetime64('2017-05-10T09:05:17.438817080')}
         self.assertDictEqual(temp, header)
 
     def test_get_comment(self):
@@ -673,20 +678,29 @@ class TestDataHandling(TestCase):
         temp = self.data.get_validity(channel_names)
         self.assertEqual(temp.shape[1], len(channel_names))
 
+    def test_get_default_time(self):
+        temp = self.data.get_time()
+        self.assertEqual(temp.shape[0], self.data._header['sample_count'])
+        self.assertIsInstance(temp[0], float)
+
     def test_get_relative_time(self):
-        temp = self.data.get_time(absolute_time=False)
+        temp = self.data.get_time(time_reference='relative')
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
         self.assertIsInstance(temp[0], float)
 
     def test_get_absolute_local_time(self):
-        temp = self.data.get_time(absolute_time=True, time_reference='local')
+        temp = self.data.get_time(time_reference='local')
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
         self.assertEqual(temp.dtype, np.dtype('<M8[ns]'))
 
     def test_get_absolute_network_time(self):
-        temp = self.data.get_time(absolute_time=True, time_reference='network')
+        temp = self.data.get_time(time_reference='network')
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
         self.assertEqual(temp.dtype, np.dtype('<M8[ns]'))
+
+    def test_get_filename(self):
+        temp = self.data.get_filename()
+        self.assertEqual(temp, os.path.abspath(_FULL_TEST_FILE))
 
 
 class TestHeaderOnlyImport(TestCase):
@@ -719,7 +733,8 @@ class TestHeaderOnlyImport(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 5000,
-                  'sample_rate': 1000}
+                  'sample_rate': 1000,
+                  'start_time': np.datetime64('2017-05-10T09:05:17.438817080')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_header_dict_with_decimation(self):
@@ -730,7 +745,8 @@ class TestHeaderOnlyImport(TestCase):
                   'file_version': 2,
                   'mac_address': '12:34:56:78:90:ab',
                   'sample_count': 500,
-                  'sample_rate': 100}
+                  'sample_rate': 100,
+                  'start_time': np.datetime64('2017-05-10T09:05:17.438817080')}
         self.assertDictEqual(data.get_header(), header)
 
     def test_with_decimation(self):
@@ -843,8 +859,16 @@ class TestDataframe(TestCase):
         self.assertEqual(temp.shape[1], len(channel_names))
         self.assertListEqual(list(temp.columns), channel_names)
 
+    def test_get_default_time(self):
+        temp = self.data.get_dataframe()
+        index = temp.index
+        self.assertIsInstance(temp, pd.DataFrame)
+        self.assertEqual(temp.shape[0], self.data._header['sample_count'])
+        self.assertEqual(index.shape[0], self.data._header['sample_count'])
+        self.assertIsInstance(index[0], float)
+
     def test_get_relative_time(self):
-        temp = self.data.get_dataframe(absolute_time=False)
+        temp = self.data.get_dataframe(time_reference='relative')
         index = temp.index
         self.assertIsInstance(temp, pd.DataFrame)
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
@@ -852,8 +876,7 @@ class TestDataframe(TestCase):
         self.assertIsInstance(index[0], float)
 
     def test_get_absolute_local_time(self):
-        temp = self.data.get_dataframe(
-            absolute_time=True, time_reference='local')
+        temp = self.data.get_dataframe(time_reference='local')
         index = temp.index
         self.assertIsInstance(temp, pd.DataFrame)
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
@@ -861,8 +884,7 @@ class TestDataframe(TestCase):
         self.assertEqual(index.dtype, np.dtype('<M8[ns]'))
 
     def test_get_absolute_network_time(self):
-        temp = self.data.get_dataframe(
-            absolute_time=True, time_reference='network')
+        temp = self.data.get_dataframe(time_reference='network')
         index = temp.index
         self.assertIsInstance(temp, pd.DataFrame)
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
