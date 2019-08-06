@@ -257,7 +257,8 @@ class RocketLoggerData:
     """
 
     def __init__(self, filename=None, join_files=True, header_only=False,
-                 decimation_factor=1, recovery=False, memory_mapped=True):
+                 exclude_part=None, decimation_factor=1, recovery=False,
+                 memory_mapped=True):
         """
         Constructor to create a RockerLoggerData object form data file.
 
@@ -265,6 +266,12 @@ class RocketLoggerData:
 
         :param join_files: Enable joining of multiple files if numbered files
             following the "<filename>_p#.rld" convention are found.
+
+        :param exclude_part: Exclude given part(s) of number files when
+            joining following the "<filename>_p#.rld" convention.
+            Expects a single index or list or numpy array of indexes to
+            exclude. Silently ignores indexes beyond the number of found parts.
+            Only applicable when joining multiple files with join_files=True.
 
         :param header_only: Enable to import only header info without data.
 
@@ -291,7 +298,7 @@ class RocketLoggerData:
                                       'currently unsupported.')
         if isfile(filename):
             self.load_file(filename, join_files=join_files,
-                           header_only=header_only,
+                           exclude_part=exclude_part, header_only=header_only,
                            decimation_factor=decimation_factor,
                            recovery=recovery, memory_mapped=memory_mapped)
         else:
@@ -658,8 +665,9 @@ class RocketLoggerData:
             self._header['channel_analog_count'] =\
                 self._header['channel_analog_count'] - 1
 
-    def load_file(self, filename, join_files=True, header_only=False,
-                  decimation_factor=1, recovery=False, memory_mapped=True):
+    def load_file(self, filename, join_files=True, exclude_part=None,
+                  header_only=False, decimation_factor=1, recovery=False,
+                  memory_mapped=True):
         """
         Read a RocketLogger data file and return an RLD object.
 
@@ -669,6 +677,12 @@ class RocketLoggerData:
 
         :param join_files: Enable joining of multiple files if numbered files
             following the "<filename>_p#.rld" convention are found.
+
+        :param exclude_part: Exclude given part(s) of number files when
+            joining following the "<filename>_p#.rld" convention.
+            Expects a single index or list or numpy array of indexes to
+            exclude. Silently ignores indexes beyond the number of found parts.
+            Only applicable when joining multiple files with join_files=True.
 
         :param header_only: Enable to import only header info without data.
 
@@ -688,11 +702,42 @@ class RocketLoggerData:
             raise RocketLoggerDataError('A data file is already loaded. Use '
                                         'separate instance for new file.')
 
-        file_basename, file_extension = splitext(filename)
-        file_name = filename
-        file_number = 0
+        if not join_files and exclude_part is not None:
+            raise ValueError('exclude_part on applicable when joining files')
 
-        while isfile(file_name):
+        if exclude_part is None:
+            exclude_part = []
+        elif isinstance(exclude_part, int):
+            exclude_part = [exclude_part]
+        elif isinstance(exclude_part, np.ndarray):
+            exclude_part = list(exclude_part)
+
+        if not isinstance(exclude_part, list):
+            raise ValueError('invalid exclude_part: accepting integer,'
+                             'a list of integers or an integer numpy array.')
+
+        file_basename, file_extension = splitext(filename)
+        file_number = 0
+        files_loaded = 0
+
+        while True:
+            # skip excluded files
+            if file_number in exclude_part:
+                print('Skipping part {:d}'.format(file_number))
+                file_number = file_number + 1
+                continue
+
+            # derive file name from index and abort if next file does not exist
+            if file_number == 0:
+                file_name = filename
+            else:
+                file_name = '{:s}_p{:d}{:s}'.format(file_basename, file_number,
+                                                    file_extension)
+
+            # for multi-part import end import if next file is not found
+            if join_files and not isfile(file_name):
+                break
+
             with open(file_name, 'rb') as file_handle:
                 # read file header
                 header = self._read_file_header(file_handle)
@@ -712,7 +757,7 @@ class RocketLoggerData:
                                      'of the buffer size.')
 
                 # multi-file header
-                if file_number == 0:
+                if files_loaded == 0:
                     self._header = header
                 else:
                     self._header['sample_count'] =\
@@ -772,7 +817,7 @@ class RocketLoggerData:
                             memory_mapped=memory_mapped)
 
                     # store new data array on first file, append on following
-                    if file_number > 0:
+                    if files_loaded > 0:
                         self._timestamps_realtime = np.hstack(
                             (self._timestamps_realtime, timestamps_realtime))
                         self._timestamps_monotonic = np.hstack(
@@ -785,12 +830,17 @@ class RocketLoggerData:
                         self._data = data
 
             file_number = file_number + 1
-            file_name = '{:s}_p{:d}{:s}'.format(file_basename, file_number,
-                                                file_extension)
+            files_loaded = files_loaded + 1
 
             # skip looking for next file if joining not enabled
             if not join_files:
                 break
+
+        # check valid data loaded
+        if files_loaded == 0:
+            raise RocketLoggerDataError('Could not load valid data from {:s} '
+                                        'and current import configuration.'
+                                        .format(filename))
 
         # adjust header files for decimation
         self._header['sample_count'] = \
@@ -801,7 +851,7 @@ class RocketLoggerData:
             round(self._header['sample_rate'] / decimation_factor)
 
         self._filename = filename
-        print('Read {:d} file(s)'.format(file_number))
+        print('Read {:d} file(s)'.format(files_loaded))
 
     def get_channel_names(self):
         """

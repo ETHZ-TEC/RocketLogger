@@ -54,6 +54,7 @@ _ANALOG_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_analog_only.rld')
 _HIGH_CURRENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_high_current.rld')
 _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_steps.rld')
 _INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_unsupported.rld')
+_INEXISTENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_inexistent.rld')
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_v3_only.rld')
 _TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_truncated.rld')
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_split.rld')
@@ -103,9 +104,9 @@ class TestFileImport(TestCase):
         with self.assertRaises(NotImplementedError):
             RocketLoggerData()
 
-    def test_inexistend_file(self):
+    def test_inexistent_file(self):
         with self.assertRaises(FileNotFoundError):
-            RocketLoggerData('nonexistent-data.rld')
+            RocketLoggerData(_INEXISTENT_TEST_FILE)
 
     def test_overload_existing(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
@@ -256,6 +257,208 @@ class TestJoinFile(TestCase):
                                  'I1L_valid', 'I2L_valid',
                                  'V1', 'V2', 'V3', 'V4',
                                  'I1L', 'I1H', 'I2L', 'I2H']))
+
+
+class TestJoinExclude(TestCase):
+
+    def test_exclude_all(self):
+        with self.assertRaises(RocketLoggerDataError):
+            RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=np.arange(0, 3))
+
+    def test_exclude_non_join(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerData(_SPLIT_TEST_FILE, join_files=False,
+                             exclude_part=np.arange(0, 3))
+
+
+class TestJoinExcludeFirst(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=0)
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.arange(128000, 3*128000)
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.arange(2, 3*2)
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.arange(2, 3*2)
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
+
+
+class TestJoinExcludeLast(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=2)
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.arange(2*128000)
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.arange(2*2)
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.arange(2*2)
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
+
+
+class TestJoinExcludeMultiple(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=[0, 2])
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.arange(128000, 2*128000)
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.arange(2, 2*2)
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.arange(2, 2*2)
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
+
+
+class TestJoinExcludeInt(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=1)
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.hstack((np.arange(128000),
+                                     np.arange(2*128000, 3*128000)))
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
+
+
+class TestJoinExcludeList(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=[1])
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.hstack((np.arange(128000),
+                                     np.arange(2*128000, 3*128000)))
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
+
+
+class TestJoinExcludeArray(TestCase):
+
+    def setUp(self):
+        self.full_reference = RocketLoggerData(_SPLIT_TEST_FILE)
+        self.data = RocketLoggerData(
+            _SPLIT_TEST_FILE, exclude_part=np.arange(1, 2))
+
+    def tearDown(self):
+        del(self.full_reference)
+        del(self.data)
+
+    def test_load(self):
+        self.assertIsInstance(self.data, RocketLoggerData)
+
+    def test_data_values(self):
+        reference_range = np.hstack((np.arange(128000),
+                                     np.arange(2*128000, 3*128000)))
+        reference = self.full_reference.get_data()[reference_range]
+        self.assertTrue(np.array_equal(self.data.get_data(), reference))
+
+    def test_data_timestamp_monotonic(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_monotonic[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_monotonic, reference))
+
+    def test_data_timestamp_realtime(self):
+        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference = self.full_reference._timestamps_realtime[reference_range]
+        self.assertTrue(np.array_equal(
+            self.data._timestamps_realtime, reference))
 
 
 class TestNoJoinFile(TestCase):
@@ -650,7 +853,7 @@ class TestDataHandling(TestCase):
         temp = self.data.get_unit('all')
         channel_units = ['binary'] * 6 + (['current'] * 2 +
                                           ['data valid (binary)']) * 2 + \
-                        ['voltage'] * 4
+            ['voltage'] * 4
         self.assertListEqual(temp, channel_units)
 
     def test_get_set_of_channels_unit(self):
@@ -713,9 +916,9 @@ class TestHeaderOnlyImport(TestCase):
         with self.assertRaises(NotImplementedError):
             RocketLoggerData(header_only=True)
 
-    def test_inexistend_file(self):
+    def test_inexistent_file(self):
         with self.assertRaises(FileNotFoundError):
-            RocketLoggerData('nonexistent-data.rld', header_only=True)
+            RocketLoggerData(_INEXISTENT_TEST_FILE, header_only=True)
 
     def test_overload_existing(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
@@ -791,7 +994,7 @@ class TestHeaderOnlyImport(TestCase):
         temp = data.get_unit('all')
         channel_units = ['binary'] * 6 + (['current'] * 2 +
                                           ['data valid (binary)']) * 2 + \
-                        ['voltage'] * 4
+            ['voltage'] * 4
         self.assertListEqual(temp, channel_units)
 
     def test_get_set_of_channels_unit(self):
