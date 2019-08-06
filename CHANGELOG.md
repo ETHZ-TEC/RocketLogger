@@ -7,13 +7,15 @@
 - [CHANGED] Software: rework low level hardware interfacing for Debian buster compatibility (#123)
 - [CHANGED] Software: update an reorganize API and headers for increased consistency
 - [CHANGED] Python support: make plotting an optional feature to reduce package dependencies
-- [ADDED] Python support: add header only import, recovery mode for truncated file import, and extended data access API (#109)
+- [CHANGED] Python support: `get_time()` drop `absolute_time`, used `time_reference` only for timestamp reference selection
+- [ADDED] Python support: extended get data API to access relevant header fields and filename, add pandas DataFrame generation
+- [ADDED] Python support: add header only import, recovery mode for truncated file import (#109)
 - [ADDED] Python support: add calibration support (#125)
 
 _Notes:_
 
 This major release updates the base system to run the latest Debian version and includes many internal software changes.
-Calibration feature was added to the Python support library and the updated web interface now allows on-device calibration.
+Calibration feature was added to the Python support library and the data functionality extended. he updated web interface now allows on-device calibration.
 
 
 ## v1.1.5 (2019-03-04)

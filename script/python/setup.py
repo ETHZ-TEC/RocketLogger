@@ -34,11 +34,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from setuptools import setup, find_packages
 
 
+def readme():
+    with open('README.rst', 'r') as file_handle:
+        return file_handle.read()
+
+
 setup(name='rocketlogger',
-      version='1.99a5',
+      version='1.99a6',
       description='RocketLogger Python Support',
+      long_description=readme(),
       url='https://rocketlogger.ethz.ch/',
-      author='Computer Engineering Group, ETH Zurich',
+      author='ETH Zurich, Computer Engineering Group',
       author_email='lukas.sigrist@tik.ee.ethz.ch',
       license='BSD 3-Clause',
       classifiers=[
@@ -46,13 +52,14 @@ setup(name='rocketlogger',
           'Intended Audience :: Science/Research',
           'Topic :: Scientific/Engineering :: Information Analysis',
           'License :: OSI Approved :: BSD License',
-          'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Operating System :: OS Independent',
       ],
-      keywords='rocketlogger data analysis',
+      keywords='rocketlogger data analysis calibration',
       packages=find_packages(exclude=['contrib', 'docs', 'tests']),
       python_requires='>=3.5, <4',
       install_requires=[
