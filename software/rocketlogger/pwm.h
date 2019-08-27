@@ -174,7 +174,7 @@
 #define AQ_B_DECSET 0x0800
 
 /// ADC master clock period (in units 10 ns)
-#define ADC_CLOCK_PERIOD 48
+#define ADC_CLOCK_PERIOD 49
 /// Range latch reset pulse width (fraction of sampling period in [0, 1])
 #define RANGE_RESET_PULSE_WIDTH 0.1
 /// Range latch reset period margin (fraction of sampling period in [0, 1])

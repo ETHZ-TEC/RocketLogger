@@ -173,10 +173,10 @@ void pwm_setup_adc_clock(void) {
     *epwm0_tbctl =
         TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP;
 
-    // set period and compare register values
-    *epwm0_tbprd = ADC_CLOCK_PERIOD;
-    *epwm0_cmpa = ADC_CLOCK_PERIOD / 2;
+    // set period and compare register values (interval = TBPRD + 1)
+    *epwm0_tbprd = (ADC_CLOCK_PERIOD - 1);
+    *epwm0_cmpa = (ADC_CLOCK_PERIOD - 1) / 2;
 
     // set action qualifiers for both channels
-    *epwm0_aqctla = AQ_A_INCSET | AQ_PRDCLR | AQ_ZROCLR;
+    *epwm0_aqctla = AQ_A_INCSET | AQ_ZROCLR;
 }
