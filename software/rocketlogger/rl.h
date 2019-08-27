@@ -276,8 +276,8 @@ int rl_config_validate(rl_config_t const *const config);
 /**
  * Get process ID (PID) of background sampling process.
  *
- * @return Returns PID of background process on success, negative on failure
- * with errno set accordingly
+ * @return If running in background the PID of the background or zero if not
+ * running, a negative value is returned on failure with errno set accordingly
  */
 pid_t rl_pid_get(void);
 

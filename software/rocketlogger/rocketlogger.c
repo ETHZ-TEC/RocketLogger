@@ -325,7 +325,12 @@ int main(int argc, char *argv[]) {
     }
     if (strcmp(action, "status") == 0) {
         rl_status_t status;
-        rl_get_status(&status);
+        int res = rl_get_status(&status);
+        if (res < 0) {
+            rl_log(RL_LOG_ERROR, "Failed getting RocketLogger status (%d).\n",
+                   res);
+            exit(EXIT_FAILURE);
+        }
         if (arguments.json) {
             rl_status_print_json(&status);
         } else {

@@ -447,7 +447,7 @@ pid_t rl_pid_get(void) {
     pid_t pid;
     FILE *file = fopen(RL_PID_FILE, "r");
     if (file == NULL) {
-        return ERROR;
+        return 0;
     }
 
     fscanf(file, "%d", &pid);
