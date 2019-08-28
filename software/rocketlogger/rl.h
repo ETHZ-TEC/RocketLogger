@@ -46,7 +46,7 @@
 #define ERROR (-1)
 
 /// Process ID file for the RocketLogger process
-#define RL_PID_FILE "/var/run/rocketlogger.pid"
+#define RL_PID_FILE "/run/rocketlogger.pid"
 /// Maximum path length in characters
 #define RL_PATH_LENGTH_MAX 256
 /// Number of RocketLogger analog channels

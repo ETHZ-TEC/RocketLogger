@@ -150,7 +150,6 @@ install: all
 	$(COPY) $(TARGET_FIRMWARE) $(INSTALL_FIRMWARE_DIR)
 	chmod 4755 $(INSTALL_BIN_DIR)/$(BINARY_NAME) $(INSTALL_BIN_DIR)/$(DEAMON_NAME) $(INSTALL_BIN_DIR)/$(SERVER_NAME)
 	$(COPY) $(SERVICE_CONFIG) $(INSTALL_SERVICE_DIR)
-	chmod 755 $(INSTALL_SERVICE_DIR)/$(SERVICE_CONFIG)
 	systemctl enable rocketlogger
 	systemctl restart rocketlogger
 

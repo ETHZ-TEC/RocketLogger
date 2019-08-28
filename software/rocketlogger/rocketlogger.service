@@ -6,7 +6,7 @@ Documentation=https://rocketlogger.ethz.ch/
 [Service]
 Type=simple
 ExecStart=/bin/rocketloggerd
-PIDFile=/var/run/rocketloggerd.pid
+PIDFile=/run/rocketloggerd.pid
 Restart=always
 RestartSec=2s
 
