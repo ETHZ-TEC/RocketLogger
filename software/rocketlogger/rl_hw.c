@@ -112,12 +112,12 @@ void hw_deinit(rl_config_t const *const config) {
     // PWM
     pwm_deinit();
 
-    // GPIO
-    // deinitialize force high range GPIOS
-    gpio_deinit(GPIO_FHR1);
-    gpio_deinit(GPIO_FHR2);
+    // GPIO (set to default state only, (un)export is handled by daemon)
+    // reset force high range GPIOs to force high range (negative enable)
+    gpio_set_value(GPIO_FHR1, 0);
+    gpio_set_value(GPIO_FHR2, 0);
 
-    // reset LED (do not unexport)
+    // reset status LED, leave error LED in current state
     gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
