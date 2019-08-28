@@ -56,7 +56,8 @@ int sysfs_unexport(char const *const sysfs_file, int value) {
 }
 
 int sysfs_is_exported(char const *const sysfs_path) {
-    int ret = access(sysfs_path, R_OK | W_OK | X_OK);
+    // check for existence of file (not permissions)
+    int ret = access(sysfs_path, F_OK);
     if (ret == 0) {
         return 1;
     }
