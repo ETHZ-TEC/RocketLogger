@@ -49,9 +49,9 @@
     /* GPIO pins used */
     "P8.11", /* LED pins */
     "P8.12",
-    "P8.14", /* Button pin */
+    "P8.14", /* User button pin */
 
-    "P9.13", /* Power enable pin */
+    "P9.13", /* Cape power enable pin */
 
     "P8.27", /* Digital input pins */
     "P8.28",
@@ -106,7 +106,7 @@
       P8_11_pinmux { status = "disabled"; }; /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
       P8_12_pinmux { status = "disabled"; }; /* Error LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
       P8_14_pinmux { status = "disabled"; }; /* User button pin */
-      P9_13_pinmux { status = "disabled"; }; /* User button pin */
+      P9_13_pinmux { status = "disabled"; }; /* Cape power enable pin */
       P8_27_pinmux { status = "disabled"; }; /* Digital input 3 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
       P8_28_pinmux { status = "disabled"; }; /* Digital input 4 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
       P8_29_pinmux { status = "disabled"; }; /* Digital input 5 pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU1 controlled */
@@ -165,7 +165,7 @@
 
       rl_power_pins: pinmux_rl_power_pins {
         pinctrl-single,pins = <
-          BONE_P9_13 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* User button pin */
+          BONE_P9_13 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* Cape power enable pin */
         >;
       };
 

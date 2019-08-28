@@ -36,9 +36,9 @@
 
 /// Linux sysfs paths device files
 /// Path to the Linux sysfs PWM0 device files
-#define PWM0_SYSFS_PATH "/sys/class/pwm/pwmchip1/"
+#define PWM0_SYSFS_PATH "/sys/class/pwm/pwmchip0/"
 /// Path to the Linux sysfs PWM1 device files
-#define PWM1_SYSFS_PATH "/sys/class/pwm/pwmchip4/"
+#define PWM1_SYSFS_PATH "/sys/class/pwm/pwmchip2/"
 
 /// Index of the Linux sysfs ePWM0A module
 #define EPWM0A_SYSFS_INDEX 0
@@ -48,11 +48,11 @@
 #define EPWM1B_SYSFS_INDEX 1
 
 /// Path to the Linux sysfs ePWM0A module
-#define EPWM0A_SYSFS_PATH PWM0_SYSFS_PATH "pwm-1:0/"
+#define EPWM0A_SYSFS_PATH PWM0_SYSFS_PATH "pwm-0:0/"
 /// Path to the Linux sysfs ePWM1A module
-#define EPWM1A_SYSFS_PATH PWM1_SYSFS_PATH "pwm-4:0/"
+#define EPWM1A_SYSFS_PATH PWM1_SYSFS_PATH "pwm-2:0/"
 /// Path to the Linux sysfs ePWM1B module
-#define EPWM1B_SYSFS_PATH PWM1_SYSFS_PATH "pwm-4:1/"
+#define EPWM1B_SYSFS_PATH PWM1_SYSFS_PATH "pwm-2:1/"
 
 /// Default PWM period
 #define PWM_PERIOD_DEFAULT 100000000
