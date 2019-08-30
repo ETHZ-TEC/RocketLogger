@@ -54,6 +54,9 @@
 /// Time margin for buffer number (in ms)
 #define TIME_MARGIN 10
 
+/// RocketLogger daemon log file.
+static char const *const log_filename = "/var/www/rocketlogger/log/server.log";
+
 // Global variables
 /// ID of semaphore set
 int sem_id;
@@ -156,6 +159,8 @@ static void print_data(void) {
  * @return standard Linux return codes
  */
 int main(int argc, char *argv[]) {
+    // init log module
+    rl_log_init(log_filename, RL_LOG_INFO);
 
     // parse arguments
     if (argc != ARG_COUNT + 1) {

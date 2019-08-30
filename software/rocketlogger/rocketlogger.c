@@ -216,6 +216,12 @@ static struct argp argp = {
 };
 
 /**
+ * RocketLogger main program log file.
+ */
+static char const *const log_filename =
+    "/var/www/rocketlogger/log/rocketlogger.log";
+
+/**
  * Main RocketLogger binary, controls the sampling
  *
  * @param argc Number of input arguments
@@ -228,8 +234,7 @@ int main(int argc, char *argv[]) {
     // load default configuration
     int res = rl_config_read_default(&config);
     if (res < 0) {
-        rl_log(RL_LOG_ERROR, "failed reading default configuration file");
-        exit(EXIT_FAILURE);
+        error(EXIT_FAILURE, errno, "failed reading default configuration file");
     }
 
     // argument structure with default values
@@ -249,6 +254,16 @@ int main(int argc, char *argv[]) {
     if (argp_status != 0) {
         error(0, argp_status, "argument parsing failed");
     }
+
+    // init log module with appropriate verbosity level
+    if (arguments.verbose) {
+        rl_log_init(log_filename, RL_LOG_VERBOSE);
+    } else if (arguments.silent) {
+        rl_log_init(log_filename, RL_LOG_IGNORE);
+    } else {
+        rl_log_init(log_filename, RL_LOG_WARNING);
+    }
+
     char const *const action = arguments.args[0];
 
     // validate arguments
@@ -377,10 +392,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 's':
         /* quiet/silent switch: no value */
         arguments->silent = true;
+        arguments->verbose = false;
         break;
     case 'v':
         /* verbose switch: no value */
         arguments->verbose = true;
+        arguments->silent = false;
         break;
     case 'b':
         /* run in background: no value */

@@ -43,6 +43,9 @@
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
 
+/// RocketLogger daemon log file.
+static char const *const log_filename = "/var/www/rocketlogger/log/daemon.log";
+
 /// Flag to terminate the infinite daemon loop
 volatile bool daemon_shutdown = false;
 
@@ -180,7 +183,6 @@ int leds_deinit(void) {
     return SUCCESS;
 }
 
-
 /**
  * Setup range forcing GPIOs.
  *
@@ -282,6 +284,9 @@ static void signal_handler(int signal_number) {
  * @return standard Linux return codes
  */
 int main(void) {
+    // init log module
+    rl_log_init(log_filename, RL_LOG_INFO);
+
     // reset all GPIOs to known reset state
     gpio_reset(GPIO_POWER);
     gpio_reset(GPIO_BUTTON);
@@ -315,7 +320,6 @@ int main(void) {
         rl_log(RL_LOG_ERROR, "Failed configuring range forcing.");
         exit(EXIT_FAILURE);
     }
-
 
     // register signal handler for SIGQUIT and SIGINT (for stopping)
     struct sigaction signal_action;
