@@ -36,9 +36,9 @@ const DISK_WARNING_THRESHOLD = 150
 const STATUS_UPDATE_INTERVAL = 5000
 
 /// RocketLogger channel names
-const CHANNEL_NAMES = ["v1", "v2", "v3", "v4", "i1l", "i1h", "i2l", "i2h"];
+const CHANNEL_NAMES = ["V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H"];
 /// RocketLogger force range channel names
-const CHANNEL_FORCE_NAMES = ["i1h", "i2h"];
+const CHANNEL_FORCE_NAMES = ["I1H", "I2H"];
 
 /// RocketLogger status reset value
 const status_reset = {
@@ -100,7 +100,7 @@ function bytes_to_string(bytes) {
     return "0 B";
   }
   var log1k = Math.floor(Math.log10(bytes) / 3);
-  var value = (bytes / (1000^log1k)).toFixed(2);
+  var value = (bytes / Math.pow(1000, log1k)).toFixed(2);
 
   switch (log1k) {
     case 0:
@@ -127,7 +127,7 @@ function date_zero_extend(value) {
 }
 
 /// get formatted date string from date object
-function date_to_string(date, join='-') {
+function date_to_string(date, join = '-') {
   var year = date.getUTCFullYear().toString();
   var month = date_zero_extend(date.getUTCMonth() + 1);
   var day = date_zero_extend(date.getUTCDate());
@@ -135,7 +135,7 @@ function date_to_string(date, join='-') {
 }
 
 /// get formatted time string from date object
-function time_to_string(time, join=':') {
+function time_to_string(time, join = ':') {
   var hour = date_zero_extend(time.getUTCHours());
   var minute = date_zero_extend(time.getUTCMinutes());
   var second = date_zero_extend(time.getUTCSeconds());
@@ -155,36 +155,36 @@ function unix_to_datetime_string(seconds) {
 
 /// get time duration string from unit timestamp
 function unix_to_timespan_string(seconds) {
-  if (seconds === 0) {
+  if (seconds == null || isNaN(seconds) || seconds === 0)  {
     return "0 s";
   }
 
   var date = new Date(seconds * 1000);
-  var year = date.getUTCFullYear();
-  var month = date_zero_extend(date.getUTCMonth() + 1);
-  var day = date_zero_extend(date.getUTCDate());
-  var hour = date_zero_extend(date.getUTCHours());
-  var minute = date_zero_extend(date.getUTCMinutes());
-  var second = date_zero_extend(date.getUTCSeconds());
+  var year = date.getUTCFullYear() - 1970;
+  var month = date.getUTCMonth() + 1;
+  var day = date.getUTCDate();
+  var hour = date.getUTCHours();
+  var minute = date.getUTCMinutes();
+  var second = date.getUTCSeconds();
 
   var str = "";
   if (year > 0 || str.length > 0) {
-    str = str + year + " year" + (year != 1) ? "s " : " ";
+    str = str + year.toFixed() + " year" + ((year != 1) ? "s " : " ");
   }
   if (month > 0 || str.length > 0) {
-    str = str + month + " month" + (month != 1) ? "s " : " ";
+    str = str + date_zero_extend(month) + " month" + ((month != 1) ? "s " : " ");
   }
   if (day > 0 || str.length > 0) {
-    str = str + day + " day" + (day != 1) ? "s " : " ";
+    str = str + date_zero_extend(day) + " day" + ((day != 1) ? "s " : " ");
   }
   if (hour > 0 || str.length > 0) {
-    str = str + hour + " h ";
+    str = str + date_zero_extend(hour) + " h ";
   }
   if (minute > 0 || str.length > 0) {
-    str = str + minute + " min ";
+    str = str + date_zero_extend(minute) + " min ";
   }
   if (second > 0 || str.length > 0) {
-    str = str + second + " s ";
+    str = str + date_zero_extend(second) + " s ";
   }
 
   return str.substr(0, str.length - 2);
@@ -204,7 +204,7 @@ function action(action, data, handler) {
     type: "POST",
     data: post_data,
     dataType: "json",
-    success: function(data, status) {
+    success: function (data, status) {
       if (status != "success") {
         console.log("Request failed (" + status + "): " + JSON.stringify(data));
         alert("Request failed (" + status + "), check console.");
@@ -216,9 +216,9 @@ function action(action, data, handler) {
       }
       handler(data.reply);
     },
-    error: function(xhr, status, error) {
-      console.log(action + " request failed (" + status + ", " + error + "): " + 
-            JSON.stringify(data));
+    error: function (xhr, status, error) {
+      console.log(action + " request failed (" + status + ", " + error + "): " +
+        JSON.stringify(data));
       alert(action + " request failed (" + status + ", " + error + "), check console.");
     },
   });
@@ -231,12 +231,10 @@ function action_status() {
     config: null,
   };
   data_json = JSON.stringify(data);
-  action("status", data_json, function(data) {
+  action("status", data_json, function (data) {
     // process status response
     if (data.status == null) {
-      if (status_update_timer != null) {
-        clearInterval(status_update_timer);
-      }
+      clearTimeout(status_update_timer);
       alert("Updating status failed. Disabled auto status updates!");
       return;
     }
@@ -245,7 +243,7 @@ function action_status() {
     status_set(data.status);
 
     // auto refresh after timeout
-    status_update_timer = setInterval(action_status, STATUS_UPDATE_INTERVAL);
+    status_update_timer = setTimeout(action_status, STATUS_UPDATE_INTERVAL);
   });
 }
 
@@ -263,7 +261,7 @@ function action_config(set_default) {
   $("#alert_config_loaded").hide();
 
   // perform remote action
-  action("config", data_json, function(data) {
+  action("config", data_json, function (data) {
     // process config response
     if (data.config === null) {
       if (set_default) {
@@ -288,12 +286,12 @@ function action_config(set_default) {
 
 /// perform config get remote action
 function action_config_load() {
-  return action_config(set_default=false);
+  return action_config(set_default = false);
 }
 
 /// perform config set remote action
 function action_config_save() {
-  return action_config(set_default=true);
+  return action_config(set_default = true);
 }
 
 /// start measurement remote action
@@ -303,7 +301,7 @@ function action_start() {
     config: config_get(),
   };
   data_json = JSON.stringify(data);
-  action("start", data_json, function(data) {
+  action("start", data_json, function (data) {
     // process start response
     if (data.start != "OK") {
       alert("Starting measurement failed.");
@@ -329,7 +327,7 @@ function action_stop() {
     config: null,
   };
   data_json = JSON.stringify(data);
-  action("stop", data_json, function(data) {
+  action("stop", data_json, function (data) {
     // process start response
     if (data.stop != "OK") {
       alert("Stopping measurement failed.");
@@ -354,18 +352,18 @@ function action_stop() {
 function config_get() {
   // get channel config
   var channel_enable_config = [];
-  for (var i = 0; i < CHANNEL_NAMES.length; i++){
+  for (var i = 0; i < CHANNEL_NAMES.length; i++) {
     var ch = CHANNEL_NAMES[i];
-    if ($("#channel_" + ch + "_enable").prop("checked")) {
+    if ($("#channel_" + ch.toLowerCase() + "_enable").prop("checked")) {
       channel_enable_config.push(ch);
     }
   }
 
   // get force channel range config
   var channel_force_range_config = [];
-  for (i = 0; i < CHANNEL_FORCE_NAMES.length; i++){
+  for (i = 0; i < CHANNEL_FORCE_NAMES.length; i++) {
     var ch = CHANNEL_FORCE_NAMES[i];
-    if ($("#channel_" + ch + "_force").prop("checked")) {
+    if ($("#channel_" + ch.toLowerCase() + "_force").prop("checked")) {
       channel_force_range_config.push(ch);
     }
   }
@@ -412,15 +410,15 @@ function config_set(config) {
   // set channel switches
   for (var i = 0; i < CHANNEL_NAMES.length; i++) {
     var ch = CHANNEL_NAMES[i];
-    $("#channel_" + ch + "_enable").prop("checked", 
-        (config.channel_enable.indexOf(ch) >= 0)).change();
+    $("#channel_" + ch.toLowerCase() + "_enable").prop("checked",
+      (config.channel_enable.indexOf(ch) >= 0)).change();
   }
 
   // set force channel range config
   for (var i = 0; i < CHANNEL_FORCE_NAMES.length; i++) {
     var ch = CHANNEL_FORCE_NAMES[i];
-    $("#channel_" + ch + "_force").prop("checked", 
-        (config.channel_force_range.indexOf(ch) >= 0)).change();
+    $("#channel_" + ch.toLowerCase() + "_force").prop("checked",
+      (config.channel_force_range.indexOf(ch) >= 0)).change();
   }
 
   // set file config
@@ -433,8 +431,8 @@ function config_set(config) {
     $("#file_format").val(config.file.format).change();
 
     // set file split and size config
+    $("#file_split").prop("checked", config.file.size > 0).change();
     if (config.file.size === 0) {
-      $("#file_split").prop("checked", false).change();
       config.file.size = config_reset.file.size;
     } else if (config.file.size < 1e6) {
       alert("configured file size too small, reseting to default");
@@ -456,23 +454,37 @@ function status_set(status) {
     status = status_reset;
   }
 
-  // status text and sampling
-  $("#status_message").text(status.message).change;
+  // status message
+  var status_message = "";
+  if (status.sampling) {
+    status_message += "sampling";
+  } else {
+    status_message += "idle";
+  }
+  if (status.error) {
+    status_message += " with error";
+    $("#warn_calibration").show();
+  } else {
+    $("#warn_calibration").hide();
+  }
+  $("#status_message").text(status_message).change();
+
+  // sampling information
   $("#status_samples").text(status.sample_count + " samples");
   $("#status_time").text(unix_to_timespan_string(status.sample_time));
 
   // calibration
-  if (status.calibration < 0) {
+  if (status.calibration_time <= 0) {
     $("#status_calibration").text("");
     $("#warn_calibration").show();
   } else {
-    $("#status_calibration").text(status.calibration);
+    $("#status_calibration").text(status.calibration_time);
     $("#warn_calibration").hide();
   }
 
   // storage
-  var disk_status = bytes_to_string(status.disk_free_bytes) + " (" + 
-                    (status.disk_free_permille / 10).toFixed(1) + "%) free";
+  var disk_status = bytes_to_string(status.disk_free_bytes) + " (" +
+    (status.disk_free_permille / 10).toFixed(1) + "%) free";
   $("#warn_storage_critical").hide();
   $("#warn_storage_low").hide();
   if (status.disk_free_permille <= DISK_WARNING_THRESHOLD) {
@@ -485,7 +497,7 @@ function status_set(status) {
   $("#status_disk").text(disk_status);
 
   // calc remaining time @todo update calculation
-  var time_remaining = status.disk_free_bytes / status.disk_use_per_min;
+  var time_remaining = status.disk_free_bytes / status.disk_use_rate;
   $("#status_remaining").text(unix_to_timespan_string(time_remaining));
 
   // control buttons and config form
@@ -499,35 +511,32 @@ function status_set(status) {
 /// force update of the status
 function status_force_update() {
   // if timeout already running avoid updates in parallel
-  if (status_update_timer != null) {
-    clearInterval(status_update_timer);
-  }
-  status_update_timer = null;
+  clearTimeout(status_update_timer);
   action_status();
 }
 
 /// adapt to background configuration setting changes
 function status_refresh_change() {
-  if($("#status_refresh").prop("checked")) {
+  if ($("#status_refresh").prop("checked")) {
     // if enabled, continue updates (no action)
     window.onblur = null;
     window.onfocus = null;
   } else {
     // if disabled, stop updates (no action)
-    window.onblur = function() {
-      if (status_update_timer != null) {
-        clearInterval(status_update_timer);
-        status_update_timer = null;
-      }
-      window.onfocus = function() {
+    window.onblur = function () {
+      clearTimeout(status_update_timer);
+
+      // on focus force update status to restart
+      window.onfocus = function () {
+        window.onfocus = null;
         status_force_update();
       };
     };
-    // on focus force update status to restart
-    window.onfocus = function() {
-      status_force_update();
-      window.onfocus = null;
-    };
+    // // on focus force update status to restart
+    // window.onfocus = function() {
+    //   status_force_update();
+    //   window.onfocus = null;
+    // };
   }
 }
 
@@ -580,14 +589,14 @@ function config_add_file_prefix() {
 
 /// Initilize after document loaded and ready
 $(function () {
-  /// convert bootstrap hidden class to jquert show/hide
+  // convert bootstrap hidden class to jquery show/hide
   $(".d-none").hide().removeClass("d-none");
 
-  /// reset status fields to default and reset config
+  // reset status fields to default and reset config
   status_set(null);
   config_set(null);
 
-  /// initialize control buttons
+  // initialize control buttons
   $("#button_start").click(action_start);
   $("#button_stop").click(action_stop);
   $("#button_status").click(status_force_update);
@@ -601,15 +610,15 @@ $(function () {
   $('#button_file_prefix').click(config_add_file_prefix)
 
   // initialize configuraiton check boxes
-  $("#file_enable").change(function() {
+  $("#file_enable").change(function () {
     $("#file_group").prop("disabled", !$("#file_enable").prop("checked"));
   });
-  $("#file_split").change(function() {
+  $("#file_split").change(function () {
     $("#file_split_group").prop("disabled", !$("#file_split").prop("checked"));
   });
-  $("#web_enable").change(function() {
+  $("#web_enable").change(function () {
     $("#web_group").prop("disabled", !$("#web_enable").prop("checked"));
-    $("#collapsePreview").collapse($("#web_enable").prop("checked")?"show":"hide");
+    $("#collapsePreview").collapse($("#web_enable").prop("checked") ? "show" : "hide");
   });
 
   // initialize plots

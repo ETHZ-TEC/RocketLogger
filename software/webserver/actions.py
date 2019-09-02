@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import json
+import os
 import re
 from subprocess import check_output
 from flask import make_response, request
@@ -78,19 +79,18 @@ def start(data):
         return invalid_request('Failed decoding JSON configuration data.',
                                action='start', data=data)
 
-    # call rocketlogger CLI
+    # call rocketlogger CLI to start measurement
+    json_reply['reply']['start'] = 'FAILED'
     try:
-        start_output = check_output(['rocketlogger', 'cont'] + config_args,
-                                    timeout=1000, text=True)
+        start_output = check_output(['rocketlogger', 'start', '--background'] +
+                                    config_args, timeout=1000, text=True)
         json_reply['reply']['output'] = start_output
         json_reply['reply']['start'] = 'OK'
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
-        json_reply['reply']['start'] = 'FAILED'
     except:
         json_reply['reply']['error'] = 'Starting measurement failed'
-        json_reply['reply']['start'] = 'FAILED'
 
     # start: 200 ok
     reply = json.dumps(json_reply)
@@ -100,7 +100,7 @@ def start(data):
 def stop(data):
     json_reply = {
         'request': {
-            'action': 'start',
+            'action': 'stop',
             'data': data,
         },
         'reply': {
@@ -110,19 +110,18 @@ def stop(data):
         },
     }
 
-    # call rocketlogger CLI
+    # call rocketlogger CLI to stop measurement
+    json_reply['reply']['stop'] = 'FAILED'
     try:
-        start_output = check_output(['rocketlogger', 'stop'],
-                                    timeout=1000, text=True)
-        json_reply['reply']['output'] = start_output
+        stop_output = check_output(['rocketlogger', 'stop'],
+                                   timeout=1000, text=True)
+        json_reply['reply']['output'] = stop_output
         json_reply['reply']['stop'] = 'OK'
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
-        json_reply['reply']['stop'] = 'FAILED'
     except:
         json_reply['reply']['error'] = 'Stopping measurement failed.'
-        json_reply['reply']['stop'] = 'FAILED'
 
     # stop: 200 ok
     reply = json.dumps(json_reply)
@@ -132,7 +131,7 @@ def stop(data):
 def status(data):
     json_reply = {
         'request': {
-            'action': 'start',
+            'action': 'status',
             'data': data,
         },
         'reply': {
@@ -142,18 +141,17 @@ def status(data):
         },
     }
 
-    # call rocketlogger web CLI for status
+    # call rocketlogger CLI for status
+    json_reply['reply']['status'] = None
     try:
-        status = check_output(['rocketloggers', 'status'],
+        status = check_output(['rocketlogger', 'status', '--json'],
                               timeout=1000, text=True)
         json_reply['reply']['status'] = json.loads(status)
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
-        json_reply['reply']['status'] = None
     except:
         json_reply['reply']['error'] = 'Getting status failed.'
-        json_reply['reply']['status'] = None
 
     # get status: 200 ok
     reply = json.dumps(json_reply)
@@ -172,6 +170,8 @@ def config(data):
             'message': None,
         },
     }
+
+    # decode and store config if reqested setting new default
     if data['set_default']:
         # reply with stored config
         json_reply['reply']['config'] = data['config']
@@ -179,12 +179,32 @@ def config(data):
         reply = json.dumps(json_reply)
         return make_response(reply, 201)
 
-    # load and reply with stored configuration
-    json_reply['reply']['config'] = data['config']
+    # call rocketlogger CLI to get default config
+    json_reply['reply']['config'] = None
+    try:
+        config = check_output(['rocketlogger', 'config', '--json'],
+                              timeout=1000, text=True)
+        json_reply['reply']['config'] = json.loads(config)
 
-    # get config: 200 ok
+        # strip the path from the filename
+        if json_reply['reply']['config']['file']:
+            json_reply['reply']['config']['file']['filename'] = \
+                os.path.basename(
+                    json_reply['reply']['config']['file']['filename'])
+    except FileNotFoundError:
+        json_reply['reply']['error'] = 'RocketLogger binary not found. '\
+                                       'Check your system configruation.'
+    except:
+        json_reply['reply']['error'] = 'Getting config failed.'
+
+    # generate response
     reply = json.dumps(json_reply)
-    return make_response(reply, 200)
+    if data['set_default']:
+        # set config: 201 created
+        return make_response(reply, 201)
+    else:
+        # get config: 200 ok
+        return make_response(reply, 200)
 
 
 def calibrate(data):
