@@ -32,35 +32,59 @@
 #ifndef LOG_H_
 #define LOG_H_
 
-/// Maximum log file size in bytes
-#define LOG_FILE_MAX_SIZE (1000 * 1000)
-
 /// Default log file name
-#ifndef LOG_FILE
-#define LOG_FILE "/var/www/rocketlogger/log/rocketlogger.log"
-#endif
+#define RL_LOG_DEFAULT_FILE "/var/www/rocketlogger/log/default.log"
+
+/// Maximum log file name path length
+#define RL_LOG_PATH_LENGTH_MAX 256
+
+/// Maximum log file size in bytes
+#define RL_LOG_FILE_SIZE_MAX (1000 * 1000)
 
 /**
- * RocketLogger log type definition
+ * RocketLogger log level definition
  */
-enum rl_log {
+enum rl_log_level {
+    RL_LOG_IGNORE,  //!< Ignore log (only for verbosity configuration)
     RL_LOG_ERROR,   //!< Error
     RL_LOG_WARNING, //!< Warning
     RL_LOG_INFO,    //!< Information
+    RL_LOG_VERBOSE, //!< Verbose
 };
 
 /**
- * Typedef for RocketLogger log types
+ * Typedef for RocketLogger level types
  */
-typedef enum rl_log rl_log_t;
+typedef enum rl_log_level rl_log_level_t;
+
+/**
+ * Initialize the log module.
+ *
+ * @note This function should be called before the first log message is stored.
+ *
+ * @param log_file The filename of the file the log messages are written to
+ * @param verbosity Messages with a log level more severe or equal to this level
+ *                  are also printed to the terminal
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_log_init(char const *const log_file, rl_log_level_t verbosity);
+
+/**
+ * Change the log module's verbosity.
+ *
+ * @param verbosity Messages with log levels more severe or equal to the
+ *                        verbosity level are also printed to the terminal
+ */
+void rl_log_verbosity(rl_log_level_t verbosity);
 
 /**
  * Write a new log message.
  *
- * @param type Log type/level of the message
+ * @param log_level Log level of the message
  * @param format The message format string passed to fprintf()
  * @param ... Variables used to format value string
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-void rl_log(rl_log_t type, char const *const format, ...);
+int rl_log(rl_log_level_t log_level, char const *const format, ...);
 
 #endif /* LOG_H_ */
