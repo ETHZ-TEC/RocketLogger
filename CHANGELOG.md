@@ -17,6 +17,9 @@ _Notes:_
 This major release updates the base system to run the latest Debian version and includes many internal software changes.
 Calibration feature was added to the Python support library and the data functionality extended. he updated web interface now allows on-device calibration.
 
+Due to the major upgrade of the base system from Debian version 7 to 10,
+we highly recommend performing an complete reinstall of the full system.
+
 
 ## v1.1.5 (2019-03-04)
 
