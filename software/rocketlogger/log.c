@@ -49,7 +49,7 @@ static rl_log_level_t log_verbosity = RL_LOG_VERBOSE;
 int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     // update log configuration
     rl_log_verbosity(verbosity);
-    strncpy(log_filename, log_file, sizeof(log_filename));
+    strncpy(log_filename, log_file, sizeof(log_filename) - 1);
 
     // open log file (create inexistent) to check for max file size
     FILE *log_fp = fopen(log_filename, "a");
