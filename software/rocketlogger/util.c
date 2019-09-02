@@ -160,22 +160,20 @@ void print_json_bool(bool const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
-            printf(",%d", data[i] ? 1 : 0);
-        } else {
-            printf("%d", data[i] ? 1 : 0);
+            printf(", ");
         }
+        printf("%d", data[i] ? 1 : 0);
     }
-    printf("]\n");
+    printf("]");
 }
 
 void print_json_int64(int64_t const *const data, const int length) {
     printf("[");
     for (int i = 0; i < length; i++) {
         if (i > 0) {
-            printf(",%lld", data[i]);
-        } else {
-            printf("%lld", data[i]);
+            printf(", ");
         }
+        printf("%lld", data[i]);
     }
-    printf("]\n");
+    printf("]");
 }

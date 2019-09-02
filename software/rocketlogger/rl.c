@@ -249,55 +249,72 @@ void rl_config_print_cmd(rl_config_t const *const config) {
 }
 
 void rl_config_print_json(rl_config_t const *const config) {
-    printf("{");
-    printf("ambient_enable: %s, ", config->ambient_enable ? "true" : "false");
-    printf("background_enable: %s, ",
-           config->background_enable ? "true" : "false");
-    printf("interactive_enable: %s, ",
-           config->interactive_enable ? "true " : "false");
+    int count;
 
-    printf("calibration_ignore: %s, ",
+    printf("{ ");
+    printf("\"ambient_enable\": %s, ",
+           config->ambient_enable ? "true" : "false");
+    printf("\"background_enable\": %s, ",
+           config->background_enable ? "true" : "false");
+    printf("\"interactive_enable\": %s, ",
+           config->interactive_enable ? "true " : "false");
+    printf("\"calibration_ignore\": %s, ",
            config->calibration_ignore ? "true" : "false");
-    printf("channel_enable: [");
+
+    printf("\"channel_enable\": [");
+    count = 0;
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
-        if (config->channel_enable[i]) {
-            printf("\"%s\", ", RL_CHANNEL_NAMES[i]);
+        if (!config->channel_enable[i]) {
+            continue;
         }
+        if (count > 0) {
+            printf(", ");
+        }
+        printf("\"%s\"", RL_CHANNEL_NAMES[i]);
+        count++;
     }
     printf("], ");
-    printf("channel_force_range: [");
+
+    printf("\"channel_force_range\": [");
+    count = 0;
     for (int i = 0; i < RL_CHANNEL_SWITCHED_COUNT; i++) {
-        if (config->channel_force_range[i]) {
-            printf("\"%s\", ", RL_CHANNEL_FORCE_NAMES[i]);
+        if (!config->channel_force_range[i]) {
+            continue;
         }
+        if (count > 0) {
+            printf(", ");
+        }
+        printf("\"%s\"", RL_CHANNEL_FORCE_NAMES[i]);
+        count++;
     }
     printf("], ");
-    printf("digital_enable: %s, ", config->digital_enable ? "true" : "false");
+    printf("\"digital_enable\": %s, ",
+           config->digital_enable ? "true" : "false");
     if (config->file_enable == false) {
-        printf("file: null, ");
+        printf("\"file\": null, ");
     } else {
-        printf("file: { ");
-        printf("comment: \"%s\", ", config->file_comment);
-        printf("filename: \"%s\", ", config->file_name);
+        printf("\"file\": { ");
+        printf("\"comment\": \"%s\", ", config->file_comment);
+        printf("\"filename\": \"%s\", ", config->file_name);
         switch (config->file_format) {
         case RL_FILE_FORMAT_RLD:
-            printf("format: \"rld\", ");
+            printf("\"format\": \"rld\", ");
             break;
         case RL_FILE_FORMAT_CSV:
-            printf("format: \"csv\", ");
+            printf("\"format\": \"csv\", ");
             break;
         default:
-            printf("format: null, ");
+            printf("\"format\": null, ");
             break;
         }
-        printf("size: %llu, ", config->file_size);
-        printf("}, ");
+        printf("\"size\": %llu", config->file_size);
+        printf(" }, ");
     }
-    printf("sample_limit: %llu, ", config->sample_limit);
-    printf("sample_rate: %u, ", config->sample_rate);
-    printf("update_rate: %u, ", config->update_rate);
-    printf("web_enable: %s, ", config->web_enable ? "true" : "false");
-    printf("}");
+    printf("\"sample_limit\": %llu, ", config->sample_limit);
+    printf("\"sample_rate\": %u, ", config->sample_rate);
+    printf("\"update_rate\": %u, ", config->update_rate);
+    printf("\"web_enable\": %s", config->web_enable ? "true" : "false");
+    printf(" }");
 }
 
 void rl_config_reset(rl_config_t *const config) {
@@ -554,31 +571,34 @@ void rl_status_print(rl_status_t const *const status) {
 }
 
 void rl_status_print_json(rl_status_t const *const status) {
-    printf("{");
-    printf("sampling: %s, ", status->sampling ? "true" : "false");
-    printf("error: %s, ", status->error ? "true" : "false");
-    printf("sample_count: %llu, ", status->sample_count);
-    printf("buffer_count: %llu, ", status->buffer_count);
-    printf("calibration_time: %llu, ", status->calibration_time);
+    printf("{ ");
+    printf("\"sampling\": %s, ", status->sampling ? "true" : "false");
+    printf("\"error\": %s, ", status->error ? "true" : "false");
+    printf("\"sample_count\": %llu, ", status->sample_count);
+    printf("\"buffer_count\": %llu, ", status->buffer_count);
+    printf("\"calibration_time\": %llu, ", status->calibration_time);
     if (status->calibration_time > 0) {
-        printf("calibration_file: \"%s\", ", status->calibration_file);
+        printf("\"calibration_file\": \"%s\", ", status->calibration_file);
     } else {
-        printf("calibration_file: null, ");
+        printf("\"calibration_file\": null, ");
     }
-    printf("disk_free: %llu, ", status->disk_free);
-    printf("disk_free_permille: %u, ", status->disk_free_permille);
-    printf("disk_use_rate: %u, ", status->disk_use_rate);
-    printf("sensor_count: %u, ", status->sensor_count);
-    printf("sensor_names: [");
+    printf("\"disk_free_bytes\": %llu, ", status->disk_free);
+    printf("\"disk_free_permille\": %u, ", status->disk_free_permille);
+    printf("\"disk_use_rate\": %u, ", status->disk_use_rate);
+    printf("\"sensor_count\": %u, ", status->sensor_count);
+    printf("\"sensor_names\": [");
     for (uint16_t i = 0; i < status->sensor_count; i++) {
+        if (i > 0) {
+            printf(", ");
+        }
         if (status->sensor_available[i]) {
-            printf("\"%s\", ", SENSOR_REGISTRY[i].name);
+            printf("\"%s\"", SENSOR_REGISTRY[i].name);
         } else {
-            printf("null, ");
+            printf("null");
         }
     }
-    printf("], ");
-    printf("}");
+    printf("]");
+    printf(" }");
 }
 
 static void print_config_line(char const *description, char const *format,
