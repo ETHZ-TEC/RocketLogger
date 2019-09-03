@@ -300,9 +300,11 @@ int main(int argc, char *argv[]) {
     }
     // store config as default
     if (arguments.config_set_default) {
-        rl_config_write_default(&config);
-        printf("The following configuration was saved as new default:\n");
-        rl_config_print(&config);
+        int config_res = rl_config_write_default(&config);
+        if (config_res < 0) {
+            rl_log(RL_LOG_ERROR, "Failed storing configuration as default.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // configure and run system in the requested MODE
