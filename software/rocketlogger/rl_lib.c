@@ -74,32 +74,31 @@ bool rl_is_sampling(void) {
 }
 
 int rl_get_status(rl_status_t *const status) {
+    int res = SUCCESS;
     pid_t pid = rl_pid_get();
 
     // if not running, return default status
     if (pid == 0 || kill(pid, 0) < 0) {
         rl_status_reset(status);
-        return SUCCESS;
-    }
-
-    int res = rl_status_read(status);
-    if (res < 0) {
-        rl_status_reset(status);
-        return res;
+    } else {
+        res = rl_status_read(status);
+        if (res < 0) {
+            rl_status_reset(status);
+        }
     }
 
     // get file system state
     int64_t disk_free = fs_space_free(FS_ROOT_PATH);
     int64_t disk_total = fs_space_total(FS_ROOT_PATH);
 
-    rl_status.disk_free = disk_free;
+    status->disk_free = disk_free;
     if (disk_total > 0) {
-        rl_status.disk_free_permille = (1000 * disk_free) / disk_total;
+        status->disk_free_permille = (1000 * disk_free) / disk_total;
     } else {
-        rl_status.disk_free_permille = 0;
+        status->disk_free_permille = 0;
     }
 
-    return SUCCESS;
+    return res;
 }
 
 int rl_run(rl_config_t *const config) {
