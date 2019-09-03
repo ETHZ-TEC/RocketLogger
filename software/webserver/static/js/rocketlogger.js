@@ -29,11 +29,13 @@
  */
 
 /// Disk space cirtically low warning thresholds in permille
-const DISK_CRITICAL_THRESHOLD = 50
+const DISK_CRITICAL_THRESHOLD = 50;
 /// Disk space low warning thresholds in permille
-const DISK_WARNING_THRESHOLD = 150
+const DISK_WARNING_THRESHOLD = 150;
 /// Status udate polling interval in milliseconds
-const STATUS_UPDATE_INTERVAL = 5000
+const STATUS_UPDATE_IDLE_INTERVAL = 5000;
+/// Status udate polling interval in milliseconds
+const STATUS_UPDATE_SAMPLING_INTERVAL = 1000;
 
 /// RocketLogger channel names
 const CHANNEL_NAMES = ["V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H"];
@@ -155,7 +157,7 @@ function unix_to_datetime_string(seconds) {
 
 /// get time duration string from unit timestamp
 function unix_to_timespan_string(seconds) {
-  if (seconds == null || isNaN(seconds) || seconds === 0)  {
+  if (seconds == null || isNaN(seconds) || seconds === 0) {
     return "0 s";
   }
 
@@ -184,10 +186,10 @@ function unix_to_timespan_string(seconds) {
     str = str + date_zero_extend(minute) + " min ";
   }
   if (second > 0 || str.length > 0) {
-    str = str + date_zero_extend(second) + " s ";
+    str = str + date_zero_extend(second) + " s";
   }
-
-  return str.substr(0, str.length - 2);
+  
+  return str.trim();
 }
 
 /* ************************************************************************* */
@@ -202,6 +204,7 @@ function action(action, data, handler) {
   $.ajax({
     url: "/control/" + action,
     type: "POST",
+    timeout: STATUS_UPDATE_SAMPLING_INTERVAL,
     data: post_data,
     dataType: "json",
     success: function (data, status) {
@@ -217,8 +220,7 @@ function action(action, data, handler) {
       handler(data.reply);
     },
     error: function (xhr, status, error) {
-      console.log(action + " request failed (" + status + ", " + error + "): " +
-        JSON.stringify(data));
+      console.log(action + " request failed (" + status + ", " + error + "): " + JSON.stringify(data));
       alert(action + " request failed (" + status + ", " + error + "), check console.");
     },
   });
@@ -226,6 +228,9 @@ function action(action, data, handler) {
 
 /// perform get status remote action
 function action_status() {
+  // first clear pending timeout to avoid race-condition and parallel requests
+  clearTimeout(status_update_timer);
+
   data = {
     action: "status",
     config: null,
@@ -234,7 +239,6 @@ function action_status() {
   action("status", data_json, function (data) {
     // process status response
     if (data.status == null) {
-      clearTimeout(status_update_timer);
       alert("Updating status failed. Disabled auto status updates!");
       return;
     }
@@ -243,7 +247,11 @@ function action_status() {
     status_set(data.status);
 
     // auto refresh after timeout
-    status_update_timer = setTimeout(action_status, STATUS_UPDATE_INTERVAL);
+    if (data.status.sampling) {
+      status_update_timer = setTimeout(action_status, STATUS_UPDATE_SAMPLING_INTERVAL);
+    } else {
+      status_update_timer = setTimeout(action_status, STATUS_UPDATE_IDLE_INTERVAL);
+    }
   });
 }
 
@@ -315,8 +323,9 @@ function action_start() {
     $("#button_stop").addClass("btn-danger").removeClass("btn-dark");
     $("#configuration_group").prop("disabled", true);
 
-    // update status
-    action_status();
+    // trigger fast sampling update
+    clearTimeout(status_update_timer);
+    status_update_timer = setTimeout(action_status, STATUS_UPDATE_IDLE_INTERVAL);
   });
 }
 
@@ -340,9 +349,6 @@ function action_stop() {
     $("#button_stop").prop("disabled", true);
     $("#button_stop").removeClass("btn-danger").addClass("btn-dark");
     $("#configuration_group").prop("disabled", false);
-
-    // update status
-    action_status();
   });
 }
 
@@ -478,7 +484,7 @@ function status_set(status) {
     $("#status_calibration").text("");
     $("#warn_calibration").show();
   } else {
-    $("#status_calibration").text(status.calibration_time);
+    $("#status_calibration").text(unix_to_datetime_string(status.calibration_time));
     $("#warn_calibration").hide();
   }
 
@@ -497,10 +503,21 @@ function status_set(status) {
   $("#status_disk").text(disk_status);
 
   // calc remaining time @todo update calculation
-  var time_remaining = status.disk_free_bytes / status.disk_use_rate;
-  $("#status_remaining").text(unix_to_timespan_string(time_remaining));
+  if (status.disk_use_rate > 0) {
+    var time_remaining = status.disk_free_bytes / status.disk_use_rate;
+    $("#status_remaining").text(unix_to_timespan_string(time_remaining));
+  } else {
+    $("#status_remaining").text("not available");
+  }
 
   // control buttons and config form
+  if (status.sampling) {
+    $("#button_start").removeClass("btn-success").addClass("btn-dark");
+    $("#button_stop").addClass("btn-danger").removeClass("btn-dark");
+  } else {
+    $("#button_start").addClass("btn-success").removeClass("btn-dark");
+    $("#button_stop").removeClass("btn-danger").addClass("btn-dark");
+  }
   $("#button_start").prop("disabled", status.sampling);
   $("#button_stop").prop("disabled", !status.sampling);
   $("#configuration_group").prop("disabled", status.sampling);
