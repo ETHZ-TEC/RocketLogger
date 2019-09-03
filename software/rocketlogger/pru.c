@@ -548,8 +548,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // if (i == 0) {
         res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
         if (res == ETIMEDOUT) {
-            // timeout occurred
+            // low level ADC timeout occurred
             rl_log(RL_LOG_ERROR, "ADC not responding");
+            rl_status.error = true;
             break;
         }
         // } else {
@@ -654,6 +655,13 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             meter_print_buffer(buffer, buffer_size, &timestamp_realtime,
                                &timestamp_monotonic, config);
         }
+    }
+
+    // sampling stopped, update status
+    rl_status.sampling = false;
+    res = rl_status_write(&rl_status);
+    if (res < 0) {
+        rl_log(RL_LOG_WARNING, "Failed writing status");
     }
 
     // deinitialize interactive measurement display when enabled
