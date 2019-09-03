@@ -34,13 +34,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
 import os
-import re
 from subprocess import check_output
-from flask import make_response, request
+from flask import make_response
+
+ROCKETLOGGER_DATA_PATH = '/var/www/rocketlogger/data'
 
 
-def _config_decode(config):
-    return []
+def _config_to_args(config):
+    args = []
+    args.append('--samples=0')  # no sample limit
+    args.append('--update=1')  # hardcode update rate for now
+    # args.append('--update={}'.format(config['update_rate']))
+
+    args.append('--ambient={}'.format(config['ambient_enable']))
+    args.append('--channel={}'.format(','.join(config['channel_enable'])))
+    args.append(
+        '--high-range={}'.format(','.join(config['channel_force_range'])))
+    args.append('--digital={}'.format(config['digital_enable']))
+    if config['file'] is None:
+        args.append('--output=0')
+    else:
+        filename = os.path.join(ROCKETLOGGER_DATA_PATH,
+                                config['file']['filename'])
+        args.append('--output={}'.format(filename))
+        args.append('--format={}'.format(config['file']['format']))
+        args.append('--size={}'.format(config['file']['size']))
+        args.append('--comment=\'{}\''.format(config['file']['comment']))
+    args.append('--rate={}'.format(config['sample_rate']))
+    args.append('--web={}'.format(config['web_enable']))
+
+    return args
 
 
 def invalid_request(message, action=None, data=None):
@@ -55,8 +78,14 @@ def invalid_request(message, action=None, data=None):
             'message': None,
         },
     }
-    reply = json.dumps(json_reply)
-    return make_response(reply, 400)
+
+    return (json_reply, 400)
+
+
+def invalid_response(message, action=None, data=None):
+    json_response, status = invalid_request(message, action, data)
+    response = json.dumps(json_response)
+    return make_response(response, status)
 
 
 def start(data):
@@ -74,7 +103,7 @@ def start(data):
 
     # parse configuration
     try:
-        config_args = _config_decode(data['config'])
+        config_args = _config_to_args(data['config'])
     except ValueError:
         return invalid_request('Failed decoding JSON configuration data.',
                                action='start', data=data)
@@ -82,19 +111,21 @@ def start(data):
     # call rocketlogger CLI to start measurement
     json_reply['reply']['start'] = 'FAILED'
     try:
-        start_output = check_output(['rocketlogger', 'start', '--background'] +
-                                    config_args, timeout=1000, text=True)
+        cmd = ['rocketlogger', 'start', '--background'] + config_args
+        start_output = check_output(cmd, timeout=1000, text=True)
         json_reply['reply']['output'] = start_output
         json_reply['reply']['start'] = 'OK'
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
+        return (json_reply, 501)
     except:
         json_reply['reply']['error'] = 'Starting measurement failed'
+        json_reply['reply']['message'] = 'Starting measurement failed'
+        return (json_reply, 503)
 
     # start: 200 ok
-    reply = json.dumps(json_reply)
-    return make_response(reply, 200)
+    return (json_reply, 200)
 
 
 def stop(data):
@@ -113,19 +144,21 @@ def stop(data):
     # call rocketlogger CLI to stop measurement
     json_reply['reply']['stop'] = 'FAILED'
     try:
-        stop_output = check_output(['rocketlogger', 'stop'],
-                                   timeout=1000, text=True)
+        cmd = ['rocketlogger', 'stop']
+        stop_output = check_output(cmd, timeout=1000, text=True)
         json_reply['reply']['output'] = stop_output
         json_reply['reply']['stop'] = 'OK'
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
+        return (json_reply, 501)
     except:
         json_reply['reply']['error'] = 'Stopping measurement failed.'
+        json_reply['reply']['message'] = ' '.join(cmd)
+        return (json_reply, 503)
 
     # stop: 200 ok
-    reply = json.dumps(json_reply)
-    return make_response(reply, 200)
+    return (json_reply, 200)
 
 
 def status(data):
@@ -144,18 +177,20 @@ def status(data):
     # call rocketlogger CLI for status
     json_reply['reply']['status'] = None
     try:
-        status = check_output(['rocketlogger', 'status', '--json'],
-                              timeout=1000, text=True)
+        cmd = ['rocketlogger', 'status', '--json']
+        status = check_output(cmd, timeout=1000, text=True)
         json_reply['reply']['status'] = json.loads(status)
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
+        return (json_reply, 501)
     except:
         json_reply['reply']['error'] = 'Getting status failed.'
+        json_reply['reply']['message'] = ' '.join(cmd)
+        return (json_reply, 503)
 
     # get status: 200 ok
-    reply = json.dumps(json_reply)
-    return make_response(reply, 200)
+    return (json_reply, 200)
 
 
 def config(data):
@@ -171,40 +206,46 @@ def config(data):
         },
     }
 
-    # decode and store config if reqested setting new default
-    if data['set_default']:
-        # reply with stored config
-        json_reply['reply']['config'] = data['config']
-        # set config: 201 created
-        reply = json.dumps(json_reply)
-        return make_response(reply, 201)
-
-    # call rocketlogger CLI to get default config
+    # call rocketlogger CLI to set/get default config
     json_reply['reply']['config'] = None
+
+    # decode additinal config if reqested setting new default
+    config_args = []
+    if data['set_default']:
+        # parse configuration
+        try:
+            config_args = _config_to_args(data['config']) + ['--default']
+        except ValueError:
+            return invalid_request('Failed decoding JSON configuration data.',
+                                   action='start', data=data)
+
+    # get/set config command
     try:
-        config = check_output(['rocketlogger', 'config', '--json'],
-                              timeout=1000, text=True)
+        cmd = ['rocketlogger', 'config', '--json'] + config_args
+        config = check_output(cmd, timeout=1000, text=True)
         json_reply['reply']['config'] = json.loads(config)
-
-        # strip the path from the filename
-        if json_reply['reply']['config']['file']:
-            json_reply['reply']['config']['file']['filename'] = \
-                os.path.basename(
-                    json_reply['reply']['config']['file']['filename'])
     except FileNotFoundError:
-        json_reply['reply']['error'] = 'RocketLogger binary not found. '\
-                                       'Check your system configruation.'
+        json_reply['reply']['error'] = 'RocketLogger binary not found. ' \
+                                        'Check your system configruation.'
+        return (json_reply, 501)
     except:
-        json_reply['reply']['error'] = 'Getting config failed.'
+        json_reply['reply']['error'] = 'Setting configuration failed.'
+        json_reply['reply']['message'] = ' '.join(cmd)
+        return (json_reply, 503)
 
-    # generate response
-    reply = json.dumps(json_reply)
+    # strip the path from the filename
+    if json_reply['reply']['config'] and json_reply['reply']['config']['file']:
+        json_reply['reply']['config']['file']['filename'] = \
+            os.path.basename(
+                json_reply['reply']['config']['file']['filename'])
+
+    # generate success response
     if data['set_default']:
         # set config: 201 created
-        return make_response(reply, 201)
+        return (json_reply, 201)
     else:
         # get config: 200 ok
-        return make_response(reply, 200)
+        return (json_reply, 200)
 
 
 def calibrate(data):
@@ -223,5 +264,4 @@ def calibrate(data):
     raise NotImplementedError()
 
     # calibrate: 202 accepted (handled later)
-    reply = json.dumps(json_reply)
-    return make_response(reply, 202)
+    return (json_reply, 202)

@@ -99,26 +99,30 @@ def control():
 def control_action(action):
     # action is required to be POST requests
     if action != request.form.get('action', None):
-        return actions.invalid_request('ambiguous action in the request data')
+        return actions.invalid_response('ambiguous action in the request data')
 
     # check for available request data
     try:
         data = json.loads(request.form['data'])
     except KeyError:
-        return make_response('Invalid request: no data', 400)
+        return actions.invalid_response('Invalid request: no data')
 
     if action == 'start':
-        return actions.start(data)
+        json_response, status = actions.start(data)
     elif action == 'stop':
-        return actions.stop(data)
+        json_response, status = actions.stop(data)
     elif action == 'status':
-        return actions.status(data)
+        json_response, status = actions.status(data)
     elif action == 'config':
-        return actions.config(data)
+        json_response, status = actions.config(data)
     elif action == 'calibrate':
-        return actions.calibrate(data)
+        json_response, status = actions.calibrate(data)
+    else:
+        return actions.invalid_response(
+            'Invalid request: action {}'.format(action))
 
-    return make_response('Invalid request: action {}'.format(action), 400)
+    response = json.dumps(json_response)
+    return make_response(response, status)
 
 
 @application.route('/calibration/')
