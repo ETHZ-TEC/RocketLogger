@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+/**
+ * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,9 +79,7 @@ int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     return 0;
 }
 
-void rl_log_verbosity(rl_log_level_t verbosity) {
-    log_verbosity = verbosity;
-}
+void rl_log_verbosity(rl_log_level_t verbosity) { log_verbosity = verbosity; }
 
 int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     // do not handle ignore log level

@@ -1,5 +1,5 @@
 %%
-%% Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+%% Copyright (c) 2016-2018, ETH Zurich, Computer Engineering Group
 %% All rights reserved.
 %% 
 %% Redistribution and use in source and binary forms, with or without
