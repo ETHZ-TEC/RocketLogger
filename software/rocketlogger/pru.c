@@ -545,17 +545,17 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // Wait for event completion from PRU
         // only check for timeout on first buffer (else it does not work!)
-        // if (i == 0) {
-        res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
-        if (res == ETIMEDOUT) {
-            // low level ADC timeout occurred
-            rl_log(RL_LOG_ERROR, "ADC not responding");
-            rl_status.error = true;
-            break;
+        if (i == 0) {
+            res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
+            if (res == ETIMEDOUT) {
+                // low level ADC timeout occurred
+                rl_log(RL_LOG_ERROR, "ADC not responding");
+                rl_status.error = true;
+                break;
+            }
+        } else {
+            prussdrv_pru_wait_event(PRU_EVTOUT_0);
         }
-        // } else {
-        //     prussdrv_pru_wait_event(PRU_EVTOUT_0);
-        // }
 
         // timestamp received data
         create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
