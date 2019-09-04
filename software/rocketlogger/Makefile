@@ -98,8 +98,7 @@ CSTD = -std=gnu99
 CXXSTD = -std=c++11
 
 ## libraries
-LIBS = -pthread
-LIBS += -lprussdrv
+LIBS = -lprussdrv
 LIBS += -li2c
 LIBS += -lncurses
 LIBS += -lrt

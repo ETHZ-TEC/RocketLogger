@@ -66,8 +66,8 @@
 #define PRU_DIGITAL_INPUT5_MASK 0x04
 #define PRU_DIGITAL_INPUT6_MASK 0x08
 
-/// PRU time out in seconds
-#define PRU_TIMEOUT 3
+/// PRU time out in micro seconds
+#define PRU_TIMEOUT_US 2000000
 
 /// Number of ADC commands
 #define PRU_ADC_COMMAND_COUNT 12
@@ -183,16 +183,6 @@ int pru_control_init(pru_control_t *const pru_control,
  * accordingly
  */
 int pru_set_state(pru_state_t state);
-
-/**
- * Wait for a PRU event with timeout.
- *
- * @param event PRU event to wait for
- * @param timeout Time out in seconds
- * @return Returns 0 on success, error code otherwise, see also
- * pthread_cond_timedwait() documentation
- */
-int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
 
 /**
  * Main PRU sampling routine.
