@@ -70,8 +70,6 @@ int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     // write header for new (empty) file, or empty line for existing file
     if (ftell(log_fp) == 0) {
         fprintf(log_fp, "# RocketLogger Log File\n");
-    } else {
-        fprintf(log_fp, "\n");
     }
 
     // close log file
@@ -132,7 +130,6 @@ int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     fprintf(log_fp, "\n");
 
     // close file
-    fflush(log_fp);
     fclose(log_fp);
 
     // output to terminal if log more severe or equal to configured verbosity
