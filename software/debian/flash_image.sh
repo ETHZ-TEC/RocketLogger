@@ -1,7 +1,7 @@
 #!/bin/bash
 # Flash the beagle bone image
 #
-# Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+# Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without

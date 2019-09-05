@@ -21,6 +21,18 @@ Due to the major upgrade of the base system from Debian version 7 to 10,
 we highly recommend performing an complete reinstall of the full system.
 
 
+## v1.1.6 (2019-07-31)
+
+- [FIXED] Software: potential corruption of ambient file name (#127)
+- [FIXED] Software: typo in ambient file channel name (#128)
+- [FIXED] Software: wrong scale for default file split value (#124)
+- [CHANGED] Python support: document successfully tested compatibility with recent Python and NumPy releases
+
+_Notes:_
+
+This hotfix release addresses two issues related to storing ambient sensor data and an invalid default value in the measurement file split configuration. The Python support package was tested to successfully work with recent Python and NumPy updates.
+
+
 ## v1.1.5 (2019-03-04)
 
 - [FIXED] Software: corrupt data when writing files >2 GB (#119)

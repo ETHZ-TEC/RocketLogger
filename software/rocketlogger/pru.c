@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+/**
+ * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,6 @@
 
 #include <pruss_intc_mapping.h>
 #include <prussdrv.h>
-#include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -52,20 +51,6 @@
 #include "web.h"
 
 #include "pru.h"
-
-/**
- * Internal pthread for waiting on PRU events.
- *
- * @param voidEvent Pointer to event to wait for
- * @return unused, always returns NULL
- */
-void *pru_wait_event_thread(void *);
-
-/// PRU access mutex for timed out PRU event wait
-pthread_mutex_t thread_mutex_wait = PTHREAD_MUTEX_INITIALIZER;
-
-/// Notification variable for PRU event wait
-pthread_cond_t thread_cond_done = PTHREAD_COND_INITIALIZER;
 
 int pru_init(void) {
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -210,43 +195,6 @@ int pru_set_state(pru_state_t state) {
     return res;
 }
 
-void *pru_wait_event_thread(void *voidEvent) {
-    unsigned int event = *((unsigned int *)voidEvent);
-
-    // allow the thread to be killed at any time
-    int oldtype;
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-    // wait for pru event
-    prussdrv_pru_wait_event(event);
-
-    // notify main program
-    pthread_cond_signal(&thread_cond_done);
-
-    return NULL;
-}
-
-int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
-    struct timespec abs_time;
-    pthread_t tid;
-
-    pthread_mutex_lock(&thread_mutex_wait);
-
-    // pthread conditional_timed wait expects an absolute time to wait until
-    clock_gettime(CLOCK_REALTIME, &abs_time);
-    abs_time.tv_sec += timeout;
-
-    pthread_create(&tid, NULL, pru_wait_event_thread, (void *)&event);
-
-    int res = pthread_cond_timedwait(&thread_cond_done, &thread_mutex_wait,
-                                     &abs_time);
-    if (res <= 0) {
-        pthread_mutex_unlock(&thread_mutex_wait);
-    }
-
-    return res;
-}
-
 int pru_sample(FILE *data_file, FILE *ambient_file,
                rl_config_t const *const config) {
     int res;
@@ -383,9 +331,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         return ERROR;
     }
 
-    // wait for PRU startup event
-    res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
-    if (res == ETIMEDOUT) {
+    // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+    res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
+    if (res < 0) {
+        // error checking interrupt occurred
+        rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt");
+        return ERROR;
+    } else if (res == 0) {
+        // low level ADC timeout occurred
         rl_log(RL_LOG_ERROR, "Failed starting PRU, PRU not responding");
         return ERROR;
     }
@@ -543,19 +496,22 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                 pru.sample_limit % pru.buffer_length; // non-full buffer size
         }
 
-        // Wait for event completion from PRU
-        // only check for timeout on first buffer (else it does not work!)
-        // if (i == 0) {
-        res = pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
-        if (res == ETIMEDOUT) {
+        // wait for PRU event indicating new data (repeat wait on interrupts)
+        do {
+            // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+            res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
+        } while (res < 0 && errno == EINTR);
+        if (res < 0) {
+            // error checking interrupt occurred
+            rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt", errno);
+            rl_status.error = true;
+            break;
+        } else if (res == 0) {
             // low level ADC timeout occurred
-            rl_log(RL_LOG_ERROR, "ADC not responding");
+            rl_log(RL_LOG_ERROR, "ADC not responsive");
             rl_status.error = true;
             break;
         }
-        // } else {
-        //     prussdrv_pru_wait_event(PRU_EVTOUT_0);
-        // }
 
         // timestamp received data
         create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
@@ -705,7 +661,8 @@ void pru_stop(void) {
 
     // wait for interrupt (if no ERROR occurred) and clear event
     if (!(rl_status.error)) {
-        pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
+        // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+        prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
     }
 }

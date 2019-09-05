@@ -1,6 +1,6 @@
 ## Makefile for RocketLogger Binaries
 ##
-## Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+## Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
 ## All rights reserved.
 ## 
 ## Redistribution and use in source and binary forms, with or without
@@ -98,8 +98,7 @@ CSTD = -std=gnu99
 CXXSTD = -std=c++11
 
 ## libraries
-LIBS = -pthread
-LIBS += -lprussdrv
+LIBS = -lprussdrv
 LIBS += -li2c
 LIBS += -lncurses
 LIBS += -lrt

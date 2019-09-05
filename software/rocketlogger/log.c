@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+/**
+ * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,8 +70,6 @@ int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     // write header for new (empty) file, or empty line for existing file
     if (ftell(log_fp) == 0) {
         fprintf(log_fp, "# RocketLogger Log File\n");
-    } else {
-        fprintf(log_fp, "\n");
     }
 
     // close log file
@@ -79,9 +77,7 @@ int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     return 0;
 }
 
-void rl_log_verbosity(rl_log_level_t verbosity) {
-    log_verbosity = verbosity;
-}
+void rl_log_verbosity(rl_log_level_t verbosity) { log_verbosity = verbosity; }
 
 int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     // do not handle ignore log level
@@ -134,7 +130,6 @@ int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     fprintf(log_fp, "\n");
 
     // close file
-    fflush(log_fp);
     fclose(log_fp);
 
     // output to terminal if log more severe or equal to configured verbosity
