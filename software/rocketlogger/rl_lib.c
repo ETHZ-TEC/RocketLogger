@@ -74,17 +74,12 @@ bool rl_is_sampling(void) {
 }
 
 int rl_get_status(rl_status_t *const status) {
-    int res = SUCCESS;
-    pid_t pid = rl_pid_get();
-
-    // if not running, return default status
-    if (pid == 0 || kill(pid, 0) < 0) {
+    // get the status from the shared memory
+    int res = rl_status_read(status);
+    if (res < 0) {
+        // on error return reset value
         rl_status_reset(status);
-    } else {
-        res = rl_status_read(status);
-        if (res < 0) {
-            rl_status_reset(status);
-        }
+        return res;
     }
 
     // get file system state

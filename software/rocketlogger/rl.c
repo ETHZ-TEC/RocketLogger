@@ -480,7 +480,7 @@ int rl_pid_set(pid_t pid) {
         return ERROR;
     }
 
-    fprintf(file, "%d", pid);
+    fprintf(file, "%d\n", pid);
     fclose(file);
 
     return SUCCESS;
@@ -490,49 +490,94 @@ void rl_status_reset(rl_status_t *const status) {
     memcpy(status, &rl_status_default, sizeof(rl_status_t));
 }
 
-int rl_status_read(rl_status_t *const status) {
-    // map shared memory
+int rl_status_init(void) {
+    // create shared memory
+    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
+                        IPC_CREAT | SHMEM_PERMISSIONS);
+    if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR,
+               "failed creating shared status memory; %d message: %s", errno,
+               strerror(errno));
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+int rl_status_deinit(void) {
+    // get ID and attach shared memory
     int shm_id =
         shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR,
+               "failed getting shared memory id for removal; message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+
+    // mark shared memory for deletion
+    int res = shmctl(shm_id, IPC_RMID, NULL);
+    if (res == -1) {
+        rl_log(RL_LOG_ERROR,
+               "failed removing shared status memory; %d message: %s", errno,
+               strerror(errno));
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+int rl_status_read(rl_status_t *const status) {
+    // get ID and attach shared memory
+    int shm_id =
+        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+    if (shm_id == -1) {
+        rl_log(RL_LOG_ERROR, "failed getting shared memory id for reading the "
+                             "status; message: %s",
+               errno, strerror(errno));
         return ERROR;
     }
 
     rl_status_t const *const shm_status =
         (rl_status_t const *const)shmat(shm_id, NULL, 0);
     if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR,
-               "failed to map shared status memory; %d message: %s", errno,
-               strerror(errno));
+        rl_log(RL_LOG_ERROR, "failed mapping shared memory for reading the "
+                             "status; %d message: %s",
+               errno, strerror(errno));
         return ERROR;
     }
 
     // copy status read from shared memory
     memcpy(status, shm_status, sizeof(rl_status_t));
 
-    // unmap shared memory
-    shmdt(shm_status);
+    // detach shared memory
+    int res = shmdt(shm_status);
+    if (res < 0) {
+        rl_log(
+            RL_LOG_ERROR,
+            "failed detaching shared memory after status read; %d message: %s",
+            errno, strerror(errno));
+        return ERROR;
+    }
 
     return SUCCESS;
 }
 
 int rl_status_write(rl_status_t const *const status) {
-    // map shared memory
-    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
-                        IPC_CREAT | SHMEM_PERMISSIONS);
+    // get ID and attach shared memory
+    int shm_id =
+        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR,
-               "In write_status: failed to get shared status memory id; "
-               "%d message: %s",
+        rl_log(RL_LOG_ERROR, "failed getting shared memory id for writing the "
+                             "status; message: %s",
                errno, strerror(errno));
         return ERROR;
     }
 
     rl_status_t *const shm_status = (rl_status_t * const)shmat(shm_id, NULL, 0);
     if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR,
-               "In write_status: failed to map shared status memory; %d "
-               "message: %s",
+        rl_log(RL_LOG_ERROR, "failed mapping shared memory for writing the "
+                             "status; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -540,8 +585,15 @@ int rl_status_write(rl_status_t const *const status) {
     // write status
     memcpy(shm_status, status, sizeof(rl_status_t));
 
-    // unmap shared memory
-    shmdt(shm_status);
+    // detach shared memory
+    int res = shmdt(shm_status);
+    if (res < 0) {
+        rl_log(
+            RL_LOG_ERROR,
+            "failed detaching shared memory after status write; %d message: %s",
+            errno, strerror(errno));
+        return ERROR;
+    }
 
     return SUCCESS;
 }

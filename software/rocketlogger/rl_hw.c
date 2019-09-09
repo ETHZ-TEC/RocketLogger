@@ -45,7 +45,7 @@
 
 void hw_init(rl_config_t const *const config) {
 
-    // STATUS reset
+    // STATUS reset to default
     rl_status_reset(&rl_status);
 
     // PWM configuration
@@ -81,15 +81,15 @@ void hw_init(rl_config_t const *const config) {
 
     // STATE
     if (config->file_enable) {
-        int64_t disk_free = fs_space_free(FS_ROOT_PATH);
-        int64_t disk_total = fs_space_total(FS_ROOT_PATH);
+        // int64_t disk_free = fs_space_free(FS_ROOT_PATH);
+        // int64_t disk_total = fs_space_total(FS_ROOT_PATH);
 
-        rl_status.disk_free = disk_free;
-        if (disk_total > 0) {
-            rl_status.disk_free_permille = (1000 * disk_free) / disk_total;
-        } else {
-            rl_status.disk_free_permille = 0;
-        }
+        // rl_status.disk_free = disk_free;
+        // if (disk_total > 0) {
+        //     rl_status.disk_free_permille = (1000 * disk_free) / disk_total;
+        // } else {
+        //     rl_status.disk_free_permille = 0;
+        // }
 
         // calculate disk use rate in bytes per second:
         // - int32_t/channel + uint32_t bytes/sample for digital at sample rate
@@ -133,9 +133,8 @@ void hw_deinit(rl_config_t const *const config) {
         sensors_deinit();
     }
 
-    // RESET SHARED MEM
-    rl_status.sample_count = 0;
-    rl_status.buffer_count = 0;
+    // RESET sampling specific state
+    rl_status.disk_use_rate = 0;
     rl_status_write(&rl_status);
 }
 

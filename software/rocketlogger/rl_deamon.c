@@ -321,6 +321,13 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
+    // create shared memory for state
+    ret = rl_status_init();
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed initializing status shared memory.");
+        exit(EXIT_FAILURE);
+    }
+
     // register signal handler for SIGTERM (for stopping daemon)
     struct sigaction signal_action;
     signal_action.sa_handler = signal_handler;
@@ -344,6 +351,10 @@ int main(void) {
 
     rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
 
+    // remove shared memory for state
+    rl_status_deinit();
+
+    // deinitialize and shutdown hardware
     button_deinit();
     power_deinit();
     leds_deinit();
