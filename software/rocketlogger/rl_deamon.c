@@ -55,17 +55,18 @@ volatile bool daemon_shutdown = false;
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int power_init(void) {
-    int ret1 = gpio_init(GPIO_POWER, GPIO_MODE_OUT);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_init(GPIO_POWER, GPIO_MODE_OUT);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_set_value(GPIO_POWER, 1);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_set_value(GPIO_POWER, 1);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -74,17 +75,18 @@ int power_init(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int power_deinit(void) {
-    int ret1 = gpio_set_value(GPIO_POWER, 0);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_set_value(GPIO_POWER, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_deinit(GPIO_POWER);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_deinit(GPIO_POWER);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -93,17 +95,18 @@ int power_deinit(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int button_init(void) {
-    int ret1 = gpio_init(GPIO_BUTTON, GPIO_MODE_IN);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_init(GPIO_BUTTON, GPIO_MODE_IN);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_interrupt(GPIO_BUTTON, GPIO_INT_FALLING);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_interrupt(GPIO_BUTTON, GPIO_INT_FALLING);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -112,17 +115,18 @@ int button_init(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int button_deinit(void) {
-    int ret1 = gpio_interrupt(GPIO_BUTTON, GPIO_INT_NONE);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_interrupt(GPIO_BUTTON, GPIO_INT_NONE);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_deinit(GPIO_BUTTON);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_deinit(GPIO_BUTTON);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -131,27 +135,28 @@ int button_deinit(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int leds_init(void) {
-    int ret1 = gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret3 = gpio_set_value(GPIO_LED_STATUS, 0);
-    if (ret3 < 0) {
-        return ret3;
+    ret = gpio_set_value(GPIO_LED_STATUS, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret4 = gpio_set_value(GPIO_LED_ERROR, 0);
-    if (ret4 < 0) {
-        return ret4;
+    ret = gpio_set_value(GPIO_LED_ERROR, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -160,27 +165,28 @@ int leds_init(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int leds_deinit(void) {
-    int ret1 = gpio_set_value(GPIO_LED_STATUS, 0);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_set_value(GPIO_LED_STATUS, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_set_value(GPIO_LED_ERROR, 0);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_set_value(GPIO_LED_ERROR, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret3 = gpio_deinit(GPIO_LED_STATUS);
-    if (ret3 < 0) {
-        return ret3;
+    ret = gpio_deinit(GPIO_LED_STATUS);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret4 = gpio_deinit(GPIO_LED_ERROR);
-    if (ret4 < 0) {
-        return ret4;
+    ret = gpio_deinit(GPIO_LED_ERROR);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -189,27 +195,28 @@ int leds_deinit(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int fhr_init(void) {
-    int ret1 = gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret3 = gpio_set_value(GPIO_FHR1, 0);
-    if (ret3 < 0) {
-        return ret3;
+    ret = gpio_set_value(GPIO_FHR1, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret4 = gpio_set_value(GPIO_FHR2, 0);
-    if (ret4 < 0) {
-        return ret4;
+    ret = gpio_set_value(GPIO_FHR2, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -218,27 +225,28 @@ int fhr_init(void) {
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int fhr_deinit(void) {
-    int ret1 = gpio_set_value(GPIO_FHR1, 0);
-    if (ret1 < 0) {
-        return ret1;
+    int ret = SUCCESS;
+    ret = gpio_set_value(GPIO_FHR1, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret2 = gpio_set_value(GPIO_FHR2, 0);
-    if (ret2 < 0) {
-        return ret2;
+    ret = gpio_set_value(GPIO_FHR2, 0);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret3 = gpio_deinit(GPIO_FHR1);
-    if (ret3 < 0) {
-        return ret3;
+    ret = gpio_deinit(GPIO_FHR1);
+    if (ret < 0) {
+        return ret;
     }
 
-    int ret4 = gpio_deinit(GPIO_FHR2);
-    if (ret4 < 0) {
-        return ret4;
+    ret = gpio_deinit(GPIO_FHR2);
+    if (ret < 0) {
+        return ret;
     }
 
-    return SUCCESS;
+    return ret;
 }
 
 /**
@@ -284,6 +292,8 @@ static void signal_handler(int signal_number) {
  * @return standard Linux return codes
  */
 int main(void) {
+    int ret = SUCCESS;
+
     // init log module
     rl_log_init(log_filename, RL_LOG_INFO);
 
@@ -297,26 +307,27 @@ int main(void) {
 
     sleep(1);
 
-    int ret1 = power_init();
-    if (ret1 < 0) {
+    // hardware initialization
+    ret = power_init();
+    if (ret < 0) {
         rl_log(RL_LOG_ERROR, "Failed powering up cape.");
         exit(EXIT_FAILURE);
     }
 
-    int ret2 = button_init();
-    if (ret2 < 0) {
+    ret = button_init();
+    if (ret < 0) {
         rl_log(RL_LOG_ERROR, "Failed configuring button.");
         exit(EXIT_FAILURE);
     }
 
-    int ret3 = leds_init();
-    if (ret3 < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring leds.");
+    ret = leds_init();
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed configuring LEDs.");
         exit(EXIT_FAILURE);
     }
 
-    int ret4 = fhr_init();
-    if (ret4 < 0) {
+    ret = fhr_init();
+    if (ret < 0) {
         rl_log(RL_LOG_ERROR, "Failed configuring range forcing.");
         exit(EXIT_FAILURE);
     }
@@ -334,8 +345,8 @@ int main(void) {
     sigemptyset(&signal_action.sa_mask);
     signal_action.sa_flags = 0;
 
-    int ret5 = sigaction(SIGTERM, &signal_action, NULL);
-    if (ret5 < 0) {
+    ret = sigaction(SIGTERM, &signal_action, NULL);
+    if (ret < 0) {
         rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
         exit(EXIT_FAILURE);
     }
@@ -345,8 +356,8 @@ int main(void) {
     daemon_shutdown = false;
     while (!daemon_shutdown) {
         // wait for interrupt with infinite timeout
-        int val = gpio_wait_interrupt(GPIO_BUTTON, GPIO_INT_TIMEOUT_INF);
-        button_interrupt_handler(val);
+        int value = gpio_wait_interrupt(GPIO_BUTTON, GPIO_INT_TIMEOUT_INF);
+        button_interrupt_handler(value);
     }
 
     rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
