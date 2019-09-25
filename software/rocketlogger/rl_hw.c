@@ -44,10 +44,8 @@
 void hw_init(rl_config_t const *const config) {
     // GPIO configuration
     // force high range (negative enable)
-    gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
-    gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_FHR1, (config->channel_force_range[0] ? 0 : 1));
-    gpio_set_value(GPIO_FHR2, (config->channel_force_range[1] ? 0 : 1));
+    gpio_init(GPIO_FHR, GPIO_MODE_OUT);
+    gpio_set_value(GPIO_FHR, (config->channel_force_range[0] ? 0 : 1));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
@@ -85,8 +83,7 @@ void hw_deinit(rl_config_t const *const config) {
 
     // GPIO (set to default state only, (un)export is handled by daemon)
     // reset force high range GPIOs to force high range (negative enable)
-    gpio_set_value(GPIO_FHR1, 0);
-    gpio_set_value(GPIO_FHR2, 0);
+    gpio_set_value(GPIO_FHR, 0);
 
     // reset status LED, leave error LED in current state
     gpio_set_value(GPIO_LED_STATUS, 0);

@@ -40,17 +40,15 @@
 #define GPIO_INT_TIMEOUT_INF -1
 
 /// Linux sysfs GPIO number for forcing I1 high
-#define GPIO_FHR1 30
-/// Linux sysfs GPIO number for forcing I2 high
-#define GPIO_FHR2 60
+#define GPIO_FHR 48
 /// Linux sysfs GPIO number of status LED
-#define GPIO_LED_STATUS 45
+#define GPIO_LED_STATUS 69
 /// Linux sysfs GPIO number of error LED
-#define GPIO_LED_ERROR 44
+#define GPIO_LED_ERROR 45
 /// Linux sysfs GPIO number of start/stop button
-#define GPIO_BUTTON 26
+#define GPIO_BUTTON 23
 /// Linux sysfs GPIO number of RocketLogger cape power enable
-#define GPIO_POWER 31
+#define GPIO_POWER 5
 
 /**
  * GPIO direction definition

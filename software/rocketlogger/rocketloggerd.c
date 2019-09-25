@@ -199,22 +199,12 @@ int leds_deinit(void) {
  */
 int fhr_init(void) {
     int ret = SUCCESS;
-    ret = gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
+    ret = gpio_init(GPIO_FHR, GPIO_MODE_OUT);
     if (ret < 0) {
         return ret;
     }
 
-    ret = gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_FHR1, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_FHR2, 0);
+    ret = gpio_set_value(GPIO_FHR, 0);
     if (ret < 0) {
         return ret;
     }
@@ -229,22 +219,12 @@ int fhr_init(void) {
  */
 int fhr_deinit(void) {
     int ret = SUCCESS;
-    ret = gpio_set_value(GPIO_FHR1, 0);
+    ret = gpio_set_value(GPIO_FHR, 0);
     if (ret < 0) {
         return ret;
     }
 
-    ret = gpio_set_value(GPIO_FHR2, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_FHR1);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_FHR2);
+    ret = gpio_deinit(GPIO_FHR);
     if (ret < 0) {
         return ret;
     }
@@ -325,8 +305,7 @@ int main(void) {
     // reset all GPIOs to known reset state
     gpio_reset(GPIO_POWER);
     gpio_reset(GPIO_BUTTON);
-    gpio_reset(GPIO_FHR1);
-    gpio_reset(GPIO_FHR2);
+    gpio_reset(GPIO_FHR);
     gpio_reset(GPIO_LED_STATUS);
     gpio_reset(GPIO_LED_ERROR);
 
