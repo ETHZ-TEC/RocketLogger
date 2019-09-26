@@ -119,7 +119,7 @@ if __name__ == "__main__":
             raise FileNotFoundError('Missing current I1 low calibration measurement.')
         elif not os.path.isfile(filename_i2l):
             raise FileNotFoundError('Missing current I2 low calibration measurement.')
-        elif not os.path.isfile(filename_i1l):
+        elif not os.path.isfile(filename_ih):
             raise FileNotFoundError('Missing current high calibration measurement.')
 
         # perform calibration and print statistics
