@@ -636,7 +636,6 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         fflush(data_file);
         rl_log(RL_LOG_INFO, "stored %llu samples to file",
                rl_status.sample_count);
-        printf("Stored %llu samples to file.\n", rl_status.sample_count);
     }
 
     // WEBSERVER FINISH
