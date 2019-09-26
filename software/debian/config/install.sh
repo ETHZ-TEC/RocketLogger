@@ -133,15 +133,12 @@ apt upgrade --assume-yes
 apt install --assume-yes        \
   unzip                         \
   git                           \
+  ntp                           \
   make                          \
+  device-tree-compiler          \
   gcc                           \
   g++                           \
-  pru-software-support-package  \
-  ti-pru-cgt-installer          \
-  device-tree-compiler          \
-  ntp                           \
   libncurses5-dev               \
-  i2c-tools                     \
   libi2c-dev                    \
   linux-headers-$(uname -r)
 

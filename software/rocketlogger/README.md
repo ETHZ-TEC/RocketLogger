@@ -1,19 +1,44 @@
-RocketLogger Software Documentation
-===================================
+# RocketLogger Software Documentation
 
-The RocketLogger software includes the three following binaries, which use de RocketLogger library.
+The RocketLogger software includes the three following binaries, which make use of the RocketLogger library.
+
 
 ### RocketLogger Binary
 
-Main RocketLogger binary defined in [rocketlogger.c](@ref rocketlogger.c). Provides a CLI to control an monitor the sampling.
+Main RocketLogger binary defined in [rocketlogger.c](@ref rocketlogger.c). Provides an extensive command line interface to control an monitor the sampling.
 
-### RocketLogger Deamon
 
-RocketLogger deamon program defined in [rl_deamon.c](@ref rl_deamon.c). Continuously waits on interrupt on button GPIO and starts/stops RocketLogger.
+### RocketLogger Daemon
+
+RocketLogger daemon program defined in [rocketloggerd.c](@ref rocketloggerd.c). Initializes the user space GPIOs, controls the power supply of the cape, and handles the user button interrupt to start and stop RocketLogger measurements.
+
 
 ### RocketLogger Server
 
 RocketLogger server program defined in [rl_server.c](@ref rl_server.c). Returns status and current sampling data (if available) when running and default configuration otherwise, for use in a webserver.
+
+
+## Dependencies
+
+### Build Tools
+
+For building the software the following build tools are required:
+
+- GNU Make - `make`
+- GNU C compiler - `gcc`
+- GNU C++ compiler - `g++`
+- TI PRU Assembler - install from source <https://github.com/beagleboard/am335x_pru_package.git>
+
+
+### Software Libraries
+
+The following libraries are required to build the software (and the corresponding Debian package):
+
+- `libi2c` - `libi2c-dev` 
+- `libncurses` - `libncurses5-dev`
+- `librt` - part of libc
+- `prussdrv` - install from source <https://github.com/beagleboard/am335x_pru_package.git>
+- Linux headers - `linux-headers-$(uname -r)`
 
 
 ## License
