@@ -82,6 +82,7 @@ def get_rocketlogger_command(measurement_type, filename,
     # other options
     command += ' --ambient=false'
     command += ' --digital=false'
+    command += ' --output={}'.format(filename)
     command += ' --format=rld'
     command += ' --size=0'
     command += ' --web=false'
@@ -95,6 +96,9 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise TypeError('need at least one argument specifying the action')
     action = str(sys.argv[1]).lower()
+
+    # create base directory path if not existing
+    os.makedirs(DATA_DIR, exist_ok=True)
 
     # generate filenames
     filename_base = os.path.join(DATA_DIR, '{}_calibration'.format(date.today()))
@@ -115,7 +119,7 @@ if __name__ == "__main__":
             raise FileNotFoundError('Missing current I1 low calibration measurement.')
         elif not os.path.isfile(filename_i2l):
             raise FileNotFoundError('Missing current I2 low calibration measurement.')
-        elif not os.path.isfile(filename_i1l):
+        elif not os.path.isfile(filename_ih):
             raise FileNotFoundError('Missing current high calibration measurement.')
 
         # perform calibration and print statistics

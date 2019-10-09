@@ -31,9 +31,9 @@
 #
 
 # Debian buster IoT image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2019-08-25/buster-console/"
-IMAGE_FILE="bone-debian-10.0-console-armhf-2019-08-25-1gb.img.xz"
-IMAGE_SHA256="c38b6d02949c4143411694e82f5f944e2536b3594ae10ceacce4f1c192796669"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2019-09-08/buster-console/"
+IMAGE_FILE="bone-debian-10.1-console-armhf-2019-09-08-1gb.img.xz"
+IMAGE_SHA256="c0f12f2b2521f28b8969e519905d23d6c9927c432baab3687f3ccb9a3daf3ada"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"

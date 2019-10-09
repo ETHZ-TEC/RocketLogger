@@ -189,7 +189,6 @@ uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
     if (sensor_count > 0) {
         message[strlen(message) - 3] = 0;
         rl_log(RL_LOG_INFO, "%s", message);
-        printf("\n\n%s\n", message);
     } else {
         rl_log(RL_LOG_WARNING, "no ambient sensor found...");
     }

@@ -290,16 +290,30 @@ pid_t rl_pid_get(void);
 int rl_pid_set(pid_t pid);
 
 /**
- * Reset RocketLogger status to standard values.
+ * Get the RocketLogger default status.
  *
- * @param status The status data strcuture to reset
+ * @param status The status data strcuture to write the default value to
  */
 void rl_status_reset(rl_status_t *const status);
 
 /**
+ * Create and initialize the shared memory for the RocketLogger status.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_init(void);
+
+/**
+ * Deinitialize and remove the shared memory for the RocketLogger status.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_deinit(void);
+
+/**
  * Read the status of the RocketLogger from shared memory.
  *
- * @param status The status data structure to write to
+ * @param status The status data structure to write the read status to
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_status_read(rl_status_t *const status);

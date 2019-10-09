@@ -132,7 +132,8 @@ int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode);
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @param timeout Maximum waiting time (in milliseconds), negative for infinite
- * @return Returns 0 on success, negative on failure with errno set accordingly
+ * @return Returns the GPIO pin value (0 or 1) on success, negative on failure
+ * with errno set accordingly
  */
 int gpio_wait_interrupt(int gpio_number, int timeout);
 

@@ -300,10 +300,10 @@ int main(int argc, char *argv[]) {
     }
     // store config as default
     if (arguments.config_set_default) {
-        int config_res = rl_config_write_default(&config);
-        if (config_res < 0) {
-            rl_log(RL_LOG_ERROR, "Failed storing configuration as default.\n");
-            exit(EXIT_FAILURE);
+        rl_config_write_default(&config);
+        if (!arguments.silent) {
+            printf("The following configuration was saved as new default:\n");
+            rl_config_print(&config);
         }
     }
 
@@ -316,8 +316,10 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        print_config(&config);
-        printf("Starting measurement...\n");
+        if (arguments.verbose) {
+            print_config(&config);
+        }
+        rl_log(RL_LOG_INFO, "Starting measurement...\n");
         rl_run(&config);
     }
     if (strcmp(action, "stop") == 0) {
@@ -327,7 +329,9 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        printf("Wait for measurement to stop...\n");
+        if (!arguments.silent) {
+            printf("Wait for measurement to stop...\n");
+        }
         rl_stop();
         /// @todo wait for measurement process to stop
     }
@@ -374,22 +378,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     // parse actual argument
     switch (key) {
     /* options with shortcuts */
-    // {"interactive", 'i', 0, 0,
-    // {"background", 'b', 0, 0,
-    // {"channel", 'c', "SELECTION",
-    // {"rate", 'r', "RATE",
-    // {"update-rate", 'u', "RATE",
-    // {"output", 'o', "FILE", 0,
-    // {"format", 'f', "FORMAT",
-    // {"comment", 'C', "COMMENT", 0,
-    // {"digital", 'd', "BOOL", OPTION_ARG_OPTIONAL,
-    // {"ambient", 'a', "BOOL", OPTION_ARG_OPTIONAL,
-    // {"aggregate", 'g', "MODE", 0,
-    // {"high-range", 'h', "SELECTION", 0, "
-    // {"web", 'w', "BOOL", OPTION_ARG_OPTIONAL,
-    // {"verbose", 'v', 0, 0,
-    // {"quiet", 'q', 0, 0,
-    // {"silent", 's', 0,
     case 'q':
     case 's':
         /* quiet/silent switch: no value */
@@ -495,13 +483,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         break;
 
     /* options without shortcuts */
-    // {"samples", OPT_SAMPLES_COUNT, "COUNT",
-    // {"size", OPT_FILE_SIZE, "SIZE",
-    // {"cli", OPT_CLI, 0, 0,
-    // {"json", OPT_JSON, 0, 0,
-    // {"default", OPT_SET_DEFAULT, 0, 0,
-    // {"reset", OPT_RESET_DEFAULT, 0, 0,
-    // {"calibration", OPT_CALIBRATION, 0, 0,
     case OPT_SAMPLES_COUNT:
         /* sample count: mandatory COUNT value */
         parse_uint64(arg, state, &config->sample_limit);
@@ -532,16 +513,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         break;
 
     /* unnamed argument options */
-    // "  Measurement modes:\n"
-    // "    sample\tStart measurement for a finite number of samples\n"
-    // "    meter\tRun measurement with console measurement view\n"
-    // "    cont\tStart continuous measurement in the background\n"
-    // "    stop\tStop a running background measurement\n"
-    // "\n"
-    // "  Management and configuration modes:\n"
-    // "    config\tDisplay configuration, not starting a new or affecting a
-    // running measurement\n"
-    // "    status\tDisplay the current sampling status\n";
     case ARGP_KEY_ARG:
         // check for too many arguments
         if (state->arg_num >= ARGP_ARGUMENTS_COUNT) {

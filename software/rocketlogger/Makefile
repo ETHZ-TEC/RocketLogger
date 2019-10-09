@@ -159,7 +159,7 @@ uninstall:
 	systemctl disable rocketlogger
 	$(REMOVE) $(INSTALL_SERVICE_DIR)/$(SERVICE_CONFIG)
 
-$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rl_deamon.o $(OBJ_DIR)/rl_server.o, $(OBJ))
+$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rocketloggerd.o $(OBJ_DIR)/rl_server.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
@@ -167,7 +167,7 @@ $(TARGET_DAEMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o,
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-$(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_deamon.o, $(OBJ))
+$(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rocketloggerd.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
