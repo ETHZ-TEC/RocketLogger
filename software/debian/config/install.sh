@@ -113,8 +113,10 @@ echo "> Deactivating and uninstalling potentially conflicting services"
 sudo systemctl stop bonescript-autorun.service cloud9.service cloud9.socket nginx.service
 sudo systemctl disable bonescript-autorun.service cloud9.service cloud9.socket nginx.service
 
-# uninstall preinstalled web services
+# uninstall potentially installed web services
 sudo apt remove --assume-yes --allow-change-held-packages \
+  apache?                                                 \
+  lighttpd?                                               \
   nginx                                                   \
   nodejs?                                                 \
   c9-core-installer                                       \

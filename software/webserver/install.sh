@@ -37,14 +37,17 @@ WEB_AUTH_FILE=/home/rocketlogger/.htpasswd
 BOOTSTRAP_VERSION=4.3.1
 POPPER_VERSION=1.15.0
 JQUERY_VERSION=3.4.1
-FLOT_VERSION=3.0.2
+FLOT_VERSION=3.2.9
 
 ## package install
 echo "> Installing web interface dependencies"
 sudo apt install --assume-yes \
-  apache2                     \
-  lighttpd                    \
-  php-cgi
+  python3                     \
+  python3-dev                 \
+  virtualenvwrapper
+  # apache2                     \
+  # lighttpd                    \
+  # php-cgi
 
 
 ## system configuration
