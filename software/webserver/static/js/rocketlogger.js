@@ -43,7 +43,7 @@ const CHANNEL_NAMES = ["V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H"];
 const CHANNEL_FORCE_NAMES = ["I1H", "I2H"];
 
 /// RocketLogger status reset value
-const status_reset = {
+const STATUS_RESET = {
   /// calibraiton timestamp, -1 no calibration
   calibration: -1,
   /// free disk space in bytes
@@ -65,7 +65,7 @@ const status_reset = {
 };
 
 /// RocketLogger config reset value
-const config_reset = {
+const CONFIG_RESET = {
   /// ambien sensor enable
   ambient_enable: false,
   /// channels enabled
@@ -210,18 +210,20 @@ function action(action, data, handler) {
     success: function (data, status) {
       if (status != "success") {
         console.log("Request failed (" + status + "): " + JSON.stringify(data));
-        alert("Request failed (" + status + "), check console.");
+        alert("Request failed (" + status + "), see console for details.");
         return;
       }
       if (!data.reply) {
-        alert("Failed decoding reply (" + status + "): " + data);
+        console.log("Failed decoding reply (" + status + "): " + data);
+        alert("Failed decoding reply (" + status + "), see console for details.");
         return;
       }
       handler(data.reply);
     },
     error: function (xhr, status, error) {
-      console.log(action + " request failed (" + status + ", " + error + "): " + JSON.stringify(data));
-      alert(action + " request failed (" + status + ", " + error + "), check console.");
+      alert("Processing action " + action + " failed, see console for details.");
+      console.log(action + " request failed (" + status.toString() + ", " + error + "): "
+                  + JSON.stringify(data));
     },
   });
 }
@@ -230,6 +232,7 @@ function action(action, data, handler) {
 function action_status() {
   // first clear pending timeout to avoid race-condition and parallel requests
   clearTimeout(status_update_timer);
+  window.onfocus = null;
 
   data = {
     action: "status",
@@ -311,7 +314,7 @@ function action_start() {
   data_json = JSON.stringify(data);
   action("start", data_json, function (data) {
     // process start response
-    if (data.start != "OK") {
+    if (data.start == null) {
       alert("Starting measurement failed.");
       return;
     }
@@ -338,7 +341,7 @@ function action_stop() {
   data_json = JSON.stringify(data);
   action("stop", data_json, function (data) {
     // process start response
-    if (data.stop != "OK") {
+    if (data.stop == null) {
       alert("Stopping measurement failed.");
       return;
     }
@@ -405,7 +408,7 @@ function config_get() {
 /// set intputs to specified or reset configuration
 function config_set(config) {
   if (config === null) {
-    config = config_reset;
+    config = CONFIG_RESET;
   }
 
   $("#ambient_enable").prop("checked", config.ambient_enable).change();
@@ -439,10 +442,10 @@ function config_set(config) {
     // set file split and size config
     $("#file_split").prop("checked", config.file.size > 0).change();
     if (config.file.size === 0) {
-      config.file.size = config_reset.file.size;
+      config.file.size = CONFIG_RESET.file.size;
     } else if (config.file.size < 1e6) {
       alert("configured file size too small, reseting to default");
-      config.file.size = config_reset.file.size;
+      config.file.size = CONFIG_RESET.file.size;
     }
     if (config.file.size >= 1e9) {
       $("#file_size").val(Math.round(config.file.size / 1e9));
@@ -457,7 +460,7 @@ function config_set(config) {
 /// set the status fields with the status, null to reset
 function status_set(status) {
   if (status === null) {
-    status = status_reset;
+    status = STATUS_RESET;
   }
 
   // status message

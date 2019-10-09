@@ -34,9 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
 import os
-from subprocess import check_output
+from subprocess import run, Popen, PIPE, CalledProcessError, TimeoutExpired
 from flask import make_response
 
+ROCKETLOGGER_CMD_TIMEOUT = 500
 ROCKETLOGGER_DATA_PATH = '/var/www/rocketlogger/data'
 
 
@@ -109,17 +110,18 @@ def start(data):
                                action='start', data=data)
 
     # call rocketlogger CLI to start measurement
-    json_reply['reply']['start'] = 'FAILED'
+    json_reply['reply']['start'] = None
     try:
         cmd = ['rocketlogger', 'start', '--background'] + config_args
-        start_output = check_output(cmd, timeout=1000, text=True)
-        json_reply['reply']['output'] = start_output
-        json_reply['reply']['start'] = 'OK'
+        start_proc = Popen(cmd, text=True, stdout=PIPE)
+        (start_stdout, start_stderr) = start_proc.communicate(
+            timeout=ROCKETLOGGER_CMD_TIMEOUT)
+        json_reply['reply']['start'] = start_stdout
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
         return (json_reply, 501)
-    except:
+    except TimeoutExpired:
         json_reply['reply']['error'] = 'Starting measurement failed'
         json_reply['reply']['message'] = 'Starting measurement failed'
         return (json_reply, 503)
@@ -142,17 +144,17 @@ def stop(data):
     }
 
     # call rocketlogger CLI to stop measurement
-    json_reply['reply']['stop'] = 'FAILED'
+    json_reply['reply']['stop'] = None
     try:
         cmd = ['rocketlogger', 'stop']
-        stop_output = check_output(cmd, timeout=1000, text=True)
-        json_reply['reply']['output'] = stop_output
-        json_reply['reply']['stop'] = 'OK'
+        stop_cmd = run(cmd, check=True, text=True, capture_output=True,
+                       timeout=ROCKETLOGGER_CMD_TIMEOUT)
+        json_reply['reply']['stop'] = stop_cmd.stdout
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
         return (json_reply, 501)
-    except:
+    except CalledProcessError:
         json_reply['reply']['error'] = 'Stopping measurement failed.'
         json_reply['reply']['message'] = ' '.join(cmd)
         return (json_reply, 503)
@@ -178,13 +180,14 @@ def status(data):
     json_reply['reply']['status'] = None
     try:
         cmd = ['rocketlogger', 'status', '--json']
-        status = check_output(cmd, timeout=1000, text=True)
-        json_reply['reply']['status'] = json.loads(status)
+        status_cmd = run(cmd, check=True, text=True, capture_output=True,
+                         timeout=ROCKETLOGGER_CMD_TIMEOUT)
+        json_reply['reply']['status'] = json.loads(status_cmd.stdout)
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. '\
                                        'Check your system configruation.'
         return (json_reply, 501)
-    except:
+    except CalledProcessError:
         json_reply['reply']['error'] = 'Getting status failed.'
         json_reply['reply']['message'] = ' '.join(cmd)
         return (json_reply, 503)
@@ -222,11 +225,12 @@ def config(data):
     # get/set config command
     try:
         cmd = ['rocketlogger', 'config', '--json'] + config_args
-        config = check_output(cmd, timeout=1000, text=True)
-        json_reply['reply']['config'] = json.loads(config)
+        config_cmd = run(cmd, check=True, text=True, capture_output=True,
+                         timeout=ROCKETLOGGER_CMD_TIMEOUT)
+        json_reply['reply']['config'] = json.loads(config_cmd.stdout)
     except FileNotFoundError:
         json_reply['reply']['error'] = 'RocketLogger binary not found. ' \
-                                        'Check your system configruation.'
+                                       'Check your system configruation.'
         return (json_reply, 501)
     except:
         json_reply['reply']['error'] = 'Setting configuration failed.'
