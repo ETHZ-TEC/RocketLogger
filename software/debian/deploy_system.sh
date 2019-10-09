@@ -64,8 +64,8 @@ fi
 
 
 # grow file system size and reboot
-echo "Set hostname and grow file system size. You will be asked twice for the user password, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "sudo sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts; cd /opt/scripts/tools/ && sudo ./grow_partition.sh && sudo reboot"
+echo "Grow file system size. You will be asked twice for the user password, which is 'temppwd'."
+ssh -F /dev/null -p 22 -t debian@${HOST} "cd /opt/scripts/tools/ && sudo ./grow_partition.sh && sudo reboot"
 
 # verify grow file system size worked
 GROW=$?
@@ -107,7 +107,7 @@ ssh -F /dev/null -p 22 -t debian@${HOST} "exit"
 
 # perform system configuration
 echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh)"
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh ${HOSTNAME})"
 
 # verify system configuration worked
 CONFIG=$?

@@ -1,5 +1,6 @@
 #!/bin/bash
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
+# Usage: install.sh [hostname]
 #
 # Copyright (c) 2016-2018, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -30,18 +31,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-# need to run on a beaglebone
-echo "> Check beaglebone platform"
-if [[ $(hostname) -ne 'beaglebone' ]]; then
-  echo "Need to run this scritp on the beaglebone. Aborting."
-  exit 1
-fi
+HOSTNAME="rocketlogger"
 
 # need to run as root
 echo "> Checking root permission"
 if [[ $(id -u) -ne 0 ]]; then
   echo "Please run as root. Aborting."
   exit 1
+fi
+
+# check that we run on a clean BeagelBone image
+echo "> Check beaglebone platform"
+if [[ $(hostname) -ne 'beaglebone' ]]; then
+  echo "Need to run this script on a clean BeagleBone image. Aborting."
+  exit 1
+fi
+
+# check wether hostname argument is given
+if [ $# -ge 1 ]; then
+  HOSTNAME=$1
 fi
 
 
@@ -97,7 +105,10 @@ chown rocketlogger:rocketlogger -R /home/rocketlogger/
 
 
 ## network configuration
-echo "> Updating network configuration"
+echo "> Updating hostname and network configuration"
+
+# change hostname
+sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts
 
 # copy network interface configuration
 cp -f network/interfaces /etc/network/
