@@ -268,12 +268,14 @@ void rl_file_update_header_csv(FILE *file_handle,
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
  * @param config Current measurement configuration
+ * @return Returns the number of data blocks written to the file, negative on
+ * failure with errno set accordingly
  */
-void rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
-                            uint32_t buffer_size,
-                            rl_timestamp_t const *const timestamp_realtime,
-                            rl_timestamp_t const *const timestamp_monotonic,
-                            rl_config_t const *const config);
+int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
+                           uint32_t buffer_size,
+                           rl_timestamp_t const *const timestamp_realtime,
+                           rl_timestamp_t const *const timestamp_monotonic,
+                           rl_config_t const *const config);
 
 /**
  * Handle the sampling data buffer to add a new block to the ambient file.
@@ -284,12 +286,14 @@ void rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
  * @param config Current measurement configuration
+ * @return Returns the number of data blocks written to the file, negative on
+ * failure with errno set accordingly
  */
-void rl_file_add_ambient_block(FILE *ambient_file,
-                               pru_buffer_t const *const buffer,
-                               uint32_t buffer_size,
-                               rl_timestamp_t const *const timestamp_realtime,
-                               rl_timestamp_t const *const timestamp_monotonic,
-                               rl_config_t const *const config);
+int rl_file_add_ambient_block(FILE *ambient_file,
+                              pru_buffer_t const *const buffer,
+                              uint32_t buffer_size,
+                              rl_timestamp_t const *const timestamp_realtime,
+                              rl_timestamp_t const *const timestamp_monotonic,
+                              rl_config_t const *const config);
 
 #endif /* RL_FILE_H_ */

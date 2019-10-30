@@ -576,13 +576,21 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write header
         if (config->file_enable) {
             // write the data buffer to file
-            rl_file_add_data_block(data_file, buffer, buffer_size,
-                                   &timestamp_realtime, &timestamp_monotonic,
-                                   config);
+            int block_count = rl_file_add_data_block(
+                data_file, buffer, buffer_size, &timestamp_realtime,
+                &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(RL_LOG_ERROR, "Adding data block to data file failed.");
+                rl_status.error = true;
+                break;
+            }
 
             // update and store data file header
-            data_file_header.lead_in.data_block_count += 1;
-            data_file_header.lead_in.sample_count += buffer_size / aggregates;
+            data_file_header.lead_in.data_block_count += block_count;
+            data_file_header.lead_in.sample_count +=
+                block_count * (buffer_size / aggregates);
 
             if (config->file_format == RL_FILE_FORMAT_RLD) {
                 rl_file_update_header_bin(data_file, &data_file_header);
@@ -593,16 +601,23 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // handle ambient data
         if (config->ambient_enable) {
-
             // fetch and write data
-            rl_file_add_ambient_block(ambient_file, buffer, buffer_size,
-                                      &timestamp_realtime, &timestamp_monotonic,
-                                      config);
+            int block_count = rl_file_add_ambient_block(
+                ambient_file, buffer, buffer_size, &timestamp_realtime,
+                &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(RL_LOG_ERROR,
+                       "Adding data block to ambient file failed.");
+                rl_status.error = true;
+                break;
+            }
 
             // update and write header
-            ambient_file_header.lead_in.data_block_count += 1;
+            ambient_file_header.lead_in.data_block_count += block_count;
             ambient_file_header.lead_in.sample_count +=
-                RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
+                block_count * RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
             rl_file_update_header_bin(ambient_file, &ambient_file_header);
         }
 

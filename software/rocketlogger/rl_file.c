@@ -140,6 +140,8 @@ void rl_file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
 
 void rl_file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
                                    rl_config_t const *const config) {
+    // reset rate limiting counter
+    ambient_rate_counter = 0;
 
     // number channels
     uint16_t channel_count = rl_status.sensor_count;
@@ -326,18 +328,18 @@ void rl_file_update_header_csv(FILE *file_handle,
     fseek(file_handle, 0, SEEK_END);
 }
 
-void rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
-                            uint32_t buffer_size,
-                            rl_timestamp_t const *const timestamp_realtime,
-                            rl_timestamp_t const *const timestamp_monotonic,
-                            rl_config_t const *const config) {
+int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
+                           uint32_t buffer_size,
+                           rl_timestamp_t const *const timestamp_realtime,
+                           rl_timestamp_t const *const timestamp_monotonic,
+                           rl_config_t const *const config) {
     // skip if not storing to file, or invalid file structure
     if (!config->file_enable) {
-        return;
+        return 0;
     }
     if (data_file == NULL) {
         rl_log(RL_LOG_ERROR, "invalid data file provided, skip append data");
-        return;
+        return ERROR;
     }
 
     // write timestamp to file
@@ -475,26 +477,32 @@ void rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
     if (config->file_enable && data_file != NULL) {
         fflush(data_file);
     }
+
+    return 1;
 }
 
-void rl_file_add_ambient_block(FILE *ambient_file,
-                               pru_buffer_t const *const buffer,
-                               uint32_t buffer_size,
-                               rl_timestamp_t const *const timestamp_realtime,
-                               rl_timestamp_t const *const timestamp_monotonic,
-                               rl_config_t const *const config) {
+int rl_file_add_ambient_block(FILE *ambient_file,
+                              pru_buffer_t const *const buffer,
+                              uint32_t buffer_size,
+                              rl_timestamp_t const *const timestamp_realtime,
+                              rl_timestamp_t const *const timestamp_monotonic,
+                              rl_config_t const *const config) {
     // suppress unused parameter warning
     (void)buffer;
     (void)buffer_size;
 
     // rate limit sampling of the ambient sensors
-    if (ambient_rate_counter < config->update_rate) {
-        ambient_rate_counter += RL_FILE_AMBIENT_SAMPLING_RATE;
-        return;
+    if (ambient_rate_counter >= RL_FILE_AMBIENT_SAMPLING_RATE) {
+        // increment rate limiting counter before exit
+        ambient_rate_counter =
+            (ambient_rate_counter + RL_FILE_AMBIENT_SAMPLING_RATE) %
+            config->update_rate;
+        return 0;
     }
-
-    // reset rate control counter
-    ambient_rate_counter = 0;
+    // increment rate limiting counter
+    ambient_rate_counter =
+        (ambient_rate_counter + RL_FILE_AMBIENT_SAMPLING_RATE) %
+        config->update_rate;
 
     // store timestamps
     fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, ambient_file);
@@ -521,6 +529,8 @@ void rl_file_add_ambient_block(FILE *ambient_file,
 
     // WRITE VALUES //
     fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
+
+    return 1;
 }
 
 void rl_file_setup_data_channels(rl_file_header_t *const file_header,
