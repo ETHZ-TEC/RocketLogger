@@ -31,7 +31,17 @@
 
 .origin 0                        // start of program in PRU memory
 .entrypoint MAIN                 // program entry point
- 
+
+// PRU control register defines for cycle counter
+#define PRU0_CTRL_BASE      0x00022000
+#define PRU_CTRL_OFFSET     0x00
+#define PRU_CYCLE_OFFSET    0x0C
+#define PRU_CYCLE_RESET     0x0000
+
+// PRU control register LSB defines for counter ON/OFF control
+#define PRU_CRTL_CTR_ON     0x0B
+#define PRU_CRTL_CTR_OFF    0x03
+
 #define PRU0_R31_VEC_VALID  32   // allows notification of program completion
 #define PRU_EVTOUT_0        3    // the event number that is sent back
 
@@ -77,8 +87,8 @@
 
 
 // value register assignment
-#define ADC1_STATUS_REG r24
-#define ADC2_STATUS_REG r25
+#define ADC1_STATUS_REG r25
+#define ADC2_STATUS_REG r26
 
 #define V1_REG r13
 #define V2_REG r14
@@ -99,6 +109,8 @@
 #define I2H_2_REG r22
 #define I2L_2_REG r23
 
+// PRU cycle counter register
+#define CNT_REG   r24
 
 // other registers
 #define STATE               r0
@@ -112,10 +124,11 @@
 #define MEM_POINTER         r8
 #define SAMPLES_COUNT       r9
 #define ADC_COMMAND_OFFSET  r11 // is reused by I1M
-// channel input regs          r10-r23
-// status regs                 r24-r25
-// unused regs                 r26-r28 // unused
-#define WAIT_VAR            r29
+// channel input regs          r10-r24
+// status regs                 r25-r26
+#define CTRL_ADDRESS        r27
+#define WAIT_VAR            r28
+#define TMP                 r29
 
 
 // nop
@@ -136,6 +149,30 @@ WAITLOOP:
     QBA WAITLOOP
 ENDWAIT:
 
+.endm
+
+
+// START CYCLE COUNTER (overwrite LSB of control register)
+.macro start_counter
+    LDI     TMP, PRU_CRTL_CTR_ON
+    SBBO    &TMP, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
+.endm
+
+
+// STOP CYCLE COUNTER (overwrite LSB of control register)
+.macro stop_counter
+    LDI     TMP, PRU_CRTL_CTR_OFF
+    SBBO    &TMP, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
+.endm
+
+// TIMESTAMP AND RESTART (store cycle count to register and restart counter)
+.macro timestamp_restart
+.mparam reg
+    stop_counter
+    LBBO    &reg, CTRL_ADDRESS, PRU_CYCLE_OFFSET, 4 // read counter value
+    LDI     TMP, PRU_CYCLE_RESET                    // load counter reset value
+    SBBO    &TMP, CTRL_ADDRESS, PRU_CYCLE_OFFSET, 4 // reset counter
+    start_counter
 .endm
 
 
@@ -289,6 +326,7 @@ MAIN:
     SBCO    r0, C4, 4, 4     // store the modified r0 back at the load addr
  
     MOV BASE_ADDRESS, 0x0    // load the base address into r1
+    MOV CTRL_ADDRESS, PRU0_CTRL_BASE    // load the CTRL base address to register
 
     SET CS1         // CS high
     SET CS2
@@ -398,6 +436,9 @@ READ:
     // wait for data ready
     WBC DR1
 
+    // immediately timestamp data
+    timestamp_restart CNT_REG
+
     // receive data
     receive_data
 
@@ -480,6 +521,10 @@ DATAPROCESSING:
     SBBO I2L_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
     ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
     SBBO I2H_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
+    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
+
+    // PRU cycle counter value
+    SBBO CNT_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
     ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
 
     QBA SAMPLINGLOOP
