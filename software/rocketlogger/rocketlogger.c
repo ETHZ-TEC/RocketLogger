@@ -288,6 +288,14 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    /// @todo temporarily disabled web interface buffer handling
+    // disable incompatible web interface
+    if (config.web_enable) {
+        rl_log(RL_LOG_WARNING, "no compatible web interface implemented, "
+                               "disabling web interface.\n");
+        config.web_enable = false;
+    }
+
     // reset config if requested
     if (arguments.config_reset) {
         if (strcmp(action, "config") != 0) {
