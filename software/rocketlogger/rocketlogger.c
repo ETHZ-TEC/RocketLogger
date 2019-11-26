@@ -288,6 +288,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // make sure incompatible web interface is diesabled
+    if (config.web_enable) {
+        rl_log(RL_LOG_WARNING, "no compatible web interface implemented, "
+                               "disabling web interface.\n");
+        config.web_enable = false;
+    }
+
     // reset config if requested
     if (arguments.config_reset) {
         if (strcmp(action, "config") != 0) {
