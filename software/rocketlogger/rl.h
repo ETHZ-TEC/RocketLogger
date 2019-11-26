@@ -50,7 +50,7 @@
 /// Maximum path length in characters
 #define RL_PATH_LENGTH_MAX 256
 /// Number of RocketLogger analog channels
-#define RL_CHANNEL_COUNT 8
+#define RL_CHANNEL_COUNT 9
 /// Number of RocketLogger switched channels (allowing to force range)
 #define RL_CHANNEL_SWITCHED_COUNT 2
 /// Number of RocketLogger digtial channels
@@ -82,9 +82,10 @@
 #define RL_CONFIG_CHANNEL_I1H 5
 #define RL_CONFIG_CHANNEL_I2L 6
 #define RL_CONFIG_CHANNEL_I2H 7
+#define RL_CONFIG_CHANNEL_DT 8
 /// Configuration channel enable default
 #define RL_CONFIG_CHANNEL_ENABLE_DEFAULT                                       \
-    { true, true, true, true, true, true, true, true }
+    { true, true, true, true, true, true, true, true, true }
 /// Configuration merged/forced channel indexes
 #define RL_CONFIG_CHANNEL_I1 0
 #define RL_CONFIG_CHANNEL_I2 1

@@ -60,7 +60,7 @@ struct rl_calibration {
     int offsets[RL_CHANNEL_COUNT];
     /// Channel scalings
     double scales[RL_CHANNEL_COUNT];
-};
+} __attribute__((packed));
 
 /**
  * Typedef for RocketLogger calibration data.
@@ -81,7 +81,7 @@ struct rl_calibration_file {
     uint64_t calibration_time;
     /// The actual calibration data
     rl_calibration_t data;
-};
+} __attribute__((packed));
 
 /**
  * Typedef for RocketLogger calibration file structure.

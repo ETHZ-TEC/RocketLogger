@@ -593,8 +593,13 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
                         RL_FILE_CHANNEL_NO_LINK;
                 }
                 file_header->channel[ch].unit = RL_UNIT_AMPERE;
-            } else {
+            } else if (is_voltage(i)) {
                 file_header->channel[ch].unit = RL_UNIT_VOLT;
+                file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
+                file_header->channel[ch].valid_data_channel =
+                    RL_FILE_CHANNEL_NO_LINK;
+            } else {
+                file_header->channel[ch].unit = RL_UNIT_SECOND;
                 file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
                 file_header->channel[ch].valid_data_channel =
                     RL_FILE_CHANNEL_NO_LINK;

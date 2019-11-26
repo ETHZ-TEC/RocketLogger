@@ -90,8 +90,8 @@ const rl_status_t rl_status_default = {
 };
 
 /// RocketLogger channel names
-const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {"V1",  "V2",  "V3",  "V4",
-                                                  "I1L", "I1H", "I2L", "I2H"};
+const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {
+    "V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H", "DT"};
 
 /// RocketLogger force range channel names
 const char *RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1H", "I2H"};
@@ -147,11 +147,12 @@ void rl_config_print(rl_config_t const *const config) {
         config->channel_enable[RL_CONFIG_CHANNEL_V3] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_V4] ? "on " : "off");
     print_config_line(
-        "", "I1L: %s  I1H: %s  I2L: %s  I2H: %s",
+        "", "I1L: %s  I1H: %s  I2L: %s  I2H: %s  DT:  %s",
         config->channel_enable[RL_CONFIG_CHANNEL_I1L] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_I1H] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_I2L] ? "on " : "off",
-        config->channel_enable[RL_CONFIG_CHANNEL_I2H] ? "on " : "off");
+        config->channel_enable[RL_CONFIG_CHANNEL_I2H] ? "on " : "off",
+        config->channel_enable[RL_CONFIG_CHANNEL_DT] ? "on " : "off");
     print_config_line(
         "Force High Channels", "I1H: %s  I2H: %s",
         config->channel_force_range[RL_CONFIG_CHANNEL_I1] ? "on " : "off",
