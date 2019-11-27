@@ -58,6 +58,9 @@
 #define ADC_STATUS_SIZE  24
 #define ADC_STATUS_MASK  0xF//0x1 // new: 0xF (for all 4 digital inputs)
 
+// total channel count
+#define CHANNEL_COUNT             9
+
 // pru data layout (position in memory)
 #define STATE_OFFSET              0x00
 #define BUFFER0_OFFSET            0x04
@@ -73,44 +76,49 @@
 #define BUFFER_DIGITAL_SIZE 4
 #define BUFFER_DATA_SIZE    4
 
+#define BUFFER_BLOCK_SIZE   (BUFFER_DIGITAL_SIZE + \
+                             CHANNEL_COUNT * BUFFER_DATA_SIZE)
 
-// gpio registers
-#define SCLK      r30.t0
-#define MOSI      r30.t1
-#define MISO1     r31.t2
-#define MISO2     r31.t16
-#define CS1       r30.t3
-#define CS2       r30.t5
-#define START_PIN r30.t7
-#define DR1       r31.t15
-#define DR2       r31.t14 // unused
+// gpio register bits
+#define SCLK        r30.t0
+#define MOSI        r30.t1
+#define MISO1       r31.t2
+#define MISO2       r31.t16
+#define CS1         r30.t3
+#define CS2         r30.t5
+#define START_PIN   r30.t7
+#define DR1         r31.t15
+#define DR2         r31.t14 // unused
+#define LED_ERROR   r30.t14 // user space controlled, PRU mapped for analysis
+#define LED_STATUS  r30.t15 // user space controlled
 
 
 // value register assignment
-#define ADC1_STATUS_REG r25
-#define ADC2_STATUS_REG r26
+#define ADC1_STATUS_REG r10
 
-#define V1_REG r13
-#define V2_REG r14
-#define V3_REG r18
-#define V4_REG r19
-
-#define I1H_REG r10
-#define I1M_REG r11 // unused
-#define I1L_REG r12
-
-#define I2H_REG r15
-#define I2M_REG r16 // unused
-#define I2L_REG r17
-
-// new channels
-#define I1H_2_REG r20
-#define I1L_2_REG r21
-#define I2H_2_REG r22
-#define I2L_2_REG r23
+// analog channel registers
+#define V1_REG  r11
+#define V2_REG  r12
+#define V3_REG  r13
+#define V4_REG  r14
+#define I2L_REG r15
+#define I1L_REG r16
+#define I1H_REG r17
+#define I2H_REG r18
 
 // PRU cycle counter register
-#define CNT_REG   r24
+#define CNT_REG r19
+
+// unused medium current channels
+#define I1M_REG r20 // unused
+#define I2M_REG r21 // unused
+
+// over sampling and second digital channels for aggregation
+#define ADC2_STATUS_REG r22
+#define I1H_2_REG r23
+#define I1L_2_REG r24
+#define I2H_2_REG r25
+#define I2L_2_REG r26
 
 // other registers
 #define STATE               r0
@@ -123,9 +131,9 @@
 #define ADC_COMMAND_COUNT   r7 // could be reused?
 #define MEM_POINTER         r8
 #define SAMPLES_COUNT       r9
-#define ADC_COMMAND_OFFSET  r11 // is reused by I1M
-// channel input regs          r10-r24
-// status regs                 r25-r26
+#define ADC_COMMAND_OFFSET  r11 // is reused by V1
+// channel input regs          r11-r25
+// status regs                 r10,r26
 #define CTRL_ADDRESS        r27
 #define WAIT_VAR            r28
 #define TMP                 r29
@@ -152,14 +160,14 @@ ENDWAIT:
 .endm
 
 
-// START CYCLE COUNTER (overwrite LSB of control register)
+// START CYCLE COUNTER (overwrite LSB of control register), 5 cycles start delay
 .macro start_counter
     LDI     TMP, PRU_CRTL_CTR_ON
     SBBO    &TMP, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
 .endm
 
 
-// STOP CYCLE COUNTER (overwrite LSB of control register)
+// STOP CYCLE COUNTER (overwrite LSB of control register), 5 cycles stop delay
 .macro stop_counter
     LDI     TMP, PRU_CRTL_CTR_OFF
     SBBO    &TMP, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
@@ -328,6 +336,9 @@ MAIN:
     MOV BASE_ADDRESS, 0x0    // load the base address into r1
     MOV CTRL_ADDRESS, PRU0_CTRL_BASE    // load the CTRL base address to register
 
+    CLR LED_ERROR   // reset error indicator
+    SET LED_STATUS  // indicate sampling active
+
     SET CS1         // CS high
     SET CS2
     CLR MOSI        // MOSI low
@@ -433,11 +444,15 @@ READ:
     // reset input register
     MOV r10, 0 // TODO: remove
 
+//    SET LED_ERROR // use erorr LED for busy wait analysis, signaling start
+
     // wait for data ready
     WBC DR1
 
     // immediately timestamp data
     timestamp_restart CNT_REG
+
+//    CLR LED_ERROR // use erorr LED for busy wait analysis, signaling end
 
     // receive data
     receive_data
@@ -447,8 +462,6 @@ READ:
     AND ADC2_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_MASK
     LSL ADC2_STATUS_REG, ADC2_STATUS_REG, 8
     OR ADC1_STATUS_REG, ADC1_STATUS_REG, ADC2_STATUS_REG
-    SBBO ADC1_STATUS_REG, MEM_POINTER, 0, BUFFER_DIGITAL_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DIGITAL_SIZE
 
     // extend 16 bit data to 24 bit full range
     QBEQ HIGHPRECISION, PRECISION, 24
@@ -495,37 +508,10 @@ DATAPROCESSING:
     ADD I2H_REG, I2H_REG, I2H_2_REG
     ADD I2L_REG, I2L_REG, I2L_2_REG
 
-    // V1
-    SBBO V1_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
 
-    // V2
-    SBBO V2_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-
-    // V3
-    SBBO V3_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-
-    // V4
-    SBBO V4_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-
-    // I1L and I1H
-    SBBO I1L_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-    SBBO I1H_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-
-    // I2L and I2H
-    SBBO I2L_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-    SBBO I2H_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
-
-    // PRU cycle counter value
-    SBBO CNT_REG, MEM_POINTER, 0, BUFFER_DATA_SIZE
-    ADD MEM_POINTER, MEM_POINTER, BUFFER_DATA_SIZE
+    // single block transfer of all channels
+    SBBO ADC1_STATUS_REG, MEM_POINTER, 0, BUFFER_BLOCK_SIZE
+    ADD MEM_POINTER, MEM_POINTER, BUFFER_BLOCK_SIZE
 
     QBA SAMPLINGLOOP
 
@@ -541,6 +527,12 @@ STOP:
     send_command ADC_CMD
     MOV ADC_CMD, ADC_RREG
     send_command ADC_CMD
+
+    // post interrupt to user space program
+    MOV r31.b0, PRU0_R31_VEC_VALID | PRU_EVTOUT_0
+
+    // indicate sampling inactive
+    CLR LED_STATUS
 
     // pause PRU
     HALT

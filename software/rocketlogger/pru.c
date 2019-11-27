@@ -628,6 +628,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         }
     }
 
+    // stop PRU
+    pru_stop();
+
     // sampling stopped, update status
     rl_status.sampling = false;
     res = rl_status_write(&rl_status);
