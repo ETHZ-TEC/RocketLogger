@@ -334,7 +334,7 @@ int bme280_set_parameters(int sensor_identifier) {
     result = i2c_smbus_write_byte_data(sensor_bus, BME280_REG_CONTROL_HUMIDITY,
                                        BME280_OVERSAMPLE_HUMIDITY_1);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 setting humidiy control register failed");
+        rl_log(RL_LOG_ERROR, "BME280 setting humidity control register failed");
         return result;
     }
 
@@ -426,8 +426,8 @@ static uint32_t bme280_compensate_pressure(int sensor_identifier,
     // hPa
     // return (uint32_t)pressure;
 
-    int64_t pressure_rebased = (1000 * pressure) >> 8;
-    return (uint32_t)pressure_rebased;
+    int64_t pressure_rescaled = (1000 * pressure) >> 8;
+    return (uint32_t)pressure_rescaled;
 }
 
 static uint32_t bme280_compensate_humidity(int sensor_identifier,
@@ -469,6 +469,6 @@ static uint32_t bme280_compensate_humidity(int sensor_identifier,
     // Output value of '47445' represents 47445/1024 = 46.333 %RH
     // return (uint32_t)(humidity >> 12);
 
-    uint32_t humidity_rebased = (((uint64_t)10000 * humidity) >> 22);
-    return humidity_rebased;
+    uint32_t humidity_rescaled = (((uint64_t)10000 * humidity) >> 22);
+    return humidity_rescaled;
 }

@@ -53,7 +53,7 @@
 #define RL_CHANNEL_COUNT 9
 /// Number of RocketLogger switched channels (allowing to force range)
 #define RL_CHANNEL_SWITCHED_COUNT 2
-/// Number of RocketLogger digtial channels
+/// Number of RocketLogger digital channels
 #define RL_CHANNEL_DIGITAL_COUNT 6
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
@@ -85,7 +85,7 @@
 #define RL_CONFIG_CHANNEL_DT 8
 /// Configuration channel enable default
 #define RL_CONFIG_CHANNEL_ENABLE_DEFAULT                                       \
-    { true, true, true, true, true, true, true, true, true }
+    { true, true, true, true, true, true, true, true, false }
 /// Configuration merged/forced channel indexes
 #define RL_CONFIG_CHANNEL_I1 0
 #define RL_CONFIG_CHANNEL_I2 1
@@ -98,7 +98,7 @@
 #define RL_CONFIG_FILE_SIZE_MIN (5UL * 1000UL * 1000UL)
 /// Configuration file size default
 #define RL_CONFIG_FILE_SIZE_DEFAULT (1000UL * 1000UL * 1000UL)
-/// Configuration file commment default
+/// Configuration file comment default
 #define RL_CONFIG_COMMENT_DEFAULT "Sampled using the RocketLogger"
 
 /**
@@ -133,7 +133,7 @@ typedef enum rl_file_format rl_file_format_t;
 struct rl_config {
     /// Configuration structure version
     uint8_t config_version;
-    /// Put the measurment process in background after successful start
+    /// Put the measurement process in background after successful start
     bool background_enable;
     /// Display measurement data interactively in CLI while sampling
     bool interactive_enable;

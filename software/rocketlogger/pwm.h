@@ -148,29 +148,29 @@
 /// Use counter clock prescaler of 2
 #define TBCTL_CLKDIV_2 0x0400
 
-/// Action quilifier: clear on zero
+/// Action qualifier: clear on zero
 #define AQ_ZROCLR 0x0001
-/// Action quilifier: set on zero
+/// Action qualifier: set on zero
 #define AQ_ZROSET 0x0002
-/// Action quilifier: clear on period
+/// Action qualifier: clear on period
 #define AQ_PRDCLR 0x0004
-/// Action quilifier: clear set on period
+/// Action qualifier: clear set on period
 #define AQ_PRDSET 0x0008
-/// Action quilifier: clear on compare A when incrementing
+/// Action qualifier: clear on compare A when incrementing
 #define AQ_A_INCCLR 0x0010
-/// Action quilifier: set on compare A when incrementing
+/// Action qualifier: set on compare A when incrementing
 #define AQ_A_INCSET 0x0020
-/// Action quilifier: clear on compare A when decrementing
+/// Action qualifier: clear on compare A when decrementing
 #define AQ_A_DECCLR 0x0040
-/// Action quilifier: set on compare A when decrementing
+/// Action qualifier: set on compare A when decrementing
 #define AQ_A_DECSET 0x0080
-/// Action quilifier: clear on compare B when incrementing
+/// Action qualifier: clear on compare B when incrementing
 #define AQ_B_INCCLR 0x0100
-/// Action quilifier: set on compare B when incrementing
+/// Action qualifier: set on compare B when incrementing
 #define AQ_B_INCSET 0x0200
-/// Action quilifier: clear on compare B when decrementing
+/// Action qualifier: clear on compare B when decrementing
 #define AQ_B_DECCLR 0x0400
-/// Action quilifier: set on compare B when decrementing
+/// Action qualifier: set on compare B when decrementing
 #define AQ_B_DECSET 0x0800
 
 /// ADC master clock period (in units 10 ns)

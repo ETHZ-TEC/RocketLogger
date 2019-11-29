@@ -68,7 +68,6 @@ bool is_voltage(int index) {
     return false;
 }
 
-
 int count_channels(bool const channels[RL_CHANNEL_COUNT]) {
     int count = 0;
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
