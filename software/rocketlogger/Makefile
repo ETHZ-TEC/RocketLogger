@@ -173,7 +173,7 @@ $(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rocketlogger
 
 $(TARGET_FIRMWARE): $(FIRMWARE_SRC)
 	@$(MAKEDIR) $(@D)
-	$(PASM) -b $< $(@:.bin=)
+	$(PASM) -V3 -b -l $< $(@:.bin=)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
@@ -214,7 +214,7 @@ $(BIN_DIR):
 .PHONY: clean code-format
 
 clean:
-	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_FIRMWARE) $(TARGET_SERVER)
+	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_FIRMWARE) $(TARGET_FIRMWARE:.bin=.lst) $(TARGET_SERVER)
 
 code-format:
 	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
