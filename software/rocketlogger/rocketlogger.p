@@ -95,6 +95,21 @@
 #define LED_ERROR                   r30.t14 // user space, cleared on start
 #define LED_STATUS                  r30.t15 // user space, busy wait indicator
 
+// SPI GPIO in/out register and bit definitions
+#define SCLK_REG                    r30
+#define SCLK_BIT                    0
+#define MOSI_REG                    r30
+#define MOSI_BIT                    1
+#define CS_REG                      r30
+#define CS1_BIT                     3
+#define CS2_BIT                     5
+#define MISO_REG                    r31
+#define MISO1_BIT                   2
+#define MISO2_BIT                   16
+#define DR_REG                      r31
+#define DR1_BIT                     15
+#define DR2_BIT                     14
+
 // PRU register definitions: channel data from ADC to transfer to DDR
 #define DI_REG                      r0
 #define V1_REG                      r1
@@ -174,6 +189,7 @@ ENDLOOP:
     SBBO    &MTMP_REG, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
 .endm
 
+
 // TIMESTAMP AND RESTART (store cycle count to register and restart counter)
 .macro timestamp_restart
 .mparam reg
@@ -191,35 +207,31 @@ ENDLOOP:
     // setup SPI bit write loop
     LOOP    END_SPI_BIT_WRITE, size
 
-    // clock high phase (5+1 cycles total)
-    SET     SCLK
+    // clock high phase (5 cycles total, offset by 1 cycle for QBBC)
 
     // set SPI output data (3 cycles)
     QBBC    OUTLOW, data_reg, 31
+    SET     SCLK
     SET     MOSI
     QBA     OUTHIGH
 OUTLOW:
+    SET     SCLK
     CLR     MOSI
     NOP
 OUTHIGH:
-    // timed delay (1 cycle)
+    // timed delay (2 cycles)
+    NOP
     NOP
 
-    // extra delay to limit SPI speed (1 cycle)
-    NOP
-
-    // clock low phase (5+1 cycles total)
+    // clock low phase (5 cycles total)
     CLR     SCLK
 
     // shift output data register (1 cycle)
     LSL     data_reg, data_reg, 1
-    // timed delay (3 cycles)
+    // timed delay (2 cycles)
     NOP
     NOP
-    NOP
-
-    // extra delay to limit SPI speed (1 cycle)
-    NOP
+    // QBBC (1 cycle) at begining of next loop iteration
 
 END_SPI_BIT_WRITE:
 .endm
@@ -228,43 +240,50 @@ END_SPI_BIT_WRITE:
 // SPI READ DATA (read SPI data block of `size` bits, optimized for timing)
 .macro spi_read_data
 .mparam data0_reg, data1_reg, size
+    // dummy read of MISO2 in first iteration
+    ZERO    &MTMP_REG, 4
+
     // setup SPI bit read loop
     LOOP    END_SPI_BIT_READ, size
 
-    // clock high phase (5+1 cycles total)
+    // clock high phase (5 cycles total)
     SET     SCLK
 
-    // shift input data register (2 cycles)
-    LSL     data0_reg, data0_reg, 1
-    LSL     data1_reg, data1_reg, 1
-    // timed delay (2 cycles)
-    NOP
-    NOP
-
-    // extra delay to limit SPI speed (1 cycle)
-    NOP
-
-    // clock low phase (5+1 cycles total)
-    CLR     SCLK
-
-    // read SPI1 input bit (2 cycles)
-    QBBS    IN0HIGH, MISO1
-    QBA     IN0LOW
-IN0HIGH:
-    OR      data0_reg, data0_reg, 0x01
-IN0LOW:
-    // read SPI2 input bit (2 cycles)
-    QBBS    IN1HIGH, MISO2
+    // decode SPI2 input bit from previous loop iteration (2 cycles)
+    QBBS    IN1HIGH, MTMP_REG, MISO2_BIT
     QBA     IN1LOW
 IN1HIGH:
     OR      data1_reg, data1_reg, 0x01
 IN1LOW:
+    // shift input data register for current loop (2 cycles)
+    LSL     data0_reg, data0_reg, 1
+    LSL     data1_reg, data1_reg, 1
 
-    // extra delay to limit SPI speed (1 cycle)
+    // clock low phase (5 cycles total)
+    CLR     SCLK
+
+    // timed delay: before input bit read; due to input delay? (1 cycle)
     NOP
 
+    // read input bits (1 cycle)
+    MOV     MTMP_REG, MISO_REG
+
+    // decode and store SPI1 input bit (2 cycles)
+    QBBS    IN0HIGH, MTMP_REG, MISO1_BIT
+    QBA     IN0LOW
+IN0HIGH:
+    OR      data0_reg, data0_reg, 0x01
+IN0LOW:
+
 END_SPI_BIT_READ:
+    // decode final SPI2 input bit from the last loop iteration (2 cycles)
+    QBBS    IN2HIGH, MTMP_REG, MISO2_BIT
+    QBA     IN2LOW
+IN2HIGH:
+    OR      data1_reg, data1_reg, 0x01
+IN2LOW:
 .endm
+
 
 // ADC SEND COMMAND (send command of 24 bits to the ADC)
 .macro adc_send_command
@@ -312,7 +331,7 @@ END_SPI_BIT_READ:
     spi_read_data V1_REG,    V3_REG,     PRECISION
 
     // end ADC data transfer frame with (positive) chip de-select
-    wait_cycles SPI_DESELECT_GUARD_CYCLES
+    // wait_cycles SPI_DESELECT_GUARD_CYCLES // skip guard for data burst read
     SET     CS1
     SET     CS2
 .endm
