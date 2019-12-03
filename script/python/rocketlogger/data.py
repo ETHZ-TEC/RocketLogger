@@ -43,7 +43,7 @@ import numpy as np
 
 _ROCKETLOGGER_FILE_MAGIC = 0x444C5225
 
-_SUPPORTED_FILE_VERSIONS = [1, 2, 3]
+_SUPPORTED_FILE_VERSIONS = [1, 2, 3, 4]
 
 _BINARY_CHANNEL_STUFF_BYTES = 4
 _TIMESTAMP_SECONDS_BYTES = 8
@@ -52,7 +52,7 @@ _TIMESTAMP_BYTES = _TIMESTAMP_SECONDS_BYTES + _TIMESTAMP_NANOSECONDS_BYTES
 
 _FILE_MAGIC_BYTES = 4
 _FILE_VERSION_BYTES = 2
-_HEADER_LENGHT_BYTES = 2
+_HEADER_LENGTH_BYTES = 2
 _DATA_BLOCK_SIZE_BYTES = 4
 _DATA_BLOCK_COUNT_BYTES = 4
 _SAMPLE_COUNT_BYTES = 8
@@ -79,6 +79,7 @@ _CHANNEL_UNIT_NAMES = {
     7: 'integer',
     8: 'percent',
     9: 'pressure',
+    10: 'time delta',
     0xffffffff: 'undefined',
 }
 _CHANNEL_IS_BINARY = {
@@ -92,6 +93,7 @@ _CHANNEL_IS_BINARY = {
     7: False,
     8: False,
     9: False,
+    10: False,
     0xffffffff: False,
 }
 _CHANNEL_VALID_UNLINKED = 65535
@@ -217,11 +219,11 @@ def _read_str(file_handle, length):
 
 def _read_timestamp(file_handle):
     """
-    Read a timestamp from the file as nano second datetime64 (numpy)
+    Read a timestamp from the file as nano second datetime64 (Numpy)
 
     :param file_handle: The file handle to read from at current position
 
-    :returns: The read date and time as nano second datetime64 (numpy)
+    :returns: The read date and time as nano second datetime64 (Numpy)
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
@@ -269,7 +271,7 @@ class RocketLoggerData:
 
         :param exclude_part: Exclude given part(s) of number files when
             joining following the "<filename>_p#.rld" convention.
-            Expects a single index or list or numpy array of indexes to
+            Expects a single index or list or Numpy array of indexes to
             exclude. Silently ignores indexes beyond the number of found parts.
             Only applicable when joining multiple files with join_files=True.
 
@@ -312,7 +314,7 @@ class RocketLoggerData:
         :param file_handle: The file handle to read from, with pointer
             positioned at file start
 
-        :returns: Named struct containing the read file header data.
+        :returns: Dictionary containing the read file header data.
         """
         header = {}
 
@@ -331,7 +333,7 @@ class RocketLoggerData:
                     header['file_version']))
 
         # read static header fields
-        header['header_length'] = _read_uint(file_handle, _HEADER_LENGHT_BYTES)
+        header['header_length'] = _read_uint(file_handle, _HEADER_LENGTH_BYTES)
         header['data_block_size'] = _read_uint(file_handle,
                                                _DATA_BLOCK_SIZE_BYTES)
         header['data_block_count'] = _read_uint(file_handle,
@@ -423,8 +425,8 @@ class RocketLoggerData:
             increase file read performance for many smaller files and/or
             some system configurations.
 
-        :returns: Tuple of realtime, monotonic clock based numpy datetime64
-            arrays, and the list of numpy arrays containing the read channel
+        :returns: Tuple of realtime, monotonic clock based Numpy datetime64
+            arrays, and the list of Numpy arrays containing the read channel
             data
         """
         # generate data type to read from header info
@@ -569,7 +571,7 @@ class RocketLoggerData:
 
         :param channel_info: Channel info structure of the channel to add
 
-        :param channel_data: The actual channel data to add, numpy array
+        :param channel_data: The actual channel data to add, Numpy array
         """
         if not isinstance(channel_info, dict):
             raise TypeError('Channel info structure is expected '
@@ -680,7 +682,7 @@ class RocketLoggerData:
 
         :param exclude_part: Exclude given part(s) of number files when
             joining following the "<filename>_p#.rld" convention.
-            Expects a single index or list or numpy array of indexes to
+            Expects a single index or list or Numpy array of indexes to
             exclude. Silently ignores indexes beyond the number of found parts.
             Only applicable when joining multiple files with join_files=True.
 
@@ -714,7 +716,7 @@ class RocketLoggerData:
 
         if not isinstance(exclude_part, list):
             raise ValueError('invalid exclude_part: accepting integer,'
-                             'a list of integers or an integer numpy array.')
+                             'a list of integers or an integer Numpy array.')
 
         file_basename, file_extension = splitext(filename)
         file_number = 0
@@ -818,12 +820,13 @@ class RocketLoggerData:
 
                     # store new data array on first file, append on following
                     if files_loaded > 0:
-                        self._timestamps_realtime = np.hstack(
+                        self._timestamps_realtime = np.concatenate(
                             (self._timestamps_realtime, timestamps_realtime))
-                        self._timestamps_monotonic = np.hstack(
+                        self._timestamps_monotonic = np.concatenate(
                             (self._timestamps_monotonic, timestamps_monotonic))
                         for i in range(len(self._data)):
-                            self._data[i] = np.hstack((self._data[i], data[i]))
+                            self._data[i] = np.concatenate(
+                                (self._data[i], data[i]))
                     else:
                         self._timestamps_realtime = timestamps_realtime
                         self._timestamps_monotonic = timestamps_monotonic
@@ -912,7 +915,7 @@ class RocketLoggerData:
             shall be returned. List of channel names or 'all' to select all
             channels.
 
-        :returns: A numpy array containing the channel's data vectors
+        :returns: A Numpy array containing the channel's data vectors
         """
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
@@ -951,7 +954,7 @@ class RocketLoggerData:
             - 'local' Get the timestamp of the local oscillator clock
             - 'network' Get the timestamp of the network synchronized clock
 
-        :returns: A numpy array containing the timestamps
+        :returns: A Numpy array containing the timestamps
         """
         if self._timestamps_monotonic is None:
             raise TypeError('No data to access for header only imported file.')
@@ -1016,7 +1019,7 @@ class RocketLoggerData:
             shall be returned. List of channel names or 'all' to select all
             channels.
 
-        :returns: A numpy array containing the channel's validity vectors
+        :returns: A Numpy array containing the channel's validity vectors
         """
         if not isinstance(channel_names, list):
             channel_names = [channel_names]

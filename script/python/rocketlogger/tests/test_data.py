@@ -285,18 +285,18 @@ class TestJoinExcludeFirst(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.arange(128000, 3*128000)
+        reference_range = np.arange(128000, 3 * 128000)
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.arange(2, 3*2)
+        reference_range = np.arange(2, 3 * 2)
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.arange(2, 3*2)
+        reference_range = np.arange(2, 3 * 2)
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))
@@ -316,18 +316,18 @@ class TestJoinExcludeLast(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.arange(2*128000)
+        reference_range = np.arange(2 * 128000)
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.arange(2*2)
+        reference_range = np.arange(2 * 2)
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.arange(2*2)
+        reference_range = np.arange(2 * 2)
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))
@@ -347,18 +347,18 @@ class TestJoinExcludeMultiple(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.arange(128000, 2*128000)
+        reference_range = np.arange(128000, 2 * 128000)
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.arange(2, 2*2)
+        reference_range = np.arange(2, 2 * 2)
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.arange(2, 2*2)
+        reference_range = np.arange(2, 2 * 2)
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))
@@ -378,19 +378,21 @@ class TestJoinExcludeInt(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.hstack((np.arange(128000),
-                                     np.arange(2*128000, 3*128000)))
+        reference_range = np.concatenate(
+            (np.arange(128000), np.arange(2 * 128000, 3 * 128000)))
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))
@@ -410,19 +412,21 @@ class TestJoinExcludeList(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.hstack((np.arange(128000),
-                                     np.arange(2*128000, 3*128000)))
+        reference_range = np.concatenate(
+            (np.arange(128000), np.arange(2 * 128000, 3 * 128000)))
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))
@@ -443,19 +447,21 @@ class TestJoinExcludeArray(TestCase):
         self.assertIsInstance(self.data, RocketLoggerData)
 
     def test_data_values(self):
-        reference_range = np.hstack((np.arange(128000),
-                                     np.arange(2*128000, 3*128000)))
+        reference_range = np.concatenate(
+            (np.arange(128000), np.arange(2 * 128000, 3 * 128000)))
         reference = self.full_reference.get_data()[reference_range]
         self.assertTrue(np.array_equal(self.data.get_data(), reference))
 
     def test_data_timestamp_monotonic(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_monotonic[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_monotonic, reference))
 
     def test_data_timestamp_realtime(self):
-        reference_range = np.hstack((np.arange(2), np.arange(2*2, 3*2)))
+        reference_range = np.concatenate(
+            (np.arange(2), np.arange(2 * 2, 3 * 2)))
         reference = self.full_reference._timestamps_realtime[reference_range]
         self.assertTrue(np.array_equal(
             self.data._timestamps_realtime, reference))

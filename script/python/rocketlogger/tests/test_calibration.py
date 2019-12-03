@@ -40,7 +40,8 @@ from rocketlogger.data import RocketLoggerData, RocketLoggerFileError
 from rocketlogger.calibration import RocketLoggerCalibration, \
     RocketLoggerCalibrationSetup, RocketLoggerCalibrationError, \
     CALIBRATION_SETUP_SMU2450, CALIBRATION_SETUP_BASIC, \
-    _extract_setpoint_measurement
+    _extract_setpoint_measurement, _CALIBRATION_PRU_CYCLES_OFFSET, \
+    _CALIBRATION_PRU_CYCLES_SCALE
 
 
 _TEST_FILE_DIR = 'data'
@@ -157,20 +158,21 @@ class TestCalibrationSetup(TestCase):
 
     def test_SMU2450_setup_voltage_setpoints(self):
         setpoints = CALIBRATION_SETUP_SMU2450.get_voltage_setpoints()
-        setpoints_reference = np.hstack([np.arange(-5, 5.1, 0.1),
-                                         np.arange(4.9, -5.1, -0.1)])
+        setpoints_reference = np.concatenate(
+            (np.arange(-5, 5.1, 0.1), np.arange(4.9, -5.1, -0.1)))
         self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_SMU2450_setup_current_low_setpoints(self):
         setpoints = CALIBRATION_SETUP_SMU2450.get_current_low_setpoints()
-        setpoints_reference = np.hstack([np.arange(-1e-3, 1.02e-3, 20e-6),
-                                         np.arange(0.98e-3, -1.02e-3, -20e-6)])
+        setpoints_reference = np.concatenate(
+            (np.arange(-1e-3, 1.02e-3, 20e-6),
+             np.arange(0.98e-3, -1.02e-3, -20e-6)))
         self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_SMU2450_setup_current_high_setpoints(self):
         setpoints = CALIBRATION_SETUP_SMU2450.get_current_high_setpoints()
-        setpoints_reference = np.hstack([np.arange(-0.1, 0.102, 2e-3),
-                                         np.arange(0.098, -0.102, -2e-3)])
+        setpoints_reference = np.concatenate(
+            (np.arange(-0.1, 0.102, 2e-3), np.arange(0.098, -0.102, -2e-3)))
         self.assertTrue(np.allclose(setpoints, setpoints_reference))
 
     def test_basic_setup_setpoint_count(self):
@@ -316,11 +318,13 @@ class TestCalibrationProcedure(TestCase):
 
     def _check_reference_calibration(self, calibration):
         reference_time = np.datetime64('2017-05-09T07:37:49', dtype='M8[s]')
-        reference_offset = [1075, 856, 962, 906, 1778, 7980, 1988, -3654]
+        reference_offset = [1075, 856, 962, 906, 1778, 7980, 1988, -3654,
+                            _CALIBRATION_PRU_CYCLES_OFFSET]
         reference_scale = [
             -122.41154850110402, -122.08777736753133, -122.22427428168358,
             -122.24473837544376, 17.536330902313154, 31.554214628481056,
-            17.503108506633023, 31.56472079317537]
+            17.503108506633023, 31.56472079317537,
+            _CALIBRATION_PRU_CYCLES_SCALE]
         self.assertEqual(calibration._calibration_time, reference_time)
         self.assertListEqual(list(calibration._calibration_offset),
                              reference_offset)
