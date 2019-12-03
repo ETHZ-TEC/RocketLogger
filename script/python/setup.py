@@ -40,7 +40,7 @@ def readme():
 
 
 setup(name='rocketlogger',
-      version='1.99a6',
+      version='1.99a7',
       description='RocketLogger Python Support',
       long_description=readme(),
       url='https://rocketlogger.ethz.ch/',
@@ -57,6 +57,7 @@ setup(name='rocketlogger',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
           'Operating System :: OS Independent',
       ],
       keywords='rocketlogger data analysis calibration',
