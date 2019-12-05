@@ -61,8 +61,6 @@
     "P9.16",
     "P9.22",
     /* FlockLab pins */
-    //"P8.15", /* Target select 0 */
-    //"P8.17", /* Target select 1 */
     "P8.27", /* pps gpio */
     "P8.37", /* uart5_txd */
     "P8.38", /* uart5_rxd */
@@ -107,8 +105,6 @@
     target = <&ocp>;
     __overlay__ {
       /* FlockLab pins */
-      //P8_15_pinmux { status = "disabled"; };
-      //P8_17_pinmux { status = "disabled"; };
       P8_27_pinmux { status = "disabled"; }; /* pps */
       P8_37_pinmux { status = "disabled"; }; /* uart5_txd */
       P8_38_pinmux { status = "disabled"; }; /* uart5_rxd */
@@ -163,12 +159,6 @@
           BONE_P8_38 (PIN_INPUT  | MUX_MODE4)  // lcd_data9.uart5_rxd
         >;
       };
-      /*fl_ctrl_pins: pinmux_fl_ctrl_pins {
-        pinctrl-single,pins = <
-          BONE_P8_15 (PIN_OUTPUT | MUX_MODE7)
-          BONE_P8_17 (PIN_OUTPUT | MUX_MODE7)
-        >;
-      };*/
       fl_pru1_pins: pinmux_fl_pru1_pins {
         pinctrl-single,pins = <
           BONE_P8_45 (PIN_INPUT | MUX_MODE6)
@@ -257,19 +247,6 @@
       pinctrl-0 = <&bb_uart5_pins>;
     };
   };
-  
-  /* FL control pins */
-  /*fragment@6 {
-    target = <&ocp>;
-    __overlay__ {
-      fl_ctrl_pinmux: fl_ctrl_pinmux_helper {
-        compatible = "bone-pinmux-helper";
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&fl_ctrl_pins>;
-      };
-    };
-  };*/
 
   /* RL control pins */
   fragment@7 {
