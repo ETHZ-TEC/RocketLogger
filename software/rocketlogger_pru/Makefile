@@ -69,14 +69,15 @@ TARGET_BINARY = $(BIN_DIR)/$(BINARY_NAME)
 #####  PROGRAMMS AND TOOLS  #####
 
 ## program definitions
-TOOLCHAIN_PREFIX = /opt/ti/ccs9/ccs/tools/compiler/ti-cgt-pru_2.3.2/bin/
-# PASM = pasm
+# assume PRU code generation tools are added to PATH (by default on beaglebone)
+TOOLCHAIN_PREFIX =
 PRUCC = $(TOOLCHAIN_PREFIX)clpru
 AS = $(PRUCC)
 CC = $(PRUCC)
 CXX = $(PRUCC)
-LD = $(PRUCC) --run_linker
-DISAS = $(TOOLCHAIN_PREFIX)dispru -1 -e
+LD = $(TOOLCHAIN_PREFIX)lnkpru
+OBJCOPY = $(TOOLCHAIN_PREFIX)hexpru
+DISAS = $(TOOLCHAIN_PREFIX)dispru
 MAKEDIR = mkdir -p
 INSTALL = install
 REMOVE = rm -f
@@ -103,8 +104,12 @@ OPT = -O2 # -flto
 ## debug (at least -g when checking for memory leaks)
 DEBUG = #-g3 -ggdb
 
+## misc ASM flags
+ASOTHER = --silicon_version=3 --asm_listing
+#ASOTHER += 
+
 ## misc C flags
-COTHER = #
+COTHER = --silicon_version=3
 #COTHER += 
 
 ## misc C++ flags
@@ -128,20 +133,23 @@ LDFLAGS = $(LIBS)
 all:  $(BIN_DIR) $(TARGET_BINARY)
 
 install: all
-	$(INSTALL) $(TARGET_BINARY) $(INSTALL_BIN_DIR)
+	$(INSTALL) --mode=644 $(TARGET_BINARY) $(INSTALL_BIN_DIR)
 
 uninstall:
 	$(UNINSTALL) $(INSTALL_BIN_DIR)/$(BINARY_NAME)
 
 $(OBJ_DIR)/%.obj: $(SRC_DIR)/%.asm
-	@$(MAKEDIR) $(OBJ_DIR)
-	$(AS) -v3 --asm_listing --output_file=$@ $<
+	@$(MAKEDIR) $(@D)
+	$(AS) $(ASOTHER) --output_file=$@ $<
 	$(DISAS) $@ $(@:%.obj=%.lst)
 
-$(TARGET_BINARY): $(LD_CMD) $(OBJ)
+%.out: $(LD_CMD) $(OBJ)
 	@$(MAKEDIR) $(@D)
-	$(LD) --output_file=$@ --map_file=$(@:%.bin=%.map) $^
-	$(DISAS) $@ $(@:%.bin=%.lst)
+	$(LD) --output_file=$@ --map_file=$(@:%.out=%.map) $^
+	$(DISAS) $@ $(@:%.out=%.lst)
+
+$(TARGET_BINARY): $(TARGET_BINARY:%.bin=%.out)
+	$(OBJCOPY) --binary --outfile=$@ $<
 
 $(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.obj, $(OBJ))
 	echo "generating version.c"
@@ -160,4 +168,4 @@ $(BIN_DIR):
 .PHONY: clean
 
 clean:
-	$(REMOVE) $(SRC_DIR)/*.lst $(OBJ_DIR)/*.obj $(OBJ_DIR)/*.lst $(TARGET_BINARY) $(TARGET_BINARY:.bin=.lst)
+	$(REMOVE) $(SRC_DIR)/*.lst $(OBJ_DIR)/*.obj $(OBJ_DIR)/*.lst $(BIN_DIR)/*
