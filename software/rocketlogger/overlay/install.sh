@@ -24,7 +24,7 @@ sudo sed "s~^#disable_uboot_overlay_wireless=1~disable_uboot_overlay_wireless=1~
 sudo sed "s~^#disable_uboot_overlay_adc=1~disable_uboot_overlay_adc=1~g" -i /boot/uEnv.txt
 
 # disable cape universal device tree overlay
-sudo sed "s~^enable_uboot_cape_universal=1~#enable_uboot_cape_universal=1~g" -i /boot/uEnv.txt
+#sudo sed "s~^enable_uboot_cape_universal=1~#enable_uboot_cape_universal=1~g" -i /boot/uEnv.txt
 
 # enable FlockLab2 device tree overlay
 sudo sed "s~^#dtb_overlay=/lib/firmware/<file8>.dtbo~dtb_overlay=/lib/firmware/BB-FLOCKLAB2.dtbo~g" -i /boot/uEnv.txt

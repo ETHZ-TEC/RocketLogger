@@ -166,9 +166,9 @@
           BONE_P8_43 (PIN_INPUT | MUX_MODE6)
           BONE_P8_44 (PIN_INPUT | MUX_MODE6)
           BONE_P8_41 (PIN_INPUT | MUX_MODE6)
-          //BONE_P8_42 (PIN_OUTPUT | MUX_MODE5)
-          //BONE_P8_39 (PIN_OUTPUT | MUX_MODE5)
-          //BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
+          BONE_P8_42 (PIN_OUTPUT | MUX_MODE5)
+          BONE_P8_39 (PIN_OUTPUT | MUX_MODE5)
+          BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
         >;
       };
       /* --- RL stuff --- */
