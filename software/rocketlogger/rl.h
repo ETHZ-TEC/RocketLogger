@@ -46,9 +46,9 @@
 #define ERROR (-1)
 
 /// RocketLogger measurement log file
-#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger.log"
+#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger/rocketlogger.log"
 /// RocketLogger daemon log file
-#define RL_DAEMON_LOG_FILE "/var/log/rocketloggerd.log"
+#define RL_DAEMON_LOG_FILE "/var/log/rocketlogger/rocketloggerd.log"
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
 
@@ -67,13 +67,13 @@
 
 /// User folder calibration file path
 #define RL_CALIBRATION_USER_FILE                                               \
-    "/home/rocketlogger/.config/rocketlogger/calibration.dat"
+    "/home/flocklab/.config/rocketlogger/calibration.dat"
 /// Default system wide calibration file path
 #define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
 
 /// User configuration file path
 #define RL_CONFIG_USER_FILE                                                    \
-    "/home/rocketlogger/.config/rocketlogger/settings.dat"
+    "/home/flocklab/.config/rocketlogger/settings.dat"
 /// Default system configuration file path
 #define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
 
@@ -102,7 +102,7 @@
 /// Configuration data file directory default
 #define RL_CONFIG_FILE_DIR_DEFAULT "/home/rocketlogger/data"
 /// Configuration file name default
-#define RL_CONFIG_FILE_DEFAULT (RL_CONFIG_FILE_DIR_DEFAULT "/data.rld")
+#define RL_CONFIG_FILE_DEFAULT "/tmp/rocketlogger/data/data.rld"
 /// Minimum measurement split file size (5 MB to fit largest block at max rate)
 #define RL_CONFIG_FILE_SIZE_MIN (5UL * 1000UL * 1000UL)
 /// Configuration file size default
