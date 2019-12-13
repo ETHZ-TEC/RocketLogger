@@ -4,11 +4,19 @@
 # clone beaglebone device tree repo
 if [ ! -d bb.org-overlays ]; then
   git clone https://github.com/beagleboard/bb.org-overlays.git
+  if [ $? -ne 0 ]; then
+    echo "Failed to clone repository bb.org-overlays."
+    exit 1
+  fi
 fi
 
 # copy RocketLogger device tree overlay and compile binary
 cp -f BB-FLOCKLAB2.dts bb.org-overlays/src/arm
 (cd bb.org-overlays && make src/arm/BB-FLOCKLAB2.dtbo)
+if [ $? -ne 0 ]; then
+  echo "Failed to compile overlays."
+  exit 1
+fi
 
 # deploy device tree binary
 sudo cp -f bb.org-overlays/src/arm/BB-FLOCKLAB2.dtbo /lib/firmware
