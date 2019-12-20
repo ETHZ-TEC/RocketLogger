@@ -33,7 +33,7 @@
 #define LOG_H_
 
 /// Default log file name
-#define RL_LOG_DEFAULT_FILE "/var/log/rocketlogger/default.log"
+#define RL_LOG_DEFAULT_FILE "/var/log/flocklab/rocketlogger.log"
 
 /// Maximum log file name path length
 #define RL_LOG_PATH_LENGTH_MAX 256

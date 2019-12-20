@@ -46,9 +46,9 @@
 #define ERROR (-1)
 
 /// RocketLogger measurement log file
-#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger/rocketlogger.log"
+#define RL_MEASUREMENT_LOG_FILE "/var/log/flocklab/rocketlogger.log"
 /// RocketLogger daemon log file
-#define RL_DAEMON_LOG_FILE "/var/log/rocketlogger/rocketloggerd.log"
+#define RL_DAEMON_LOG_FILE "/var/log/flocklab/rocketlogger_daemon.log"
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
 
@@ -66,16 +66,14 @@
 #define RL_SENSOR_SAMPLE_RATE 1
 
 /// User folder calibration file path
-#define RL_CALIBRATION_USER_FILE                                               \
-    "/home/flocklab/.config/rocketlogger/calibration.dat"
+#define RL_CALIBRATION_USER_FILE   "/home/flocklab/.config/rocketloger_cal.dat"
 /// Default system wide calibration file path
-#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
+#define RL_CALIBRATION_SYSTEM_FILE "/etc/flocklab/rocketloger_cal.dat"
 
 /// User configuration file path
-#define RL_CONFIG_USER_FILE                                                    \
-    "/home/flocklab/.config/rocketlogger/settings.dat"
+#define RL_CONFIG_USER_FILE   "/home/flocklab/.config/rocketlogger.dat"
 /// Default system configuration file path
-#define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
+#define RL_CONFIG_SYSTEM_FILE "/etc/flocklab/rocketlogger.dat"
 
 /// Default system configuration file path
 #define RL_CONFIG_VERSION 0x03
