@@ -62,6 +62,7 @@
     "P9.22",
     /* FlockLab pins */
     "P8.27", /* pps gpio */
+    "P8.31", /* serial_id_rx */
     "P8.37", /* uart5_txd */
     "P8.38", /* uart5_rxd */
     //"P8.39", /* Target_SIG2 */
@@ -106,6 +107,7 @@
     __overlay__ {
       /* FlockLab pins */
       P8_27_pinmux { status = "disabled"; }; /* pps */
+      P8_31_pinmux { status = "disabled"; }; /* serial_id_rx */
       P8_37_pinmux { status = "disabled"; }; /* uart5_txd */
       P8_38_pinmux { status = "disabled"; }; /* uart5_rxd */
       //P8_39_pinmux { status = "disabled"; };
@@ -144,7 +146,13 @@
       /* --- FL stuff --- */
       pps_pins: pinmux_pps_pins {
         pinctrl-single,pins = <
-          BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
+          //BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
+          BONE_P8_41 (PIN_INPUT | MUX_MODE7)   /* TODO remove for FlockLab2 rev1.1 */
+        >;
+      };
+      w1_pins: pinmux_w1_pins {
+        pinctrl-single,pins = <
+          BONE_P8_31 (PIN_INPUT | MUX_MODE7)   /* Serial ID RX pin */
         >;
       };
       bb_uart4_pins: pinmux_bb_uart4_pins {
@@ -165,7 +173,7 @@
           BONE_P8_46 (PIN_INPUT | MUX_MODE6)
           BONE_P8_43 (PIN_INPUT | MUX_MODE6)
           BONE_P8_44 (PIN_INPUT | MUX_MODE6)
-          BONE_P8_41 (PIN_INPUT | MUX_MODE6)
+          //BONE_P8_41 (PIN_INPUT | MUX_MODE6)    /* TODO: uncomment for FlockLab2 rev1.1 */
           //BONE_P8_42 (PIN_OUTPUT | MUX_MODE5)
           //BONE_P8_39 (PIN_OUTPUT | MUX_MODE5)
           //BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
@@ -245,6 +253,21 @@
       status = "okay";
       pinctrl-names = "default";
       pinctrl-0 = <&bb_uart5_pins>;
+    };
+  };
+
+  /* Serial ID RX */
+  fragment@6 {
+    target = <&ocp>;
+    __overlay__ {
+      onewire@0 {
+        status = "okay";
+        compatible = "w1-gpio";
+        pinctrl-names = "default";
+        pinctrl-0 = <&w1_pins>;
+        //gpios = <&gpio0 10 0>;
+        gpios = <&gpio2 10 0>; /* TODO remove for FlockLab2 rev1.1 */
+      };
     };
   };
 
