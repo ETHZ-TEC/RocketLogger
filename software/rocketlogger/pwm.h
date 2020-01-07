@@ -34,9 +34,9 @@
 
 /// Linux sysfs paths device files
 /// Path to the Linux sysfs PWMSS0 module device files
-#define PWMSS0_SYSFS_PATH "/sys/class/pwm/pwmchip0/"
+#define PWMSS0_SYSFS_PATH "/sys/class/pwm/pwmchip1/"    // TODO change to pwmchip0 on debian 10
 /// Path to the Linux sysfs PWMSS1 module device files
-#define PWMSS1_SYSFS_PATH "/sys/class/pwm/pwmchip2/"
+#define PWMSS1_SYSFS_PATH "/sys/class/pwm/pwmchip4/"    // TODO change to pwmchip2 on debian 10
 
 /// Index of the Linux sysfs ePWM0A module
 #define EPWM0A_SYSFS_INDEX 0
@@ -46,11 +46,11 @@
 #define EPWM1B_SYSFS_INDEX 1
 
 /// Path to the Linux sysfs ePWM0A module
-#define EPWM0A_SYSFS_PATH PWMSS0_SYSFS_PATH "pwm-0:0/"
+#define EPWM0A_SYSFS_PATH PWMSS0_SYSFS_PATH "pwm-1:0/"
 /// Path to the Linux sysfs ePWM1A module
-#define EPWM1A_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-2:0/"
+#define EPWM1A_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-4:0/"  // TODO change to pwm-2:0 on debian 10
 /// Path to the Linux sysfs ePWM1B module
-#define EPWM1B_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-2:1/"
+#define EPWM1B_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-4:1/"  // TODO change to pwm-2:1 on debian 10
 
 /// Default PWM period in nanoseconds
 #define PWM_PERIOD_DEFAULT 490
