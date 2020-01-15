@@ -146,8 +146,7 @@
       /* --- FL stuff --- */
       pps_pins: pinmux_pps_pins {
         pinctrl-single,pins = <
-          //BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
-          BONE_P8_41 (PIN_INPUT | MUX_MODE7)   /* TODO remove for FlockLab2 rev1.1 */
+          BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
         >;
       };
       w1_pins: pinmux_w1_pins {
@@ -173,7 +172,7 @@
           BONE_P8_46 (PIN_INPUT | MUX_MODE6)
           BONE_P8_43 (PIN_INPUT | MUX_MODE6)
           BONE_P8_44 (PIN_INPUT | MUX_MODE6)
-          //BONE_P8_41 (PIN_INPUT | MUX_MODE6)    /* TODO: uncomment for FlockLab2 rev1.1 */
+          BONE_P8_41 (PIN_INPUT | MUX_MODE6)
           //BONE_P8_42 (PIN_OUTPUT | MUX_MODE5)
           //BONE_P8_39 (PIN_OUTPUT | MUX_MODE5)
           //BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
@@ -193,11 +192,11 @@
       };
       rl_pru0_pins: pinmux_rl_pru0_pins {
         pinctrl-single,pins = <
-          BONE_P9_24 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR pin, PRU0 controlled */
+          BONE_P9_24 (PIN_INPUT_PULLUP | MUX_MODE6)    /* DR pin, PRU0 controlled */
           BONE_P9_25 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* START pin, PRU0 controlled */
-          BONE_P9_28 (PIN_OUTPUT_PULLUP | MUX_MODE5) /* CS pin, PRU0 controlled */
+          BONE_P9_28 (PIN_OUTPUT_PULLUP | MUX_MODE5)   /* CS pin, PRU0 controlled */
           BONE_P9_29 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* MOSI pin, PRU0 controlled */
-          BONE_P9_30 (PIN_INPUT_PULLDOWN | MUX_MODE6) /* MISO pin, PRU0 controlled */
+          BONE_P9_30 (PIN_INPUT_PULLDOWN | MUX_MODE6)  /* MISO pin, PRU0 controlled */
           BONE_P9_31 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* SCLK pin, PRU0 controlled */
         >;
       };
@@ -210,7 +209,7 @@
         pinctrl-single,pins = <
           BONE_P8_09 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
           BONE_P8_11 (PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* Error LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
-          BONE_P8_13 (PIN_INPUT_PULLUP | MUX_MODE7) /* User button pin */
+          BONE_P8_13 (PIN_INPUT_PULLUP | MUX_MODE7)    /* User button pin */
         >;
       };
       rl_power_pins: pinmux_rl_power_pins {
@@ -265,8 +264,7 @@
         compatible = "w1-gpio";
         pinctrl-names = "default";
         pinctrl-0 = <&w1_pins>;
-        //gpios = <&gpio0 10 0>;
-        gpios = <&gpio2 10 0>; /* TODO remove for FlockLab2 rev1.1 */
+        gpios = <&gpio0 10 0>;
       };
     };
   };
