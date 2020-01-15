@@ -61,6 +61,7 @@
     "P9.16",
     "P9.22",
     /* FlockLab pins */
+    "P8.07", /* timer4/PPS */
     "P8.27", /* pps gpio */
     "P8.31", /* serial_id_rx */
     "P8.37", /* uart5_txd */
@@ -106,6 +107,7 @@
     target = <&ocp>;
     __overlay__ {
       /* FlockLab pins */
+      P8_07_pinmux { status = "disabled"; }; /* pps */
       P8_27_pinmux { status = "disabled"; }; /* pps */
       P8_31_pinmux { status = "disabled"; }; /* serial_id_rx */
       P8_37_pinmux { status = "disabled"; }; /* uart5_txd */
@@ -147,6 +149,11 @@
       pps_pins: pinmux_pps_pins {
         pinctrl-single,pins = <
           BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
+        >;
+      };
+      pps_gmtimer_pins: pinmux_pps_gmtimer_pins {
+        pinctrl-single,pins = <
+          BONE_P8_07 (PIN_INPUT | MUX_MODE2)   /* 0x90 0x22 -> TIMER4 */
         >;
       };
       w1_pins: pinmux_w1_pins {
@@ -231,6 +238,13 @@
         pinctrl-0 = <&pps_pins>;
         gpios = <&gpio2 22 0>;
         assert-rising-edge;
+      };
+      pps_gmtimer {
+        compatible = "pps-gmtimer";
+        status = "okay";
+        timer = <&timer4>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pps_gmtimer_pins>;
       };
     };
   };
