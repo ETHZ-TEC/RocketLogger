@@ -36,21 +36,8 @@
 
 #include "rl.h"
 
-<<<<<<< HEAD
 /// Calibration file header magic
 #define RL_CALIBRATION_FILE_MAGIC 0x434C5225
-=======
-/// Default system wide calibration file path
-#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
-
-/// User folder calibration file path
-#define RL_CALIBRATION_USER_FILE                                               \
-    "/home/rocketlogger/.config/rocketlogger/calibration.dat"
-
-/// Calibration file header magic
-#define RL_CALIBRATION_FILE_MAGIC 0x434C5225
-
->>>>>>> feature-pru-timestamp
 /// Calibration file header version
 #define RL_CALIBRATION_FILE_VERSION 0x02
 /// Calibration file header length
