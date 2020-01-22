@@ -89,49 +89,40 @@ int pru_control_init(pru_control_t *const pru_control,
         pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set sampling rate configuration
+    // set sample rate
+    if (config->sample_rate <= ADS131E0X_RATE_MIN) {
+        pru_control->adc_sample_rate = ADS131E0X_RATE_MIN / 1000;
+    } else {
+        pru_control->adc_sample_rate = config->sample_rate / 1000;
+    }
+    
+    // set sample rate configuration
     uint32_t adc_sample_rate;
-    switch (config->sample_rate) {
+    switch (pru_control->adc_sample_rate) {
     case 1:
         adc_sample_rate = ADS131E0X_K1;
         break;
-    case 10:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 100:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 1000:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 2000:
+    case 2:
         adc_sample_rate = ADS131E0X_K2;
         break;
-    case 4000:
+    case 4:
         adc_sample_rate = ADS131E0X_K4;
         break;
-    case 8000:
+    case 8:
         adc_sample_rate = ADS131E0X_K8;
         break;
-    case 16000:
+    case 16:
         adc_sample_rate = ADS131E0X_K16;
         break;
-    case 32000:
+    case 32:
         adc_sample_rate = ADS131E0X_K32;
         break;
-    case 64000:
+    case 64:
         adc_sample_rate = ADS131E0X_K64;
         break;
     default:
         rl_log(RL_LOG_ERROR, "invalid sample rate %d", config->sample_rate);
         return ERROR;
-    }
-
-    // set data format precision depending on sample rate
-    if (adc_sample_rate == ADS131E0X_K32 || adc_sample_rate == ADS131E0X_K64) {
-        pru_control->adc_precision = ADS131E0X_PRECISION_LOW;
-    } else {
-        pru_control->adc_precision = ADS131E0X_PRECISION_HIGH;
     }
 
     // set buffer infos

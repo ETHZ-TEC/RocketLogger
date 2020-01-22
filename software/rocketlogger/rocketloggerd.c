@@ -38,6 +38,7 @@
 
 #include "gpio.h"
 #include "log.h"
+#include "pwm.h"
 #include "rl.h"
 
 /// Minimal time interval between two interrupts (in seconds)
@@ -332,6 +333,12 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
+    ret = pwm_init();
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules.");
+        exit(EXIT_FAILURE);
+    }
+
     // create shared memory for state
     ret = rl_status_init();
     if (ret < 0) {
@@ -370,6 +377,7 @@ int main(void) {
     power_deinit();
     leds_deinit();
     fhr_deinit();
+    pwm_deinit();
 
     exit(EXIT_SUCCESS);
 }

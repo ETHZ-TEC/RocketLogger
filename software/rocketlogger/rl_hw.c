@@ -36,7 +36,6 @@
 #include "gpio.h"
 #include "log.h"
 #include "pru.h"
-#include "pwm.h"
 #include "rl.h"
 #include "rl_file.h"
 #include "sensor/sensor.h"
@@ -47,16 +46,6 @@ void hw_init(rl_config_t const *const config) {
 
     // STATUS reset to default
     rl_status_reset(&rl_status);
-
-    // PWM configuration
-    pwm_init();
-
-    if (config->sample_rate < ADS131E0X_RATE_MIN) {
-        pwm_setup_range_reset(ADS131E0X_RATE_MIN);
-    } else {
-        pwm_setup_range_reset(config->sample_rate);
-    }
-    pwm_setup_adc_clock();
 
     // GPIO configuration
     // force high range (negative enable)
@@ -108,9 +97,6 @@ void hw_init(rl_config_t const *const config) {
 }
 
 void hw_deinit(rl_config_t const *const config) {
-
-    // PWM
-    pwm_deinit();
 
     // GPIO (set to default state only, (un)export is handled by daemon)
     // reset force high range GPIOs to force high range (negative enable)

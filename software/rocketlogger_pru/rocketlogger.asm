@@ -67,7 +67,7 @@ BUFFER0_OFFSET              .set    0x04
 BUFFER1_OFFSET              .set    0x08
 BUFFER_LENGTH_OFFSET        .set    0x0C
 SAMPLE_LIMIT_OFFSET         .set    0x10
-ADC_PRECISION_OFFSET        .set    0x14
+ADC_SAMPLE_RATE_OFFSET      .set    0x14
 ADC_COMMAND_COUNT_OFFSET    .set    0x18
 ADC_COMMAND_BASE_OFFSET     .set    0x1C
 
@@ -135,7 +135,8 @@ SAMPLES_COUNT               .set    r25
 MEM_POINTER                 .set    r24
 
 ; PRU register definitions: PRU user space configuration
-PRECISION                   .set    r23
+SAMPLE_RATE                 .set    r23
+PRECISION                   .set    r22
 
 ; PRU register definitions: ADC status and configuration register aliases
 ADC_COMMAND_COUNT_REG       .set    V1_REG  ; reuse data register for ADC setup
@@ -143,8 +144,82 @@ ADC_COMMAND_OFFSET_REG      .set    V2_REG  ; reuse data register for ADC setup
 ADC1_STATUS_REG             .set    DI_REG
 ADC2_STATUS_REG             .set    TMP_REG
 
-; registers r18-r22 unused
+; registers r18-r21 unused
 
+; PRU constants table alias definitions
+C_PRU_INTC                  .set    C0  ; PRU-ICSS INTC (local) 0x0002_0000
+C_PRU_ECAP                  .set    C3  ; PRU-ICSS eCAP (local) 0x0003_0000
+C_PRU_CFG                   .set    C4  ; PRU-ICSS CFG (local) 0x0002_6000
+C_EHRPWM0                   .set    C18 ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
+C_EHRPWM1                   .set    C19 ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
+C_EHRPWM2                   .set    C20 ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
+
+
+; clock managment register offsets
+CM_PER_BASE                 .set    0x44E00000
+CM_PER_EPWMSS1_OFFSET       .set    0xCC
+CM_PER_EPWMSS0_OFFSET       .set    0xD4
+CM_PER_EPWMSS2_OFFSET       .set    0xD8
+
+; clock managements register values (selection)
+CM_MODULEMODE_DISABLE       .set    0x00
+CM_MODULEMODE_ENABLE        .set    0x02
+CM_IDLESTATUS_FUNC          .set    0x000000
+CM_IDLESTATUS_TRANS         .set    0x010000
+CM_IDLESTATUS_IDLE          .set    0x020000
+CM_IDLESTATUS_DISABLE       .set    0x030000
+
+; control register offsets and PWMSS values (selection)
+CONTROL_PWMSS_CTRL          .set    0x44E10664
+PWMSS_CTRL_PWMSS_RESET      .set    0x00
+PWMSS_CTRL_PWMSS0_TBCLKEN   .set    0x01
+PWMSS_CTRL_PWMSS1_TBCLKEN   .set    0x02
+PWMSS_CTRL_PWMSS2_TBCLKEN   .set    0x04
+
+; ePWM module and configuration register offsets
+EPWM0_BASE                  .set    0x48300200  ; ePWM0 module base address
+EPWM1_BASE                  .set    0x48302200  ; ePWM1 module base address
+EPWM2_BASE                  .set    0x48304200  ; ePWM2 module base address
+EPWM_TBCTL_OFFSET           .set    0x00        ; Time-Base Control Register
+EPWM_TBSTS_OFFSET           .set    0x02        ; Time-Base Status Register
+EPWM_TBPHS_OFFSET           .set    0x06        ; Time-Base Phase Register
+EPWM_TBCNT_OFFSET           .set    0x08        ; Time-Base Counter Register
+EPWM_TBPRD_OFFSET           .set    0x0A        ; Time-Base Period Register
+EPWM_CMPCTL_OFFSET          .set    0x0E        ; Counter-Compare Control Register
+EPWM_CMPA_OFFSET            .set    0x12        ; Counter-Compare A Register
+EPWM_CMPB_OFFSET            .set    0x14        ; Counter-Compare B Register
+EPWM_AQCTLA_OFFSET          .set    0x16        ; Action-Qualifier Control Register for Output A (EPWMxA)
+EPWM_AQCTLB_OFFSET          .set    0x18        ; Action-Qualifier Control Register for Output B (EPWMxB)
+
+; ePWM configuration register values (selection)
+TBCTL_FREERUN               .set    0xC000  ; TBCTL default value after reset
+TBCTL_COUNT_UP              .set    0x0000  ; Up counting mode
+TBCTL_COUNT_UP_DOWN         .set    0x0002  ; Up-down counting mode
+TBCTL_PRDLD                 .set    0x0008  ; Period register double buffer disable
+TBCTL_CLKDIV_1              .set    0x0000  ; Use counter clock prescaler of 1
+TBCTL_CLKDIV_2              .set    0x0400  ; Use counter clock prescaler of 2
+
+AQ_ZROCLR                   .set    0x0001  ; Action qualifier: clear on zero
+AQ_ZROSET                   .set    0x0002  ; Action qualifier: set on zero
+AQ_PRDCLR                   .set    0x0004  ; Action qualifier: clear on period
+AQ_PRDSET                   .set    0x0008  ; Action qualifier: clear set on period
+AQ_A_INCCLR                 .set    0x0010  ; Action qualifier: clear on compare A when incrementing
+AQ_A_INCSET                 .set    0x0020  ; Action qualifier: set on compare A when incrementing
+AQ_A_DECCLR                 .set    0x0040  ; Action qualifier: clear on compare A when decrementing
+AQ_A_DECSET                 .set    0x0080  ; Action qualifier: set on compare A when decrementing
+AQ_B_INCCLR                 .set    0x0100  ; Action qualifier: clear on compare B when incrementing
+AQ_B_INCSET                 .set    0x0200  ; Action qualifier: set on compare B when incrementing
+AQ_B_DECCLR                 .set    0x0400  ; Action qualifier: clear on compare B when decrementing
+AQ_B_DECSET                 .set    0x0800  ; Action qualifier: set on compare B when decrementing
+
+; ePWM configuration values for ADC clock and range reset pulses
+ADC_CLOCK_PERIOD            .set    49              ; ADC master clock period (in units of 10 ns)
+ADC_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
+ADC_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
+
+; ADC precision bit count
+ADC_PRECISION_HIGH          .set    24  ; data precision for low, < 32 kSPS sample rate
+ADC_PRECISION_LOW           .set    16  ; data precision for high, >= 32 kSPS sample rate
 
 ; --------------------------------- Macros --------------------------------- ;
 
@@ -314,6 +389,121 @@ adc_read .macro
     .endm
 
 
+; PWM MODULE INITIALIZATION (setup PWM clocks) => HANDLED BY SYSFS INTERFACE
+pwm_init .macro
+; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
+;    ; load CM_PER base address
+;    LDI32   TMP_REG, CM_PER_BASE
+;
+;    ; enable EPWMSS0 and EPWMSS1 interface clocks
+;    LDI32   MTMP_REG, CM_IDLESTATUS_FUNC | CM_MODULEMODE_ENABLE
+;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS0_OFFSET, 4
+;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS1_OFFSET, 4
+;
+;    ; enable EPWMSS0 and EPWMSS1 counter clocks (handled via sysfs driver)
+;    ;LDI32   TMP_REG, CONTROL_PWMSS_CTRL
+;    ;LDI     MTMP_REG, PWMSS_CTRL_PWMSS1_TBCLKEN | PWMSS_CTRL_PWMSS0_TBCLKEN
+;    ;SBBO    &MTMP_REG, TMP_REG, 0, 2
+
+    .endm
+
+; PWM MODULE DE-INITIALIZATION (setup PWM clocks)
+pwm_deinit .macro
+; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
+;    ; load CM_PER base address
+;    LDI32   TMP_REG, CM_PER_BASE
+;
+;    ; disable EPWMSS0 and EPWMSS1 interface clocks
+;    LDI32   MTMP_REG, CM_IDLESTATUS_DISABLE | CM_MODULEMODE_DISABLE
+;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS0_OFFSET, 4
+;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS1_OFFSET, 4
+;
+;    ; disable EPWMSS0 and EPWMSS1 counter clocks (handled via sysfs driver)
+;    LDI32   TMP_REG, CONTROL_PWMSS_CTRL
+;    LDI     MTMP_REG, PWMSS_CTRL_PWMSS_RESET
+;    SBBO    &MTMP_REG, TMP_REG, 0, 2
+
+    .endm
+
+
+; PWM MODULE STOP (stop PWM counter and outputs)
+pwm_stop .macro
+    ; initialize value register to zero
+    ZERO    &MTMP_REG, 4
+
+    ; load EPWM0 base address from constants memory
+    LDI32   TMP_REG, EPWM0_BASE
+
+    ; reset EPWM0 config and counters to initial zero state
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCNT_OFFSET, 2
+
+    ; load EPWM1 base address from constants memory
+    LDI32   TMP_REG, EPWM1_BASE
+
+    ; reset EPWM1 config and counters to initial zero state
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCNT_OFFSET, 2
+
+    .endm
+
+
+; ADC CLOCK INITIALIZATION (configure PWM to generate ADC clock)
+adc_clock_init .macro
+    ; load EPWM0 base address from constants memory
+    LDI32   TMP_REG, EPWM0_BASE
+
+    ; set period and compare register values (interval = TBPRD + 1)
+    LDI     MTMP_REG, (ADC_CLOCK_PERIOD - 1)
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
+    LSR     MTMP_REG, MTMP_REG, 1
+    SBBO    &MTMP_REG, TMP_REG, EPWM_CMPA_OFFSET, 2
+
+    ; set action qualifiers for both channels
+    LDI     MTMP_REG, AQ_A_INCSET | AQ_ZROCLR
+    SBBO    &MTMP_REG, TMP_REG, EPWM_AQCTLA_OFFSET, 2
+
+    ; set clock prescaler 1 and up counting mode, no period double buffering
+    LDI     MTMP_REG, TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
+
+    .endm
+
+
+; ADC RANGE VALID RESET INITIALIZATION (configure PWM for range reset signals)
+adc_range_reset_init .macro sample_rate_k
+
+    ; calculate period from samle rate
+    LDI32   MTMP_REG, (ADC_RANGE_RESET_PERIOD_BASE)
+    LMBD    TMP_REG, sample_rate_k, 1   ; get exponent of 2 of the sample rate
+    LSR     MTMP_REG, MTMP_REG, TMP_REG
+
+    ; load EPWM1 base address from constants memory
+    LDI32   TMP_REG, EPWM1_BASE
+
+    ; store calculated period value
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
+
+    ; set compare register values (first value depends on period)
+    SUB     MTMP_REG, MTMP_REG, (ADC_RANGE_RESET_PULSE_WIDTH / 2)
+    SBBO    &MTMP_REG, TMP_REG, EPWM_CMPA_OFFSET, 2
+    LDI     MTMP_REG, (ADC_RANGE_RESET_PULSE_WIDTH / 2)
+    SBBO    &MTMP_REG, TMP_REG, EPWM_CMPB_OFFSET, 2
+
+    ; set action qualifiers for both channels
+    LDI     MTMP_REG, AQ_A_INCSET | AQ_A_DECCLR
+    SBBO    &MTMP_REG, TMP_REG, EPWM_AQCTLA_OFFSET, 2
+    LDI     MTMP_REG, AQ_B_INCCLR | AQ_B_DECSET
+    SBBO    &MTMP_REG, TMP_REG, EPWM_AQCTLB_OFFSET, 2
+
+    ; configure PWM operational mode
+    LDI     MTMP_REG, TBCTL_FREERUN | TBCTL_CLKDIV_2 | TBCTL_PRDLD | TBCTL_COUNT_UP_DOWN
+    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
+
+    .endm
+
 ; SIGN EXTEND 24 BIT (24 to 32 bit)
 sign_extend_24 .macro reg
     LDI     reg.b3, 0x00
@@ -330,19 +520,36 @@ POS?:
     .global MAIN
 MAIN:
     ; Enable the OCP master port -- allows transfer of data to Linux userspace
-    LBCO    &TMP_REG, C4, 4, 4  ; load SYSCFG reg (use c4 const addr)
-    CLR     TMP_REG, TMP_REG, 4 ; clear bit 4 of SYSCFG (STANDBY_INIT)
-    SBCO    &TMP_REG, C4, 4, 4  ; store back modified SYSCFG value
+    LBCO    &TMP_REG, C_PRU_CFG, 4, 4   ; load SYSCFG reg (use c4 const addr)
+    CLR     TMP_REG, TMP_REG, 4         ; clear bit 4 of SYSCFG (STANDBY_INIT)
+    SBCO    &TMP_REG, C_PRU_CFG, 4, 4   ; store back modified SYSCFG value
  
     LDI32   RAM_ADDRESS, PRU0_DATA_RAM_BASE ; load the RAM base address
     LDI32   CTRL_ADDRESS, PRU0_CTRL_BASE    ; load the CTRL base addr  ess
 
-    CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error indicator
+    ; load configuration and initialize state with user space settings
+    LBBO    &MEM_POINTER,    RAM_ADDRESS,    BUFFER0_OFFSET,         4
+    LBBO    &SAMPLES_COUNT,  RAM_ADDRESS,    SAMPLE_LIMIT_OFFSET,    4
+    LBBO    &BUFFER_SIZE,    RAM_ADDRESS,    BUFFER_LENGTH_OFFSET,   4
+    LBBO    &SAMPLE_RATE,    RAM_ADDRESS,    ADC_SAMPLE_RATE_OFFSET, 4
 
+    ; initialize GPIO states
+    CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
+
+    ; reset SPI bus signals
     SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT    ; CS high
     SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
     CLR     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT   ; MOSI low
     CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT  ; START low
+
+    ; initialize PWM modules
+    pwm_init
+
+    ; configure ADC clock
+    adc_clock_init
+
+    ; configure ADC range reset
+    adc_range_reset_init SAMPLE_RATE
 
     ; notify user-space program
     LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
@@ -353,6 +560,11 @@ INIT:
 
     ; get ADC initialization command list count
     LBBO    &ADC_COMMAND_COUNT_REG, RAM_ADDRESS, ADC_COMMAND_COUNT_OFFSET, 4
+
+    ; get ADC precision configuration (
+    LDI     PRECISION, ADC_PRECISION_HIGH
+    QBGT    ADC_SETUP, SAMPLE_RATE, 32
+    LDI     PRECISION, ADC_PRECISION_HIGH
 
 ADC_SETUP:
     ; load and send ADC command
@@ -370,12 +582,6 @@ ADC_SETUP:
     QBLT    ADC_SETUP, ADC_COMMAND_COUNT_REG, 0
 
 END_ADC_SETUP:
-
-    ; load configuration and initialize state with user space settings
-    LBBO    &MEM_POINTER,    RAM_ADDRESS,    BUFFER0_OFFSET,         4
-    LBBO    &SAMPLES_COUNT,  RAM_ADDRESS,    SAMPLE_LIMIT_OFFSET,    4
-    LBBO    &BUFFER_SIZE,    RAM_ADDRESS,    BUFFER_LENGTH_OFFSET,   4
-    LBBO    &PRECISION,      RAM_ADDRESS,    ADC_PRECISION_OFFSET,   4
 
     ; initialize buffer index to zero
     ZERO    &BUFFER_INDEX,  4
@@ -516,6 +722,10 @@ STOP:
 
     ; signal interrupt to user space program
     LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
+
+    ; stop and deinitialize PWM modules
+    pwm_stop
+    pwm_deinit
 
     ; clear status LED
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
