@@ -149,6 +149,7 @@ apt install --assume-yes        \
   device-tree-compiler          \
   gcc                           \
   g++                           \
+  ti-pru-cgt-installer          \
   libncurses5-dev               \
   libi2c-dev                    \
   linux-headers-$(uname -r)
