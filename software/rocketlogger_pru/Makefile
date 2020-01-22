@@ -41,19 +41,12 @@ LIB_DIR = lib
 OBJ_DIR = obj
 DEP_DIR = $(OBJ_DIR)/.dep
 SRC_DIR = .
-SENSOR_DIR = $(SRC_DIR)/sensor
 
 ## install directories
-INSTALL_BIN_DIR = /bin
-INSTALL_SERVICE_DIR = /etc/systemd/system
+INSTALL_BIN_DIR = /lib/firmware
 
 ## binary names
-BINARY_NAME = rocketlogger
-DEAMON_NAME = rocketloggerd
-SERVER_NAME = rocketloggers
-
-## config file names
-SERVICE_CONFIG = rocketlogger.service
+BINARY_NAME = rocketlogger.bin
 
 ## code revision
 GIT_DESCRIPTION = `git describe --tags --dirty`
@@ -61,26 +54,30 @@ GIT_DATE = `git show -s --format="%ci" HEAD`
 COMPILE_DATE = `date --rfc-3339=seconds`
 
 ## source files
-SRC = $(wildcard  $(SRC_DIR)/*.c)
-SRC += $(wildcard  $(SRC_DIR)/*.cpp)
-SRC += $(wildcard  $(SENSOR_DIR)/*.c)
-SRC += $(SRC_DIR)/version.c
+SRC = $(wildcard  $(SRC_DIR)/*.asm)
 
 ## object files
-OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .o, $(basename $(SRC)))))
+OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .obj, $(basename $(SRC)))))
+
+## linker command file definition
+LD_CMD = AM335x_PRU.cmd
 
 ## target binary
 TARGET_BINARY = $(BIN_DIR)/$(BINARY_NAME)
-TARGET_DAEMON = $(BIN_DIR)/$(DEAMON_NAME)
-TARGET_SERVER = $(BIN_DIR)/$(SERVER_NAME)
 
 
 #####  PROGRAMMS AND TOOLS  #####
 
 ## program definitions
-TOOLCHAIN_PREFIX = #
-CC = $(TOOLCHAIN_PREFIX)gcc
-CXX = $(TOOLCHAIN_PREFIX)g++
+# assume PRU code generation tools are added to PATH (by default on beaglebone)
+TOOLCHAIN_PREFIX =
+PRUCC = $(TOOLCHAIN_PREFIX)clpru
+AS = $(PRUCC)
+CC = $(PRUCC)
+CXX = $(PRUCC)
+LD = $(TOOLCHAIN_PREFIX)lnkpru
+OBJCOPY = $(TOOLCHAIN_PREFIX)hexpru
+DISAS = $(TOOLCHAIN_PREFIX)dispru
 MAKEDIR = mkdir -p
 INSTALL = install
 REMOVE = rm -f
@@ -93,13 +90,10 @@ CSTD = -std=gnu99
 CXXSTD = -std=c++11
 
 ## libraries
-LIBS = -lprussdrv
-LIBS += -li2c
-LIBS += -lncurses
-LIBS += -lrt
+LIBS = 
 
 ## defines
-DEFS = -D_LARGEFILE64_SOURCE
+DEFS = 
 
 ## warnings
 WARNINGS = -Werror -Wall -Wextra -fmessage-length=0
@@ -110,11 +104,12 @@ OPT = -O2 # -flto
 ## debug (at least -g when checking for memory leaks)
 DEBUG = #-g3 -ggdb
 
-## dependency file configurations
-GENDEP = -MMD -MP -MF $(DEP_DIR)/$(@F).d
+## misc ASM flags
+ASOTHER = --silicon_version=3 --asm_listing
+#ASOTHER += 
 
 ## misc C flags
-COTHER = #
+COTHER = --silicon_version=3
 #COTHER += 
 
 ## misc C++ flags
@@ -135,52 +130,28 @@ LDFLAGS = $(LIBS)
 #####  TARGETS  #####
 
 ## build targets
-all:  $(BIN_DIR) $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_SERVER)
+all:  $(BIN_DIR) $(TARGET_BINARY)
 
 install: all
-	$(INSTALL) --mode=4755 $(TARGET_BINARY) $(INSTALL_BIN_DIR)
-	$(INSTALL) --mode=4755 $(TARGET_DAEMON) $(INSTALL_BIN_DIR)
-	$(INSTALL) --mode=4755 $(TARGET_SERVER) $(INSTALL_BIN_DIR)
-	$(INSTALL) --mode=644 $(SERVICE_CONFIG) $(INSTALL_SERVICE_DIR)
-	systemctl enable rocketlogger
-	systemctl restart rocketlogger
+	$(INSTALL) --mode=644 $(TARGET_BINARY) $(INSTALL_BIN_DIR)
 
 uninstall:
-	$(REMOVE) $(INSTALL_BIN_DIR)/$(BINARY_NAME)
-	$(REMOVE) $(INSTALL_BIN_DIR)/$(DEAMON_NAME)
-	$(REMOVE) $(INSTALL_BIN_DIR)/$(SERVER_NAME)
-	systemctl disable rocketlogger
-	$(REMOVE) $(INSTALL_SERVICE_DIR)/$(SERVICE_CONFIG)
+	$(UNINSTALL) $(INSTALL_BIN_DIR)/$(BINARY_NAME)
 
-$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rocketloggerd.o $(OBJ_DIR)/rl_server.o, $(OBJ))
+$(OBJ_DIR)/%.obj: $(SRC_DIR)/%.asm
 	@$(MAKEDIR) $(@D)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(AS) $(ASOTHER) --output_file=$@ $<
+	$(DISAS) $@ $(@:%.obj=%.lst)
 
-$(TARGET_DAEMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o, $(OBJ))
+%.out: $(LD_CMD) $(OBJ)
 	@$(MAKEDIR) $(@D)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(LD) --output_file=$@ --map_file=$(@:%.out=%.map) $^
+	$(DISAS) $@ $(@:%.out=%.lst)
 
-$(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rocketloggerd.o, $(OBJ))
-	@$(MAKEDIR) $(@D)
-	$(CXX) $(LDFLAGS) -o $@ $^
+$(TARGET_BINARY): $(TARGET_BINARY:%.bin=%.out)
+	$(OBJCOPY) --binary --outfile=$@ $<
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.c
-	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-$(OBJ_DIR)/%.o: $(SENSOR_DIR)/%.cpp
-	@$(MAKEDIR) $(OBJ_DIR) $(DEP_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-$(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.o, $(OBJ))
+$(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.obj, $(OBJ))
 	echo "generating version.c"
 	@echo "#include \"version.h\"" > $@
 	@echo "char const *const PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
@@ -189,25 +160,12 @@ $(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.o, $(OBJ))
 	@echo "char const *const COMPILE_DATE = \"$(COMPILE_DATE)\";" >> $@
 
 ## directories
-$(OBJ_DIR):
-	$(MAKEDIR) $(OBJ_DIR)
-
-$(DEP_DIR):
-	$(MAKEDIR) $(DEP_DIR)
-
 $(BIN_DIR):
 	$(MAKEDIR) $(BIN_DIR)
 
 
 ## phony targets
-.PHONY: clean code-format
+.PHONY: clean
 
 clean:
-	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_SERVER)
-
-code-format:
-	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
-
-
-#####  INCLUDE DEPENDENCIES  #####
--include $(wildcard  $(DEP_DIR)/*.d)
+	$(REMOVE) $(SRC_DIR)/*.lst $(OBJ_DIR)/*.obj $(OBJ_DIR)/*.lst $(BIN_DIR)/*

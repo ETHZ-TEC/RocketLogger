@@ -1,7 +1,7 @@
 """
 RocketLogger calibration tests.
 
-Copyright (c) 2019, ETH Zurich, Computer Engineering Group
+Copyright (c) 2019-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -63,12 +63,12 @@ class TestCalibrationFile(TestCase):
     def test_file_read(self):
         cal = RocketLoggerCalibration()
         cal.read_calibration_file(_CALIBRATION_FILE)
-        reference_time = np.datetime64('2019-01-01T00:00:00', dtype='M8[s]')
+        reference_time = np.datetime64('2020-01-01T00:00:00', dtype='M8[s]')
         self.assertEqual(cal._calibration_time, reference_time)
 
     def test_file_read_direct(self):
         cal = RocketLoggerCalibration(_CALIBRATION_FILE)
-        reference_time = np.datetime64('2019-01-01T00:00:00', dtype='M8[s]')
+        reference_time = np.datetime64('2020-01-01T00:00:00', dtype='M8[s]')
         self.assertEqual(cal._calibration_time, reference_time)
 
     def test_compare_empty(self):

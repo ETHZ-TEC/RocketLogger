@@ -103,8 +103,8 @@ struct pru_control {
     uint32_t buffer_length;
     /// Samples to take (0 for continuous)
     uint32_t sample_limit;
-    /// ADC precision (in bit)
-    uint32_t adc_precision;
+    /// ADC sample rate (in kSPS)
+    uint32_t adc_sample_rate;
     /// Number of ADC commands to send
     uint32_t adc_command_count;
     /// ADC commands to send: command starts in MSB, optional bytes
