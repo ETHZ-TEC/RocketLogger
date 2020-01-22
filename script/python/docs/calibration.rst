@@ -5,7 +5,7 @@ To generate a calibration file from your calibration measurements use the Rocket
 
     >>> from rocketlogger.data import RocketLoggerData
     >>> from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_SMU2450
-    >>> filename_prefix = '20190101_'
+    >>> filename_prefix = '20200101_'
     >>> data_i1l = RocketLoggerData('{}calibration_i1l.rld'
     ...                             .format(filename_prefix))
     >>> data_i2l = RocketLoggerData('{}calibration_i2l.rld'
@@ -25,7 +25,7 @@ To generate a calibration file from your calibration measurements use the Rocket
 
 or using the shortcut with passing the trace filenames::
 
-    >>> filename_prefix = '20190101_'
+    >>> filename_prefix = '20200101_'
     >>> cal = RocketLoggerCalibration(
     ...     '{}calibration_v.rld'.format(filename_prefix),
     ...     '{}calibration_i1l.rld'.format(filename_prefix),
