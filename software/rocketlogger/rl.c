@@ -611,7 +611,7 @@ void rl_status_print(rl_status_t const *const status) {
     }
     print_config_line("Disk free", "%llu Bytes", status->disk_free);
     print_config_line("Disk free", "%u/1000", status->disk_free_permille);
-    print_config_line("Disk use rate", "%u Bytes/min", status->disk_use_rate);
+    print_config_line("Disk use rate", "%u Bytes/s", status->disk_use_rate);
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (status->sensor_available[i]) {
