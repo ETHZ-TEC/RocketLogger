@@ -164,5 +164,8 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
         mvprintw(20, 10, "Digital inputs disabled.");
     }
 
+    // move cursor for warning outputs on new line
+    mvprintw(27, 2, "");
+
     refresh();
 }

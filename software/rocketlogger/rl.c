@@ -492,8 +492,8 @@ void rl_status_reset(rl_status_t *const status) {
 
 int rl_status_init(void) {
     // create shared memory
-    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
-                        IPC_CREAT | SHMEM_PERMISSIONS);
+    int shm_id = shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t),
+                        IPC_CREAT | RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed creating shared status memory; %d message: %s", errno,
@@ -507,7 +507,7 @@ int rl_status_init(void) {
 int rl_status_deinit(void) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed getting shared memory id for removal; message: %s",
@@ -530,7 +530,7 @@ int rl_status_deinit(void) {
 int rl_status_read(rl_status_t *const status) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR, "failed getting shared memory id for reading the "
                              "status; message: %s",
@@ -566,7 +566,7 @@ int rl_status_read(rl_status_t *const status) {
 int rl_status_write(rl_status_t const *const status) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR, "failed getting shared memory id for writing the "
                              "status; message: %s",
