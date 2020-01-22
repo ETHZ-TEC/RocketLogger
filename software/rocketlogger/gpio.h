@@ -82,7 +82,7 @@ typedef enum gpio_interrupt {
 int gpio_init(int gpio_number, gpio_mode_t mode);
 
 /**
- * Denitialize a GPIO.
+ * Deinitialize a GPIO.
  *
  * Unexport an exported sysfs GPIO resource.
  *

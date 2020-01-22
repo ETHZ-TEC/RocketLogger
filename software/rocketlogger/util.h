@@ -78,6 +78,14 @@ bool is_current(int index);
 bool is_low_current(int index);
 
 /**
+ * Checks whether a channel is a voltage channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a voltage, false otherwise
+ */
+bool is_voltage(int index);
+
+/**
  * Check whether a string is empty, i.e. does not contain visible characters.
  *
  * Validates to true if none of the characters belongs to either isgraph()

@@ -41,13 +41,13 @@
 #include "meter.h"
 
 /// Analog channel units
-char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {"V",  "V",  "V",  "V",
-                                                        "uA", "mA", "uA", "mA"};
+char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {
+    "V", "V", "V", "V", "uA", "mA", "uA", "mA", "ms"};
 
 /// Analog channel scales
 double const RL_CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
-    100000000, 100000000, 100000000, 100000000,
-    100000,    1000000,   100000,    1000000};
+    100000000, 100000000, 100000000, 100000000, 100000,
+    1000000,   100000,    1000000,   1000000};
 
 /// Digital input bit location in binary data
 uint32_t const DIGITAL_INPUT_BITS[RL_CHANNEL_DIGITAL_COUNT] = {

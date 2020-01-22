@@ -36,8 +36,21 @@
 
 #include "rl.h"
 
+<<<<<<< HEAD
 /// Calibration file header magic
 #define RL_CALIBRATION_FILE_MAGIC 0x434C5225
+=======
+/// Default system wide calibration file path
+#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
+
+/// User folder calibration file path
+#define RL_CALIBRATION_USER_FILE                                               \
+    "/home/rocketlogger/.config/rocketlogger/calibration.dat"
+
+/// Calibration file header magic
+#define RL_CALIBRATION_FILE_MAGIC 0x434C5225
+
+>>>>>>> feature-pru-timestamp
 /// Calibration file header version
 #define RL_CALIBRATION_FILE_VERSION 0x02
 /// Calibration file header length
@@ -51,7 +64,7 @@ struct rl_calibration {
     int offsets[RL_CHANNEL_COUNT];
     /// Channel scales
     double scales[RL_CHANNEL_COUNT];
-};
+} __attribute__((packed));
 
 /**
  * Typedef for RocketLogger calibration data.
@@ -72,7 +85,7 @@ struct rl_calibration_file {
     uint64_t calibration_time;
     /// The actual calibration data
     rl_calibration_t data;
-};
+} __attribute__((packed));
 
 /**
  * Typedef for RocketLogger calibration file structure.

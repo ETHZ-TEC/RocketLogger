@@ -60,6 +60,14 @@ bool is_low_current(int index) {
     return false;
 }
 
+bool is_voltage(int index) {
+    if (index == RL_CONFIG_CHANNEL_V1 || index == RL_CONFIG_CHANNEL_V2 ||
+        index == RL_CONFIG_CHANNEL_V3 || index == RL_CONFIG_CHANNEL_V4) {
+        return true;
+    }
+    return false;
+}
+
 int count_channels(bool const channels[RL_CHANNEL_COUNT]) {
     int count = 0;
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {

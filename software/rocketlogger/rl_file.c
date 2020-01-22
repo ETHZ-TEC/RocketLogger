@@ -294,6 +294,9 @@ void rl_file_store_header_csv(FILE *file_handle,
         case RL_UNIT_AMPERE:
             fprintf(file_handle, "A]");
             break;
+        case RL_UNIT_SECOND:
+            fprintf(file_handle, "s]");
+            break;
         default:
             break;
         }
@@ -512,14 +515,14 @@ int rl_file_add_ambient_block(FILE *ambient_file,
     int32_t sensor_data[SENSOR_REGISTRY_SIZE];
 
     int ch = 0;
-    int mutli_channel_read = -1;
+    int multi_channel_read = -1;
     for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // only read registered sensors
         if (rl_status.sensor_available[i]) {
             // read multi-channel sensor data only once
-            if (SENSOR_REGISTRY[i].identifier != mutli_channel_read) {
+            if (SENSOR_REGISTRY[i].identifier != multi_channel_read) {
                 SENSOR_REGISTRY[i].read(SENSOR_REGISTRY[i].identifier);
-                mutli_channel_read = SENSOR_REGISTRY[i].identifier;
+                multi_channel_read = SENSOR_REGISTRY[i].identifier;
             }
             sensor_data[ch] = SENSOR_REGISTRY[i].get_value(
                 SENSOR_REGISTRY[i].identifier, SENSOR_REGISTRY[i].channel);
@@ -593,9 +596,14 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
                         RL_FILE_CHANNEL_NO_LINK;
                 }
                 file_header->channel[ch].unit = RL_UNIT_AMPERE;
-            } else {
+            } else if (is_voltage(i)) {
                 file_header->channel[ch].unit = RL_UNIT_VOLT;
                 file_header->channel[ch].channel_scale = RL_SCALE_TEN_NANO;
+                file_header->channel[ch].valid_data_channel =
+                    RL_FILE_CHANNEL_NO_LINK;
+            } else {
+                file_header->channel[ch].unit = RL_UNIT_SECOND;
+                file_header->channel[ch].channel_scale = RL_SCALE_NANO;
                 file_header->channel[ch].valid_data_channel =
                     RL_FILE_CHANNEL_NO_LINK;
             }
