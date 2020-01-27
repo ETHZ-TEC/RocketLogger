@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/limits.h>
+
 #include "log.h"
 #include "rl.h"
 #include "rl_lib.h"
@@ -424,7 +426,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 config->file_enable = false;
             } else {
                 config->file_enable = true;
-                strncpy(config->file_name, arg, RL_PATH_LENGTH_MAX - 1);
+                strncpy(config->file_name, arg, PATH_MAX - 1);
             }
         } else {
             argp_usage(state);

@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/limits.h>
 #include <pruss_intc_mapping.h>
 #include <prussdrv.h>
 #include <sys/types.h>
@@ -95,7 +96,7 @@ int pru_control_init(pru_control_t *const pru_control,
     } else {
         pru_control->adc_sample_rate = config->sample_rate / 1000;
     }
-    
+
     // set sample rate configuration
     uint32_t adc_sample_rate;
     switch (pru_control->adc_sample_rate) {
@@ -394,8 +395,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                 fclose(data_file);
 
                 // determine new file name
-                char file_name[RL_PATH_LENGTH_MAX];
-                char new_file_ending[RL_PATH_LENGTH_MAX];
+                char file_name[PATH_MAX];
+                char new_file_ending[PATH_MAX];
                 strcpy(file_name, config->file_name);
 
                 // search for last .

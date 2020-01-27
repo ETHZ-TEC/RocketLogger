@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/limits.h>
 #include <time.h>
 
 #include "ads131e0x.h"
@@ -73,7 +74,7 @@ int i1l_valid_channel = 0;
 int i2l_valid_channel = 0;
 
 char *rl_file_get_ambient_file_name(char const *const data_file_name) {
-    static char ambient_file_name[RL_PATH_LENGTH_MAX];
+    static char ambient_file_name[PATH_MAX];
 
     // determine new file name
     strcpy(ambient_file_name, data_file_name);
@@ -89,7 +90,7 @@ char *rl_file_get_ambient_file_name(char const *const data_file_name) {
     file_ending--;
 
     // add file ending
-    char ambient_file_ending[RL_PATH_LENGTH_MAX] = RL_FILE_AMBIENT_SUFFIX;
+    char ambient_file_ending[PATH_MAX] = RL_FILE_AMBIENT_SUFFIX;
     strcat(ambient_file_ending, file_ending);
     strcpy(file_ending, ambient_file_ending);
 

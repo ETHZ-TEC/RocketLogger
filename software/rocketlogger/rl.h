@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <linux/limits.h>
 #include <sys/types.h>
 
 #include "version.h"
@@ -51,8 +52,6 @@
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
 
-/// Maximum path length in characters
-#define RL_PATH_LENGTH_MAX 256
 /// Number of RocketLogger analog channels
 #define RL_CHANNEL_COUNT 9
 /// Number of RocketLogger switched channels (allowing to force range)
@@ -170,7 +169,7 @@ struct rl_config {
     /// Enable storing measurements to file
     bool file_enable;
     /// Data file name
-    char file_name[RL_PATH_LENGTH_MAX];
+    char file_name[PATH_MAX];
     /// File format
     rl_file_format_t file_format;
     /// Maximum data file size
@@ -199,7 +198,7 @@ struct rl_status {
     /// Time stamp of last calibration run
     uint64_t calibration_time;
     /// Time stamp of last calibration run
-    char calibration_file[RL_PATH_LENGTH_MAX];
+    char calibration_file[PATH_MAX];
     /// Time stamp of last calibration run
     uint64_t disk_free;
     /// Time stamp of last calibration run

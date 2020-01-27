@@ -34,6 +34,7 @@
 #include <stdlib.h>
 
 #include <fcntl.h>
+#include <linux/limits.h>
 #include <poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -47,7 +48,7 @@
 
 int gpio_init(int gpio_number, gpio_mode_t mode) {
     int ret = 0;
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
 
     // export unexported GPIO
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
@@ -86,7 +87,7 @@ int gpio_deinit(int gpio_number) {
 }
 
 int gpio_reset(int gpio_number) {
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
     int ret = sysfs_unexport_exported(sysfs_file, (GPIO_SYSFS_PATH "unexport"),
                                       gpio_number);
@@ -100,7 +101,7 @@ int gpio_reset(int gpio_number) {
 
 int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode) {
     // construct sysfs path
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/edge"), gpio_number);
 
     // set mode
@@ -138,7 +139,7 @@ int gpio_set_value(int gpio_number, int value) {
     }
 
     // construct sysfs path
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
 
     // set the output value
@@ -154,7 +155,7 @@ int gpio_set_value(int gpio_number, int value) {
 
 int gpio_get_value(int gpio_number) {
     // construct sysfs path
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
 
     // set the output value
@@ -171,7 +172,7 @@ int gpio_get_value(int gpio_number) {
 
 int gpio_wait_interrupt(int gpio_number, int timeout) {
     // construct sysfs path
-    char sysfs_file[RL_PATH_LENGTH_MAX];
+    char sysfs_file[PATH_MAX];
     sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
 
     int fd = open(sysfs_file, O_RDONLY);
