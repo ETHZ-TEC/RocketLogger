@@ -34,10 +34,11 @@ WEB_ROOT="/var/www/rocketlogger"
 WEB_SOURCE=`pwd`"/data"
 WEB_AUTH_FILE=/home/rocketlogger/.htpasswd
 
-BOOTSTRAP_VERSION=4.3.1
-POPPER_VERSION=1.15.0
+LIB_DIR='./lib'
+BOOTSTRAP_VERSION=4.4.1
+POPPER_VERSION=1.16.0
 JQUERY_VERSION=3.4.1
-FLOT_VERSION=3.2.9
+FLOT_VERSION=4.1.1
 
 ## package install
 echo "> Installing web interface dependencies"
@@ -45,9 +46,6 @@ sudo apt install --assume-yes \
   python3                     \
   python3-dev                 \
   virtualenvwrapper
-  # apache2                     \
-  # lighttpd                    \
-  # php-cgi
 
 
 ## system configuration
@@ -77,12 +75,11 @@ sudo mkdir -p ${WEB_ROOT}/data ${WEB_ROOT}/log
 # download dependencies (bootstrap, popper, jquery, flot)
 sudo mkdir -p ${WEB_ROOT}/css/ ${WEB_ROOT}/js/vendor/
 
-wget -N https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
-wget -N https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
-wget -N https://code.jquery.com/jquery-${JQUERY_VERSION}.min.js
-wget -N https://unpkg.com/popper.js@${POPPER_VERSION}/dist/umd/popper.min.js
-wget -N https://github.com/flot/flot/blob/v${FLOT_VERSION}/source/jquery.flot.js
-wget -N https://github.com/flot/flot/blob/v${FLOT_VERSION}/source/jquery.flot.time.js
+wget --no-clobber --directory-prefix=${LIB_DIR} https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
+wget --no-clobber --directory-prefix=${LIB_DIR} https://code.jquery.com/jquery-${JQUERY_VERSION}.min.js
+wget --no-clobber --directory-prefix=${LIB_DIR} https://unpkg.com/popper.js@${POPPER_VERSION}/dist/umd/popper.min.js
+wget --no-clobber --directory-prefix=${LIB_DIR} https://raw.githubusercontent.com/flot/flot/v${FLOT_VERSION}/source/jquery.flot.js
+wget --no-clobber --directory-prefix=${LIB_DIR} https://raw.githubusercontent.com/flot/flot/v${FLOT_VERSION}/source/jquery.flot.time.js
 
 # copy relevant file and clean up
 unzip -o bootstrap-${BOOTSTRAP_VERSION}-dist.zip

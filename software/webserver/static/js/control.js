@@ -29,8 +29,8 @@
  */
 
 
-/// Initilize after document loaded and ready
+/// Initialize after document loaded and ready
 $(function () {
-  // activate tooltips
-  $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+	// activate tooltips
+	$('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
 })
