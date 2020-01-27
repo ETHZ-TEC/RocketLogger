@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 /// File to read MAC address
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
 
-/// File to read MAC address
+/// File system root path
 #define FS_ROOT_PATH "/"
 
 /**
@@ -76,6 +76,14 @@ bool is_current(int index);
  * @return Returns true if channel is a low range current, false otherwise
  */
 bool is_low_current(int index);
+
+/**
+ * Checks whether a channel is a voltage channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a voltage, false otherwise
+ */
+bool is_voltage(int index);
 
 /**
  * Check whether a string is empty, i.e. does not contain visible characters.

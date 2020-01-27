@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <linux/limits.h>
 
 #include "log.h"
 #include "rl.h"
@@ -218,8 +220,7 @@ static struct argp argp = {
 /**
  * RocketLogger main program log file.
  */
-static char const *const log_filename =
-    "/var/www/rocketlogger/log/rocketlogger.log";
+static char const *const log_filename = RL_MEASUREMENT_LOG_FILE;
 
 /**
  * Main RocketLogger binary, controls the sampling
@@ -286,6 +287,14 @@ int main(int argc, char *argv[]) {
     if (valid_config < 0) {
         rl_log(RL_LOG_ERROR, "invalid configuration, check message above");
         exit(EXIT_FAILURE);
+    }
+
+    /// @todo temporarily disabled web interface buffer handling
+    // disable incompatible web interface
+    if (config.web_enable) {
+        rl_log(RL_LOG_WARNING, "no compatible web interface implemented, "
+                               "disabling web interface.\n");
+        config.web_enable = false;
     }
 
     // reset config if requested
@@ -417,7 +426,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 config->file_enable = false;
             } else {
                 config->file_enable = true;
-                strncpy(config->file_name, arg, RL_PATH_LENGTH_MAX - 1);
+                strncpy(config->file_name, arg, PATH_MAX - 1);
             }
         } else {
             argp_usage(state);

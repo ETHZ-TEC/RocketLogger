@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@
 enum pru_state {
     PRU_STATE_OFF = 0x00,               /// PRU off
     PRU_STATE_SAMPLE_FINITE = 0x01,     /// PRU sampling in finite mode
-    PRU_STATE_SAMPLE_CONTINUOUS = 0x03, /// PRU sampling in coninuous mode
+    PRU_STATE_SAMPLE_CONTINUOUS = 0x03, /// PRU sampling in continuous mode
 };
 
 /**
@@ -103,8 +103,8 @@ struct pru_control {
     uint32_t buffer_length;
     /// Samples to take (0 for continuous)
     uint32_t sample_limit;
-    /// ADC precision (in bit)
-    uint32_t adc_precision;
+    /// ADC sample rate (in kSPS)
+    uint32_t adc_sample_rate;
     /// Number of ADC commands to send
     uint32_t adc_command_count;
     /// ADC commands to send: command starts in MSB, optional bytes
@@ -159,7 +159,7 @@ int pru_init(void);
 /**
  * Shutdown PRU and deinitialize PRU driver.
  *
- * Halts the PRU, unmaps PRU shared memory and disables PRU interrupts.
+ * Halt the PRU, unmap PRU shared memory and disable PRU interrupts.
  */
 void pru_deinit(void);
 

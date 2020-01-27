@@ -4,6 +4,9 @@
 			"path": "software/rocketlogger"
 		},
 		{
+			"path": "software/rocketlogger_pru"
+		},
+		{
 			"path": "software/webserver"
 		},
 		{

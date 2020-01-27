@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,14 @@ bool is_current(int index) {
 
 bool is_low_current(int index) {
     if (index == RL_CONFIG_CHANNEL_I1L || index == RL_CONFIG_CHANNEL_I2L) {
+        return true;
+    }
+    return false;
+}
+
+bool is_voltage(int index) {
+    if (index == RL_CONFIG_CHANNEL_V1 || index == RL_CONFIG_CHANNEL_V2 ||
+        index == RL_CONFIG_CHANNEL_V3 || index == RL_CONFIG_CHANNEL_V4) {
         return true;
     }
     return false;

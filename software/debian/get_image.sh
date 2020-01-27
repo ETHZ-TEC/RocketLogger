@@ -1,7 +1,7 @@
 #!/bin/bash
 # Download the beagle bone image from the beaglebone archive
 #
-# Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,9 @@
 #
 
 # Debian buster IoT image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2019-09-08/buster-console/"
-IMAGE_FILE="bone-debian-10.1-console-armhf-2019-09-08-1gb.img.xz"
-IMAGE_SHA256="c0f12f2b2521f28b8969e519905d23d6c9927c432baab3687f3ccb9a3daf3ada"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-01-20/buster-console/"
+IMAGE_FILE="bone-debian-10.2-console-armhf-2020-01-20-1gb.img.xz"
+IMAGE_SHA256="160351ee8074368250d42ac09055f1454a06406229586ffbb2a9c934b23a3434"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"

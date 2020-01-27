@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ typedef enum gpio_interrupt {
 int gpio_init(int gpio_number, gpio_mode_t mode);
 
 /**
- * Denitialize a GPIO.
+ * Deinitialize a GPIO.
  *
  * Unexport an exported sysfs GPIO resource.
  *

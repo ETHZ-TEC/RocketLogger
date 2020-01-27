@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@
 #include "gpio.h"
 #include "log.h"
 #include "pru.h"
-#include "pwm.h"
 #include "rl.h"
 #include "rl_file.h"
 #include "sensor/sensor.h"
@@ -47,16 +46,6 @@ void hw_init(rl_config_t const *const config) {
 
     // STATUS reset to default
     rl_status_reset(&rl_status);
-
-    // PWM configuration
-    pwm_init();
-
-    if (config->sample_rate < ADS131E0X_RATE_MIN) {
-        pwm_setup_range_reset(ADS131E0X_RATE_MIN);
-    } else {
-        pwm_setup_range_reset(config->sample_rate);
-    }
-    pwm_setup_adc_clock();
 
     // GPIO configuration
     // force high range (negative enable)
@@ -109,9 +98,6 @@ void hw_init(rl_config_t const *const config) {
 
 void hw_deinit(rl_config_t const *const config) {
 
-    // PWM
-    pwm_deinit();
-
     // GPIO (set to default state only, (un)export is handled by daemon)
     // reset force high range GPIOs to force high range (negative enable)
     gpio_set_value(GPIO_FHR1, 0);
@@ -159,7 +145,8 @@ int hw_sample(rl_config_t const *const config) {
     if (config->file_enable) {
         data_file = fopen64(config->file_name, "w+");
         if (data_file == NULL) {
-            rl_log(RL_LOG_ERROR, "failed to open data file '%s'", config->file_name);
+            rl_log(RL_LOG_ERROR, "failed to open data file '%s'",
+                   config->file_name);
             return ERROR;
         }
     }

@@ -3,7 +3,7 @@ RocketLogger Calibration Support.
 
 Calibration file generation and accuracy verification.
 
-Copyright (c) 2019, ETH Zurich, Computer Engineering Group
+Copyright (c) 2019-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -53,16 +53,6 @@ _ROCKETLOGGER_ADC_STEP_V = -1.22e-6
 _ROCKETLOGGER_ADC_STEP_IL = 1.755e-10
 _ROCKETLOGGER_ADC_STEP_IH = 3.18e-08
 
-# data format of the calibration file
-_CALIBRATION_FILE_DTYPE = np.dtype([
-    ('file_magic', '<u4'),
-    ('file_version', '<u2'),
-    ('header_length', '<u2'),
-    ('calibration_time', '<M8[s]'),
-    ('offset', ('<i4', 8)),
-    ('scale', ('<f8', 8)),
-])
-
 # calibration file format magic
 _CALIBRATION_FILE_MAGIC = 0x434C5225
 
@@ -74,13 +64,30 @@ _CALIBRATION_FILE_HEADER_LENGTH = 0x10
 
 # data format channel name sequence
 _CALIBRATION_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4',
-                              'I1L', 'I1H', 'I2L', 'I2H']
+                              'I1L', 'I1H', 'I2L', 'I2H', 'DT']
+
+# data format of the calibration file
+_CALIBRATION_FILE_DTYPE = np.dtype([
+    ('file_magic', '<u4'),
+    ('file_version', '<u2'),
+    ('header_length', '<u2'),
+    ('calibration_time', '<M8[s]'),
+    ('offset', ('<i4', len(_CALIBRATION_CHANNEL_NAMES))),
+    ('scale', ('<f8', len(_CALIBRATION_CHANNEL_NAMES))),
+])
 
 # channels with positive scales
 _CALIBRATION_CHANNEL_SCALES_POSITIVE = ([False] * 4 + [True] * 4)
 
 # RocketLogger calibration scale scales for channels
 _CALIBRATION_CHANNEL_SCALES = ([1e-8] * 4 + [1e-11, 1e-9] * 2)
+
+# Calculated PRU cycle counter offset
+# (2 MEM write + 1 MEM read + 2 ALU op readout)
+_CALIBRATION_PRU_CYCLES_OFFSET = 3 * 4  # 2 * 1 + 1 * 4 + 2 * 1
+
+# Calculated PRU cycle counter scale (200 MHz clock)
+_CALIBRATION_PRU_CYCLES_SCALE = 5
 
 
 def regression_linear(measurement, reference, zero_weight=1):
@@ -135,7 +142,8 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
         measurement_smooth = measurement_data
 
     # find stable measurement intervals using rms of smoothed signal signals
-    measurement_diff_abs = np.abs(np.diff(np.hstack([0, measurement_smooth])))
+    measurement_diff_abs = np.abs(
+        np.diff(np.concatenate(([0], measurement_smooth))))
     measurement_diff_rms = np.sqrt(np.mean(
         measurement_diff_abs[measurement_diff_abs < setpoint_step]**2))
     measurement_stable = (measurement_diff_abs < 2 * measurement_diff_rms)
@@ -146,7 +154,7 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
                     mode='same') > np.sum(filter_window[:-1])
 
     # extract set-point measurement intervals
-    setpoint_boundary = np.diff(np.hstack([0, measurement_filtered]))
+    setpoint_boundary = np.diff(np.concatenate(([0], measurement_filtered)))
     setpoint_start = np.array((setpoint_boundary > 0).nonzero()) - \
         int(filter_window_length / 2)
     setpoint_end = np.array((setpoint_boundary < 0).nonzero()) + \
@@ -321,7 +329,7 @@ class RocketLoggerCalibrationSetup:
 
         # add down sweep for dual sweep setups
         if self._dual_sweep:
-            setpoints = np.hstack([setpoints, setpoints[-2::-1]])
+            setpoints = np.concatenate((setpoints, setpoints[-2::-1]))
         return setpoints
 
 
@@ -522,6 +530,16 @@ class RocketLoggerCalibration:
                 if pos and self._calibration_scale[ch] < 0:
                     self._calibration_scale[ch] = -self._calibration_scale[ch]
 
+        # append PRU timestamp constant calibration values
+        self._calibration_offset = np.concatenate(
+            (self._calibration_offset, [_CALIBRATION_PRU_CYCLES_OFFSET]))
+        self._calibration_scale = np.concatenate(
+            (self._calibration_scale, [_CALIBRATION_PRU_CYCLES_SCALE]))
+        # error statistics do not exist for PRU timestamp (design values)
+        self._error_offset = np.concatenate((self._error_offset, [np.NaN]))
+        self._error_scale = np.concatenate((self._error_scale, [np.NaN]))
+        self._error_rmse = np.concatenate((self._error_rmse, [np.NaN]))
+
     def print_statistics(self):
         """
         Print statistics of the calibration.
@@ -585,10 +603,10 @@ class RocketLoggerCalibration:
         if self._calibration_time > np.datetime64('now'):
             raise RocketLoggerCalibrationError(
                 'Invalid calibration time in calibration file')
-        if len(self._calibration_offset) != 8:
+        if len(self._calibration_offset) != len(_CALIBRATION_CHANNEL_NAMES):
             raise RocketLoggerCalibrationError(
                 'Invalid offset data in calibration file')
-        if len(self._calibration_scale) != 8:
+        if len(self._calibration_scale) != len(_CALIBRATION_CHANNEL_NAMES):
             raise RocketLoggerCalibrationError(
                 'Invalid scale data in calibration file')
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,8 +58,8 @@ static void web_merge_currents(uint8_t const *const valid, int64_t *dest,
                                rl_config_t const *const config);
 
 web_shm_t *web_create_shm(void) {
-    int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t),
-                        IPC_CREAT | SHMEM_PERMISSIONS);
+    int shm_id = shmget(RL_SHMEM_DATA_KEY, sizeof(web_shm_t),
+                        IPC_CREAT | RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "Failed creating shared web data memory; %d message: %s", errno,
@@ -79,7 +79,8 @@ web_shm_t *web_create_shm(void) {
 }
 
 web_shm_t *web_open_shm(void) {
-    int shm_id = shmget(SHMEM_DATA_KEY, sizeof(web_shm_t), SHMEM_PERMISSIONS);
+    int shm_id =
+        shmget(RL_SHMEM_DATA_KEY, sizeof(web_shm_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "Failed getting shared web data memory; %d message: %s", errno,

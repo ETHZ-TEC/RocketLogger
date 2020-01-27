@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/limits.h>
 #include <pruss_intc_mapping.h>
 #include <prussdrv.h>
 #include <sys/types.h>
@@ -89,49 +90,40 @@ int pru_control_init(pru_control_t *const pru_control,
         pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set sampling rate configuration
+    // set sample rate
+    if (config->sample_rate <= ADS131E0X_RATE_MIN) {
+        pru_control->adc_sample_rate = ADS131E0X_RATE_MIN / 1000;
+    } else {
+        pru_control->adc_sample_rate = config->sample_rate / 1000;
+    }
+
+    // set sample rate configuration
     uint32_t adc_sample_rate;
-    switch (config->sample_rate) {
+    switch (pru_control->adc_sample_rate) {
     case 1:
         adc_sample_rate = ADS131E0X_K1;
         break;
-    case 10:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 100:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 1000:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 2000:
+    case 2:
         adc_sample_rate = ADS131E0X_K2;
         break;
-    case 4000:
+    case 4:
         adc_sample_rate = ADS131E0X_K4;
         break;
-    case 8000:
+    case 8:
         adc_sample_rate = ADS131E0X_K8;
         break;
-    case 16000:
+    case 16:
         adc_sample_rate = ADS131E0X_K16;
         break;
-    case 32000:
+    case 32:
         adc_sample_rate = ADS131E0X_K32;
         break;
-    case 64000:
+    case 64:
         adc_sample_rate = ADS131E0X_K64;
         break;
     default:
         rl_log(RL_LOG_ERROR, "invalid sample rate %d", config->sample_rate);
         return ERROR;
-    }
-
-    // set data format precision depending on sample rate
-    if (adc_sample_rate == ADS131E0X_K32 || adc_sample_rate == ADS131E0X_K64) {
-        pru_control->adc_precision = ADS131E0X_PRECISION_LOW;
-    } else {
-        pru_control->adc_precision = ADS131E0X_PRECISION_HIGH;
     }
 
     // set buffer infos
@@ -403,8 +395,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                 fclose(data_file);
 
                 // determine new file name
-                char file_name[RL_PATH_LENGTH_MAX];
-                char new_file_ending[RL_PATH_LENGTH_MAX];
+                char file_name[PATH_MAX];
+                char new_file_ending[PATH_MAX];
                 strcpy(file_name, config->file_name);
 
                 // search for last .
@@ -576,13 +568,21 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // update and write header
         if (config->file_enable) {
             // write the data buffer to file
-            rl_file_add_data_block(data_file, buffer, buffer_size,
-                                   &timestamp_realtime, &timestamp_monotonic,
-                                   config);
+            int block_count = rl_file_add_data_block(
+                data_file, buffer, buffer_size, &timestamp_realtime,
+                &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(RL_LOG_ERROR, "Adding data block to data file failed.");
+                rl_status.error = true;
+                break;
+            }
 
             // update and store data file header
-            data_file_header.lead_in.data_block_count += 1;
-            data_file_header.lead_in.sample_count += buffer_size / aggregates;
+            data_file_header.lead_in.data_block_count += block_count;
+            data_file_header.lead_in.sample_count +=
+                block_count * (buffer_size / aggregates);
 
             if (config->file_format == RL_FILE_FORMAT_RLD) {
                 rl_file_update_header_bin(data_file, &data_file_header);
@@ -593,16 +593,23 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // handle ambient data
         if (config->ambient_enable) {
-
             // fetch and write data
-            rl_file_add_ambient_block(ambient_file, buffer, buffer_size,
-                                      &timestamp_realtime, &timestamp_monotonic,
-                                      config);
+            int block_count = rl_file_add_ambient_block(
+                ambient_file, buffer, buffer_size, &timestamp_realtime,
+                &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(RL_LOG_ERROR,
+                       "Adding data block to ambient file failed.");
+                rl_status.error = true;
+                break;
+            }
 
             // update and write header
-            ambient_file_header.lead_in.data_block_count += 1;
+            ambient_file_header.lead_in.data_block_count += block_count;
             ambient_file_header.lead_in.sample_count +=
-                RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
+                block_count * RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
             rl_file_update_header_bin(ambient_file, &ambient_file_header);
         }
 
@@ -612,6 +619,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
                                &timestamp_monotonic, config);
         }
     }
+
+    // stop PRU
+    pru_stop();
 
     // sampling stopped, update status
     rl_status.sampling = false;

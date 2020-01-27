@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,35 +35,37 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <linux/limits.h>
 #include <sys/types.h>
 
 #include "version.h"
 
 /// Function return value for successful completion
 #define SUCCESS (0)
-
 /// Function return value for errors (use errno to indicate the error)
 #define ERROR (-1)
 
+/// RocketLogger measurement log file
+#define RL_MEASUREMENT_LOG_FILE "/var/www/rocketlogger/log/daemon.log"
+/// RocketLogger daemon log file
+#define RL_DAEMON_LOG_FILE "/var/www/rocketlogger/log/daemon.log"
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
-/// Maximum path length in characters
-#define RL_PATH_LENGTH_MAX 256
+
 /// Number of RocketLogger analog channels
-#define RL_CHANNEL_COUNT 8
+#define RL_CHANNEL_COUNT 9
 /// Number of RocketLogger switched channels (allowing to force range)
 #define RL_CHANNEL_SWITCHED_COUNT 2
-/// Number of RocketLogger digtial channels
+/// Number of RocketLogger digital channels
 #define RL_CHANNEL_DIGITAL_COUNT 6
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
 
-/// Key for status shared memory (used for creation)
-#define SHMEM_STATUS_KEY 1111
-/// Key for web shared memory (used for creation)
-#define SHMEM_DATA_KEY 4443
-/// Permissions for shared memory
-#define SHMEM_PERMISSIONS 0666
+/// Default system wide calibration file path
+#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
+/// User folder calibration file path
+#define RL_CALIBRATION_USER_FILE                                               \
+    "/home/rocketlogger/.config/rocketlogger/calibration.dat"
 
 /// Default system configuration file path
 #define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
@@ -82,9 +84,10 @@
 #define RL_CONFIG_CHANNEL_I1H 5
 #define RL_CONFIG_CHANNEL_I2L 6
 #define RL_CONFIG_CHANNEL_I2H 7
+#define RL_CONFIG_CHANNEL_DT 8
 /// Configuration channel enable default
 #define RL_CONFIG_CHANNEL_ENABLE_DEFAULT                                       \
-    { true, true, true, true, true, true, true, true }
+    { true, true, true, true, true, true, true, true, false }
 /// Configuration merged/forced channel indexes
 #define RL_CONFIG_CHANNEL_I1 0
 #define RL_CONFIG_CHANNEL_I2 1
@@ -97,8 +100,15 @@
 #define RL_CONFIG_FILE_SIZE_MIN (5UL * 1000UL * 1000UL)
 /// Configuration file size default
 #define RL_CONFIG_FILE_SIZE_DEFAULT (1000UL * 1000UL * 1000UL)
-/// Configuration file commment default
+/// Configuration file comment default
 #define RL_CONFIG_COMMENT_DEFAULT "Sampled using the RocketLogger"
+
+/// Key for status shared memory (used for creation)
+#define RL_SHMEM_STATUS_KEY 1111
+/// Key for web shared memory (used for creation)
+#define RL_SHMEM_DATA_KEY 4443
+/// Permissions for shared memory
+#define RL_SHMEM_PERMISSIONS 0666
 
 /**
  * RocketLogger data aggregation modes.
@@ -132,7 +142,7 @@ typedef enum rl_file_format rl_file_format_t;
 struct rl_config {
     /// Configuration structure version
     uint8_t config_version;
-    /// Put the measurment process in background after successful start
+    /// Put the measurement process in background after successful start
     bool background_enable;
     /// Display measurement data interactively in CLI while sampling
     bool interactive_enable;
@@ -159,7 +169,7 @@ struct rl_config {
     /// Enable storing measurements to file
     bool file_enable;
     /// Data file name
-    char file_name[RL_PATH_LENGTH_MAX];
+    char file_name[PATH_MAX];
     /// File format
     rl_file_format_t file_format;
     /// Maximum data file size
@@ -188,7 +198,7 @@ struct rl_status {
     /// Time stamp of last calibration run
     uint64_t calibration_time;
     /// Time stamp of last calibration run
-    char calibration_file[RL_PATH_LENGTH_MAX];
+    char calibration_file[PATH_MAX];
     /// Time stamp of last calibration run
     uint64_t disk_free;
     /// Time stamp of last calibration run

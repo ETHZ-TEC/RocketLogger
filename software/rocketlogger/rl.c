@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, Swiss Federal Institute of Technology (ETH Zurich)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -90,8 +90,8 @@ const rl_status_t rl_status_default = {
 };
 
 /// RocketLogger channel names
-const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {"V1",  "V2",  "V3",  "V4",
-                                                  "I1L", "I1H", "I2L", "I2H"};
+const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {
+    "V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H", "DT"};
 
 /// RocketLogger force range channel names
 const char *RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1H", "I2H"};
@@ -147,11 +147,12 @@ void rl_config_print(rl_config_t const *const config) {
         config->channel_enable[RL_CONFIG_CHANNEL_V3] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_V4] ? "on " : "off");
     print_config_line(
-        "", "I1L: %s  I1H: %s  I2L: %s  I2H: %s",
+        "", "I1L: %s  I1H: %s  I2L: %s  I2H: %s  DT:  %s",
         config->channel_enable[RL_CONFIG_CHANNEL_I1L] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_I1H] ? "on " : "off",
         config->channel_enable[RL_CONFIG_CHANNEL_I2L] ? "on " : "off",
-        config->channel_enable[RL_CONFIG_CHANNEL_I2H] ? "on " : "off");
+        config->channel_enable[RL_CONFIG_CHANNEL_I2H] ? "on " : "off",
+        config->channel_enable[RL_CONFIG_CHANNEL_DT] ? "on " : "off");
     print_config_line(
         "Force High Channels", "I1H: %s  I2H: %s",
         config->channel_force_range[RL_CONFIG_CHANNEL_I1] ? "on " : "off",
@@ -492,8 +493,8 @@ void rl_status_reset(rl_status_t *const status) {
 
 int rl_status_init(void) {
     // create shared memory
-    int shm_id = shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t),
-                        IPC_CREAT | SHMEM_PERMISSIONS);
+    int shm_id = shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t),
+                        IPC_CREAT | RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed creating shared status memory; %d message: %s", errno,
@@ -507,7 +508,7 @@ int rl_status_init(void) {
 int rl_status_deinit(void) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed getting shared memory id for removal; message: %s",
@@ -530,7 +531,7 @@ int rl_status_deinit(void) {
 int rl_status_read(rl_status_t *const status) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR, "failed getting shared memory id for reading the "
                              "status; message: %s",
@@ -566,7 +567,7 @@ int rl_status_read(rl_status_t *const status) {
 int rl_status_write(rl_status_t const *const status) {
     // get ID and attach shared memory
     int shm_id =
-        shmget(SHMEM_STATUS_KEY, sizeof(rl_status_t), SHMEM_PERMISSIONS);
+        shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR, "failed getting shared memory id for writing the "
                              "status; message: %s",
@@ -611,7 +612,7 @@ void rl_status_print(rl_status_t const *const status) {
     }
     print_config_line("Disk free", "%llu Bytes", status->disk_free);
     print_config_line("Disk free", "%u/1000", status->disk_free_permille);
-    print_config_line("Disk use rate", "%u Bytes/min", status->disk_use_rate);
+    print_config_line("Disk use rate", "%u Bytes/s", status->disk_use_rate);
     print_config_line("Sensors found", "%u total", status->sensor_count);
     for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (status->sensor_available[i]) {

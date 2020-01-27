@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,13 +41,13 @@
 #include "meter.h"
 
 /// Analog channel units
-char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {"V",  "V",  "V",  "V",
-                                                        "uA", "mA", "uA", "mA"};
+char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {
+    "V", "V", "V", "V", "uA", "mA", "uA", "mA", "ms"};
 
 /// Analog channel scales
 double const RL_CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
-    100000000, 100000000, 100000000, 100000000,
-    100000,    1000000,   100000,    1000000};
+    100000000, 100000000, 100000000, 100000000, 100000,
+    1000000,   100000,    1000000,   1000000};
 
 /// Digital input bit location in binary data
 uint32_t const DIGITAL_INPUT_BITS[RL_CHANNEL_DIGITAL_COUNT] = {
@@ -163,6 +163,9 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
     } else {
         mvprintw(20, 10, "Digital inputs disabled.");
     }
+
+    // move cursor for warning outputs on new line
+    mvprintw(27, 2, "");
 
     refresh();
 }

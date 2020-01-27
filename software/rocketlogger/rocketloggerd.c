@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define LOG_FILE "/var/www/rocketlogger/log/daemon.log"
-
 #include <stdlib.h>
 
 #include <signal.h>
@@ -38,13 +36,14 @@
 
 #include "gpio.h"
 #include "log.h"
+#include "pwm.h"
 #include "rl.h"
 
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
 
 /// RocketLogger daemon log file.
-static char const *const log_filename = "/var/www/rocketlogger/log/daemon.log";
+static char const *const log_filename = RL_DAEMON_LOG_FILE;
 
 /// Flag to terminate the infinite daemon loop
 volatile bool daemon_shutdown = false;
@@ -332,6 +331,12 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
+    ret = pwm_init();
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules.");
+        exit(EXIT_FAILURE);
+    }
+
     // create shared memory for state
     ret = rl_status_init();
     if (ret < 0) {
@@ -370,6 +375,7 @@ int main(void) {
     power_deinit();
     leds_deinit();
     fhr_deinit();
+    pwm_deinit();
 
     exit(EXIT_SUCCESS);
 }
