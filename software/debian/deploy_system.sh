@@ -2,7 +2,7 @@
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
 # Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]
 #
-# Copyright (c) 2016-2018, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -112,7 +112,7 @@ ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh ${HOST
 # verify system configuration worked
 CONFIG=$?
 
-if [ $CONFIG -ne 255 ]; then
+if [ $CONFIG -ne 0 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
   exit $CONFIG
 else
