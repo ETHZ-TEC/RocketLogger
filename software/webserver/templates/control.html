@@ -11,6 +11,7 @@
   <!-- local javascript -->
   <script src="{{ url_for('static', filename='js/rocketlogger.js') }}"></script>
   <script src="{{ url_for('static', filename='js/control.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rocketlogger.plot.js') }}"></script>
 {% endblock %}
 
 {% block title %}RocketLogger Control{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}

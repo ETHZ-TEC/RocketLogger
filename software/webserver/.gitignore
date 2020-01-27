@@ -2,9 +2,3 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# 3rd party web libraries
-bootstrap*/
-flot*/
-jquery*.js
-*.zip
