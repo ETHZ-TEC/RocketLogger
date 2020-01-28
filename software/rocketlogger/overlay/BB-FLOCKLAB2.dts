@@ -62,7 +62,7 @@
     "P9.22",
     /* FlockLab pins */
     "P8.07", /* timer4/PPS */
-    "P8.27", /* pps gpio */
+    "P8.27", /* pps for PRU1 */
     "P8.31", /* serial_id_rx */
     "P8.37", /* uart5_txd */
     "P8.38", /* uart5_rxd */
@@ -108,7 +108,7 @@
     __overlay__ {
       /* FlockLab pins */
       P8_07_pinmux { status = "disabled"; }; /* pps */
-      P8_27_pinmux { status = "disabled"; }; /* pps */
+      P8_27_pinmux { status = "disabled"; }; /* pps for PRU1 */
       P8_31_pinmux { status = "disabled"; }; /* serial_id_rx */
       P8_37_pinmux { status = "disabled"; }; /* uart5_txd */
       P8_38_pinmux { status = "disabled"; }; /* uart5_rxd */
@@ -146,11 +146,6 @@
     target = <&am33xx_pinmux>;
     __overlay__ {
       /* --- FL stuff --- */
-      pps_pins: pinmux_pps_pins {
-        pinctrl-single,pins = <
-          BONE_P8_27 (PIN_INPUT | MUX_MODE7)   /* PPS pin */
-        >;
-      };
       pps_gmtimer_pins: pinmux_pps_gmtimer_pins {
         pinctrl-single,pins = <
           BONE_P8_07 (PIN_INPUT | MUX_MODE2)   /* 0x90 0x22 -> TIMER4 */
@@ -175,6 +170,7 @@
       };
       fl_pru1_pins: pinmux_fl_pru1_pins {
         pinctrl-single,pins = <
+          BONE_P8_27 (PIN_INPUT | MUX_MODE6)
           BONE_P8_45 (PIN_INPUT | MUX_MODE6)
           BONE_P8_46 (PIN_INPUT | MUX_MODE6)
           BONE_P8_43 (PIN_INPUT | MUX_MODE6)
@@ -231,14 +227,6 @@
   fragment@3 {
     target = <&ocp>;
     __overlay__ {
-      pps {
-        compatible = "pps-gpio";
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&pps_pins>;
-        gpios = <&gpio2 22 0>;
-        assert-rising-edge;
-      };
       pps_gmtimer {
         compatible = "pps-gmtimer";
         status = "okay";
