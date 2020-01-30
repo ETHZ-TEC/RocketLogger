@@ -46,9 +46,9 @@
 #define ERROR (-1)
 
 /// RocketLogger measurement log file
-#define RL_MEASUREMENT_LOG_FILE "/var/www/rocketlogger/log/daemon.log"
+#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger.log"
 /// RocketLogger daemon log file
-#define RL_DAEMON_LOG_FILE "/var/www/rocketlogger/log/daemon.log"
+#define RL_DAEMON_LOG_FILE "/var/log/rocketloggerd.log"
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
 
@@ -61,17 +61,17 @@
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
 
-/// Default system wide calibration file path
-#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
 /// User folder calibration file path
 #define RL_CALIBRATION_USER_FILE                                               \
     "/home/rocketlogger/.config/rocketlogger/calibration.dat"
+/// Default system wide calibration file path
+#define RL_CALIBRATION_SYSTEM_FILE "/etc/rocketlogger/calibration.dat"
 
-/// Default system configuration file path
-#define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
 /// User configuration file path
 #define RL_CONFIG_USER_FILE                                                    \
     "/home/rocketlogger/.config/rocketlogger/settings.dat"
+/// Default system configuration file path
+#define RL_CONFIG_SYSTEM_FILE "/etc/rocketlogger/settings.dat"
 
 /// Default system configuration file path
 #define RL_CONFIG_VERSION 0x03
@@ -95,7 +95,7 @@
 #define RL_CONFIG_CHANNEL_FORCE_RANGE_DEFAULT                                  \
     { false, false }
 /// Configuration file name default
-#define RL_CONFIG_FILE_DEFAULT "/var/www/rocketlogger/data/data.rld"
+#define RL_CONFIG_FILE_DEFAULT "/home/rocketlogger/data.rld"
 /// Minimum measurement split file size (5 MB to fit largest block at max rate)
 #define RL_CONFIG_FILE_SIZE_MIN (5UL * 1000UL * 1000UL)
 /// Configuration file size default
