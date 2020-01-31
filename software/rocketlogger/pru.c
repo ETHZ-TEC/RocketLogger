@@ -90,47 +90,19 @@ int pru_control_init(pru_control_t *const pru_control,
         pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set sample rate
+    // set ADC sample rate in kSPS
     if (config->sample_rate <= ADS131E0X_RATE_MIN) {
         pru_control->adc_sample_rate = ADS131E0X_RATE_MIN / 1000;
     } else {
         pru_control->adc_sample_rate = config->sample_rate / 1000;
     }
 
-    // set sample rate configuration
-    uint32_t adc_sample_rate;
-    switch (pru_control->adc_sample_rate) {
-    case 1:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 2:
-        adc_sample_rate = ADS131E0X_K2;
-        break;
-    case 4:
-        adc_sample_rate = ADS131E0X_K4;
-        break;
-    case 8:
-        adc_sample_rate = ADS131E0X_K8;
-        break;
-    case 16:
-        adc_sample_rate = ADS131E0X_K16;
-        break;
-    case 32:
-        adc_sample_rate = ADS131E0X_K32;
-        break;
-    case 64:
-        adc_sample_rate = ADS131E0X_K64;
-        break;
-    default:
-        rl_log(RL_LOG_ERROR, "invalid sample rate %d", config->sample_rate);
-        return ERROR;
-    }
-
-    // set buffer infos
+    // set sample limit and data buffer size
     pru_control->sample_limit = config->sample_limit * aggregates;
     pru_control->buffer_length =
-        (config->sample_rate * aggregates) / config->update_rate;
+        1000 * pru_control->adc_sample_rate / config->update_rate;
 
+    // get shared buffer addresses
     uint32_t buffer_size_bytes =
         pru_control->buffer_length *
             (PRU_SAMPLE_SIZE * RL_CHANNEL_COUNT + PRU_DIGITAL_SIZE) +
@@ -142,39 +114,6 @@ int pru_control_init(pru_control_t *const pru_control,
         (uint32_t)prussdrv_get_phys_addr(pru_extmem_base);
     pru_control->buffer0_addr = pru_extmem_phys;
     pru_control->buffer1_addr = pru_extmem_phys + buffer_size_bytes;
-
-    // setup commands to send for ADC initialization
-    pru_control->adc_command_count = PRU_ADC_COMMAND_COUNT;
-
-    // reset and stop sampling
-    pru_control->adc_command[0] = (ADS131E0X_RESET << 24);
-    pru_control->adc_command[1] = (ADS131E0X_SDATAC << 24);
-
-    // configure registers
-    pru_control->adc_command[2] = ((ADS131E0X_WREG | ADS131E0X_CONFIG3) << 24) |
-                                  (ADS131E0X_CONFIG3_DEFAULT << 8);
-    pru_control->adc_command[3] =
-        ((ADS131E0X_WREG | ADS131E0X_CONFIG1) << 24) |
-        ((ADS131E0X_CONFIG1_DEFAULT | adc_sample_rate) << 8);
-
-    // set channel gains (CH1-7, CH8 unused)
-    pru_control->adc_command[4] = ((ADS131E0X_WREG | ADS131E0X_CH1SET) << 24) |
-                                  (ADS131E0X_GAIN2 << 8); // High Range A
-    pru_control->adc_command[5] = ((ADS131E0X_WREG | ADS131E0X_CH2SET) << 24) |
-                                  (ADS131E0X_GAIN2 << 8); // High Range B
-    pru_control->adc_command[6] = ((ADS131E0X_WREG | ADS131E0X_CH3SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Medium Range
-    pru_control->adc_command[7] = ((ADS131E0X_WREG | ADS131E0X_CH4SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Low Range A
-    pru_control->adc_command[8] = ((ADS131E0X_WREG | ADS131E0X_CH5SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Low Range B
-    pru_control->adc_command[9] = ((ADS131E0X_WREG | ADS131E0X_CH6SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Voltage 1
-    pru_control->adc_command[10] = ((ADS131E0X_WREG | ADS131E0X_CH7SET) << 24) |
-                                   (ADS131E0X_GAIN1 << 8); // Voltage 2
-
-    // start continuous reading
-    pru_control->adc_command[11] = (ADS131E0X_RDATAC << 24);
 
     return SUCCESS;
 }

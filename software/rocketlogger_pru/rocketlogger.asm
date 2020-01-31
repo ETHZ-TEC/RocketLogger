@@ -47,32 +47,56 @@ PRU_R31_VEC_VALID           .set    0x20    ; valid interrupt bit flag
 PRU_EVTOUT_0                .set    0x03    ; user space interrupt event number
 
 ; SPI delay cycle definitions
-SPI_SELECT_GUARD_CYCLES     .set    4   ; min. 20ns after CS before SCLK rise
-SPI_DESELECT_GUARD_CYCLES   .set    400 ; min. 4 t_CLK (2us) before CS rise
-SPI_DECODE_GUARD_CYCLES     .set    320 ; min. 4 t_CLK (2us) burst period
-SPI_IDLE_GUARD_CYCLES       .set    200 ; min. 2 t_CLK (1us) CS high
+SPI_SELECT_GUARD_CYCLES     .set    4       ; min. 20ns after CS before SCLK rise
+SPI_DESELECT_GUARD_CYCLES   .set    400     ; min. 4 t_CLK (2us) before CS rise
+SPI_DECODE_GUARD_CYCLES     .set    320     ; min. 4 t_CLK (2us) total burst period
+SPI_IDLE_GUARD_CYCLES       .set    200     ; min. 2 t_CLK (1us) CS high
 
-; ADC command and status definitions
-ADC_COMMAND_SDATAC          .set    0x11000000  ; stop ADC data acquisition
-ADC_COMMAND_RREG            .set    0x20000000  ; read ADC register
-ADC_COMMAND_SIZE            .set    24
-ADC_STATUS_SIZE             .set    24
-ADC_STATUS_MASK             .set    0x0F ; for all 4 digital inputs
-ADC_WRITE_GUARD_CYCLES      .set    4000
+; ADC command and delay cycle definitions
+ADC_COMMAND_RESET           .set    0x06    ; reset configuration
+ADC_COMMAND_RDATAC          .set    0x10    ; enable continuous data mode
+ADC_COMMAND_SDATAC          .set    0x11    ; disable continuous data mode
+ADC_COMMAND_RREG            .set    0x20    ; read register data
+ADC_COMMAND_WREG            .set    0x40    ; write register data
+ADC_RESET_CYCLES            .set    1800    ; min. 18 t_CLK (9us) to perform reset
+ADC_SDATAC_CYCLES           .set    400     ; min. 4 t_CLK (2us) to process
+
+; ADC register addresses and value definitions
+ADC_REGISTER_ID             .set    0x00
+ADC_REGISTER_CONFIG1        .set    0x01
+ADC_REGISTER_CONFIG2        .set    0x02
+ADC_REGISTER_CONFIG3        .set    0x03
+ADC_REGISTER_CH1SET         .set    0x05
+ADC_REGISTER_CH2SET         .set    0x06
+ADC_REGISTER_CH3SET         .set    0x07
+ADC_REGISTER_CH4SET         .set    0x08
+ADC_REGISTER_CH5SET         .set    0x09
+ADC_REGISTER_CH6SET         .set    0x0A
+ADC_REGISTER_CH7SET         .set    0x0B
+ADC_REGISTER_CH8SET         .set    0x0C
+
+; ADC register value definitions and constants
+ADC_CONFIG1_VALUE           .set    0x90    ; no daisy-chain, clock out, data rate omitted
+ADC_CONFIG2_VALUE           .set    0xE0    ; reset value of test configuration
+ADC_CONFIG3_VALUE           .set    0xE8    ; 4V reference, internal opamp ref
+ADC_CONFIG1_DR_BASE         .set    0x06    ; base value for DR calcualtion
+ADC_CHANNEL_GAIN1           .set    0x10
+ADC_CHANNEL_GAIN2           .set    0x20
+ADC_PRECISION_LOW_BITS      .set    16      ; data bits for >= 32 kSPS sample rate
+ADC_PRECISION_HIGH_BITS     .set    24      ; data bits for < 32 kSPS sample rate
+ADC_STATUS_BITS             .set    24
+ADC_STATUS_GPIO_MASK        .set    0x0F    ; for all 4 digital inputs
 
 
 ; pru data layout (position in memory)
 STATE_OFFSET                .set    0x00
-BUFFER0_OFFSET              .set    0x04
-BUFFER1_OFFSET              .set    0x08
-BUFFER_LENGTH_OFFSET        .set    0x0C
-SAMPLE_LIMIT_OFFSET         .set    0x10
-ADC_SAMPLE_RATE_OFFSET      .set    0x14
-ADC_COMMAND_COUNT_OFFSET    .set    0x18
-ADC_COMMAND_BASE_OFFSET     .set    0x1C
+SAMPLE_RATE_OFFSET          .set    0x04
+BUFFER_LENGTH_OFFSET        .set    0x08
+SAMPLE_LIMIT_OFFSET         .set    0x0C
+BUFFER0_OFFSET              .set    0x10
+BUFFER1_OFFSET              .set    0x14
 
-; buffer data layout
-; total channel count
+; shared buffer data layout
 BUFFER_CHANNEL_COUNT        .set    10
 BUFFER_INDEX_SIZE           .set    4
 BUFFER_DATA_SIZE            .set    4
@@ -139,20 +163,18 @@ SAMPLE_RATE                 .set    r23
 PRECISION                   .set    r22
 
 ; PRU register definitions: ADC status and configuration register aliases
-ADC_COMMAND_COUNT_REG       .set    V1_REG  ; reuse data register for ADC setup
-ADC_COMMAND_OFFSET_REG      .set    V2_REG  ; reuse data register for ADC setup
 ADC1_STATUS_REG             .set    DI_REG
 ADC2_STATUS_REG             .set    TMP_REG
 
 ; registers r18-r21 unused
 
 ; PRU constants table alias definitions
-C_PRU_INTC                  .set    C0  ; PRU-ICSS INTC (local) 0x0002_0000
-C_PRU_ECAP                  .set    C3  ; PRU-ICSS eCAP (local) 0x0003_0000
-C_PRU_CFG                   .set    C4  ; PRU-ICSS CFG (local) 0x0002_6000
-C_EHRPWM0                   .set    C18 ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
-C_EHRPWM1                   .set    C19 ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
-C_EHRPWM2                   .set    C20 ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
+C_PRU_INTC                  .set    C0      ; PRU-ICSS INTC (local) 0x0002_0000
+C_PRU_ECAP                  .set    C3      ; PRU-ICSS eCAP (local) 0x0003_0000
+C_PRU_CFG                   .set    C4      ; PRU-ICSS CFG (local) 0x0002_6000
+C_EHRPWM0                   .set    C18     ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
+C_EHRPWM1                   .set    C19     ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
+C_EHRPWM2                   .set    C20     ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
 
 
 ; clock managment register offsets
@@ -213,41 +235,42 @@ AQ_B_DECCLR                 .set    0x0400  ; Action qualifier: clear on compare
 AQ_B_DECSET                 .set    0x0800  ; Action qualifier: set on compare B when decrementing
 
 ; ePWM configuration values for ADC clock and range reset pulses
-ADC_CLOCK_PERIOD            .set    49              ; ADC master clock period (in units of 10 ns)
-ADC_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
-ADC_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
+PWM_ADC_CLOCK_PERIOD        .set    49              ; ADC master clock period (in units of 10 ns)
+PWM_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
+PWM_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
 
-; ADC precision bit count
-ADC_PRECISION_HIGH          .set    24  ; data precision for low, < 32 kSPS sample rate
-ADC_PRECISION_LOW           .set    16  ; data precision for high, >= 32 kSPS sample rate
 
-; --------------------------------- Macros --------------------------------- ;
+; ------------------------------- Time Macros ------------------------------- ;
 
-; WAIT CYCLES (wait for defined number of cycles, min. 3 cycles)
+; WAIT CYCLES
+; (wait for defined number of `cycles`, min. 3 cycles)
 wait_cycles .macro cycles
-    LDI     MTMP_REG, cycles
-    SUB     MTMP_REG, MTMP_REG, 3
-    LOOP    ENDLOOP?, MTMP_REG
+    LDI     MTMP_REG.w1, cycles
+    SUB     MTMP_REG.w1, MTMP_REG.w1, 3
+    LOOP    ENDLOOP?, MTMP_REG.w1
     NOP
 ENDLOOP?:
     .endm
 
 
-; START CYCLE COUNTER (overwrite LSB of control register), 5 cycles start delay
+; START CYCLE COUNTER
+; (overwrite LSB of control register, 5 cycles start delay)
 start_counter .macro
     LDI     MTMP_REG, PRU_CRTL_CTR_ON
     SBBO    &MTMP_REG, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
     .endm
 
 
-; STOP CYCLE COUNTER (overwrite LSB of control register), 5 cycles stop delay
+; STOP CYCLE COUNTER
+; (overwrite LSB of control register, 5 cycles stop delay)
 stop_counter .macro
     LDI     MTMP_REG, PRU_CRTL_CTR_OFF
     SBBO    &MTMP_REG, CTRL_ADDRESS, PRU_CTRL_OFFSET, 1
     .endm
 
 
-; TIMESTAMP AND RESTART (store cycle count to register and restart counter)
+; TIMESTAMP AND RESTART
+; (store cycle count to register and restart counter)
 timestamp_restart .macro reg
     stop_counter
     LBBO    &reg, CTRL_ADDRESS, PRU_CYCLE_OFFSET, 4      ; read counter value
@@ -257,15 +280,28 @@ timestamp_restart .macro reg
     .endm
 
 
-; SPI WRITE DATA (write SPI data block of `size` bits, optimized for timing)
-spi_write_data .macro data_reg, size
+; ------------------------------- SPI Macros ------------------------------- ;
+
+; SPI RESET
+; (reset SPI output signal to idle levels)
+spi_reset .macro
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT   ; both CS high
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    CLR     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT  ; MOSI low
+    CLR     ADC_OUT_REG, ADC_OUT_REG, SCLK_BIT  ; SCLK low
+    .endm
+
+
+; SPI WRITE BYTE
+; (write SPI data block of 8 bits, optimized for timing)
+spi_write_byte .macro data_reg
     ; setup SPI bit write loop
-    LOOP    END_SPI_BIT_WRITE?, size
+    LOOP    END_SPI_BIT_WRITE?, 8
 
     ; clock high phase (5 cycles total, offset by 1 cycle for QBBC)
 
     ; set SPI output data (3 cycles)
-    QBBC    OUTLOW?, data_reg, 31
+    QBBC    OUTLOW?, data_reg, 7
     SET     ADC_OUT_REG, ADC_OUT_REG, SCLK_BIT
     SET     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT
     JMP     OUTHIGH?
@@ -288,10 +324,13 @@ OUTHIGH?:
     ; QBBC (1 cycle) at begining of next loop iteration
 
 END_SPI_BIT_WRITE?:
+    ; MOSI idle low (optional, helps debugging)
+    CLR     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT   
     .endm
 
 
-; SPI READ DATA (read SPI data block of `size` bits, optimized for timing)
+; SPI READ DATA
+; (read SPI data block of `size` bits, optimized for timing, no CS handling)
 spi_read_data .macro data0_reg, data1_reg, size
     ; dummy read of MISO2 in first iteration
     ZERO    &MTMP_REG, 4
@@ -338,23 +377,20 @@ IN2LOW?:
     .endm
 
 
-; ADC SEND COMMAND (send command of 24 bits to the ADC)
-adc_send_command .macro command_reg
+; ------------------------------- ADC Macros ------------------------------- ;
+
+; ADC SEND COMMAND
+; (send non-data ADC command defined in `command` constant)
+adc_send_command .macro command
+
     ; start ADC command frame with (negative) chip select
     CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
     CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
     wait_cycles SPI_SELECT_GUARD_CYCLES
 
-    ; write ADC command to SPI (byte 1, MSB)
-    spi_write_data command_reg, 8
-    wait_cycles SPI_DECODE_GUARD_CYCLES
-
-    ; write ADC command to SPI (byte 2)
-    spi_write_data command_reg, 8
-    wait_cycles SPI_DECODE_GUARD_CYCLES
-
-    ; write ADC command to SPI (byte 3, LSB)
-    spi_write_data command_reg, 8
+    ; load and send ADC command byte to SPI
+    LDI     MTMP_REG.b0, command
+    spi_write_byte MTMP_REG.b0
 
     ; end ADC command frame with (positive) chip de-select
     wait_cycles SPI_DESELECT_GUARD_CYCLES
@@ -363,15 +399,133 @@ adc_send_command .macro command_reg
     .endm
 
 
-; ADC READ (read full ADC sample data to pre-assigned registers)
-adc_read .macro
+; ADC WRITE DATA REGISTER
+; (write register at address `register` with 8 bit data in register `data_reg`)
+adc_write_register .macro register, data_reg
+    ; load command bytes to temporary register
+    LDI     TMP_REG.b0, ADC_COMMAND_WREG
+    LDI     TMP_REG.b1, register
+    OR      TMP_REG.b0, TMP_REG.b0, TMP_REG.b1
+    ZERO    &TMP_REG.b1, 1
+    AND     TMP_REG.b2, data_reg, data_reg
+
+    ; start ADC command frame with (negative) chip select
+    CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
+    CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    wait_cycles SPI_SELECT_GUARD_CYCLES
+
+    ; write ADC command to SPI (byte 1)
+    spi_write_byte TMP_REG.b0
+    wait_cycles SPI_DECODE_GUARD_CYCLES
+
+    ; write ADC command to SPI (byte 2)
+    spi_write_byte TMP_REG.b1
+    wait_cycles SPI_DECODE_GUARD_CYCLES
+
+    ; write ADC command to SPI (byte 3)
+    spi_write_byte TMP_REG.b2
+
+    ; end ADC command frame with (positive) chip de-select
+    wait_cycles SPI_DESELECT_GUARD_CYCLES
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    .endm
+
+
+; ADC INITIALIZATION
+; (initialize ADC for sampling at a rate of `sample_rate_reg` ksps)
+adc_init .macro sample_rate_reg
+    ; reset ADC START signal
+    CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT
+
+    ; initialize SPI interface
+    spi_reset
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    ; reset ADC configuration
+    adc_send_command ADC_COMMAND_RESET
+    wait_cycles ADC_RESET_CYCLES
+
+    ; disable continuous data output mode
+    adc_send_command ADC_COMMAND_SDATAC
+    wait_cycles ADC_SDATAC_CYCLES
+
+    ; set ADC precision configuration
+    LDI     PRECISION, ADC_PRECISION_HIGH_BITS
+    QBGT    ADC_INIT_REG?, sample_rate_reg, 32
+    LDI     PRECISION, ADC_PRECISION_LOW_BITS
+ADC_INIT_REG?:
+
+    ; calculate sample rate configuration, i.e. 0x06 - log2(sample_rate_reg)
+    LDI     MTMP_REG.b1, ADC_CONFIG1_DR_BASE
+    LMBD    MTMP_REG.b0, sample_rate_reg, 1     ; = floor(log2(sample_rate_reg))
+    SUB     MTMP_REG.b1, MTMP_REG.b1, MTMP_REG.b0
+
+    ; set register CONFIG1
+    LDI     MTMP_REG.b0, ADC_CONFIG1_VALUE
+    OR      MTMP_REG.b0, MTMP_REG.b0, MTMP_REG.b1       ; data rate
+    adc_write_register ADC_REGISTER_CONFIG1, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    ; set register CONFIG2
+    LDI     MTMP_REG.b0, ADC_CONFIG2_VALUE
+    adc_write_register ADC_REGISTER_CONFIG2, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    ; set register CONFIG3
+    LDI     MTMP_REG.b0, ADC_CONFIG3_VALUE
+    adc_write_register ADC_REGISTER_CONFIG3, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    ; set channel configurations: gain 2 for high currents, gain 1 for others
+    ; HW channel order: IHA, IHB, IM, ILA, ILB, VB, VA, CH8 unused
+    LDI     MTMP_REG.b0, ADC_CHANNEL_GAIN2
+    adc_write_register ADC_REGISTER_CH1SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+    adc_write_register ADC_REGISTER_CH2SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    LDI     MTMP_REG.b0, ADC_CHANNEL_GAIN1
+    adc_write_register ADC_REGISTER_CH3SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+    adc_write_register ADC_REGISTER_CH4SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+    adc_write_register ADC_REGISTER_CH5SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+    adc_write_register ADC_REGISTER_CH6SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+    adc_write_register ADC_REGISTER_CH7SET, MTMP_REG.b0
+    wait_cycles SPI_IDLE_GUARD_CYCLES
+
+    ; enable continuous data output mode again
+    adc_send_command ADC_COMMAND_RDATAC
+    .endm
+
+
+; ADC START SAMPLING
+; (set ADC start signal to start sampling)
+adc_start .macro
+    SET     ADC_OUT_REG, ADC_OUT_REG, START_BIT
+    .endm
+
+
+; ADC STOP SAMPLING
+; (clear ADC start signal to stop sampling)
+adc_stop .macro
+    CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT
+    .endm
+
+
+; ADC READ CONTINUOUS
+; (read ADC data frame to pre-assigned registers)
+adc_read_continuous .macro
     ; start ADC data transfer frame with (negative) chip select
     CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
     CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
     wait_cycles SPI_SELECT_GUARD_CYCLES
 
     ; read status data
-    spi_read_data ADC1_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_SIZE 
+    spi_read_data ADC1_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_BITS 
 
     ; read all channel data (HW channel order: IHA, IHB, IM, ILA, ILB, VB, VA)
     spi_read_data I1H_REG,   I2H_REG,    PRECISION
@@ -389,7 +543,10 @@ adc_read .macro
     .endm
 
 
-; PWM MODULE INITIALIZATION (setup PWM clocks) => HANDLED BY SYSFS INTERFACE
+; ------------------------------- PWM Macros ------------------------------- ;
+
+; PWM MODULE INITIALIZATION
+; (setup/enable PWM clock sources and signals)
 pwm_init .macro
 ; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
 ;    ; load CM_PER base address
@@ -407,7 +564,9 @@ pwm_init .macro
 
     .endm
 
-; PWM MODULE DE-INITIALIZATION (setup PWM clocks)
+
+; PWM MODULE DE-INITIALIZATION
+; (reset/disable PWM clock sources and signals)
 pwm_deinit .macro
 ; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
 ;    ; load CM_PER base address
@@ -426,7 +585,8 @@ pwm_deinit .macro
     .endm
 
 
-; PWM MODULE STOP (stop PWM counter and outputs)
+; PWM MODULE STOP
+; (stop PWM counter and outputs)
 pwm_stop .macro
     ; initialize value register to zero
     ZERO    &MTMP_REG, 4
@@ -450,13 +610,14 @@ pwm_stop .macro
     .endm
 
 
-; ADC CLOCK INITIALIZATION (configure PWM to generate ADC clock)
-adc_clock_init .macro
+; SETUP PWM FOR ADC CLOCK GENERATION
+; (configure PWM for ADC clock generation)
+pwm_setup_adc_clock .macro
     ; load EPWM0 base address from constants memory
     LDI32   TMP_REG, EPWM0_BASE
 
     ; set period and compare register values (interval = TBPRD + 1)
-    LDI     MTMP_REG, (ADC_CLOCK_PERIOD - 1)
+    LDI     MTMP_REG, (PWM_ADC_CLOCK_PERIOD - 1)
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
     LSR     MTMP_REG, MTMP_REG, 1
     SBBO    &MTMP_REG, TMP_REG, EPWM_CMPA_OFFSET, 2
@@ -472,12 +633,13 @@ adc_clock_init .macro
     .endm
 
 
-; ADC RANGE VALID RESET INITIALIZATION (configure PWM for range reset signals)
-adc_range_reset_init .macro sample_rate_k
+; SETUP PWM FOR RANGE VALID RESET SIGNALS
+; (configure PWM for range reset signals for a sample rate of `sample_rate_reg`)
+pwm_setup_range_valid_reset .macro sample_rate_reg
 
     ; calculate period from samle rate
-    LDI32   MTMP_REG, (ADC_RANGE_RESET_PERIOD_BASE)
-    LMBD    TMP_REG, sample_rate_k, 1   ; get exponent of 2 of the sample rate
+    LDI32   MTMP_REG, (PWM_RANGE_RESET_PERIOD_BASE)
+    LMBD    TMP_REG, sample_rate_reg, 1   ; get exponent of 2 of the sample rate
     LSR     MTMP_REG, MTMP_REG, TMP_REG
 
     ; load EPWM1 base address from constants memory
@@ -487,9 +649,9 @@ adc_range_reset_init .macro sample_rate_k
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
 
     ; set compare register values (first value depends on period)
-    SUB     MTMP_REG, MTMP_REG, (ADC_RANGE_RESET_PULSE_WIDTH / 2)
+    SUB     MTMP_REG, MTMP_REG, (PWM_RANGE_RESET_PULSE_WIDTH / 2)
     SBBO    &MTMP_REG, TMP_REG, EPWM_CMPA_OFFSET, 2
-    LDI     MTMP_REG, (ADC_RANGE_RESET_PULSE_WIDTH / 2)
+    LDI     MTMP_REG, (PWM_RANGE_RESET_PULSE_WIDTH / 2)
     SBBO    &MTMP_REG, TMP_REG, EPWM_CMPB_OFFSET, 2
 
     ; set action qualifiers for both channels
@@ -504,7 +666,11 @@ adc_range_reset_init .macro sample_rate_k
 
     .endm
 
-; SIGN EXTEND 24 BIT (24 to 32 bit)
+
+; ------------------------------ Misc Macros ------------------------------ ;
+
+; SIGN EXTEND 24 BIT
+; (sign extend 24 bit data to 32 bit)
 sign_extend_24 .macro reg
     LDI     reg.b3, 0x00
     QBBC    POS?, reg, 23
@@ -512,82 +678,50 @@ sign_extend_24 .macro reg
 POS?:
     .endm
 
- 
+
 ; ------------------------------ Main Program ------------------------------ ;
     .text
     .retain ".text"
 
     .global MAIN
 MAIN:
-    ; Enable the OCP master port -- allows transfer of data to Linux userspace
+    ; enable the OCP master port -- allows transfer of data to Linux userspace
     LBCO    &TMP_REG, C_PRU_CFG, 4, 4   ; load SYSCFG reg (use c4 const addr)
     CLR     TMP_REG, TMP_REG, 4         ; clear bit 4 of SYSCFG (STANDBY_INIT)
     SBCO    &TMP_REG, C_PRU_CFG, 4, 4   ; store back modified SYSCFG value
  
-    LDI32   RAM_ADDRESS, PRU0_DATA_RAM_BASE ; load the RAM base address
     LDI32   CTRL_ADDRESS, PRU0_CTRL_BASE    ; load the CTRL base addr  ess
+    LDI32   RAM_ADDRESS, PRU0_DATA_RAM_BASE ; load the RAM base address
 
     ; load configuration and initialize state with user space settings
-    LBBO    &MEM_POINTER,    RAM_ADDRESS,    BUFFER0_OFFSET,         4
-    LBBO    &SAMPLES_COUNT,  RAM_ADDRESS,    SAMPLE_LIMIT_OFFSET,    4
-    LBBO    &BUFFER_SIZE,    RAM_ADDRESS,    BUFFER_LENGTH_OFFSET,   4
-    LBBO    &SAMPLE_RATE,    RAM_ADDRESS,    ADC_SAMPLE_RATE_OFFSET, 4
+    LBBO    &SAMPLE_RATE,   RAM_ADDRESS,    SAMPLE_RATE_OFFSET,     4
+    LBBO    &BUFFER_SIZE,   RAM_ADDRESS,    BUFFER_LENGTH_OFFSET,   4
+    LBBO    &SAMPLES_COUNT, RAM_ADDRESS,    SAMPLE_LIMIT_OFFSET,    4
+    LBBO    &MEM_POINTER,   RAM_ADDRESS,    BUFFER0_OFFSET,         4
 
+INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
-    ; reset SPI bus signals
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT    ; CS high
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
-    CLR     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT   ; MOSI low
-    CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT  ; START low
-
-    ; initialize PWM modules
+    ; initialize PWM modules and enable ADC clock signal
     pwm_init
+    pwm_setup_adc_clock
 
-    ; configure ADC clock
-    adc_clock_init
+    ; initialize the ADC
+    adc_init SAMPLE_RATE
 
-    ; configure ADC range reset
-    adc_range_reset_init SAMPLE_RATE
+    ; configure PWM for range reset signals
+    pwm_setup_range_valid_reset SAMPLE_RATE
 
-    ; notify user-space program
-    LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
-
-INIT:
-    ; get ADC initialization command list address offset
-    LDI     ADC_COMMAND_OFFSET_REG, ADC_COMMAND_BASE_OFFSET
-
-    ; get ADC initialization command list count
-    LBBO    &ADC_COMMAND_COUNT_REG, RAM_ADDRESS, ADC_COMMAND_COUNT_OFFSET, 4
-
-    ; get ADC precision configuration (
-    LDI     PRECISION, ADC_PRECISION_HIGH
-    QBGT    ADC_SETUP, SAMPLE_RATE, 32
-    LDI     PRECISION, ADC_PRECISION_HIGH
-
-ADC_SETUP:
-    ; load and send ADC command
-    LBBO    &TMP_REG, RAM_ADDRESS, ADC_COMMAND_OFFSET_REG, 4
-    adc_send_command TMP_REG
-
-    ; min delay for chip deselect
-    wait_cycles SPI_IDLE_GUARD_CYCLES
-
-    ; increment ADC command list address offset
-    ADD     ADC_COMMAND_OFFSET_REG, ADC_COMMAND_OFFSET_REG, 4
-
-    ; decrement command counter and check for init done
-    SUB     ADC_COMMAND_COUNT_REG, ADC_COMMAND_COUNT_REG, 1
-    QBLT    ADC_SETUP, ADC_COMMAND_COUNT_REG, 0
-
-END_ADC_SETUP:
-
+INIT_COMPLETE:
     ; initialize buffer index to zero
     ZERO    &BUFFER_INDEX,  4
     
-    ; set ADC start signal to one to start ADC conversion
-    SET     ADC_OUT_REG, ADC_OUT_REG, START_BIT
+    ; start ADC conversion
+    adc_start
+
+    ; notify user-space program of measurement start
+    LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
 
     ; jump right into into sampling loop
     JMP     START
@@ -654,11 +788,11 @@ READ:
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
     ; read data from ADC
-    adc_read
+    adc_read_continuous
 
     ; mask digital inputs and store in digital data register
-    AND     ADC1_STATUS_REG, ADC1_STATUS_REG, ADC_STATUS_MASK
-    AND     ADC2_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_MASK
+    AND     ADC1_STATUS_REG, ADC1_STATUS_REG, ADC_STATUS_GPIO_MASK
+    AND     ADC2_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_GPIO_MASK
     LSL     ADC2_STATUS_REG, ADC2_STATUS_REG, 8
     OR      DI_REG, ADC1_STATUS_REG, ADC2_STATUS_REG
 
@@ -711,14 +845,8 @@ DATAPROCESSING:
     JMP     SAMPLINGLOOP
 
 STOP:
-    ; clear all ADC signals
-    CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT
-
-    ; set SDATAC command (RREG needed for SDATAC to work!)
-    LDI32   TMP_REG, ADC_COMMAND_SDATAC
-    adc_send_command TMP_REG
-    LDI32   TMP_REG, ADC_COMMAND_RREG
-    adc_send_command TMP_REG
+    ; stop ADC sampling
+    adc_stop
 
     ; signal interrupt to user space program
     LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
