@@ -220,11 +220,24 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // PRU memory write fence
     __sync_synchronize();
+
+    // create daemon after if requested to run in background
+    if (config->background_enable) {
+        if (daemon(1, 1) < 0) {
+            rl_log(RL_LOG_ERROR, "failed to create background process");
+            return ERROR;
+        }
+    }
+
+    // write PID in file (only after potential forking using daemon)
+    pid_t pid = getpid();
+    rl_pid_set(pid);
     
     // wait for start timestamp
     if (config->t_start) {
         rl_log(RL_LOG_INFO, "Waiting for start time %ld...", config->t_start);
         rl_status.sampling = true;
+        rl_status_write(&rl_status);
         // alternatively, use sem_timedwait()
         struct timespec currtime;
         clock_gettime(CLOCK_REALTIME, &currtime);
@@ -239,10 +252,11 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             clock_gettime(CLOCK_REALTIME, &currtime);
         }
         if (!rl_status.sampling) {
-            rl_log(RL_LOG_ERROR, "Abort signal received");
+            rl_log(RL_LOG_WARNING, "Abort signal received");
             return ERROR;
         }
         rl_status.sampling = false;
+        rl_status_write(&rl_status);
     }
 
     // run SPI on PRU0
@@ -268,18 +282,6 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     if (config->interactive_enable) {
         meter_init();
     }
-
-    // create daemon after if requested to run in background
-    if (config->background_enable) {
-        if (daemon(1, 1) < 0) {
-            rl_log(RL_LOG_ERROR, "failed to create background process");
-            return ERROR;
-        }
-    }
-
-    // write PID in file (only after potential forking using daemon)
-    pid_t pid = getpid();
-    rl_pid_set(pid);
 
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
