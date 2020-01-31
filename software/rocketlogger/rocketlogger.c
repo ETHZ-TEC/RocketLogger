@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <linux/limits.h>
 
@@ -162,6 +163,9 @@ static struct argp_option options[] = {
      0},
     {"web", 'w', "BOOL", OPTION_ARG_OPTIONAL,
      "Enable web server plotting. Enabled per default.", 0},
+
+    {"tstart", 't', "TIMESTAMP", 0, "Unix timestamp of "
+     " the sampling start.", 0},
 
     {0, 0, 0, OPTION_DOC, "Optional arguments for status and config actions:",
      6},
@@ -480,6 +484,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             parse_bool(arg, state, &config->web_enable);
         } else {
             config->web_enable = true;
+        }
+        break;
+    case 't':
+        /* define sampling start: optional UNIX timestamp */
+        if (arg != NULL) {
+            int long starttime = strtol(arg, NULL, 10);
+            if (starttime < time(NULL)) {
+                starttime = 0;    // invalid start time
+            }
+            config->t_start = starttime;
+        } else {
+            config->t_start = 0;
         }
         break;
 

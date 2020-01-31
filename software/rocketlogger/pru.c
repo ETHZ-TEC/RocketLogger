@@ -41,6 +41,7 @@
 #include <prussdrv.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "calibration.h"
 #include "log.h"
@@ -219,6 +220,30 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // PRU memory write fence
     __sync_synchronize();
+    
+    // wait for start timestamp
+    if (config->t_start) {
+        rl_log(RL_LOG_INFO, "Waiting for start time %ld...", config->t_start);
+        rl_status.sampling = true;
+        // alternatively, use sem_timedwait()
+        struct timespec currtime;
+        clock_gettime(CLOCK_REALTIME, &currtime);
+        long int starttime = config->t_start - 1;
+        while (currtime.tv_sec < starttime && rl_status.sampling) {
+            usleep(100000);
+            clock_gettime(CLOCK_REALTIME, &currtime);
+        }
+        // wait for T minus 100ms
+        while (currtime.tv_nsec < 900000000 && rl_status.sampling) {
+            usleep(10000);
+            clock_gettime(CLOCK_REALTIME, &currtime);
+        }
+        if (!rl_status.sampling) {
+            rl_log(RL_LOG_ERROR, "Abort signal received");
+            return ERROR;
+        }
+        rl_status.sampling = false;
+    }
 
     // run SPI on PRU0
     res = prussdrv_exec_program(0, PRU_BINARY_FILE);
