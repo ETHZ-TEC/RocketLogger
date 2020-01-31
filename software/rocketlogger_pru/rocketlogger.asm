@@ -222,8 +222,9 @@ ADC_COMMAND_RDATAC          .set    0x10    ; enable continuous data mode
 ADC_COMMAND_SDATAC          .set    0x11    ; disable continuous data mode
 ADC_COMMAND_RREG            .set    0x20    ; read register data
 ADC_COMMAND_WREG            .set    0x40    ; write register data
+ADC_PRE_RESET_GUARD_CYCLES  .set    200     ; min. 2 t_CLK (1us) before reset
 ADC_RESET_CYCLES            .set    1800    ; min. 18 t_CLK (9us) to perform reset
-ADC_SDATAC_CYCLES           .set    400     ; min. 4 t_CLK (2us) to process
+ADC_SDATAC_GUARD_CYCLES     .set    400     ; min. 4 t_CLK (2us) to process
 
 ; ADC register addresses and value definitions
 ADC_REGISTER_ID             .set    0x00
@@ -450,17 +451,21 @@ adc_init .macro sample_rate_reg
     ; reset ADC START signal
     CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT
 
+    ; setup and enable ADC clock
+    pwm_setup_adc_clock
+
     ; initialize SPI interface
     spi_reset
     wait_cycles SPI_IDLE_GUARD_CYCLES
 
     ; reset ADC configuration
+    wait_cycles ADC_PRE_RESET_GUARD_CYCLES
     adc_send_command ADC_COMMAND_RESET
     wait_cycles ADC_RESET_CYCLES
 
     ; disable continuous data output mode
     adc_send_command ADC_COMMAND_SDATAC
-    wait_cycles ADC_SDATAC_CYCLES
+    wait_cycles ADC_SDATAC_GUARD_CYCLES
 
     ; set ADC precision configuration
     LDI     PRECISION, ADC_PRECISION_HIGH_BITS
@@ -714,9 +719,8 @@ INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
-    ; initialize PWM modules and enable ADC clock signal
+    ; initialize PWM modules
     pwm_init
-    pwm_setup_adc_clock
 
     ; initialize the ADC
     adc_init SAMPLE_RATE

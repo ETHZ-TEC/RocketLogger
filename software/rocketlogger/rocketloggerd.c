@@ -65,6 +65,8 @@ int power_init(void) {
         return ret;
     }
 
+    // wait for converter soft start (> 1 ms)
+    usleep(5000);
     return ret;
 }
 

@@ -151,13 +151,6 @@ $(OBJ_DIR)/%.obj: $(SRC_DIR)/%.asm
 $(TARGET_BINARY): $(TARGET_BINARY:%.bin=%.out)
 	$(OBJCOPY) --binary --outfile=$@ $<
 
-$(SRC_DIR)/version.c: $(filter-out $(OBJ_DIR)/version.obj, $(OBJ))
-	echo "generating version.c"
-	@echo "#include \"version.h\"" > $@
-	@echo "char const *const PROJECT_VERSION = \"$(PROJECT_VERSION)\";" >> $@
-	@echo "char const *const GIT_DESCRIPTION = \"$(GIT_DESCRIPTION)\";" >> $@
-	@echo "char const *const GIT_DATE = \"$(GIT_DATE)\";" >> $@
-	@echo "char const *const COMPILE_DATE = \"$(COMPILE_DATE)\";" >> $@
 
 ## directories
 $(BIN_DIR):
