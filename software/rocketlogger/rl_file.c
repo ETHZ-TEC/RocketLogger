@@ -37,7 +37,6 @@
 #include <linux/limits.h>
 #include <time.h>
 
-#include "ads131e0x.h"
 #include "calibration.h"
 #include "log.h"
 #include "pru.h"
@@ -359,7 +358,7 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
     int channel_count = count_channels(config->channel_enable);
 
     // aggregation
-    int32_t aggregate_count = ADS131E0X_RATE_MIN / config->sample_rate;
+    int32_t aggregate_count = RL_SAMPLE_RATE_MIN / config->sample_rate;
     int32_t aggregate_channel_data[RL_CHANNEL_COUNT] = {0};
     uint32_t aggregate_bin_data = 0xffffffff;
 
@@ -414,7 +413,7 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
         }
 
         // handle data aggregation for low sampling rates
-        if (config->sample_rate < ADS131E0X_RATE_MIN) {
+        if (config->sample_rate < RL_SAMPLE_RATE_MIN) {
             switch (config->aggregation_mode) {
             case RL_AGGREGATION_MODE_DOWNSAMPLE:
                 // drop intermediate samples (skip writing to file)

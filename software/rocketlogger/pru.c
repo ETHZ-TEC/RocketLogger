@@ -42,7 +42,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "ads131e0x.h"
 #include "log.h"
 #include "meter.h"
 #include "rl.h"
@@ -90,17 +89,17 @@ int pru_control_init(pru_control_t *const pru_control,
         pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set ADC sample rate in kSPS
-    if (config->sample_rate <= ADS131E0X_RATE_MIN) {
-        pru_control->adc_sample_rate = ADS131E0X_RATE_MIN / 1000;
+    // set native sample rate in kSPS
+    if (config->sample_rate <= RL_SAMPLE_RATE_MIN) {
+        pru_control->sample_rate = RL_SAMPLE_RATE_MIN / 1000;
     } else {
-        pru_control->adc_sample_rate = config->sample_rate / 1000;
+        pru_control->sample_rate = config->sample_rate / 1000;
     }
 
     // set sample limit and data buffer size
     pru_control->sample_limit = config->sample_limit * aggregates;
     pru_control->buffer_length =
-        1000 * pru_control->adc_sample_rate / config->update_rate;
+        1000 * pru_control->sample_rate / config->update_rate;
 
     // get shared buffer addresses
     uint32_t buffer_size_bytes =
@@ -132,8 +131,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // average (for low rates)
     uint32_t aggregates = 1;
-    if (config->sample_rate < ADS131E0X_RATE_MIN) {
-        aggregates = (uint32_t)(ADS131E0X_RATE_MIN / config->sample_rate);
+    if (config->sample_rate < RL_SAMPLE_RATE_MIN) {
+        aggregates = (uint32_t)(RL_SAMPLE_RATE_MIN / config->sample_rate);
     }
 
     // WEBSERVER

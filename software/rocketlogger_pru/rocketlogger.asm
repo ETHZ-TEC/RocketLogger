@@ -27,12 +27,14 @@
 ; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ; POSSIBILITY OF SUCH DAMAGE.
 
+; -------------------------- CONSTANT DEFINITIONS --------------------------- ;
 
-; PRU data RAM address definitions
+; ------------------------- PRU Memory Definitions -------------------------- ;
+; PRU control and data RAM address definitions
 PRU0_DATA_RAM_BASE          .set    0x00000000
+PRU0_CTRL_BASE              .set    0x00022000
 
 ; PRU control register definitions
-PRU0_CTRL_BASE              .set    0x00022000
 PRU_CTRL_BASE               .set    PRU0_CTRL_BASE
 PRU_CTRL_OFFSET             .set    0x00
 PRU_CYCLE_OFFSET            .set    0x0C
@@ -46,12 +48,174 @@ PRU_CRTL_CTR_OFF            .set    0x03
 PRU_R31_VEC_VALID           .set    0x20    ; valid interrupt bit flag
 PRU_EVTOUT_0                .set    0x03    ; user space interrupt event number
 
+; PRU constants table alias definitions
+C_PRU_INTC                  .set    C0      ; PRU-ICSS INTC (local) 0x0002_0000
+C_PRU_ECAP                  .set    C3      ; PRU-ICSS eCAP (local) 0x0003_0000
+C_PRU_CFG                   .set    C4      ; PRU-ICSS CFG (local) 0x0002_6000
+C_EHRPWM0                   .set    C18     ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
+C_EHRPWM1                   .set    C19     ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
+C_EHRPWM2                   .set    C20     ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
+
+; PRU data layout (address offets in PRU local memory)
+STATE_OFFSET                .set    0x00
+SAMPLE_RATE_OFFSET          .set    0x04
+SAMPLE_LIMIT_OFFSET         .set    0x08
+BUFFER_LENGTH_OFFSET        .set    0x0C
+BUFFER0_ADDR_OFFSET         .set    0x10
+BUFFER1_ADDR_OFFSET         .set    0x14
+
+; shared DDR buffer data layout
+BUFFER_CHANNEL_COUNT        .set    10
+BUFFER_INDEX_SIZE           .set    4
+BUFFER_DATA_SIZE            .set    4
+BUFFER_BLOCK_SIZE           .set    (BUFFER_CHANNEL_COUNT * BUFFER_DATA_SIZE)
+
+
+; -------------------------- PRU Register Mappings -------------------------- ;
+; Status GPIO in/out register bit definitions
+STATUS_OUT_REG              .set    r30
+LED_ERROR_BIT               .set    14      ; user space, cleared on start
+LED_STATUS_BIT              .set    15      ; user space, busy wait indicator
+
+; ADC GPIO in/out register and bit definitions
+ADC_OUT_REG                 .set    r30
+SCLK_BIT                    .set    0
+MOSI_BIT                    .set    1
+CS1_BIT                     .set    3
+CS2_BIT                     .set    5
+START_BIT                   .set    7
+ADC_IN_REG                  .set    r31
+MISO1_BIT                   .set    2
+MISO2_BIT                   .set    16
+DR1_BIT                     .set    15
+DR2_BIT                     .set    14
+
+; PRU register definitions: channel data from ADC to transfer to DDR
+DI_REG                      .set    r0
+V1_REG                      .set    r1
+V2_REG                      .set    r2
+V3_REG                      .set    r3
+V4_REG                      .set    r4
+I1L_REG                     .set    r5
+I1H_REG                     .set    r6
+I2L_REG                     .set    r7
+I2H_REG                     .set    r8
+DT_REG                      .set    r9      ; PRU cycle counter
+
+; PRU register definitions: double sampled channel data from ADC
+I1L_2_REG                   .set    r10
+I1H_2_REG                   .set    r11
+I2L_2_REG                   .set    r12
+I2H_2_REG                   .set    r13
+
+; PRU register definitions: unused medium current channel data from ADC
+I1M_REG                     .set    r14     ; unused ADC data
+I2M_REG                     .set    r15     ; unused ADC data
+
+; PRU register definitions: temporary registers
+TMP_REG                     .set    r16
+
+; PRU register definitions: temporary macro register
+MTMP_REG                    .set    r17
+
+; PRU register definitions: data memory addresses
+RAM_ADDRESS                 .set    r29
+CTRL_ADDRESS                .set    r28
+
+; PRU register definitions: PRU local sampling state
+BUFFER_SIZE                 .set    r27
+BUFFER_INDEX                .set    r26
+SAMPLES_COUNT               .set    r25
+MEM_POINTER                 .set    r24
+PRECISION                   .set    r23
+
+; PRU register definitions: PRU user space configuration
+SAMPLE_RATE                 .set    r22
+
+; registers r18-r21 unused
+
+; PRU register definitions: ADC status and configuration register aliases
+ADC1_STATUS_REG             .set    DI_REG
+ADC2_STATUS_REG             .set    TMP_REG
+
+
+; ---------------------- CLOCK MANAGEMENT Definitions ----------------------- ;
+; clock managment register offsets
+CM_PER_BASE                 .set    0x44E00000
+CM_PER_EPWMSS1_OFFSET       .set    0xCC
+CM_PER_EPWMSS0_OFFSET       .set    0xD4
+CM_PER_EPWMSS2_OFFSET       .set    0xD8
+
+; clock managements register values (selection)
+CM_MODULEMODE_DISABLE       .set    0x00
+CM_MODULEMODE_ENABLE        .set    0x02
+CM_IDLESTATUS_FUNC          .set    0x000000
+CM_IDLESTATUS_TRANS         .set    0x010000
+CM_IDLESTATUS_IDLE          .set    0x020000
+CM_IDLESTATUS_DISABLE       .set    0x030000
+
+
+; --------------------------- CONTROL Definitions --------------------------- ;
+; control register offsets and PWMSS values (selection)
+CONTROL_PWMSS_CTRL          .set    0x44E10664
+PWMSS_CTRL_PWMSS_RESET      .set    0x00
+PWMSS_CTRL_PWMSS0_TBCLKEN   .set    0x01
+PWMSS_CTRL_PWMSS1_TBCLKEN   .set    0x02
+PWMSS_CTRL_PWMSS2_TBCLKEN   .set    0x04
+
+
+; ----------------------------- PWM Definitions ----------------------------- ;
+; ePWM module and configuration register offsets
+EPWM0_BASE                  .set    0x48300200  ; ePWM0 module base address
+EPWM1_BASE                  .set    0x48302200  ; ePWM1 module base address
+EPWM2_BASE                  .set    0x48304200  ; ePWM2 module base address
+EPWM_TBCTL_OFFSET           .set    0x00    ; Time-Base Control Register
+EPWM_TBSTS_OFFSET           .set    0x02    ; Time-Base Status Register
+EPWM_TBPHS_OFFSET           .set    0x06    ; Time-Base Phase Register
+EPWM_TBCNT_OFFSET           .set    0x08    ; Time-Base Counter Register
+EPWM_TBPRD_OFFSET           .set    0x0A    ; Time-Base Period Register
+EPWM_CMPCTL_OFFSET          .set    0x0E    ; Counter-Compare Control Register
+EPWM_CMPA_OFFSET            .set    0x12    ; Counter-Compare A Register
+EPWM_CMPB_OFFSET            .set    0x14    ; Counter-Compare B Register
+EPWM_AQCTLA_OFFSET          .set    0x16    ; Action-Qualifier Control Register for Output A (EPWMxA)
+EPWM_AQCTLB_OFFSET          .set    0x18    ; Action-Qualifier Control Register for Output B (EPWMxB)
+
+; ePWM configuration register values (selection)
+TBCTL_FREERUN               .set    0xC000  ; TBCTL default value after reset
+TBCTL_COUNT_UP              .set    0x0000  ; Up counting mode
+TBCTL_COUNT_UP_DOWN         .set    0x0002  ; Up-down counting mode
+TBCTL_PRDLD                 .set    0x0008  ; Period register double buffer disable
+TBCTL_CLKDIV_1              .set    0x0000  ; Use counter clock prescaler of 1
+TBCTL_CLKDIV_2              .set    0x0400  ; Use counter clock prescaler of 2
+
+AQ_ZROCLR                   .set    0x0001  ; Action qualifier: clear on zero
+AQ_ZROSET                   .set    0x0002  ; Action qualifier: set on zero
+AQ_PRDCLR                   .set    0x0004  ; Action qualifier: clear on period
+AQ_PRDSET                   .set    0x0008  ; Action qualifier: clear set on period
+AQ_A_INCCLR                 .set    0x0010  ; Action qualifier: clear on compare A when incrementing
+AQ_A_INCSET                 .set    0x0020  ; Action qualifier: set on compare A when incrementing
+AQ_A_DECCLR                 .set    0x0040  ; Action qualifier: clear on compare A when decrementing
+AQ_A_DECSET                 .set    0x0080  ; Action qualifier: set on compare A when decrementing
+AQ_B_INCCLR                 .set    0x0100  ; Action qualifier: clear on compare B when incrementing
+AQ_B_INCSET                 .set    0x0200  ; Action qualifier: set on compare B when incrementing
+AQ_B_DECCLR                 .set    0x0400  ; Action qualifier: clear on compare B when decrementing
+AQ_B_DECSET                 .set    0x0800  ; Action qualifier: set on compare B when decrementing
+
+; ePWM configuration values for ADC clock and range reset pulses
+PWM_ADC_CLOCK_PERIOD        .set    49              ; ADC master clock period (in units of 10 ns)
+PWM_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
+PWM_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
+
+
+; ----------------------------- SPI Definitions ----------------------------- ;
 ; SPI delay cycle definitions
 SPI_SELECT_GUARD_CYCLES     .set    4       ; min. 20ns after CS before SCLK rise
 SPI_DESELECT_GUARD_CYCLES   .set    400     ; min. 4 t_CLK (2us) before CS rise
 SPI_DECODE_GUARD_CYCLES     .set    320     ; min. 4 t_CLK (2us) total burst period
 SPI_IDLE_GUARD_CYCLES       .set    200     ; min. 2 t_CLK (1us) CS high
 
+
+; ----------------------------- ADC Definitions ----------------------------- ;
 ; ADC command and delay cycle definitions
 ADC_COMMAND_RESET           .set    0x06    ; reset configuration
 ADC_COMMAND_RDATAC          .set    0x10    ; enable continuous data mode
@@ -86,162 +250,12 @@ ADC_PRECISION_LOW_BITS      .set    16      ; data bits for >= 32 kSPS sample ra
 ADC_PRECISION_HIGH_BITS     .set    24      ; data bits for < 32 kSPS sample rate
 ADC_STATUS_BITS             .set    24
 ADC_STATUS_GPIO_MASK        .set    0x0F    ; for all 4 digital inputs
+; --------------------------------------------------------------------------- ;
 
 
-; pru data layout (position in memory)
-STATE_OFFSET                .set    0x00
-SAMPLE_RATE_OFFSET          .set    0x04
-BUFFER_LENGTH_OFFSET        .set    0x08
-SAMPLE_LIMIT_OFFSET         .set    0x0C
-BUFFER0_OFFSET              .set    0x10
-BUFFER1_OFFSET              .set    0x14
-
-; shared buffer data layout
-BUFFER_CHANNEL_COUNT        .set    10
-BUFFER_INDEX_SIZE           .set    4
-BUFFER_DATA_SIZE            .set    4
-BUFFER_BLOCK_SIZE           .set    (BUFFER_CHANNEL_COUNT * BUFFER_DATA_SIZE)
-
-; Status GPIO in/out register bit definitions
-STATUS_OUT_REG              .set    r30
-LED_ERROR_BIT               .set    14  ; user space, cleared on start
-LED_STATUS_BIT              .set    15  ; user space, busy wait indicator
-
-; ADC GPIO in/out register and bit definitions
-ADC_OUT_REG                 .set    r30
-SCLK_BIT                    .set    0
-MOSI_BIT                    .set    1
-CS1_BIT                     .set    3
-CS2_BIT                     .set    5
-START_BIT                   .set    7
-ADC_IN_REG                  .set    r31
-MISO1_BIT                   .set    2
-MISO2_BIT                   .set    16
-DR1_BIT                     .set    15
-DR2_BIT                     .set    14
-
-; PRU register definitions: channel data from ADC to transfer to DDR
-DI_REG                      .set    r0
-V1_REG                      .set    r1
-V2_REG                      .set    r2
-V3_REG                      .set    r3
-V4_REG                      .set    r4
-I1L_REG                     .set    r5
-I1H_REG                     .set    r6
-I2L_REG                     .set    r7
-I2H_REG                     .set    r8
-DT_REG                      .set    r9  ; PRU cycle counter
-
-; PRU register definitions: double sampled channel data from ADC
-I1L_2_REG                   .set    r10
-I1H_2_REG                   .set    r11
-I2L_2_REG                   .set    r12
-I2H_2_REG                   .set    r13
-
-; PRU register definitions: unused medium current channel data from ADC
-I1M_REG                     .set    r14 ; unused ADC data
-I2M_REG                     .set    r15 ; unused ADC data
-
-; PRU register definitions: temporary registers (highest registers)
-TMP_REG                     .set    r16
-
-; PRU register definitions: temporary macro register (to be optimized???)
-MTMP_REG                    .set    r17
-
-; PRU register definitions: data memory addresses
-RAM_ADDRESS                 .set    r29
-CTRL_ADDRESS                .set    r28
-
-; PRU register definitions: PRU local sampling state
-BUFFER_SIZE                 .set    r27
-BUFFER_INDEX                .set    r26
-SAMPLES_COUNT               .set    r25
-MEM_POINTER                 .set    r24
-
-; PRU register definitions: PRU user space configuration
-SAMPLE_RATE                 .set    r23
-PRECISION                   .set    r22
-
-; PRU register definitions: ADC status and configuration register aliases
-ADC1_STATUS_REG             .set    DI_REG
-ADC2_STATUS_REG             .set    TMP_REG
-
-; registers r18-r21 unused
-
-; PRU constants table alias definitions
-C_PRU_INTC                  .set    C0      ; PRU-ICSS INTC (local) 0x0002_0000
-C_PRU_ECAP                  .set    C3      ; PRU-ICSS eCAP (local) 0x0003_0000
-C_PRU_CFG                   .set    C4      ; PRU-ICSS CFG (local) 0x0002_6000
-C_EHRPWM0                   .set    C18     ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
-C_EHRPWM1                   .set    C19     ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
-C_EHRPWM2                   .set    C20     ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
-
-
-; clock managment register offsets
-CM_PER_BASE                 .set    0x44E00000
-CM_PER_EPWMSS1_OFFSET       .set    0xCC
-CM_PER_EPWMSS0_OFFSET       .set    0xD4
-CM_PER_EPWMSS2_OFFSET       .set    0xD8
-
-; clock managements register values (selection)
-CM_MODULEMODE_DISABLE       .set    0x00
-CM_MODULEMODE_ENABLE        .set    0x02
-CM_IDLESTATUS_FUNC          .set    0x000000
-CM_IDLESTATUS_TRANS         .set    0x010000
-CM_IDLESTATUS_IDLE          .set    0x020000
-CM_IDLESTATUS_DISABLE       .set    0x030000
-
-; control register offsets and PWMSS values (selection)
-CONTROL_PWMSS_CTRL          .set    0x44E10664
-PWMSS_CTRL_PWMSS_RESET      .set    0x00
-PWMSS_CTRL_PWMSS0_TBCLKEN   .set    0x01
-PWMSS_CTRL_PWMSS1_TBCLKEN   .set    0x02
-PWMSS_CTRL_PWMSS2_TBCLKEN   .set    0x04
-
-; ePWM module and configuration register offsets
-EPWM0_BASE                  .set    0x48300200  ; ePWM0 module base address
-EPWM1_BASE                  .set    0x48302200  ; ePWM1 module base address
-EPWM2_BASE                  .set    0x48304200  ; ePWM2 module base address
-EPWM_TBCTL_OFFSET           .set    0x00        ; Time-Base Control Register
-EPWM_TBSTS_OFFSET           .set    0x02        ; Time-Base Status Register
-EPWM_TBPHS_OFFSET           .set    0x06        ; Time-Base Phase Register
-EPWM_TBCNT_OFFSET           .set    0x08        ; Time-Base Counter Register
-EPWM_TBPRD_OFFSET           .set    0x0A        ; Time-Base Period Register
-EPWM_CMPCTL_OFFSET          .set    0x0E        ; Counter-Compare Control Register
-EPWM_CMPA_OFFSET            .set    0x12        ; Counter-Compare A Register
-EPWM_CMPB_OFFSET            .set    0x14        ; Counter-Compare B Register
-EPWM_AQCTLA_OFFSET          .set    0x16        ; Action-Qualifier Control Register for Output A (EPWMxA)
-EPWM_AQCTLB_OFFSET          .set    0x18        ; Action-Qualifier Control Register for Output B (EPWMxB)
-
-; ePWM configuration register values (selection)
-TBCTL_FREERUN               .set    0xC000  ; TBCTL default value after reset
-TBCTL_COUNT_UP              .set    0x0000  ; Up counting mode
-TBCTL_COUNT_UP_DOWN         .set    0x0002  ; Up-down counting mode
-TBCTL_PRDLD                 .set    0x0008  ; Period register double buffer disable
-TBCTL_CLKDIV_1              .set    0x0000  ; Use counter clock prescaler of 1
-TBCTL_CLKDIV_2              .set    0x0400  ; Use counter clock prescaler of 2
-
-AQ_ZROCLR                   .set    0x0001  ; Action qualifier: clear on zero
-AQ_ZROSET                   .set    0x0002  ; Action qualifier: set on zero
-AQ_PRDCLR                   .set    0x0004  ; Action qualifier: clear on period
-AQ_PRDSET                   .set    0x0008  ; Action qualifier: clear set on period
-AQ_A_INCCLR                 .set    0x0010  ; Action qualifier: clear on compare A when incrementing
-AQ_A_INCSET                 .set    0x0020  ; Action qualifier: set on compare A when incrementing
-AQ_A_DECCLR                 .set    0x0040  ; Action qualifier: clear on compare A when decrementing
-AQ_A_DECSET                 .set    0x0080  ; Action qualifier: set on compare A when decrementing
-AQ_B_INCCLR                 .set    0x0100  ; Action qualifier: clear on compare B when incrementing
-AQ_B_INCSET                 .set    0x0200  ; Action qualifier: set on compare B when incrementing
-AQ_B_DECCLR                 .set    0x0400  ; Action qualifier: clear on compare B when decrementing
-AQ_B_DECSET                 .set    0x0800  ; Action qualifier: set on compare B when decrementing
-
-; ePWM configuration values for ADC clock and range reset pulses
-PWM_ADC_CLOCK_PERIOD        .set    49              ; ADC master clock period (in units of 10 ns)
-PWM_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
-PWM_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
-
+; ---------------------------- MACRO DEFINITIONS ---------------------------- ;
 
 ; ------------------------------- Time Macros ------------------------------- ;
-
 ; WAIT CYCLES
 ; (wait for defined number of `cycles`, min. 3 cycles)
 wait_cycles .macro cycles
@@ -280,8 +294,7 @@ timestamp_restart .macro reg
     .endm
 
 
-; ------------------------------- SPI Macros ------------------------------- ;
-
+; ------------------------------- SPI Macros -------------------------------- ;
 ; SPI RESET
 ; (reset SPI output signal to idle levels)
 spi_reset .macro
@@ -377,8 +390,7 @@ IN2LOW?:
     .endm
 
 
-; ------------------------------- ADC Macros ------------------------------- ;
-
+; ------------------------------- ADC Macros -------------------------------- ;
 ; ADC SEND COMMAND
 ; (send non-data ADC command defined in `command` constant)
 adc_send_command .macro command
@@ -543,8 +555,7 @@ adc_read_continuous .macro
     .endm
 
 
-; ------------------------------- PWM Macros ------------------------------- ;
-
+; ------------------------------- PWM Macros -------------------------------- ;
 ; PWM MODULE INITIALIZATION
 ; (setup/enable PWM clock sources and signals)
 pwm_init .macro
@@ -667,8 +678,7 @@ pwm_setup_range_valid_reset .macro sample_rate_reg
     .endm
 
 
-; ------------------------------ Misc Macros ------------------------------ ;
-
+; ------------------------------- Misc Macros ------------------------------- ;
 ; SIGN EXTEND 24 BIT
 ; (sign extend 24 bit data to 32 bit)
 sign_extend_24 .macro reg
@@ -677,9 +687,10 @@ sign_extend_24 .macro reg
     LDI     reg.b3, 0xFF
 POS?:
     .endm
+; --------------------------------------------------------------------------- ;
 
 
-; ------------------------------ Main Program ------------------------------ ;
+; ------------------------------ MAIN PROGRAM ------------------------------- ;
     .text
     .retain ".text"
 
@@ -697,7 +708,7 @@ MAIN:
     LBBO    &SAMPLE_RATE,   RAM_ADDRESS,    SAMPLE_RATE_OFFSET,     4
     LBBO    &BUFFER_SIZE,   RAM_ADDRESS,    BUFFER_LENGTH_OFFSET,   4
     LBBO    &SAMPLES_COUNT, RAM_ADDRESS,    SAMPLE_LIMIT_OFFSET,    4
-    LBBO    &MEM_POINTER,   RAM_ADDRESS,    BUFFER0_OFFSET,         4
+    LBBO    &MEM_POINTER,   RAM_ADDRESS,    BUFFER0_ADDR_OFFSET,    4
 
 INIT:
     ; initialize GPIO states
@@ -754,11 +765,11 @@ START:
     QBBC    BUFFER0, BUFFER_INDEX, 0
     
     ; point to buffer1 for odd indexes
-    LBBO    &MEM_POINTER, RAM_ADDRESS, BUFFER1_OFFSET, 4
+    LBBO    &MEM_POINTER, RAM_ADDRESS, BUFFER1_ADDR_OFFSET, 4
     JMP     BUFFER1
 BUFFER0:
     ; point to buffer0 for even indexes
-    LBBO    &MEM_POINTER, RAM_ADDRESS, BUFFER0_OFFSET, 4
+    LBBO    &MEM_POINTER, RAM_ADDRESS, BUFFER0_ADDR_OFFSET, 4
 BUFFER1:
 
     ; store buffer index
@@ -860,3 +871,4 @@ STOP:
 
     ; halt the PRU
     HALT
+; --------------------------------------------------------------------------- ;

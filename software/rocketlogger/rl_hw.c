@@ -31,7 +31,6 @@
 
 #include <stdio.h>
 
-#include "ads131e0x.h"
 #include "calibration.h"
 #include "gpio.h"
 #include "log.h"

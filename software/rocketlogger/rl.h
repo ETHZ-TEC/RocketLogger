@@ -58,6 +58,8 @@
 #define RL_CHANNEL_SWITCHED_COUNT 2
 /// Number of RocketLogger digital channels
 #define RL_CHANNEL_DIGITAL_COUNT 6
+/// Minimum native sample rate of the ADC in samples per second
+#define RL_SAMPLE_RATE_MIN 1000
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
 

@@ -95,12 +95,12 @@ typedef enum pru_state pru_state_t;
 struct pru_control {
     /// Current PRU state
     pru_state_t state;
-    /// ADC sample rate (in kSPS)
-    uint32_t adc_sample_rate;
-    /// Shared buffer length in number of data elements
-    uint32_t buffer_length;
+    /// Sample rate of the ADC (in kSPS)
+    uint32_t sample_rate;
     /// Samples to take (0 for continuous)
     uint32_t sample_limit;
+    /// Shared buffer length in number of data elements
+    uint32_t buffer_length;
     /// Memory address of the shared buffer 0
     uint32_t buffer0_addr;
     /// Memory address of the shared buffer 1
