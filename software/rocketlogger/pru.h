@@ -39,8 +39,6 @@
 
 /// PRU binary file location
 #define PRU_BINARY_FILE "/lib/firmware/rocketlogger.bin"
-/// Memory map file
-#define PRU_MMAP_SYSFS_PATH "/sys/class/uio/uio0/maps/map1/"
 
 /// Overall size of FRU digital channels in bytes
 #define PRU_DIGITAL_SIZE 4
@@ -49,31 +47,21 @@
 /// Size of PRU buffer status in bytes
 #define PRU_BUFFER_STATUS_SIZE 4
 
-/// Mask for valid bit read from PRU
-#define PRU_VALID_MASK 0x1
-/// Mask for binary inputs read from PRU
-#define PRU_BINARY_MASK 0xE
-
-// /**
-//  * Digital channel bit position in PRU digital information
-//  */
-#define PRU_DIGITAL_I1L_VALID_MASK 0x01
-#define PRU_DIGITAL_I2L_VALID_MASK 0x01
-#define PRU_DIGITAL_INPUT1_MASK 0x02
-#define PRU_DIGITAL_INPUT2_MASK 0x04
-#define PRU_DIGITAL_INPUT3_MASK 0x08
-#define PRU_DIGITAL_INPUT4_MASK 0x02
-#define PRU_DIGITAL_INPUT5_MASK 0x04
-#define PRU_DIGITAL_INPUT6_MASK 0x08
+/**
+ * Digital channel bit position in PRU digital information
+ */
+#define PRU_DIGITAL_INPUT_MASK 0x3F
+#define PRU_DIGITAL_INPUT1_MASK 0x01
+#define PRU_DIGITAL_INPUT2_MASK 0x02
+#define PRU_DIGITAL_INPUT3_MASK 0x04
+#define PRU_DIGITAL_INPUT4_MASK 0x08
+#define PRU_DIGITAL_INPUT5_MASK 0x10
+#define PRU_DIGITAL_INPUT6_MASK 0x20
+#define PRU_DIGITAL_I1L_VALID_MASK 0x40
+#define PRU_DIGITAL_I2L_VALID_MASK 0x80
 
 /// PRU time out in micro seconds
 #define PRU_TIMEOUT_US 2000000
-
-/// Number of ADC commands
-#define PRU_ADC_COMMAND_COUNT 12
-
-// #define PRU_STATE_OFF 0x00
-// #define PRU_STATE_SAMPLING 0x01
 
 /**
  * PRU state definition
@@ -95,21 +83,16 @@ typedef enum pru_state pru_state_t;
 struct pru_control {
     /// Current PRU state
     pru_state_t state;
+    /// Sample rate of the ADC (in kSPS)
+    uint32_t sample_rate;
+    /// Samples to take (0 for continuous)
+    uint32_t sample_limit;
+    /// Shared buffer length in number of data elements
+    uint32_t buffer_length;
     /// Memory address of the shared buffer 0
     uint32_t buffer0_addr;
     /// Memory address of the shared buffer 1
     uint32_t buffer1_addr;
-    /// Shared buffer length in number of data elements
-    uint32_t buffer_length;
-    /// Samples to take (0 for continuous)
-    uint32_t sample_limit;
-    /// ADC sample rate (in kSPS)
-    uint32_t adc_sample_rate;
-    /// Number of ADC commands to send
-    uint32_t adc_command_count;
-    /// ADC commands to send: command starts in MSB, optional bytes
-    /// (e.g. register address and values) aligned in degreasing byte order
-    uint32_t adc_command[PRU_ADC_COMMAND_COUNT];
 };
 
 /**
@@ -121,9 +104,15 @@ typedef struct pru_control pru_control_t;
  * PRU channel data block structure
  */
 struct pru_data {
-    /// bit map of digital channels
+    /**
+     * digital channel data.
+     * bit map order (LSB frist): DI1, ..., DI6, I1L_valid, I2L_valid
+     */
     uint32_t channel_digital;
-    /// analog channel data
+    /**
+     * analog channel data
+     * data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
+     */
     int32_t channel_analog[RL_CHANNEL_COUNT];
 };
 

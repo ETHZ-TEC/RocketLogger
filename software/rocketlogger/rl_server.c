@@ -38,7 +38,6 @@
 #include <libgen.h>
 #include <sys/types.h>
 
-#include "calibration.h"
 #include "log.h"
 #include "rl_lib.h"
 #include "sem.h"

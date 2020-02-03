@@ -42,7 +42,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "ads131e0x.h"
+#include "calibration.h"
 #include "log.h"
 #include "meter.h"
 #include "rl.h"
@@ -90,47 +90,19 @@ int pru_control_init(pru_control_t *const pru_control,
         pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set sample rate
-    if (config->sample_rate <= ADS131E0X_RATE_MIN) {
-        pru_control->adc_sample_rate = ADS131E0X_RATE_MIN / 1000;
+    // set native sample rate in kSPS
+    if (config->sample_rate <= RL_SAMPLE_RATE_MIN) {
+        pru_control->sample_rate = RL_SAMPLE_RATE_MIN / 1000;
     } else {
-        pru_control->adc_sample_rate = config->sample_rate / 1000;
+        pru_control->sample_rate = config->sample_rate / 1000;
     }
 
-    // set sample rate configuration
-    uint32_t adc_sample_rate;
-    switch (pru_control->adc_sample_rate) {
-    case 1:
-        adc_sample_rate = ADS131E0X_K1;
-        break;
-    case 2:
-        adc_sample_rate = ADS131E0X_K2;
-        break;
-    case 4:
-        adc_sample_rate = ADS131E0X_K4;
-        break;
-    case 8:
-        adc_sample_rate = ADS131E0X_K8;
-        break;
-    case 16:
-        adc_sample_rate = ADS131E0X_K16;
-        break;
-    case 32:
-        adc_sample_rate = ADS131E0X_K32;
-        break;
-    case 64:
-        adc_sample_rate = ADS131E0X_K64;
-        break;
-    default:
-        rl_log(RL_LOG_ERROR, "invalid sample rate %d", config->sample_rate);
-        return ERROR;
-    }
-
-    // set buffer infos
+    // set sample limit and data buffer size
     pru_control->sample_limit = config->sample_limit * aggregates;
     pru_control->buffer_length =
-        (config->sample_rate * aggregates) / config->update_rate;
+        1000 * pru_control->sample_rate / config->update_rate;
 
+    // get shared buffer addresses
     uint32_t buffer_size_bytes =
         pru_control->buffer_length *
             (PRU_SAMPLE_SIZE * RL_CHANNEL_COUNT + PRU_DIGITAL_SIZE) +
@@ -142,39 +114,6 @@ int pru_control_init(pru_control_t *const pru_control,
         (uint32_t)prussdrv_get_phys_addr(pru_extmem_base);
     pru_control->buffer0_addr = pru_extmem_phys;
     pru_control->buffer1_addr = pru_extmem_phys + buffer_size_bytes;
-
-    // setup commands to send for ADC initialization
-    pru_control->adc_command_count = PRU_ADC_COMMAND_COUNT;
-
-    // reset and stop sampling
-    pru_control->adc_command[0] = (ADS131E0X_RESET << 24);
-    pru_control->adc_command[1] = (ADS131E0X_SDATAC << 24);
-
-    // configure registers
-    pru_control->adc_command[2] = ((ADS131E0X_WREG | ADS131E0X_CONFIG3) << 24) |
-                                  (ADS131E0X_CONFIG3_DEFAULT << 8);
-    pru_control->adc_command[3] =
-        ((ADS131E0X_WREG | ADS131E0X_CONFIG1) << 24) |
-        ((ADS131E0X_CONFIG1_DEFAULT | adc_sample_rate) << 8);
-
-    // set channel gains (CH1-7, CH8 unused)
-    pru_control->adc_command[4] = ((ADS131E0X_WREG | ADS131E0X_CH1SET) << 24) |
-                                  (ADS131E0X_GAIN2 << 8); // High Range A
-    pru_control->adc_command[5] = ((ADS131E0X_WREG | ADS131E0X_CH2SET) << 24) |
-                                  (ADS131E0X_GAIN2 << 8); // High Range B
-    pru_control->adc_command[6] = ((ADS131E0X_WREG | ADS131E0X_CH3SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Medium Range
-    pru_control->adc_command[7] = ((ADS131E0X_WREG | ADS131E0X_CH4SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Low Range A
-    pru_control->adc_command[8] = ((ADS131E0X_WREG | ADS131E0X_CH5SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Low Range B
-    pru_control->adc_command[9] = ((ADS131E0X_WREG | ADS131E0X_CH6SET) << 24) |
-                                  (ADS131E0X_GAIN1 << 8); // Voltage 1
-    pru_control->adc_command[10] = ((ADS131E0X_WREG | ADS131E0X_CH7SET) << 24) |
-                                   (ADS131E0X_GAIN1 << 8); // Voltage 2
-
-    // start continuous reading
-    pru_control->adc_command[11] = (ADS131E0X_RDATAC << 24);
 
     return SUCCESS;
 }
@@ -193,8 +132,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
     // average (for low rates)
     uint32_t aggregates = 1;
-    if (config->sample_rate < ADS131E0X_RATE_MIN) {
-        aggregates = (uint32_t)(ADS131E0X_RATE_MIN / config->sample_rate);
+    if (config->sample_rate < RL_SAMPLE_RATE_MIN) {
+        aggregates = (uint32_t)(RL_SAMPLE_RATE_MIN / config->sample_rate);
     }
 
     // WEBSERVER
@@ -355,8 +294,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
-    pru_buffer_t const *buffer = NULL;
-    uint32_t buffer_size; // number of samples per buffer
+    // CHANNEL DATA MEMORY ALLOCATION
+    int32_t *const analog_buffer = (int32_t *)malloc(
+        pru.buffer_length * RL_CHANNEL_COUNT * sizeof(int32_t));
+    uint32_t *const digital_buffer =
+        (uint32_t *)malloc(pru.buffer_length * sizeof(uint32_t));
+
+    pru_buffer_t const *pru_buffer = NULL;
+    size_t buffer_size; // number of data samples per buffer
     rl_timestamp_t timestamp_monotonic;
     rl_timestamp_t timestamp_realtime;
     uint32_t buffers_lost = 0;
@@ -474,18 +419,18 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // select current buffer
         if (i % 2 == 0) {
-            buffer = buffer0;
+            pru_buffer = buffer0;
         } else {
-            buffer = buffer1;
+            pru_buffer = buffer1;
         }
 
-        // select buffer size
+        // select buffer size, repecting non-full last buffer
         if (i < buffer_read_count - 1 ||
             pru.sample_limit % pru.buffer_length == 0) {
-            buffer_size = pru.buffer_length; // full buffer size
+            buffer_size = (size_t)pru.buffer_length;
         } else {
-            buffer_size =
-                pru.sample_limit % pru.buffer_length; // non-full buffer size
+            // last buffer is not fully used
+            buffer_size = (size_t)(pru.sample_limit % pru.buffer_length);
         }
 
         // wait for PRU event indicating new data (repeat wait on interrupts)
@@ -527,13 +472,33 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         __sync_synchronize();
 
         // check for overrun (compare buffer numbers)
-        if (buffer->index != i) {
-            buffers_lost += (buffer->index - i);
+        if (pru_buffer->index != i) {
+            buffers_lost += (pru_buffer->index - i);
             rl_log(RL_LOG_WARNING,
                    "overrun: %d samples (%d buffer) lost (%d in total)",
-                   (buffer->index - i) * pru.buffer_length, buffer->index - i,
-                   buffers_lost);
-            i = buffer->index;
+                   (pru_buffer->index - i) * pru.buffer_length,
+                   pru_buffer->index - i, buffers_lost);
+            i = pru_buffer->index;
+        }
+
+        // process new data: copy data and apply calibration
+        for (size_t i = 0; i < buffer_size; i++) {
+            // get PRU data buffer pointer
+            pru_data_t const *const pru_data = &(pru_buffer->data[i]);
+
+            // get local data buffer pointers
+            int32_t *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+            uint32_t *const digital_data = digital_buffer + i;
+
+            // copy digital channel data
+            *digital_data = pru_data->channel_digital;
+
+            // copy and calibrate analog channel data
+            for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                analog_data[j] = (int32_t)(
+                    (pru_data->channel_analog[j] + rl_calibration.offsets[j]) *
+                    rl_calibration.scales[j]);
+            }
         }
 
         // update and write state
@@ -546,8 +511,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // process data for web when enabled
         if (config->web_enable && !web_failure_disable) {
-            res = web_handle_data(web_data, sem_id, buffer, buffer_size,
-                                  &timestamp_realtime, config);
+            res =
+                web_handle_data(web_data, sem_id, analog_buffer, digital_buffer,
+                                buffer_size, &timestamp_realtime, config);
             if (res < 0) {
                 // disable web interface on failure, but continue sampling
                 web_failure_disable = true;
@@ -569,8 +535,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->file_enable) {
             // write the data buffer to file
             int block_count = rl_file_add_data_block(
-                data_file, buffer, buffer_size, &timestamp_realtime,
-                &timestamp_monotonic, config);
+                data_file, analog_buffer, digital_buffer, buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
 
             // stop sampling on file error
             if (block_count < 0) {
@@ -595,8 +561,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->ambient_enable) {
             // fetch and write data
             int block_count = rl_file_add_ambient_block(
-                ambient_file, buffer, buffer_size, &timestamp_realtime,
-                &timestamp_monotonic, config);
+                ambient_file, analog_buffer, digital_buffer, buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
 
             // stop sampling on file error
             if (block_count < 0) {
@@ -615,8 +581,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // print meter output if enabled
         if (config->interactive_enable) {
-            meter_print_buffer(buffer, buffer_size, &timestamp_realtime,
-                               &timestamp_monotonic, config);
+            meter_print_buffer(analog_buffer, digital_buffer, buffer_size,
+                               &timestamp_realtime, &timestamp_monotonic,
+                               config);
         }
     }
 
@@ -629,6 +596,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     if (res < 0) {
         rl_log(RL_LOG_WARNING, "Failed writing status");
     }
+
+    // CLEANUP CHANNEL DATA MEMORY ALLOCATION
+    free(analog_buffer);
+    free(digital_buffer);
 
     // deinitialize interactive measurement display when enabled
     if (config->interactive_enable) {

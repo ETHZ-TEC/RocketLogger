@@ -37,8 +37,6 @@
 #include <linux/limits.h>
 #include <time.h>
 
-#include "ads131e0x.h"
-#include "calibration.h"
 #include "log.h"
 #include "pru.h"
 #include "rl.h"
@@ -332,11 +330,17 @@ void rl_file_update_header_csv(FILE *file_handle,
     fseek(file_handle, 0, SEEK_END);
 }
 
-int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
-                           uint32_t buffer_size,
+int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
+                           uint32_t const *digital_buffer, size_t buffer_size,
                            rl_timestamp_t const *const timestamp_realtime,
                            rl_timestamp_t const *const timestamp_monotonic,
                            rl_config_t const *const config) {
+    // aggregation buffer and configuration
+    int32_t aggregate_analog[RL_CHANNEL_COUNT] = {0};
+    uint32_t aggregate_digital = ~(0);
+    ;
+    size_t aggregate_count = RL_SAMPLE_RATE_MIN / config->sample_rate;
+
     // skip if not storing to file, or invalid file structure
     if (!config->file_enable) {
         return 0;
@@ -345,8 +349,13 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
         rl_log(RL_LOG_ERROR, "invalid data file provided, skip append data");
         return ERROR;
     }
+    if (aggregate_count > buffer_size) {
+        rl_log(RL_LOG_ERROR, "cannot aggregate more data than the buffer size, "
+                             "skip append data");
+        return ERROR;
+    }
 
-    // write timestamp to file
+    // write buffer timestamp to file
     if (config->file_format == RL_FILE_FORMAT_RLD) {
         fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, data_file);
         fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, data_file);
@@ -355,124 +364,125 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
                 timestamp_realtime->nsec);
     }
 
-    // count channels
-    int channel_count = count_channels(config->channel_enable);
+    // process data buffers
+    for (size_t i = 0; i < buffer_size; i++) {
+        // point to sample buffer to store by default (updated for aggregates)
+        int32_t const *analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+        uint32_t const *digital_data = digital_buffer + i;
 
-    // aggregation
-    int32_t aggregate_count = ADS131E0X_RATE_MIN / config->sample_rate;
-    int32_t aggregate_channel_data[RL_CHANNEL_COUNT] = {0};
-    uint32_t aggregate_bin_data = 0xffffffff;
+        // handle aggregation when applicable
+        if (aggregate_count > 1) {
+            bool aggregate_store = false;
 
-    // HANDLE BUFFER //
-    for (uint32_t i = 0; i < buffer_size; i++) {
-
-        // channel data variables
-        int32_t channel_data[RL_CHANNEL_COUNT] = {0};
-        uint32_t bin_data = 0x00000000;
-
-        pru_data_t const pru_data = buffer->data[i];
-
-        // read digital channels
-        uint8_t bin_adc1 = (uint8_t)(pru_data.channel_digital & 0xff);
-        uint8_t bin_adc2 = (uint8_t)((pru_data.channel_digital >> 8) & 0xff);
-        // uint8_t bin_adc1 = (*((int8_t *)(buffer)));
-        // uint8_t bin_adc2 = (*((int8_t *)(buffer + 1)));
-        // buffer += PRU_DIGITAL_SIZE;
-
-        // read and scale values (if channel selected)
-        int channel_index = 0;
-        for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-            if (config->channel_enable[j]) {
-                channel_data[channel_index] = (int32_t)(
-                    (pru_data.channel_analog[j] + rl_calibration.offsets[j]) *
-                    rl_calibration.scales[j]);
-                channel_index++;
+            // reset aggregate buffer on window start
+            if (i % aggregate_count == 0) {
+                memset(aggregate_analog, 0, sizeof(aggregate_analog));
+                aggregate_digital = ~(0);
             }
-        }
 
-        // BINARY CHANNELS //
-
-        // mask and combine digital inputs, if requested
-        int bin_channel_pos = 0;
-        if (config->digital_enable) {
-            bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |
-                       ((bin_adc2 & PRU_BINARY_MASK) << 2);
-            bin_channel_pos = RL_CHANNEL_DIGITAL_COUNT;
-        }
-
-        // mask and combine valid info
-        uint8_t valid1 = (~bin_adc1) & PRU_VALID_MASK;
-        uint8_t valid2 = (~bin_adc2) & PRU_VALID_MASK;
-
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
-            bin_data = bin_data | (valid1 << bin_channel_pos);
-            bin_channel_pos++;
-        }
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
-            bin_data = bin_data | (valid2 << bin_channel_pos);
-            bin_channel_pos++;
-        }
-
-        // handle data aggregation for low sampling rates
-        if (config->sample_rate < ADS131E0X_RATE_MIN) {
             switch (config->aggregation_mode) {
             case RL_AGGREGATION_MODE_DOWNSAMPLE:
-                // drop intermediate samples (skip writing to file)
-                if (i % aggregate_count > 0) {
-                    // aggregate this sample only, skip file writing for now
-                    continue;
+                // store first sample of aggregate window, skip storing others
+                if (i % aggregate_count == 0) {
+                    // store data as in non-aggregate mode
+                    aggregate_store = true;
                 }
                 break;
 
             case RL_AGGREGATION_MODE_AVERAGE:
-                // accumulate intermediate samples only (skip writing)
-                if ((i + 1) % aggregate_count > 0) {
-                    for (int i = 0; i < channel_count; i++) {
-                        aggregate_channel_data[i] += channel_data[i];
+                // accumulate data of the aggregate window, store at the end
+                for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                    aggregate_analog[j] += *(analog_data + j);
+                }
+                aggregate_digital = aggregate_digital & *digital_data;
+
+                // on last sample of the window: average analog data and store
+                if ((i + 1) % aggregate_count == 0) {
+                    for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                        aggregate_analog[j] =
+                            aggregate_analog[j] / aggregate_count;
                     }
-                    aggregate_bin_data = aggregate_bin_data & bin_data;
 
-                    // aggregate this sample only, skip file writing for now
-                    continue;
+                    // store aggregated data
+                    analog_data = (int32_t const *)aggregate_analog;
+                    digital_data = (uint32_t const *)aggregate_digital;
+                    aggregate_store = true;
                 }
-
-                // calculate average for writing to file
-                for (int i = 0; i < channel_count; i++) {
-                    channel_data[i] =
-                        aggregate_channel_data[i] / aggregate_count;
-                    aggregate_channel_data[i] = 0;
-                }
-
-                bin_data = aggregate_bin_data;
-                aggregate_bin_data = 0xffffffff;
                 break;
+
+            default:
+                rl_log(RL_LOG_WARNING,
+                       "unknown data aggregation mode, storing all samples.");
+                aggregate_store = true;
+            }
+
+            // skip storing data if no aggregates available
+            if (!aggregate_store) {
+                continue;
             }
         }
 
-        // write data to file
+        // write digital channels
+        if (config->file_format == RL_FILE_FORMAT_RLD) {
+            size_t index = 0;
+            uint32_t data = 0x00;
 
-        // write binary channels if enabled
-        if (bin_channel_pos > 0) {
-            if (config->file_format == RL_FILE_FORMAT_RLD) {
-                fwrite(&bin_data, sizeof(uint32_t), 1, data_file);
-            } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-                uint32_t bin_mask = 0x01;
-                for (int j = 0; j < bin_channel_pos; j++) {
-                    fprintf(data_file, (RL_FILE_CSV_DELIMITER "%i"),
-                            (bin_data & bin_mask) > 0);
-                    bin_mask = bin_mask << 1;
+            // build binary bit field to store
+            if (config->digital_enable) {
+                data |= ((*digital_data & PRU_DIGITAL_INPUT_MASK) << index);
+                index += RL_CHANNEL_DIGITAL_COUNT;
+            }
+            if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
+                if (*digital_data & PRU_DIGITAL_I1L_VALID_MASK) {
+                    data |= (1 << index);
                 }
+                index++;
+            }
+            if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
+                if (*digital_data & PRU_DIGITAL_I2L_VALID_MASK) {
+                    data |= (1 << index);
+                }
+                index++;
+            }
+
+            // write digital data to file
+            fwrite(&data, sizeof(data), 1, data_file);
+        } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+            if (config->digital_enable) {
+                uint32_t binary_mask = PRU_DIGITAL_INPUT1_MASK;
+                for (int j = 0; j < RL_CHANNEL_DIGITAL_COUNT; j++) {
+                    fprintf(data_file, (RL_FILE_CSV_DELIMITER "%i"),
+                            (*digital_data & binary_mask) > 0);
+                    binary_mask = binary_mask << 1;
+                }
+            }
+            if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
+                fprintf(data_file, (RL_FILE_CSV_DELIMITER "%i"),
+                        (*digital_data & PRU_DIGITAL_I1L_VALID_MASK) > 0);
+            }
+            if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
+                fprintf(data_file, (RL_FILE_CSV_DELIMITER "%i"),
+                        (*digital_data & PRU_DIGITAL_I2L_VALID_MASK) > 0);
             }
         }
 
         // write analog channels
-        if (config->file_format == RL_FILE_FORMAT_RLD) {
-            fwrite(channel_data, sizeof(int32_t), channel_count, data_file);
-        } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-            for (int j = 0; j < channel_count; j++) {
-                fprintf(data_file, (RL_FILE_CSV_DELIMITER "%d"),
-                        channel_data[j]);
+        for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+            // skip disabled channels
+            if (!config->channel_enable[j]) {
+                continue;
             }
+            // write analog data to file
+            if (config->file_format == RL_FILE_FORMAT_RLD) {
+                fwrite(&analog_data[j], sizeof(int32_t), 1, data_file);
+            } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+                fprintf(data_file, (RL_FILE_CSV_DELIMITER "%d"),
+                        analog_data[j]);
+            }
+        }
+
+        // end of data row
+        if (config->file_format == RL_FILE_FORMAT_CSV) {
             fprintf(data_file, "\n");
         }
     }
@@ -485,14 +495,15 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
     return 1;
 }
 
-int rl_file_add_ambient_block(FILE *ambient_file,
-                              pru_buffer_t const *const buffer,
-                              uint32_t buffer_size,
+int rl_file_add_ambient_block(FILE *ambient_file, int32_t const *analog_buffer,
+                              uint32_t const *digital_buffer,
+                              size_t buffer_size,
                               rl_timestamp_t const *const timestamp_realtime,
                               rl_timestamp_t const *const timestamp_monotonic,
                               rl_config_t const *const config) {
     // suppress unused parameter warning
-    (void)buffer;
+    (void)analog_buffer;
+    (void)digital_buffer;
     (void)buffer_size;
 
     // rate limit sampling of the ambient sensors
@@ -546,8 +557,10 @@ void rl_file_setup_data_channels(rl_file_header_t *const file_header,
     memset(file_header->channel, 0,
            total_channel_count * sizeof(rl_file_channel_t));
 
-    // digital channels
+    // overall channel index
     int ch = 0;
+
+    // digital channels
     if (config->digital_enable) {
         for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
             file_header->channel[ch].unit = RL_UNIT_BINARY;

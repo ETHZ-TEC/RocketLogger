@@ -52,8 +52,10 @@
 /// Path to the Linux sysfs ePWM1B module
 #define EPWM1B_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-2:1/"
 
-/// Default PWM period
-#define PWM_PERIOD_DEFAULT 100000000
+/// Default PWM period in nanoseconds
+#define PWM_PERIOD_DEFAULT 490
+/// Default PWM period in nanoseconds
+#define PWM_DUTY_CYCLE_DEFAULT (PWM_PERIOD_DEFAULT / 2)
 
 /**
  * Initialize PWM modules.

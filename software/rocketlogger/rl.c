@@ -41,8 +41,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "ads131e0x.h"
-#include "calibration.h"
 #include "log.h"
 #include "sensor/sensor.h"
 
@@ -56,7 +54,7 @@ const rl_config_t rl_config_default = {
     .background_enable = false,
     .interactive_enable = false,
     .sample_limit = 0,
-    .sample_rate = ADS131E0X_RATE_MIN,
+    .sample_rate = RL_SAMPLE_RATE_MIN,
     .update_rate = 1,
     .channel_enable = RL_CONFIG_CHANNEL_ENABLE_DEFAULT,
     .channel_force_range = RL_CONFIG_CHANNEL_FORCE_RANGE_DEFAULT,
@@ -403,10 +401,10 @@ int rl_config_validate(rl_config_t const *const config) {
          config->sample_rate == 64000);
     if (config->sample_rate == 0 ||
         (!sample_rate_native &&
-         ((ADS131E0X_RATE_MIN % config->sample_rate) > 0))) {
+         ((RL_SAMPLE_RATE_MIN % config->sample_rate) > 0))) {
         rl_log(RL_LOG_ERROR, "invalid sample rate (%u). Needs to be natively "
                              "supported value, or valid divisor of %u.",
-               config->sample_rate, ADS131E0X_RATE_MIN);
+               config->sample_rate, RL_SAMPLE_RATE_MIN);
         return ERROR;
     }
 

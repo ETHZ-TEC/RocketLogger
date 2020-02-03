@@ -134,7 +134,8 @@ int64_t *web_buffer_get(web_buffer_t *const buffer, int num) {
 }
 
 int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
-                    void const *buffer, uint32_t samples_count,
+                    int32_t const *analog_buffer,
+                    uint32_t const *digital_buffer, size_t buffer_size,
                     rl_timestamp_t const *const timestamp_realtime,
                     rl_config_t const *const config) {
 
@@ -149,9 +150,9 @@ int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
     // AVERAGE DATA //
 
     // averaged data for web
-    uint32_t avg_window[WEB_BUFFER_COUNT] = {samples_count / BUFFER1_SIZE,
-                                             samples_count / BUFFER10_SIZE,
-                                             samples_count / BUFFER100_SIZE};
+    uint32_t avg_window[WEB_BUFFER_COUNT] = {buffer_size / BUFFER1_SIZE,
+                                             buffer_size / BUFFER10_SIZE,
+                                             buffer_size / BUFFER100_SIZE};
     int64_t avg_data[WEB_BUFFER_COUNT][RL_CHANNEL_COUNT] = {{0}};
     uint32_t bin_avg_data[WEB_BUFFER_COUNT][RL_CHANNEL_DIGITAL_COUNT] = {{0}};
     uint8_t avg_valid[WEB_BUFFER_COUNT]
@@ -163,78 +164,48 @@ int web_handle_data(web_shm_t *const web_data_ptr, int sem_id,
     int64_t web_data[WEB_BUFFER_COUNT][BUFFER1_SIZE]
                     [web_data_ptr->num_channels];
 
-    // HANDLE BUFFER //
-    for (uint32_t i = 0; i < samples_count; i++) {
+    // process data buffers
+    for (size_t i = 0; i < buffer_size; i++) {
+        // point to sample buffer to store by default (updated for aggregates)
+        int32_t const *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+        uint32_t const *const digital_data = digital_buffer + i;
 
-        // channel data variables
-        uint32_t bin_data;
+        // overall channel index
+        size_t index = 0;
 
-        // read binary channels
-        uint8_t bin_adc1 = (*((int8_t *)(buffer)));
-        uint8_t bin_adc2 = (*((int8_t *)(buffer + 1)));
-
-        buffer += PRU_DIGITAL_SIZE;
-
-        // read and scale values (if channel selected)
-        int ch = 0;
+        // process analog data of selected channels
         for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
             if (config->channel_enable[j]) {
-                int32_t adc_value =
-                    *((int32_t *)(buffer + j * PRU_SAMPLE_SIZE));
-                int32_t channel_value =
-                    (int32_t)((adc_value + rl_calibration.offsets[j]) *
-                              rl_calibration.scales[j]);
-                avg_data[WEB_BUFFER1_INDEX][ch] += channel_value;
-
-                ch++;
+                avg_data[WEB_BUFFER1_INDEX][index] += analog_data[j];
+                index++;
             }
         }
-        buffer += RL_CHANNEL_COUNT * PRU_SAMPLE_SIZE;
 
-        // BINARY CHANNELS //
-
-        // mask and combine digital inputs, if requested
-        int bin_channel_pos;
+        // process binary channels
+        int binary_index;
         if (config->digital_enable) {
-            bin_data = ((bin_adc1 & PRU_BINARY_MASK) >> 1) |
-                       ((bin_adc2 & PRU_BINARY_MASK) << 2);
-            bin_channel_pos = RL_CHANNEL_DIGITAL_COUNT;
-            // average digital inputs
-            int32_t MASK = 1;
-            for (int j = 0; j < num_bin_channels; j++) {
-                if ((bin_data & MASK) > 0) {
+            uint32_t binary_mask = PRU_DIGITAL_INPUT1_MASK;
+            for (int j = 0; j < RL_CHANNEL_DIGITAL_COUNT; j++) {
+                if (*digital_data & binary_mask) {
                     bin_avg_data[WEB_BUFFER1_INDEX][j] += 1;
                 }
-                MASK = MASK << 1;
+                binary_mask = binary_mask << 1;
             }
-        } else {
-            bin_channel_pos = 0;
+            binary_index += RL_CHANNEL_DIGITAL_COUNT;
         }
 
-        // mask and combine valid info
-        uint8_t valid1 = (~bin_adc1) & PRU_VALID_MASK;
-        uint8_t valid2 = (~bin_adc2) & PRU_VALID_MASK;
-
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
-            bin_data = bin_data | (valid1 << bin_channel_pos);
-            bin_channel_pos++;
-        }
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
-            bin_data = bin_data | (valid2 << bin_channel_pos);
-            bin_channel_pos++;
-        }
-
-        // average valid info
+        // average valid information
         for (int j = 0; j <= WEB_BUFFER100_INDEX; j++) {
-            avg_valid[j][0] = avg_valid[j][0] & valid1;
-            avg_valid[j][1] = avg_valid[j][1] & valid2;
+            avg_valid[j][0] =
+                avg_valid[j][0] & (*digital_data & PRU_DIGITAL_I1L_VALID_MASK);
+            avg_valid[j][1] =
+                avg_valid[j][1] & (*digital_data & PRU_DIGITAL_I2L_VALID_MASK);
         }
 
         // HANDLE AVERAGE DATA //
 
         // buffer 1s/div
         if ((i + 1) % avg_window[WEB_BUFFER1_INDEX] == 0) {
-
             // average channel data
             for (int j = 0; j < num_channels; j++) {
                 avg_data[WEB_BUFFER1_INDEX][j] /= avg_window[WEB_BUFFER1_INDEX];

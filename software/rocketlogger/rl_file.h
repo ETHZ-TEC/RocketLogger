@@ -264,7 +264,8 @@ void rl_file_update_header_csv(FILE *file_handle,
  * Handle the sampling data buffer to add a new block to the data file.
  *
  * @param data_file Data file to write to
- * @param buffer PRU data buffer to process
+ * @param analog_buffer Analog data buffer to process
+ * @param digital_buffer Digital data buffer to process
  * @param buffer_size Number of samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
@@ -272,8 +273,8 @@ void rl_file_update_header_csv(FILE *file_handle,
  * @return Returns the number of data blocks written to the file, negative on
  * failure with errno set accordingly
  */
-int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
-                           uint32_t buffer_size,
+int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
+                           uint32_t const *digital_buffer, size_t buffer_size,
                            rl_timestamp_t const *const timestamp_realtime,
                            rl_timestamp_t const *const timestamp_monotonic,
                            rl_config_t const *const config);
@@ -282,7 +283,8 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
  * Handle the sampling data buffer to add a new block to the ambient file.
  *
  * @param ambient_file Ambient file to write to
- * @param buffer PRU data buffer to process
+ * @param analog_buffer Analog data buffer to process
+ * @param digital_buffer Digital data buffer to process
  * @param buffer_size Number of samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
@@ -290,11 +292,11 @@ int rl_file_add_data_block(FILE *data_file, pru_buffer_t const *const buffer,
  * @return Returns the number of data blocks written to the file, negative on
  * failure with errno set accordingly
  */
-int rl_file_add_ambient_block(FILE *ambient_file,
-                              pru_buffer_t const *const buffer,
-                              uint32_t buffer_size,
-                              rl_timestamp_t const *const timestamp_realtime,
-                              rl_timestamp_t const *const timestamp_monotonic,
-                              rl_config_t const *const config);
+int rl_file_add_ambient_block(FILE *ambient_file, int32_t const *analog_buffer,
+                           uint32_t const *digital_buffer, size_t buffer_size,
+                           rl_timestamp_t const *const timestamp_realtime,
+                           rl_timestamp_t const *const timestamp_monotonic,
+                           rl_config_t const *const config);
+
 
 #endif /* RL_FILE_H_ */

@@ -46,6 +46,10 @@ int pwm_init(void) {
     sysfs_write_int((EPWM1A_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
     sysfs_write_int((EPWM1B_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
 
+    sysfs_write_int((EPWM0A_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
+    sysfs_write_int((EPWM1A_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
+    sysfs_write_int((EPWM1B_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
+
     sysfs_write_int((EPWM0A_SYSFS_PATH "enable"), 1);
     sysfs_write_int((EPWM1A_SYSFS_PATH "enable"), 1);
     sysfs_write_int((EPWM1B_SYSFS_PATH "enable"), 1);
