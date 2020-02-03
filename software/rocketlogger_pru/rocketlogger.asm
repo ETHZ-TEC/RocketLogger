@@ -808,8 +808,21 @@ READ:
     ; mask digital inputs and store in digital data register
     AND     ADC1_STATUS_REG, ADC1_STATUS_REG, ADC_STATUS_GPIO_MASK
     AND     ADC2_STATUS_REG, ADC2_STATUS_REG, ADC_STATUS_GPIO_MASK
-    LSL     ADC2_STATUS_REG, ADC2_STATUS_REG, 8
-    OR      DI_REG, ADC1_STATUS_REG, ADC2_STATUS_REG
+
+    ; generate digital data bit map
+    ; bit map order (LSB frist): DI1, ..., DI6, I1L_valid, I2L_valid
+    LSR     ADC1_STATUS_REG.b3, ADC1_STATUS_REG.b0, 1
+    LSR     ADC2_STATUS_REG.b3, ADC2_STATUS_REG.b0, 1
+    AND     ADC1_STATUS_REG.b2, ADC1_STATUS_REG.b0, 1
+    AND     ADC2_STATUS_REG.b2, ADC2_STATUS_REG.b0, 1
+
+    LSL     DI_REG.b0, ADC1_STATUS_REG.b3, 0
+    LSL     DI_REG.b1, ADC2_STATUS_REG.b3, 3
+    OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
+    LSL     DI_REG.b1, ADC1_STATUS_REG.b2, 6
+    OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
+    LSL     DI_REG.b1, ADC2_STATUS_REG.b2, 7
+    OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
 
     ; extend 16 bit data to 24 bit in case of lower precision data
     QBEQ    HIGHPRECISION, PRECISION, 24
@@ -854,6 +867,7 @@ DATAPROCESSING:
     ADD     I2L_REG, I2L_REG, I2L_2_REG
 
     ; single block transfer to DDR of all data channels
+    ; data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
     SBBO    &DI_REG, MEM_POINTER, 0, BUFFER_BLOCK_SIZE
     ADD     MEM_POINTER, MEM_POINTER, BUFFER_BLOCK_SIZE
 
