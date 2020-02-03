@@ -204,48 +204,51 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     void const *buffer0 = prussdrv_get_virt_addr(pru.buffer0_addr);
     void const *buffer1 = prussdrv_get_virt_addr(pru.buffer1_addr);
 
-    // DATA FILE STORING
-
-    // data file header lead-in
+    // data file headers
     rl_file_header_t data_file_header;
-    rl_file_setup_data_lead_in(&(data_file_header.lead_in), config);
-
-    // channel array
-    int total_channel_count = data_file_header.lead_in.channel_bin_count +
-                              data_file_header.lead_in.channel_count;
-    rl_file_channel_t file_channel[total_channel_count];
-    data_file_header.channel = file_channel;
-
-    // complete file header
-    rl_file_setup_data_header(&data_file_header, config);
-
-    // store header
-    if (config->file_format == RL_FILE_FORMAT_RLD) {
-        rl_file_store_header_bin(data_file, &data_file_header);
-    } else if (config->file_format == RL_FILE_FORMAT_CSV) {
-        rl_file_store_header_csv(data_file, &data_file_header);
-    }
-
-    // AMBIENT FILE STORING
-
-    // file header lead-in
     rl_file_header_t ambient_file_header;
 
-    if (config->ambient_enable) {
+    // DATA FILE STORING
+    if (config->file_enable) {
 
-        rl_file_setup_ambient_lead_in(&(ambient_file_header.lead_in), config);
+        // data file header lead-in
+        rl_file_setup_data_lead_in(&(data_file_header.lead_in), config);
 
-        // allocate channel array
-        ambient_file_header.channel =
-            malloc(rl_status.sensor_count * sizeof(rl_file_channel_t));
+        // channel array
+        int total_channel_count = data_file_header.lead_in.channel_bin_count +
+                                  data_file_header.lead_in.channel_count;
+        rl_file_channel_t file_channel[total_channel_count];
+        data_file_header.channel = file_channel;
 
         // complete file header
-        rl_file_setup_ambient_header(&ambient_file_header, config);
+        rl_file_setup_data_header(&data_file_header, config);
 
         // store header
-        rl_file_store_header_bin(ambient_file, &ambient_file_header);
-    }
+        if (config->file_format == RL_FILE_FORMAT_RLD) {
+            rl_file_store_header_bin(data_file, &data_file_header);
+        } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+            rl_file_store_header_csv(data_file, &data_file_header);
+        }
 
+        // AMBIENT FILE STORING
+
+        // file header lead-in
+        if (config->ambient_enable) {
+
+            rl_file_setup_ambient_lead_in(&(ambient_file_header.lead_in),
+                                          config);
+
+            // allocate channel array
+            ambient_file_header.channel =
+                malloc(rl_status.sensor_count * sizeof(rl_file_channel_t));
+
+            // complete file header
+            rl_file_setup_ambient_header(&ambient_file_header, config);
+
+            // store header
+            rl_file_store_header_bin(ambient_file, &ambient_file_header);
+        }
+    }
     // EXECUTION
 
     // write configuration to PRU memory
