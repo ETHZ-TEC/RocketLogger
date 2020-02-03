@@ -811,11 +811,17 @@ READ:
 
     ; generate digital data bit map
     ; bit map order (LSB frist): DI1, ..., DI6, I1L_valid, I2L_valid
+    ; split digital inputs *.b3 and range valid signals *.b2
     LSR     ADC1_STATUS_REG.b3, ADC1_STATUS_REG.b0, 1
     LSR     ADC2_STATUS_REG.b3, ADC2_STATUS_REG.b0, 1
     AND     ADC1_STATUS_REG.b2, ADC1_STATUS_REG.b0, 1
     AND     ADC2_STATUS_REG.b2, ADC2_STATUS_REG.b0, 1
 
+    ; invert logically negative I1L_valid, I2L_valid input bits *.b2
+    XOR     ADC1_STATUS_REG.b2, ADC1_STATUS_REG.b2, 1
+    XOR     ADC2_STATUS_REG.b2, ADC2_STATUS_REG.b2, 1
+
+    ; construct digital signal bit map
     LSL     DI_REG.b0, ADC1_STATUS_REG.b3, 0
     LSL     DI_REG.b1, ADC2_STATUS_REG.b3, 3
     OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
