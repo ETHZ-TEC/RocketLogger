@@ -167,14 +167,16 @@ int64_t *web_buffer_get(web_buffer_t *const buffer, int num);
  *
  * @param web_data The shared web data buffer
  * @param sem_id ID of semaphore set for shared web data
- * @param buffer PRU data buffer to process
- * @param samples_count Number of samples in the buffer
+ * @param analog_buffer Analog data buffer to process
+ * @param digital_buffer Digital data buffer to process
+ * @param buffer_size Number of samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param config Current measurement configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int web_handle_data(web_shm_t *const web_data, int sem_id, void const *buffer,
-                    uint32_t samples_count,
+int web_handle_data(web_shm_t *const web_data, int sem_id,
+                    int32_t const *analog_buffer,
+                    uint32_t const *digital_buffer, size_t buffer_size,
                     rl_timestamp_t const *const timestamp_realtime,
                     rl_config_t const *const config);
 

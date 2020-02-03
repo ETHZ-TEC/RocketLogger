@@ -33,7 +33,6 @@
 
 #include <ncurses.h>
 
-#include "calibration.h"
 #include "pru.h"
 #include "rl.h"
 #include "util.h"
@@ -66,40 +65,52 @@ void meter_init(void) {
 
 void meter_deinit(void) { endwin(); }
 
-void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
+void meter_print_buffer(int32_t const *analog_buffer,
+                        uint32_t const *digital_buffer, size_t buffer_size,
                         rl_timestamp_t const *const timestamp_realtime,
                         rl_timestamp_t const *const timestamp_monotonic,
                         rl_config_t const *const config) {
+    // aggregation buffer and configuration
+    uint32_t aggregate_digital = ~(0);
+    double aggregate_analog[RL_CHANNEL_COUNT] = {0};
 
-    // data
-    uint8_t dig_data[2] = {0};
-    double channel_data[RL_CHANNEL_COUNT] = {0};
+    // process data buffers
+    for (size_t i = 0; i < buffer_size; i++) {
+        // point to sample buffer
+        int32_t const *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+        uint32_t const *const digital_data = digital_buffer + i;
 
-    // read digital channels
-    for (uint32_t i = 0; i < buffer_size; i++) {
-        pru_data_t const pru_data = buffer->data[i];
-        dig_data[0] |= (uint8_t)(pru_data.channel_digital & 0xff);
-        dig_data[1] |= (uint8_t)((pru_data.channel_digital >> 8) & 0xff);
-    }
-
-    // read, average and scale values (if channel selected)
-    int channel_index = 0;
-    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
-        if (config->channel_enable[i]) {
-            int64_t value = 0;
-            for (uint32_t j = 0; j < buffer_size; j++) {
-                pru_data_t const pru_data = buffer->data[j];
-                value += pru_data.channel_analog[i];
+        // aggregate data
+        switch (config->aggregation_mode) {
+        case RL_AGGREGATION_MODE_DOWNSAMPLE:
+            // use first sample of buffer only, skip storing others
+            if (i == 0) {
+                for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                    aggregate_analog[j] = (double)analog_data[j];
+                }
+                aggregate_digital = *digital_data;
             }
-            value = value / (int64_t)buffer_size;
+            break;
 
-            channel_data[i] =
-                (double)(value + (int64_t)rl_calibration.offsets[i]) *
-                rl_calibration.scales[i];
-            channel_index++;
+        default:
+        case RL_AGGREGATION_MODE_AVERAGE:
+            // accumulate data of the aggregate window, store at the end
+            for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                aggregate_analog[j] += (double)*(analog_data + j);
+            }
+            aggregate_digital = aggregate_digital & *digital_data;
+            break;
         }
     }
 
+    // on last sample of the window: average analog data and store
+    if (config->aggregation_mode == RL_AGGREGATION_MODE_AVERAGE) {
+        for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+            aggregate_analog[j] = aggregate_analog[j] / buffer_size;
+        }
+    }
+
+    // display data
     // clear screen
     erase();
 
@@ -119,14 +130,14 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
             // current
             mvprintw(9 + 2 * current_index, 40, "%s:", RL_CHANNEL_NAMES[i]);
             mvprintw(9 + 2 * current_index, 50, "%12.6f %s",
-                     (channel_data[i] / RL_CHANNEL_SCALES[i]),
+                     (aggregate_analog[i] / RL_CHANNEL_SCALES[i]),
                      RL_CHANNEL_UNITS[i]);
             current_index++;
         } else {
             // voltage
             mvprintw(9 + 2 * voltage_index, 10, "%s:", RL_CHANNEL_NAMES[i]);
             mvprintw(9 + 2 * voltage_index, 20, "%9.6f %s",
-                     (channel_data[i] / RL_CHANNEL_SCALES[i]),
+                     (aggregate_analog[i] / RL_CHANNEL_SCALES[i]),
                      RL_CHANNEL_UNITS[i]);
             voltage_index++;
         }
@@ -135,15 +146,15 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
     // display titles, range information
     mvprintw(7, 10, "Voltages:");
     mvprintw(7, 40, "Currents:");
-    if ((dig_data[0] & PRU_VALID_MASK) > 0) {
-        mvprintw(9, 70, "I1L invalid");
-    } else {
+    if (aggregate_digital & PRU_DIGITAL_I1L_VALID_MASK) {
         mvprintw(9, 70, "I1L valid");
-    }
-    if ((dig_data[1] & PRU_VALID_MASK) > 0) {
-        mvprintw(13, 70, "I2L invalid");
     } else {
+        mvprintw(9, 70, "I1L invalid");
+    }
+    if (aggregate_digital & PRU_DIGITAL_I2L_VALID_MASK) {
         mvprintw(13, 70, "I2L valid");
+    } else {
+        mvprintw(13, 70, "I2L invalid");
     }
 
     // digital inputs
@@ -153,12 +164,12 @@ void meter_print_buffer(pru_buffer_t const *const buffer, uint32_t buffer_size,
         for (int i = 0; i < 3; i++) {
             mvprintw(20 + 2 * i, 30, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
             mvprintw(20 + 2 * i, 38, "%d",
-                     (dig_data[0] & DIGITAL_INPUT_BITS[i]) > 0);
+                     (aggregate_digital & DIGITAL_INPUT_BITS[i]) > 0);
         }
         for (int i = 3; i < 6; i++) {
             mvprintw(20 + 2 * (i - 3), 50, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
             mvprintw(20 + 2 * (i - 3), 58, "%d",
-                     (dig_data[1] & DIGITAL_INPUT_BITS[i]) > 0);
+                     (aggregate_digital & DIGITAL_INPUT_BITS[i]) > 0);
         }
     } else {
         mvprintw(20, 10, "Digital inputs disabled.");

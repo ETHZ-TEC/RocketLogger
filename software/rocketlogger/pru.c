@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "calibration.h"
 #include "log.h"
 #include "meter.h"
 #include "rl.h"
@@ -486,16 +487,15 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             pru_data_t const *const pru_data = &(pru_buffer->data[i]);
 
             // get local data buffer pointers
-            int32_t *const analog_buffer[RL_CHANNEL_COUNT] =
-                analog_buffer + i * RL_CHANNEL_COUNT;
-            uint32_t *const binary_data = binary_buffer + i;
+            int32_t *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+            uint32_t *const digital_data = digital_buffer + i;
 
             // copy digital channel data
-            *binary_data = pru_data->channel_digital;
+            *digital_data = pru_data->channel_digital;
 
             // copy and calibrate analog channel data
             for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-                channel_data[j] = (int32_t)(
+                analog_data[j] = (int32_t)(
                     (pru_data->channel_analog[j] + rl_calibration.offsets[j]) *
                     rl_calibration.scales[j]);
             }
