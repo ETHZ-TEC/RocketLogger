@@ -293,8 +293,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
-    pru_buffer_t const *buffer = NULL;
-    uint32_t buffer_size; // number of samples per buffer
+    // CHANNEL DATA MEMORY ALLOCATION
+    int32_t *const analog_buffer = (int32_t *)malloc(
+        pru.buffer_length * RL_CHANNEL_COUNT * sizeof(int32_t));
+    uint32_t *const digital_buffer =
+        (uint32_t *)malloc(pru.buffer_length * sizeof(uint32_t));
+
+    pru_buffer_t const *pru_buffer = NULL;
+    size_t buffer_size; // number of data samples per buffer
     rl_timestamp_t timestamp_monotonic;
     rl_timestamp_t timestamp_realtime;
     uint32_t buffers_lost = 0;
@@ -412,18 +418,18 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // select current buffer
         if (i % 2 == 0) {
-            buffer = buffer0;
+            pru_buffer = buffer0;
         } else {
-            buffer = buffer1;
+            pru_buffer = buffer1;
         }
 
-        // select buffer size
+        // select buffer size, repecting non-full last buffer
         if (i < buffer_read_count - 1 ||
             pru.sample_limit % pru.buffer_length == 0) {
-            buffer_size = pru.buffer_length; // full buffer size
+            buffer_size = (size_t)pru.buffer_length;
         } else {
-            buffer_size =
-                pru.sample_limit % pru.buffer_length; // non-full buffer size
+            // last buffer is not fully used
+            buffer_size = (size_t)(pru.sample_limit % pru.buffer_length);
         }
 
         // wait for PRU event indicating new data (repeat wait on interrupts)
@@ -465,13 +471,34 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         __sync_synchronize();
 
         // check for overrun (compare buffer numbers)
-        if (buffer->index != i) {
-            buffers_lost += (buffer->index - i);
+        if (pru_buffer->index != i) {
+            buffers_lost += (pru_buffer->index - i);
             rl_log(RL_LOG_WARNING,
                    "overrun: %d samples (%d buffer) lost (%d in total)",
-                   (buffer->index - i) * pru.buffer_length, buffer->index - i,
-                   buffers_lost);
-            i = buffer->index;
+                   (pru_buffer->index - i) * pru.buffer_length,
+                   pru_buffer->index - i, buffers_lost);
+            i = pru_buffer->index;
+        }
+
+        // process new data: copy data and apply calibration
+        for (size_t i = 0; i < buffer_size; i++) {
+            // get PRU data buffer pointer
+            pru_data_t const *const pru_data = &(pru_buffer->data[i]);
+
+            // get local data buffer pointers
+            int32_t *const analog_buffer[RL_CHANNEL_COUNT] =
+                analog_buffer + i * RL_CHANNEL_COUNT;
+            uint32_t *const binary_data = binary_buffer + i;
+
+            // copy digital channel data
+            *binary_data = pru_data->channel_digital;
+
+            // copy and calibrate analog channel data
+            for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                channel_data[j] = (int32_t)(
+                    (pru_data->channel_analog[j] + rl_calibration.offsets[j]) *
+                    rl_calibration.scales[j]);
+            }
         }
 
         // update and write state
@@ -484,8 +511,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // process data for web when enabled
         if (config->web_enable && !web_failure_disable) {
-            res = web_handle_data(web_data, sem_id, buffer, buffer_size,
-                                  &timestamp_realtime, config);
+            res =
+                web_handle_data(web_data, sem_id, analog_buffer, digital_buffer,
+                                buffer_size, &timestamp_realtime, config);
             if (res < 0) {
                 // disable web interface on failure, but continue sampling
                 web_failure_disable = true;
@@ -507,8 +535,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->file_enable) {
             // write the data buffer to file
             int block_count = rl_file_add_data_block(
-                data_file, buffer, buffer_size, &timestamp_realtime,
-                &timestamp_monotonic, config);
+                data_file, analog_buffer, digital_buffer, buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
 
             // stop sampling on file error
             if (block_count < 0) {
@@ -533,8 +561,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         if (config->ambient_enable) {
             // fetch and write data
             int block_count = rl_file_add_ambient_block(
-                ambient_file, buffer, buffer_size, &timestamp_realtime,
-                &timestamp_monotonic, config);
+                ambient_file, analog_buffer, digital_buffer, buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
 
             // stop sampling on file error
             if (block_count < 0) {
@@ -553,8 +581,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // print meter output if enabled
         if (config->interactive_enable) {
-            meter_print_buffer(buffer, buffer_size, &timestamp_realtime,
-                               &timestamp_monotonic, config);
+            meter_print_buffer(analog_buffer, digital_buffer, buffer_size,
+                               &timestamp_realtime, &timestamp_monotonic,
+                               config);
         }
     }
 
@@ -567,6 +596,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     if (res < 0) {
         rl_log(RL_LOG_WARNING, "Failed writing status");
     }
+
+    // CLEANUP CHANNEL DATA MEMORY ALLOCATION
+    free(analog_buffer);
+    free(digital_buffer);
 
     // deinitialize interactive measurement display when enabled
     if (config->interactive_enable) {

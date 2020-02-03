@@ -41,7 +41,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "calibration.h"
 #include "log.h"
 #include "sensor/sensor.h"
 
