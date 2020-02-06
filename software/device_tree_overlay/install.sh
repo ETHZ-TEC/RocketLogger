@@ -15,8 +15,7 @@ sudo cp -f bb.org-overlays/src/arm/ROCKETLOGGER.dtbo /lib/firmware
 sudo sed "s~^uboot_overlay_pru=/lib/firmware/AM335X-PRU-RPROC~#uboot_overlay_pru=/lib/firmware/AM335X-PRU-RPROC~g" -i /boot/uEnv.txt
 sudo sed "s~^#uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO~uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO~g" -i /boot/uEnv.txt
 
-# disable EMMC, HDMI video, HDMI audio, wireless and ADC device tree overlay
-sudo sed "s~^#disable_uboot_overlay_emmc=1~disable_uboot_overlay_emmc=1~g" -i /boot/uEnv.txt
+# disable HDMI video, HDMI audio, wireless and ADC device tree overlay
 sudo sed "s~^#disable_uboot_overlay_video=1~disable_uboot_overlay_video=1~g" -i /boot/uEnv.txt
 sudo sed "s~^#disable_uboot_overlay_audio=1~disable_uboot_overlay_audio=1~g" -i /boot/uEnv.txt
 sudo sed "s~^#disable_uboot_overlay_wireless=1~disable_uboot_overlay_wireless=1~g" -i /boot/uEnv.txt

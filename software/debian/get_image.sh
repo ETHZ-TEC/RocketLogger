@@ -32,15 +32,15 @@
 
 # Debian buster IoT image
 URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-01-20/buster-console/"
-IMAGE_FILE="bone-debian-10.2-console-armhf-2020-01-20-1gb.img.xz"
-IMAGE_SHA256="160351ee8074368250d42ac09055f1454a06406229586ffbb2a9c934b23a3434"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.2-console-armhf-2020-01-20-1gb.img.xz"
+IMAGE_FLASHER_SHA256="9e19728ed14f4e4e2c9343de1e01de9cd28bc3ea7b9a5b16f763a936af655b02"
 
 # download image
-wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"
+wget --progress=bar "$URL_DIRECTORY$IMAGE_FLASHER_FILE"
 
 # check downloaded file hash
-SHA=`sha256sum "$IMAGE_FILE" | awk '{print $1}'`
-if [[ "$SHA" == "$IMAGE_SHA256" ]]; then
+SHA=`sha256sum "$IMAGE_FLASHER_FILE" | awk '{print $1}'`
+if [[ "$SHA" == "$IMAGE_FLASHER_SHA256" ]]; then
   echo "SHA256 hash checked successfully."
   exit 0
 else
