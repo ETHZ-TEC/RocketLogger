@@ -66,9 +66,9 @@
 #define RL_SENSOR_SAMPLE_RATE 1
 
 /// User folder calibration file path
-#define RL_CALIBRATION_USER_FILE   "/home/flocklab/.config/rocketloger_cal.dat"
+#define RL_CALIBRATION_USER_FILE   "/home/flocklab/.config/rocketlogger/calibration.dat"
 /// Default system wide calibration file path
-#define RL_CALIBRATION_SYSTEM_FILE "/etc/flocklab/rocketloger_cal.dat"
+#define RL_CALIBRATION_SYSTEM_FILE "/etc/flocklab/rl_calibration.dat"
 
 /// User configuration file path
 #define RL_CONFIG_USER_FILE   "/home/flocklab/.config/rocketlogger.dat"
