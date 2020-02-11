@@ -53,70 +53,6 @@ if [ $# -ge 1 ]; then
 fi
 
 
-## default login
-echo "> Create new user 'rocketlogger'"
-
-# add new rocketlogger user with home directory and bash shell
-useradd --create-home --shell /bin/bash rocketlogger
-# set default password
-cat user/password | chpasswd
-
-# add rocketlogger user to admin and sudo group for super user commands
-usermod --append --groups admin rocketlogger
-usermod --append --groups sudo rocketlogger
-
-# display updated user configuration
-id rocketlogger
-
-
-## default login
-echo "> Disable default user 'debian'"
-
-# set expiration date in the past to disable logins
-chage -E 1970-01-01 debian
-
-
-## user permission
-echo "> Setting user permissions"
-
-# configure sudoers
-cp -f sudo/privacy /etc/sudoers.d/
-#cp -f sudo/rocketlogger_web /etc/sudoers.d/
-chmod 440 /etc/sudoers.d/*
-
-
-## security
-echo "> Updating some security and permission settings"
-
-# copy more secure ssh configuration
-cp -f ssh/sshd_config /etc/ssh/
-
-# copy public keys for log in
-mkdir -p /home/rocketlogger/.ssh/
-chmod 700 /home/rocketlogger/.ssh/
-cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
-cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
-
-# change ssh welcome message
-cp -f system/issue.net /etc/issue.net
-
-# make user owner of its own files
-chown rocketlogger:rocketlogger -R /home/rocketlogger/
-
-
-## network configuration
-echo "> Updating hostname and network configuration"
-
-# change hostname
-sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts
-
-# copy network interface configuration
-cp -f network/interfaces /etc/network/
-
-# create RocketLogger system config folder
-mkdir -p /etc/rocketlogger
-
-
 ## updates and software dependencies
 echo "> Deactivating and uninstalling potentially conflicting services"
 
@@ -159,6 +95,81 @@ echo "> Manually download, compile and install am335x-pru-package"
 git clone https://github.com/beagleboard/am335x_pru_package.git
 (cd am335x_pru_package && make && make install)
 ldconfig
+
+
+## default login
+echo "> Create new user 'rocketlogger'"
+
+# add new rocketlogger user with home directory and bash shell
+useradd --create-home --shell /bin/bash rocketlogger
+# set default password
+cat user/password | chpasswd
+
+# add rocketlogger user to admin and sudo group for super user commands
+usermod --append --groups admin rocketlogger
+usermod --append --groups sudo rocketlogger
+
+# display updated user configuration
+id rocketlogger
+
+
+## deactivate default login
+echo "> Disable default user 'debian'"
+
+# set expiration date in the past to disable logins
+chage -E 1970-01-01 debian
+
+
+## user permission
+echo "> Setting user permissions"
+
+# configure sudoers
+cp -f sudo/privacy /etc/sudoers.d/
+#cp -f sudo/rocketlogger_web /etc/sudoers.d/
+chmod 440 /etc/sudoers.d/*
+
+
+## security
+echo "> Updating some security and permission settings"
+
+# copy more secure ssh configuration
+cp -f ssh/sshd_config /etc/ssh/
+
+# copy public keys for log in
+mkdir -p /home/rocketlogger/.ssh/
+chmod 700 /home/rocketlogger/.ssh/
+cp -f user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
+cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+
+# change ssh welcome message
+cp -f system/issue.net /etc/issue.net
+
+
+## filesystem, system and user config directories setup
+
+# external SD card
+mkdir -p /media/sdcard/
+echo -e "# mount external sdcard on boot if available" >> /etc/fstab
+echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro,gid=rocketlogger,uid=rocketlogger\t0\t2" >> /etc/fstab
+
+# create RocketLogger system config folder
+mkdir -p /etc/rocketlogger
+
+# user configuration folder for rocketlogger
+mkdir -p /home/rocketlogger/.config/rocketlogger/
+
+# make user owner of its own files
+chown rocketlogger:rocketlogger -R /home/rocketlogger/
+
+
+## network configuration
+echo "> Updating hostname and network configuration"
+
+# change hostname
+sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts
+
+# copy network interface configuration
+cp -f network/interfaces /etc/network/
 
 
 ## cleanup
