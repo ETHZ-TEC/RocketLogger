@@ -31,9 +31,9 @@
 #
 
 # Debian buster IoT image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-01-20/buster-console/"
-IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.2-console-armhf-2020-01-20-1gb.img.xz"
-IMAGE_FLASHER_SHA256="9e19728ed14f4e4e2c9343de1e01de9cd28bc3ea7b9a5b16f763a936af655b02"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-02-10/buster-console/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.3-console-armhf-2020-02-10-1gb.img.xz"
+IMAGE_FLASHER_SHA256="d9a181c3a7852b7f3f69579eab078be7225fbb973df5798cc0ac8524455f23f4"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FLASHER_FILE"
