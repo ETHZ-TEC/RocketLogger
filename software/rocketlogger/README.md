@@ -41,6 +41,13 @@ The following libraries are required to build the software (and the correspondin
 - Linux headers - `linux-headers-$(uname -r)`
 
 
+## Debian 9 Backport
+
+The code targets compilation on a Debian 10 (buster) image. If you want to compile on the official Debian 9 image, a few minor library header and compiler compatibility updates are required. To apply these changes we provide a patch file that is applied using `git apply -- debian9_backport.patch`.
+
+To undo the patch for pulling new updates, revert the patch using `git apply -R debian9_backport.patch`.
+
+
 ## License
 
 ```
