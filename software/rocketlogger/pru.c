@@ -246,9 +246,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             usleep(100000);
             clock_gettime(CLOCK_REALTIME, &currtime);
         }
-        // wait for T minus 100ms
-        while (currtime.tv_nsec < 900000000 && rl_status.sampling) {
-            usleep(10000);
+        // wait for T minus 10ms
+        while (currtime.tv_nsec < 990000000 && rl_status.sampling) {
+            usleep(1000);
             clock_gettime(CLOCK_REALTIME, &currtime);
         }
         if (!rl_status.sampling) {
