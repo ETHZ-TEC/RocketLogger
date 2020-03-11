@@ -58,6 +58,8 @@ _INEXISTENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_inexistent.rld')
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_v3_only.rld')
 _TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_truncated.rld')
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, 'test_split.rld')
+_SPLIT_TRUNCATED_TEST_FILE = os.path.join(
+    _TEST_FILE_DIR, 'test_split_truncated.rld')
 
 
 class TestDecimation(TestCase):
@@ -551,6 +553,64 @@ class TestRecoveryFile(TestCase):
         self.assertEqual(data._header['sample_count'], 400)
         self.assertEqual(data._header['sample_rate'], 100)
         self.assertEqual(data.get_data('V3').shape, (400, 1))
+
+
+class TestRecoverySplitFile(TestCase):
+
+    def test_no_recovery(self):
+        with self.assertRaises(RocketLoggerDataError):
+            RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE)
+
+    def test_header_dict(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True)
+        header = {'data_block_count': 3,
+                  'data_block_size': 64000,
+                  'file_version': 2,
+                  'mac_address': '12:34:56:78:90:ab',
+                  'sample_count': 3*64000,
+                  'sample_rate': 64000,
+                  'start_time': np.datetime64('2017-05-10T09:13:49.760529959')}
+        self.assertDictEqual(data.get_header(), header)
+
+    def test_header_dict_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True,
+                                    decimation_factor=10)
+        header = {'data_block_count': 3,
+                  'data_block_size': 6400,
+                  'file_version': 2,
+                  'mac_address': '12:34:56:78:90:ab',
+                  'sample_count': 3*6400,
+                  'sample_rate': 6400,
+                  'start_time': np.datetime64('2017-05-10T09:13:49.760529959')}
+        self.assertDictEqual(data.get_header(), header)
+
+    def test_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True,
+                                    decimation_factor=10)
+        self.assertEqual(data._header['data_block_size'], 6400)
+
+    def test_with_invalid_decimation(self):
+        with self.assertRaises(ValueError):
+            RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True,
+                             decimation_factor=3)
+
+    def test_direct_import(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True,
+                                    memory_mapped=False)
+        self.assertEqual(data.get_data().shape, (3 * 64000, 16))
+
+    def test_direct_import_with_decimation(self):
+        with self.assertWarns(RocketLoggerDataWarning):
+            data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True,
+                                    memory_mapped=False, decimation_factor=10)
+        self.assertEqual(data._header['data_block_size'], 6400)
+        self.assertEqual(data._header['sample_count'], 3 * 6400)
+        self.assertEqual(data._header['sample_rate'], 6400)
+        self.assertEqual(data.get_data().shape, (3 * 6400, 16))
 
 
 class TestChannelHandling(TestCase):

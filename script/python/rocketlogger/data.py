@@ -758,16 +758,6 @@ class RocketLoggerData:
                     raise ValueError('Decimation factor needs to be divider '
                                      'of the buffer size.')
 
-                # multi-file header
-                if files_loaded == 0:
-                    self._header = header
-                else:
-                    self._header['sample_count'] =\
-                        self._header['sample_count'] + header['sample_count']
-                    self._header['data_block_count'] =\
-                        (self._header['data_block_count'] +
-                         header['data_block_count'])
-
                 if header_only is True:
                     # set data arrays to None on header only import
                     self._timestamps_realtime = None
@@ -831,6 +821,16 @@ class RocketLoggerData:
                         self._timestamps_realtime = timestamps_realtime
                         self._timestamps_monotonic = timestamps_monotonic
                         self._data = data
+
+                # multi-file header
+                if files_loaded == 0:
+                    self._header = header
+                else:
+                    self._header['sample_count'] =\
+                        self._header['sample_count'] + header['sample_count']
+                    self._header['data_block_count'] =\
+                        (self._header['data_block_count'] +
+                         header['data_block_count'])
 
             file_number = file_number + 1
             files_loaded = files_loaded + 1
