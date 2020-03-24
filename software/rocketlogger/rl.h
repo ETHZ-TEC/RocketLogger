@@ -188,6 +188,8 @@ struct rl_config {
     char const *file_comment;
     /// Start timestamp
     long int t_start;
+    /// Time correction offset
+    float t_offset;
 };
 
 /**

@@ -457,6 +457,14 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             break;
         }
 
+        // adjust the timestamp in case a correction offset is given
+        if (config->t_offset) {
+            int secs = (int)config->t_offset;
+            timestamp_realtime.sec += secs;
+            int nsecs = (int)((config->t_offset - secs) * 1000000000);
+            timestamp_realtime.nsec += nsecs;
+        }
+
         // adjust data timestamps with buffer latency (adjusted relative
         // nanoseconds)
         timestamp_realtime.nsec -= (int64_t)2048e3 * 490 / config->update_rate;

@@ -504,7 +504,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'x':
         /* define sampling start: optional UNIX timestamp */
         if (arg != NULL) {
-            float timeofs = strtof(arg, NULL, 10);
+            float timeofs = strtof(arg, NULL);
             config->t_offset = timeofs;
         } else {
             config->t_offset = 0;
