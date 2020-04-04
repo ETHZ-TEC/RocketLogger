@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,13 +63,15 @@
     /* FlockLab pins */
     "P8.07", /* timer4/PPS */
     "P8.27", /* pps for PRU1 */
+    "P8.28", /* actuation SIG2 */
+    "P8.30", /* actuation SIG1 */
     "P8.31", /* serial_id_rx */
     "P8.37", /* uart5_txd */
     "P8.38", /* uart5_rxd */
-    //"P8.39", /* Target_SIG2 */
-    //"P8.40", /* Target_nRST */
+    "P8.39", /* Target_SIG2 */
+    "P8.40", /* Target_nRST */
     "P8.41", /* Target_INT2 */
-    //"P8.42", /* Target_SIG1 */
+    "P8.42", /* Target_SIG1 */
     "P8.43", /* Target_LED3 */
     "P8.44", /* Target_INT1 */
     "P8.45", /* Target_LED1 */
@@ -109,13 +111,15 @@
       /* FlockLab pins */
       P8_07_pinmux { status = "disabled"; }; /* pps */
       P8_27_pinmux { status = "disabled"; }; /* pps for PRU1 */
+      P8_28_pinmux { status = "disabled"; }; /* actuation SIG2 */
+      P8_30_pinmux { status = "disabled"; }; /* actuation SIG1 */
       P8_31_pinmux { status = "disabled"; }; /* serial_id_rx */
       P8_37_pinmux { status = "disabled"; }; /* uart5_txd */
       P8_38_pinmux { status = "disabled"; }; /* uart5_rxd */
-      //P8_39_pinmux { status = "disabled"; };
+      P8_39_pinmux { status = "disabled"; };
       //P8_40_pinmux { status = "disabled"; };
       P8_41_pinmux { status = "disabled"; };
-      //P8_42_pinmux { status = "disabled"; };
+      P8_42_pinmux { status = "disabled"; };
       P8_43_pinmux { status = "disabled"; };
       P8_44_pinmux { status = "disabled"; };
       P8_45_pinmux { status = "disabled"; };
@@ -168,16 +172,22 @@
           BONE_P8_38 (PIN_INPUT  | MUX_MODE4)  /* lcd_data9.uart5_rxd */
         >;
       };
+      fl_act_pins: pinmux_fl_act_pins {
+        pinctrl-single,pins = <
+          BONE_P8_28 (PIN_OUTPUT | MUX_MODE7)  /* MODE7 = GPIO */
+          BONE_P8_30 (PIN_OUTPUT | MUX_MODE7)
+        >;
+      };
       fl_pru1_pins: pinmux_fl_pru1_pins {
         pinctrl-single,pins = <
-          BONE_P8_27 (PIN_INPUT | MUX_MODE6)
+          BONE_P8_27 (PIN_INPUT | MUX_MODE6)   /* MODE6 = pru input, MODE5 = pru output */
           BONE_P8_45 (PIN_INPUT | MUX_MODE6)
           BONE_P8_46 (PIN_INPUT | MUX_MODE6)
           BONE_P8_43 (PIN_INPUT | MUX_MODE6)
           BONE_P8_44 (PIN_INPUT | MUX_MODE6)
           BONE_P8_41 (PIN_INPUT | MUX_MODE6)
-          //BONE_P8_42 (PIN_OUTPUT | MUX_MODE5)
-          //BONE_P8_39 (PIN_OUTPUT | MUX_MODE5)
+          BONE_P8_42 (PIN_INPUT | MUX_MODE6)
+          BONE_P8_39 (PIN_INPUT | MUX_MODE6)
           //BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
         >;
       };
@@ -341,6 +351,19 @@
       status = "okay";
       pinctrl-names = "default";
       pinctrl-0 = <&rl_pwm1_pins>;
+    };
+  };
+
+  /* fl actuation pins */
+  fragment@13 {
+    target = <&ocp>;
+    __overlay__ {
+      fl_act_pinmux: fl_act_pinmux_helper {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&fl_act_pins>;
+      };
     };
   };
 };
