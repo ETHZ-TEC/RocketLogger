@@ -38,13 +38,14 @@ SDCARD_DEV=$2
 # need to run as root
 echo "> Checking root permission"
 if [[ $(id -u) -ne 0 ]]; then
-  echo "Please run as root"
+  echo "Need to run as root (e.g. using sudo)"
   exit 1
 fi
 
 # decompress and write SD card image, sync file system at the end
-xz --decompress --stdout ${IMAGE_FILE} | dd bs=1M status=progress of=${SDCARD_DEV}
-echo -n "Syncing file system..."
-sync
-echo " done."
+echo "> Flashing SD card..."
+xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=4M conv=fsync status=progress
+echo "> Flashing SD card complete."
 
+# hint on the next setup step
+echo "Remove SD card and insert into the RocketLogger to continue."
