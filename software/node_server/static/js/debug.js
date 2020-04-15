@@ -1,6 +1,6 @@
 "use strict";
 
-const socket = io('http://localhost:5000/');
+const socket = io('http://' + location.hostname + ':5000/');
 
 /**
  * Initialization when document is fully loaded
@@ -18,8 +18,9 @@ $(() => {
 			console.log(`control: ${JSON.stringify(msg)}`);
 		});
 		socket.on('data', (msg) => {
+			let timestamp = new BigInt64Array(msg.ts);
 			let data = new Float32Array(msg.data);
-			console.log(`data: ${msg.time}, ${msg.ts}, ${data.toString()}`);
+			console.log(`data: ${msg.time}, ${timestamp[0]}, [ ${data} ]`);
 		});
 		socket.on('status', (msg) => {
 			console.log(`status: ${JSON.stringify(msg)}`);

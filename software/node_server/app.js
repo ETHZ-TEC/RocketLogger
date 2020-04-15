@@ -15,8 +15,8 @@ const { spawnSync } = require('child_process');
 
 // configuration
 const port = 5000;
-const zmq_port = 5555;
 const version = '1.99';
+const zmq_data_socket = 'tcp://127.0.0.1:5555'
 const path_system_logfile = '/var/log/rocketlogger.log';
 const path_static = path.join(__dirname, 'static');
 const path_templates = path.join(__dirname, 'templates');
@@ -27,7 +27,6 @@ const path_files = path.join(__dirname, 'files');
 const app = express();
 const server = http.Server(app);
 const io = socketio(server);
-const sockets = [];
 
 // app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
@@ -248,55 +247,37 @@ app.post('/control/:action', (req, res) => {
 
 // socket.io connection handlers
 io.on('connection', (socket) => {
-    console.log(`socket.io ${socket.id}: connect`);
+    console.log(`socket.io connect: ${socket.id}`);
     socket.on('disconnect', (socket) => {
-        console.log(`socket.io ${socket.id}: disconnect`);
+        console.log(`socket.io disconnect: ${socket.id}`);
     });
     socket.on('control', (data) => {
-        console.log(`control: ${data}`);
+        console.log(`socket.io control: ${data}`);
     });
     socket.on('message', (data) => {
-        console.log(`echo: ${data}`);
+        console.log(`socket.io echo: ${data}`);
         socket.send({ echo: data });
     });
-    socket.send({ hello: 'world' });
 });
 
 
-// zeromq buffer handlers
-async function zmq_sub() {
+// zeromq data buffer proxy handlers
+async function data_proxy() {
     const sock = new zmq.Subscriber
 
-    sock.connect(`tcp://127.0.0.1:${zmq_port}`);
+    sock.connect(zmq_data_socket);
+    console.log(`zmq sub: connected to ${zmq_data_socket}`);
+
     sock.subscribe();
-    console.log(`zmq sub: connected to port ${zmq_port}`);
-
     for await (const [timestamp, data] of sock) {
-        io.emit('data', { time: Date.now(), ts: timestamp.toString(), data: data });
-    }
-}
-
-async function zmq_pub() {
-    const sock = new zmq.Publisher
-
-    await sock.bind(`tcp://127.0.0.1:${zmq_port}`);
-    console.log(`zmq pub: bound to port ${zmq_port}`);
-
-    while (true) {
-        let data = new Float32Array(3).map(() => { return Math.random() });
-        let ts = Date.now()
-        console.log(`zmq pub: { ts: ${ts}, data: ${data.toString()} }`);
-        await sock.send([ts, data]);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        io.emit('data', { time: Date.now(), ts: timestamp, data: data });
     }
 }
 
 
-// run webserver 
-server.listen(port, function () {
+// run webserver and data buffer proxies
+server.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 });
 
-
-zmq_pub();
-zmq_sub();
+data_proxy();
