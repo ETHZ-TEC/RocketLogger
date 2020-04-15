@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block js_footer %}
+  {{ super() }}
+  <!-- socket.io client -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+  <script>if (typeof(io) === 'undefined') { document.write('<script src="/static/js/vendor/socket.io-2.3.0.min.js"><\/script>') }</script>
+  <!-- local javascript -->
+  <script src="/static/js/debug.js"></script>
+{% endblock %}
+
+{% block title %}Debug/Info Page{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
+{% block content %}
+<!-- Page Title -->
+<div class="row justify-content-between align-items-center mb-4">
+  <div class="col">
+    <h1>Debug and Information Page{% if hostname %} ({{ hostname }}){% endif %}</h1>
+  </div>
+</div>
+
+<!-- Info -->
+<div class="card mb-3">
+  <h2 class="card-header">Debug Information</h2>
+  <div class="card-body">
+    <p><a href="/" class="btn btn-primary" role="button">&lt; Return to home</a></p>
+  </div>
+</div>
+
+<!-- Info -->
+<div class="card mb-3">
+  <h2 class="card-header">Socket.IO Demo Section</h2>
+  <div class="card-body">
+    <div class="container" id="plotly">
+      <h3>Plotting with plotly</h3>
+      <p>
+        <button id="plot-pause" class="btn btn-default" data-toggle="tooltip" title="Pause plot updates">Pause</button>
+        <button id="plot-resume" class="btn btn-default" data-toggle="tooltip" title="Resume plot updates">Resume</button>
+      </p>
+      <div id="plotly-chart" class="chart"></div>
+    </div>
+    <div class="container" id="log">
+      <h3>Server echo log:</h3>
+      <p>
+        <button id="server-ping" class="btn btn-default" data-toggle="tooltip" title="Ping Server">Ping</button>
+      </p>
+      <textarea id="server-log" class="log" readonly></textarea>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

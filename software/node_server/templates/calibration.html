@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block css_head %}
+  {{ super() }}
+  <!-- local CSS -->
+  <link rel="stylesheet" type="text/css" href="/static/css/rocketlogger.css">
+{% endblock %}
+{% block js_footer %}
+  {{ super() }}
+  <!-- local javascript -->
+  <script src="/static/js/vendor/jquery.flot.js"></script>
+  <script src="/static/js/vendor/jquery.flot.time.js"></script>
+  <!-- local javascript -->
+  <script src="/static/js/rocketlogger.js"></script>
+  <script src="/static/js/calibration.js"></script>
+{% endblock %}
+
+{% block title %}RocketLogger Calibration{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
+{% block content %}
+<!-- Page Title -->
+<div class="row justify-content-between align-items-center mb-4">
+  <div class="col">
+    <h1>RocketLogger Calibration{% if hostname %} ({{ hostname }}){% endif %}</h1>
+  </div>
+</div>
+
+<!-- Status Panel Container -->
+<div class="card mb-3">
+  <h2 class="card-header">RocketLogger Status</h2>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Status</h5>
+        <p id="status">connecting...</p>
+        <h5>Recorded samples</h5>
+        <p id="status_samples">0 samples</p>
+        <h5>Recorded time</h5>
+        <p id="status_time">0 h 0 min 0 sec</p>
+      </div>
+      <div class="col-md-6">
+        <h5>Calibration date</h5>
+        <p id="status_calibration"><span class="badge badge-danger" id="warn_calibration">uncalibrated</span></p>
+        <h5>Disk usage</h5>
+        <p id="status_disk">100 MB <span class="badge badge-warning" id="warn_storage_low">low</span><span class="badge badge-danger" id="warn_storage_critical">critical</span></p>
+        <h5>Remaining recording time</h5>
+        <p id="status_remaining">5 min</p>
+      </div>
+    </div>
+    <hr />
+
+    <a href="/control/" class="btn btn-primary" role="button">&lt; Return to measurements</a>
+  </div>
+</div>
+
+<!-- Calibration Panel Container -->
+<div class="card mb-3">
+  <h2 class="card-header">Calibration Toolbox</h2>
+  <div class="card-body">
+
+    <h3>Calibration Action Control</h3>
+    <div class="accordion mb-3" id="calibration_measurements">
+      <div class="card">
+        <div class="card-header accordion-toggle" id="calibration_voltage_header" data-toggle="collapse" data-target="#calibration_voltage" aria-expanded="true" aria-controls="calibrate_voltage">
+          <div class="row justify-content-start align-items-top">
+            <div class="col-auto">
+              <h4>Voltage Channel Calibration</h4>
+            </div>
+            <div class="col-auto">
+              <span class="badge badge-secondary">V1</span>
+              <span class="badge badge-secondary">V2</span>
+              <span class="badge badge-secondary">V3</span>
+              <span class="badge badge-secondary">V4</span>
+            </div>
+          </div>
+        </div>
+        <div id="calibration_voltage" class="collapse show" aria-labelledby="calibration_voltage_header" data-parent="#calibration_measurements">
+          <div class="card-body">
+            <p>Setup your measurement as follows to perform the voltage calibration measurement:</p>
+            <img class="img-fluid float-center" src="img/calibrate_voltage.png" alt="Voltage calibration measurement setup">
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="calibration_voltage_setup">
+              <label class="custom-control-label" for="calibration_voltage_setup">Double checked setup for voltage calibration measurement.</label>
+            </div>
+            <button type="button" class="btn btn-outline-success" id="button_calibration_v_start" disabled>Run Voltage Calibration Measurement</button>
+            <button type="button" class="btn btn-success">Run Voltage Calibration Measurement</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header accordion-toggle" id="calibration_current_high_header" data-toggle="collapse" data-target="#calibration_current_high" aria-expanded="true" aria-controls="calibrate_current_high">
+          <div class="row justify-content-start align-items-top">
+            <div class="col-auto">
+              <h4>High Current Channel Calibration</h4>
+            </div>
+            <div class="col-auto">
+              <span class="badge badge-secondary">I1H</span>
+              <span class="badge badge-secondary">I2H</span>
+            </div>
+          </div>
+        </div>
+        <div id="calibration_current_high" class="collapse" aria-labelledby="calibration_current_high_header" data-parent="#calibration_measurements">
+          <div class="card-body">
+            <p>Setup your measurement as follows to perform the high current calibration measurement (polarity on SMU side does not matter):</p>
+            <img class="img-fluid float-center" src="img/calibrate_current_high.png" alt="High current calibration measurement setup">
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="calibration_current_high_setup">
+              <label class="custom-control-label" for="calibration_current_high_setup">Double checked setup for high current calibration measurement.</label>
+            </div>
+            <button type="button" class="btn btn-outline-success" id="button_calibration_ih_start" disabled>Run High Current Calibration Measurement</button>
+            <button type="button" class="btn btn-success">Run High Current Calibration Measurement</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header accordion-toggle" id="calibration_current_low1_header" data-toggle="collapse" data-target="#calibration_current_low1" aria-expanded="true" aria-controls="calibrate_current_low1">
+          <div class="row justify-content-start align-items-top">
+            <div class="col-auto">
+              <h4>Low Current Channel 1 Calibration</h4>
+            </div>
+            <div class="col-auto">
+              <span class="badge badge-secondary">I1L</span>
+            </div>
+          </div>
+        </div>
+        <div id="calibration_current_low1" class="collapse" aria-labelledby="calibration_current_low1_header" data-parent="#calibration_measurements">
+          <div class="card-body">
+            <p>Setup your measurement as follows to perform the low current I1L calibration measurement:</p>
+            <img class="img-fluid float-center" src="img/calibrate_current_low1.png" alt="High current calibration measurement setup">
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="calibration_current_low1_setup">
+              <label class="custom-control-label" for="calibration_current_low1_setup">Double checked setup for low current I1L calibration measurement.</label>
+            </div>
+            <button type="button" class="btn btn-outline-success" id="button_calibration_i1l_start" disabled>Run I1L Calibration Measurement</button>
+            <button type="button" class="btn btn-success">Run I1L Calibration Measurement</button>
+          </div>
+        </div>
+      </div>
+          
+      <div class="card">
+        <div class="card-header accordion-toggle" id="calibration_current_low2_header" data-toggle="collapse" data-target="#calibration_current_low2" aria-expanded="true" aria-controls="calibrate_current_low2">
+            <div class="row justify-content-start align-items-top">
+              <div class="col-auto">
+                <h4>Low Current Channel 2 Calibration</h4>
+              </div>
+              <div class="col-auto">
+                <span class="badge badge-secondary">I2L</span>
+              </div>
+            </div>
+          </div>
+          <div id="calibration_current_low2" class="collapse" aria-labelledby="calibration_current_low2_header" data-parent="#calibration_measurements">
+          <div class="card-body">
+            <p>Setup your measurement as follows to perform the low current I2L calibration measurement:</p>
+            <img class="img-fluid float-center" src="img/calibrate_current_low2.png" alt="High current calibration measurement setup">
+
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="calibration_current_low2_setup">
+              <label class="custom-control-label" for="calibration_current_low2_setup">Double checked setup for low current I2L calibration measurement.</label>
+            </div>
+            <button type="button" class="btn btn-outline-success" id="button_calibration_i2l_start" disabled>Run I2L Calibration Measurement</button>
+            <button type="button" class="btn btn-success">Run I2L Calibration Measurement</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header accordion-toggle" id="calibration_file_header" data-toggle="collapse" data-target="#calibration_file" aria-expanded="true" aria-controls="calibrate_current_low2">
+            <div class="row justify-content-start align-items-top">
+              <div class="col-auto">
+                <h4>Calibration File Generation</h4>
+              </div>
+              <div class="col-auto">
+                <span class="badge badge-secondary">CALIBRATION</span>
+              </div>
+            </div>
+          </div>
+          <div id="calibration_file" class="collapse" aria-labelledby="calibration_file_header" data-parent="#calibration_measurements">
+          <div class="card-body">
+            <p>One all measurements are complete you can caluculate a new calibration file:</p>
+            <p><button type="button" class="btn btn-success" id="button_calibration_generate">Generate Calibration File</button></p>
+            <p>Confirm that the calibration parameters look reasonable to apply the generated calibration file. Otherwise repeat the respective measurement and regenerate the file.</p>
+            <div class="custom-control custom-checkbox mb-3">
+              <input type="checkbox" class="custom-control-input" id="calibration_review_check">
+              <label class="custom-control-label" for="calibration_review_check">Double checked that the calibration errors are within reasonable bounds.</label>
+            </div>
+            <button type="button" class="btn btn-outline-danger" id="button_calibration_apply" disabled>Apply Calibration</button>
+            <button type="button" class="btn btn-danger">Apply Calibration</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+    <div class="form-group">
+      <label for="calibration_log">Calibration action log</label>
+      <button type="button" class="btn btn-secondary btn-sm" id="button_calibration_log_clear">Clear</button>
+      <textarea class="form-control" id="calibration_log" rows="8" readonly></textarea>
+    </div>
+    
+    <p>Measurement preview (in raw ADC)</p>
+    <div id="plot_group_calibration" class="mb-3">
+      <div class="rl-plot mb-3" id="plot_calibration"></div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
