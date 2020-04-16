@@ -1,3 +1,33 @@
+/**
+ * Copyright (c) 2020, ETH Zurich, Computer Engineering Group
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * 
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 "use strict";
 
 // imports
@@ -10,17 +40,17 @@ const express = require('express');
 const nunjucks = require('nunjucks');
 const socketio = require('socket.io');
 const zmq = require('zeromq');
-const { spawnSync } = require('child_process');
+const util = require('./util.js');
+const rl = require('./rl.js');
 
 
 // configuration
 const port = 5000;
 const version = '1.99';
 const zmq_data_socket = 'tcp://127.0.0.1:5555'
-const path_system_logfile = '/var/log/rocketlogger.log';
+const zmq_status_socket = 'tcp://127.0.0.1:5556'
 const path_static = path.join(__dirname, 'static');
 const path_templates = path.join(__dirname, 'templates');
-const path_files = path.join(__dirname, 'files');
 
 
 // initialize
@@ -28,38 +58,10 @@ const app = express();
 const server = http.Server(app);
 const io = socketio(server);
 
-// app.use(express.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-
 nunjucks.configure(path_templates, {
     autoescape: true,
     express: app,
 });
-
-
-/// helper function to display byte values
-function bytes_to_string(bytes) {
-    if (bytes === 0) {
-        return "0 B";
-    }
-    let log1k = Math.floor(Math.log10(bytes) / 3);
-    let value = (bytes / Math.pow(1000, log1k));
-
-    switch (log1k) {
-        case 0:
-            return value.toFixed(0) + " B";
-        case 1:
-            return value.toFixed(2) + " kB";
-        case 2:
-            return value.toFixed(2) + " MB";
-        case 3:
-            return value.toFixed(2) + " GB";
-        case 4:
-            return value.toFixed(2) + " TB";
-        default:
-            return bytes.toPrecision(5);
-    }
-}
 
 /// render page templates
 function render_page(req, res, template_name, context = null) {
@@ -82,26 +84,18 @@ function render_page(req, res, template_name, context = null) {
     };
     context.hostname = os.hostname();
 
-    // validate compatibility of binart and web interface
-    try {
-        let cmd = spawnSync('rocketlogger', ['--version']);
-        if (cmd.error) {
-            context.err.push('RocketLogger binary was not found. ' +
-                'Please check your system configuration!');
-        } else {
-            context.version_string = cmd.stdout.toString();
-            context.version = context.version_string.split('\n')[0].split(' ').reverse()[0];
-            if (version != context.version) {
-                context.warn.push(`Potentially incompatible binary and web interface ` +
-                    `versions (interface: ${version}, binary: ${context.version})`);
-            }
+    // validate compatibility of binary and web interface
+    const rl_version = rl.version();
+    for (err of rl_version.err) {
+        context.err.push(err);
+    }
+    if (rl_version.version) {
+        if (rl_version.version != version) {
+            context.warn.push(`Potentially incompatible binary and web interface ` +
+                `versions (interface: ${version}, binary: ${context.version})`);
         }
-    } catch (err) {
-        console.log(err);
-        context.err.push('Failed getting RocketLogger binary version. ' +
-            'Please check your system configuration!');
-        context.version = null;
-        context.version_string = null;
+        context.version_string = rl_version.version_string;
+        context.version = rl_version.version;
     }
 
     res.render(template_name, context);
@@ -125,13 +119,13 @@ app.get('/calibration', (req, res) => { render_page(req, res, 'calibration.html'
 
 app.get('/data', (req, res) => {
     let files = [];
-    glob.sync(path.join(path_files, '*.@(rld|csv)')).forEach(file => {
+    glob.sync(path.join(rl.path_data, '*.@(rld|csv)')).forEach(file => {
         try {
             let stat = fs.statSync(file);
             let file_info = {
                 name: path.basename(file),
                 modified: stat.mtime.toISOString().split('.')[0].replace('T', ' '),
-                size: bytes_to_string(stat.size),
+                size: util.bytes_to_string(stat.size),
                 filename: path.dirname(file),
                 href_download: `/data/download/${path.basename(file)}`,
                 href_delete: `/data/delete/${path.basename(file)}`,
@@ -157,7 +151,7 @@ app.get('/log', (req, res) => {
 });
 
 app.get('/data/download/:filename', (req, res) => {
-    let filepath = path.join(path_files, req.params.filename);
+    let filepath = path.join(rl.path_data, req.params.filename);
 
     if (req.params.filename.indexOf(path.sep) >= 0) {
         res.status(400).send(`Invalid filename ${req.params.filename}.`);
@@ -172,8 +166,8 @@ app.get('/data/download/:filename', (req, res) => {
     }
 });
 
-app.delete('/data/delete/:filename', (req, res) => {
-    let filepath = path.join(path_files, req.params.filename);
+app.get('/data/delete/:filename', (req, res) => {
+    let filepath = path.join(rl.path_data, req.params.filename);
 
     if (req.params.filename.indexOf(path.sep) >= 0) {
         res.status(400).send(`Invalid filename ${req.params.filename}.`);
@@ -195,68 +189,65 @@ app.delete('/data/delete/:filename', (req, res) => {
     res.send(`deleted file: ${req.params.filename}`);
 });
 
-// routing of control actions
-app.post('/control/:action', (req, res) => {
-    console.log(req.body);
-
-    let action = req.params.action;
-    let data = null;
-    if (!action) {
-        res.status(400).send('Invalid request: no action.');
-    }
-    try {
-        data = JSON.parse(req.body.data);
-    } catch (err) {
-        res.status(400).send('Invalid request: no data.');
-    }
-
-    if (action != data.action) {
-        res.status(400).send('Invalid request: ambiguous action in the request data.');
-    }
-
-    let response = {
-        req: {
-            action: action,
-            data: data,
-        },
-        rep: {
-            err: null,
-            warn: null,
-            msg: null,
-        },
-    };
-
-    switch (action) {
-        case 'start':
-            break;
-        case 'stop':
-            break;
-        case 'status':
-            break;
-        case 'config':
-            break;
-        case 'calibrate':
-            break;
-        default:
-            res.status(400).send(`Invalid request: unknown action ${action}.`);
-            break;
-    }
-    res.json(response);
-});
-
-
-// socket.io connection handlers
+// socket.io configure new connection
 io.on('connection', (socket) => {
     console.log(`socket.io connect: ${socket.id}`);
-    socket.on('disconnect', (socket) => {
+
+    // logging disconnect
+    socket.on('disconnect', () => {
         console.log(`socket.io disconnect: ${socket.id}`);
     });
-    socket.on('control', (data) => {
-        console.log(`socket.io control: ${data}`);
-    });
+
+    // default message: echo back
     socket.on('message', (data) => {
         console.log(`socket.io echo: ${data}`);
         socket.send({ echo: data });
+    });
+
+    // handle control command
+    socket.on('control', (req) => {
+        console.log(`rl control: ${JSON.stringify(req)}`);
+        // handle control command and emit on status channel
+        let res = null;
+        if (req.cmd == 'start') {
+            res = rl.start(req.config);
+        } else if (req.cmd == 'stop') {
+            res = rl.stop();
+        } else if (req.cmd == 'config') {
+            if (req.config && req.default) {
+                res = rl.config(req.config);
+            } else {
+                res = rl.config();
+            }
+        }
+
+        // process and send result
+        if (res) {
+            res.req = req;
+            socket.emit('control', res);
+        } else {
+            socket.emit('control', { err: [`invalid control command: ${req.cmd}`] });
+        }
+    });
+
+    // handle status request
+    socket.on('status', (req) => {
+        console.log(`rl status: ${JSON.stringify(req)}`);
+
+        // poll status and emit on status channel
+        if (req.cmd == 'status') {
+            const res = rl.status();
+            res.req = req;
+            socket.emit('status', res);
+        } else {
+            socket.emit('status', { err: [`invalid status command: ${req.cmd}`] });
+        }
+    });
+
+    // handle cached data request
+    socket.on('data', (req) => {
+        // @todo: implement local data caching
+        console.log(`rl data: ${JSON.stringify(req)}`);
     });
 });
 
@@ -269,8 +260,21 @@ async function data_proxy() {
     console.log(`zmq sub: connected to ${zmq_data_socket}`);
 
     sock.subscribe();
-    for await (const [timestamp, data] of sock) {
-        io.emit('data', { time: Date.now(), ts: timestamp, data: data });
+    for await (const [time, data] of sock) {
+        io.emit('data', { t: Date.now(), time: time, data: data });
+        // perform local data caching
+    }
+}
+
+async function status_proxy() {
+    const sock = new zmq.Subscriber
+
+    sock.connect(zmq_status_socket);
+    console.log(`zmq sub: connected to ${zmq_status_socket}`);
+
+    sock.subscribe();
+    for await (const [time, status] of sock) {
+        io.emit('status', { t: Date.now(), time: time, status: status });
     }
 }
 
@@ -281,3 +285,4 @@ server.listen(port, () => {
 });
 
 data_proxy();
+status_proxy();

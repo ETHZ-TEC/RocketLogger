@@ -1,6 +1,9 @@
 # RocketLogger Node.js Web Interface
 
-Interface features include:
+
+## Features
+
+This web interface features:
 
 - static source file serving
 - dynamic site redering using nunjucks
@@ -8,7 +11,13 @@ Interface features include:
 - websockets for server side data streaming using socket.io and zeromq
 
 
-## Node.js server side dependencies
+## Requirements
+
+- Server: Node.js v10 or later
+- Client: reasonably recent web browser supporting ECMAScript 6
+
+
+### Node.js server side dependencies
 
 - `express` - minimalistic web framework
 - `nunjucks` - Jinja2 inspired web template engine
@@ -21,10 +30,19 @@ Install dependencies using `npm`:
 `npm install express nunjucks gulp socket.io zeromq`
 
 
-## Browser client side dependencies
+### Browser client side dependencies
 
 - `bootstrap` - responsive, mobile-first front-end component library
 - `popper.js` - tooltip and popover positioning engine (used by bootstrap)
 - `jquery` - general purpose JavaScript library
 - `socket.io.js` - websockets client side JavaScript library
 - `flot` - JavaScript plotting library
+
+Install dependencies using `npm`:
+
+`npm install bootstrap jquery @popperjs/core socket.io-client flot`
+
+
+## Installation
+
+TBD, provide install script
