@@ -30,9 +30,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-URL_DIRECTORY="http://debian.beagleboard.org/images/rcn-ee.net/rootfs/bb.org/release/2016-06-15/console/"
-IMAGE_FILE="bone-debian-7.11-console-armhf-2016-06-15-2gb.img.xz"
-IMAGE_SHA256="cfceb64083cf63ed49ad75c3b5f5665cef65eaa67c86420a2c4d27bddc22d1ee"
+URL_DIRECTORY="https://debian.beagleboard.org/images/"
+IMAGE_FILE="bone-debian-7.11-lxde-4gb-armhf-2016-06-15-4gb.img.xz"
+IMAGE_SHA256="128d67b78e0adb8beefed73e88a3219b4cacdc8929663c2a997627cc6333591e"
 
 # download image
 wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"
