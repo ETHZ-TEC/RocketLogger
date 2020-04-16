@@ -39,7 +39,8 @@ LIB_DIR=`pwd`"/lib"
 BOOTSTRAP_VERSION=4.4.1
 POPPER_VERSION=1.16.0
 JQUERY_VERSION=3.4.1
-FLOT_VERSION=4.1.1
+FLOT_VERSION=4.2.0
+SOCKETIO_VERSION=2.3.0
 
 
 ## package install
@@ -53,14 +54,14 @@ sudo apt install --assume-yes \
 ## system configuration
 echo "> Configuring system web services"
 
-# disable other web services, enable lighttp
-sudo systemctl stop apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
-sudo systemctl disable apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
-sudo systemctl enable lighttpd.service
-sudo systemctl start lighttpd.service
+# # disable other web services, enable lighttp
+# sudo systemctl stop apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+# sudo systemctl disable apache2.service bonescript-autorun.service cloud9.service cloud9.socket nginx.service
+# sudo systemctl enable lighttpd.service
+# sudo systemctl start lighttpd.service
 
-# copy lighttpd server configuration
-sudo cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
+# # copy lighttpd server configuration
+# sudo cp -f lighttpd.conf /etc/lighttpd/lighttpd.conf
 
 
 ## webserver configuration
@@ -80,17 +81,21 @@ mkdir -p "${WEB_ROOT}/css" "${WEB_ROOT}/js/vendor"
 wget --no-clobber --directory-prefix="${LIB_DIR}" https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip
 wget --no-clobber --directory-prefix="${LIB_DIR}" https://code.jquery.com/jquery-${JQUERY_VERSION}.min.js
 wget --no-clobber --directory-prefix="${LIB_DIR}" https://unpkg.com/popper.js@${POPPER_VERSION}/dist/umd/popper.min.js
+wget --no-clobber --directory-prefix="${LIB_DIR}" https://cdnjs.cloudflare.com/ajax/libs/socket.io/${POPPER_VERSION}/socket.io.js
 wget --no-clobber --directory-prefix="${LIB_DIR}" "https://registry.npmjs.org/flot/-/flot-${FLOT_VERSION}.tgz"
 
 # copy relevant file and clean up
-unzip -d "${LIB_DIR}" -o "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip"
-cp -f "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css" "${WEB_ROOT}/css/bootstrap-${BOOTSTRAP_VERSION}.min.css"
-cp -f "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js" "${WEB_ROOT}/js/vendor/bootstrap-${BOOTSTRAP_VERSION}.min.js"
-rm -r "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist"
+unzip -jo "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip" "bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css" -d "${LIB_DIR}"
+unzip -jo "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip" "bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js" -d "${LIB_DIR}"
+mv -f "${LIB_DIR}/bootstrap.min.css" "${WEB_ROOT}/css/bootstrap-${BOOTSTRAP_VERSION}.min.css"
+mv -f "${LIB_DIR}/bootstrap.min.js" "${WEB_ROOT}/js/vendor/bootstrap-${BOOTSTRAP_VERSION}.min.js"
 rm "${LIB_DIR}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip"
 
 cp -f "${LIB_DIR}/popper.min.js" "${WEB_ROOT}/js/vendor/popper-${POPPER_VERSION}.min.js"
 rm "${LIB_DIR}/popper.min.js"
+
+cp -f "${LIB_DIR}/socket.io.js" "${WEB_ROOT}/js/vendor/socket.io-${SOCKETIO_VERSION}.min.js"
+rm "${LIB_DIR}/socket.io.js"
 
 cp -f "${LIB_DIR}/jquery-${JQUERY_VERSION}.min.js" "${WEB_ROOT}/js/vendor/jquery-${JQUERY_VERSION}.min.js"
 rm "${LIB_DIR}/jquery-${JQUERY_VERSION}.min.js"
@@ -106,17 +111,17 @@ rm "${LIB_DIR}/flot-${FLOT_VERSION}.tgz"
 #   rm "${LIB_DIR}/${file}"
 # done
 
-# create web interface login if not existing
-if [ -f $WEB_AUTH_FILE ]; then
-  echo "> Found existing web interface authentication config, skipping setup"
-else
-  echo "> Configure the web interface authentication for user 'rocketlogger':"
-  htpasswd -c $WEB_AUTH_FILE rocketlogger
-fi
+# # create web interface login if not existing
+# if [ -f $WEB_AUTH_FILE ]; then
+#   echo "> Found existing web interface authentication config, skipping setup"
+# else
+#   echo "> Configure the web interface authentication for user 'rocketlogger':"
+#   htpasswd -c $WEB_AUTH_FILE rocketlogger
+# fi
 
 
-## restart webserver to reload configuration
-echo "> Restarting web server"
-sudo systemctl restart lighttpd.service
+# ## restart webserver to reload configuration
+# echo "> Restarting web server"
+# sudo systemctl restart lighttpd.service
 
 echo "> Done installing RocketLogger web interface. Reboot as required."

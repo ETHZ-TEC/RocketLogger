@@ -6,7 +6,10 @@
 {% endblock %}
 {% block js_footer %}
   {{ super() }}
-  <!-- local javascript -->
+  <!-- socket.io client -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+  <script>if (typeof (io) === 'undefined') { document.write('<script src="{{ url_for('static', filename='js/vendor/socket.io-2.3.0.min.js') }}"><\/script>') }</script>
+  <!-- plotting javascript -->
   <script src="{{ url_for('static', filename='js/vendor/jquery.flot-4.1.1.js') }}"></script>
   <!-- local javascript -->
   <script src="{{ url_for('static', filename='js/rocketlogger.js') }}"></script>

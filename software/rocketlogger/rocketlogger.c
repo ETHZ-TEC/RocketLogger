@@ -289,12 +289,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    /// @todo temporarily disabled web interface buffer handling
-    // disable incompatible web interface
-    if (config.web_enable) {
-        config.web_enable = false;
-    }
-
     // reset config if requested
     if (arguments.config_reset) {
         if (strcmp(action, "config") != 0) {

@@ -37,10 +37,10 @@ const RL_CHANNELS_DIGITAL = ["DI1", "DI2", "DI3", "DI4", "DI5", "DI6"];
 /// Current channel names
 const RL_CHANNELS_CURRENT = ["I1", "I2"];
 
-/// Status udate polling interval in milliseconds
+/// Status update polling interval in milliseconds
 const DATA_UPDATE_INTERVAL = 1000;
 
-/// Status udate timeout in milliseconds
+/// Status update timeout in milliseconds
 const DATA_UPDATE_TIMEOUT = 500;
 
 /// Default plot configuration

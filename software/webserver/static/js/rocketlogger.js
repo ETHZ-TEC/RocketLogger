@@ -188,7 +188,7 @@ function unix_to_timespan_string(seconds) {
 	if (second > 0 || str.length > 0) {
 		str = str + date_zero_extend(second) + " s";
 	}
-	
+
 	return str.trim();
 }
 
@@ -223,7 +223,7 @@ function action(action, data, handler) {
 		error: function (xhr, status, error) {
 			alert("Processing action " + action + " failed, see console for details.");
 			console.log(action + " request failed (" + status.toString() + ", " + error + "): "
-									+ JSON.stringify(data));
+				+ JSON.stringify(data));
 		},
 	});
 }
@@ -510,7 +510,15 @@ function status_set(status) {
 		var time_remaining = status.disk_free_bytes / status.disk_use_rate;
 		$("#status_remaining").text(unix_to_timespan_string(time_remaining));
 	} else {
-		$("#status_remaining").text("not available");
+		var config = config_get();
+		var use_rate_estimated = (config.channel_enable.length + 
+			(config.digital_enable ? 1 : 0)) * 4 * config.sample_rate;
+		if (use_rate_estimated > 0 && config.file !== null) {
+			var time_remaining = status.disk_free_bytes / use_rate_estimated;
+			$("#status_remaining").text("~ " + unix_to_timespan_string(time_remaining));
+		} else {
+			$("#status_remaining").text("indefinite");
+		}
 	}
 
 	// control buttons and config form

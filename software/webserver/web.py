@@ -37,15 +37,20 @@ from socket import gethostname
 from subprocess import check_output
 from flask import Flask, make_response, render_template, request, \
     send_from_directory, url_for
+from flask_socketio import SocketIO, emit
 
 import actions
 
 
-ROCKETLOGGER_DATA_DIR = '/var/www/rocketlogger/data'
-ROCKETLOGGER_LOG_FILE = '/var/www/rocketlogger/log/rocketlogger.log'
+ROCKETLOGGER_DATA_DIR = '/home/rocketlogger/public_html/media'
+ROCKETLOGGER_LOG_FILE = '/var/log/rocketlogger.log'
 WEB_VERSION = 1.99
+ZMQ_LISTENING_PORT = 5555
 
 application = Flask(__name__)
+# sockets = Sockets(application)
+
+# context = zmq.Context()
 
 
 def render_page(template_name_or_list, **context):
@@ -180,6 +185,19 @@ def data_download(filename):
         return 'download link to {}'.format(filename)
 
 
+# @sockets.route('/ws/')
+# def stream(ws):
+#     socket = context.socket(zmq.SUB)
+#     socket.connect('tcp://localhost:{PORT}'.format(PORT=ZMQ_LISTENING_PORT))
+#     socket.setsockopt(zmq.SUBSCRIBE, "")
+#     gevent.sleep()
+#     while True:
+#         data = socket.recv_json()
+#         logger.info(data)
+#         ws.send(json.dumps(data))
+#         gevent.sleep()
+
+
 @application.route('/log/')
 def log():
     return 'Hello log!'
@@ -192,4 +210,8 @@ def static_from_root():
 
 
 if __name__ == "__main__":
-    application.run()
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+    server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
+    server.serve_forever()
+    # application.run()
