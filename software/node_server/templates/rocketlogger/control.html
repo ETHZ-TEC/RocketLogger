@@ -1,0 +1,40 @@
+{% extends "rocketlogger/status.html" %}
+
+{% block rocketlogger_status_title %}RocketLogger Status & Control{% endblock %}
+{% block rocketlogger_status_footer %}
+  {% block rocketlogger_control %}
+    <hr />
+    <h3>Controls</h3>
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="form-group">
+          <button id="button_start" class="btn btn-success">Start</button>
+          <button id="button_stop" class="btn btn-dark" disabled>Stop</button>
+        </div>
+      </div>
+      <div class="col-sm-auto">
+        <div class="form-group">
+          <button id="button_status" class="btn btn-outline-dark">Force Status Update</button>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+  {% block rocketlogger_download %}
+    <hr />
+    <h3>Download & Calibration</h3>
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="form-group">
+          <a href="/data/" target="_blank" class="btn btn-outline-dark" role="button">Browse measurements</a>
+          <a href="/log/" target="_blank" class="btn btn-outline-dark" role="button">Open log file</a>
+        </div>
+      </div>
+      <div class="col-sm-1"></div>
+      <div class="col-auto">
+        <div class="form-group">
+          <a href="/calibration/" class="btn btn-outline-danger" role="button" aria-pressed="true">Calibrate</a>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+{% endblock %}

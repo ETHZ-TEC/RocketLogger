@@ -26,18 +26,18 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <!-- Bootstrap CSS local fallback, source: https://stackoverflow.com/questions/26192897/should-i-use-bootstrap-from-cdn-or-make-a-copy-on-my-server/26198380#26198380 -->
   <script>
-    var test = document.createElement("div")
-    test.className = "hidden d-none"
-    document.head.appendChild(test)
-    var cssLoaded = window.getComputedStyle(test).display === "none"
-    document.head.removeChild(test)
-    if (!cssLoaded) {
-      var link = document.createElement("link");
-      link.type = "text/css";
-      link.rel = "stylesheet";
-      link.href = "/static/css/bootstrap-4.4.1.min.css";
+    "use strict";
+    let test = document.createElement('div');
+    test.className = 'hidden d-none';
+    document.head.appendChild(test);
+    if (window.getComputedStyle(test).display !== 'none') {
+      let link = document.createElement('link');
+      link.type = 'text/css';
+      link.rel = 'stylesheet';
+      link.href = '/static/css/bootstrap-4.4.1.min.css';
       document.head.appendChild(link);
     }
+    document.head.removeChild(test);
   </script>
   <!-- site CSS -->
   <link rel="stylesheet" type="text/css" href="/static/css/main.css">
@@ -122,6 +122,7 @@
     <script>if (typeof (Popper) === 'undefined') { document.write('<script src="/static/js/vendor/popper-1.16.0.min.js"><\/script>') }</script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script>if (typeof ($.fn.modal) === 'undefined') { document.write('<script src="/static/js/vendor/bootstrap-4.4.1.min.js"><\/script>') }</script>
+    <script src="/static/js/base.js"></script>
     {% endblock %}
 	</div>
 </body>

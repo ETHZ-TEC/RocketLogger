@@ -10,8 +10,10 @@
   <script src="/static/js/vendor/jquery.flot.js"></script>
   <script src="/static/js/vendor/jquery.flot.time.js"></script>
   <!-- local javascript -->
-  <script src="/static/js/rocketlogger.js"></script>
-  <script src="/static/js/calibration.js"></script>
+  <script src="/static/js/rl.util.js"></script>
+  <script src="/static/js/rl.base.js"></script>
+  <script src="/static/js/rl.config.js"></script>
+  <script src="/static/js/rl.data.js"></script>
 {% endblock %}
 
 {% block title %}RocketLogger Calibration{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
@@ -23,33 +25,7 @@
   </div>
 </div>
 
-<!-- Status Panel Container -->
-<div class="card mb-3">
-  <h2 class="card-header">RocketLogger Status</h2>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <h5>Status</h5>
-        <p id="status">connecting...</p>
-        <h5>Recorded samples</h5>
-        <p id="status_samples">0 samples</p>
-        <h5>Recorded time</h5>
-        <p id="status_time">0 h 0 min 0 sec</p>
-      </div>
-      <div class="col-md-6">
-        <h5>Calibration date</h5>
-        <p id="status_calibration"><span class="badge badge-danger" id="warn_calibration">uncalibrated</span></p>
-        <h5>Disk usage</h5>
-        <p id="status_disk">100 MB <span class="badge badge-warning" id="warn_storage_low">low</span><span class="badge badge-danger" id="warn_storage_critical">critical</span></p>
-        <h5>Remaining recording time</h5>
-        <p id="status_remaining">5 min</p>
-      </div>
-    </div>
-    <hr />
-
-    <a href="/control/" class="btn btn-primary" role="button">&lt; Return to measurements</a>
-  </div>
-</div>
+{% include "rocketlogger/status.html" %}
 
 <!-- Calibration Panel Container -->
 <div class="card mb-3">
