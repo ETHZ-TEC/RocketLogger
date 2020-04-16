@@ -107,6 +107,11 @@ mkdir -p /etc/rocketlogger
 ## updates
 echo "> Updating system"
 
+# switch to archive mirror, disable update and security repos (wheezy end of live announcement: <https://lists.debian.org/debian-devel-announce/2019/03/msg00006.html>)
+sed "s~^deb http://httpredir.debian.org/debian/ wheezy main contrib non-free~deb http://archive.debian.org/debian/ wheezy main contrib non-free~g" -i /etc/apt/sources.list
+sed "s~^deb http://httpredir.debian.org/debian/ wheezy-updates main contrib non-free~#deb http://httpredir.debian.org/debian/ wheezy-updates main contrib non-free~g" -i /etc/apt/sources.list
+sed "s~^deb http://security.debian.org/ wheezy/updates main contrib non-free~#deb http://security.debian.org/ wheezy/updates main contrib non-free~g" -i /etc/apt/sources.list
+
 # update packages
 apt-get update --assume-yes
 apt-get upgrade --assume-yes
