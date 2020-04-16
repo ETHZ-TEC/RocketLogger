@@ -7,7 +7,7 @@
 			"path": "software/rocketlogger_pru"
 		},
 		{
-			"path": "software/webserver"
+			"path": "software/node_server"
 		},
 		{
 			"path": "script/python"
