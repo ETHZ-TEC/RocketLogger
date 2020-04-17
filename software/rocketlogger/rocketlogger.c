@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
     // store config as default
     if (arguments.config_set_default) {
         rl_config_write_default(&config);
-        if (!arguments.silent) {
+        if (!(arguments.silent || arguments.json | arguments.cli)) {
             printf("The following configuration was saved as new default:\n");
             rl_config_print(&config);
         }

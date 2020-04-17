@@ -243,9 +243,13 @@ $(() => {
 
 	// initialize default configuration control buttons
 	$('#button_config_save').click(() => {
+		$("#alert_config_saved").hide();
+		$("#alert_config_loaded").hide();
 		rl_config(config_get());
 	});
 	$('#button_config_load').click(() => {
+		$("#alert_config_saved").hide();
+		$("#alert_config_loaded").hide();
 		rl_config();
 	});
 
@@ -283,6 +287,11 @@ $(() => {
 			setTimeout(rl_status, 300);
 		} else if (cmd == 'config') {
 			config_set(res.config);
+			if (res.default) {
+				$("#alert_config_saved").show();
+			} else {
+				$("#alert_config_loaded").show();
+			}
 		}
 	});
 });

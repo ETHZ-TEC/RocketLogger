@@ -136,7 +136,9 @@ module.exports = {
 
         // parse and filter config
         const rl_config = JSON.parse(cmd.stdout.toString());
-        rl_config.file.filename = path.basename(rl_config.file.filename);
+        if (rl_config.file) {
+            rl_config.file.filename = path.basename(rl_config.file.filename);
+        }
 
         res.config = rl_config;
         res.default = (config != null);
@@ -193,7 +195,7 @@ function config_to_args(mode, config) {
         args.push(`--output=${path.join(path_data, config.file.filename)}`);
         args.push(`--format=${config.file.format}`);
         args.push(`--size=${config.file.size}`);
-        args.push(`--comment='${config.file.comment}'`);
+        args.push(`--comment=${config.file.comment.replace(/"/g, '')}`);
     }
     args.push(`--rate=${config.sample_rate}`);
     args.push(`--web=${config.web_enable}`);
