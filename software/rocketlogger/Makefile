@@ -96,6 +96,7 @@ CXXSTD = -std=c++11
 LIBS = -lprussdrv
 LIBS += -li2c
 LIBS += -lncurses
+LIBS += -lzmq
 LIBS += -lrt
 
 ## defines

@@ -47,8 +47,6 @@ const rl = require('./rl.js');
 // configuration
 const port = 5000;
 const version = '1.99';
-const zmq_data_socket = 'tcp://127.0.0.1:5555'
-const zmq_status_socket = 'tcp://127.0.0.1:5556'
 const path_static = path.join(__dirname, 'static');
 const path_templates = path.join(__dirname, 'templates');
 
@@ -256,11 +254,12 @@ io.on('connection', (socket) => {
 async function data_proxy() {
     const sock = new zmq.Subscriber
 
-    sock.connect(zmq_data_socket);
-    console.log(`zmq sub: connected to ${zmq_data_socket}`);
+    sock.connect(rl.zmq_data_socket);
+    console.log(`zmq data subscribe to ${rl.zmq_data_socket}`);
 
     sock.subscribe();
     for await (const [time, data] of sock) {
+        console.log(`zmq new data with t=${time}`);
         io.emit('data', { t: Date.now(), time: time, data: data });
         // perform local data caching
     }
@@ -269,12 +268,17 @@ async function data_proxy() {
 async function status_proxy() {
     const sock = new zmq.Subscriber
 
-    sock.connect(zmq_status_socket);
-    console.log(`zmq sub: connected to ${zmq_status_socket}`);
+    sock.connect(rl.zmq_status_socket);
+    console.log(`zmq status subscribe to ${rl.zmq_status_socket}`);
 
     sock.subscribe();
-    for await (const [time, status] of sock) {
-        io.emit('status', { t: Date.now(), time: time, status: status });
+    for await (const [status] of sock) {
+        console.log(`zmq new status: ${status}`);
+        try {
+            io.emit('status', { status: JSON.parse(status) });
+        } catch (err) {
+            console.log(`zmq status pressing error: ${err}`);
+        }
     }
 }
 
@@ -284,5 +288,5 @@ server.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 });
 
-data_proxy();
 status_proxy();
+data_proxy();

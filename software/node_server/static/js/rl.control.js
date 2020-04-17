@@ -282,9 +282,9 @@ $(() => {
 		const cmd = res.req.cmd;
 		// @todo handle control feedback
 		if (cmd == 'start') {
-			rl_status();
+			// rl_status();
 		} else if (cmd == 'stop') {
-			setTimeout(rl_status, 300);
+			// setTimeout(rl_status, 300);
 		} else if (cmd == 'config') {
 			config_set(res.config);
 			if (res.default) {

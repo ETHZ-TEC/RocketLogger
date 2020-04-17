@@ -33,12 +33,20 @@
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
+/// RocketLogger measurement data path
 const path_data = '/home/rocketlogger/data';
+/// RocketLogger measurement log file
 const path_system_logfile = '/var/log/rocketlogger.log';
+/// ZeroMQ socket identifier for data publishing status
+const zmq_status_socket = 'tcp://127.0.0.1:8276';
+/// ZeroMQ socket identifier for status publishing
+const zmq_data_socket = 'tcp://127.0.0.1:8277';
 
 module.exports = {
     path_data: path_data,
     path_system_logfile: path_system_logfile,
+    zmq_status_socket: zmq_status_socket,
+    zmq_data_socket: zmq_data_socket,
 
     /// get RocketLogger status
     status() {
@@ -57,7 +65,12 @@ module.exports = {
             return res;
         }
 
-        res.status = JSON.parse(cmd.stdout.toString());
+        try {
+            res.status = JSON.parse(cmd.stdout.toString());
+        } catch (err) {
+            res.err.push(`RocketLogger configuration processing error: ${err}`);
+        }
+
         res.cli = `rocketlogger ${args.join(' ')}`;
         return res;
     },
@@ -123,7 +136,6 @@ module.exports = {
         };
 
         const args = config_to_args('config', config);
-        args.push('--json');
         if (config) {
             args.push('--default');
         }
@@ -135,12 +147,15 @@ module.exports = {
         }
 
         // parse and filter config
-        const rl_config = JSON.parse(cmd.stdout.toString());
-        if (rl_config.file) {
-            rl_config.file.filename = path.basename(rl_config.file.filename);
+        try {
+            res.config = JSON.parse(cmd.stdout.toString());
+            if (res.config.file) {
+                res.config.file.filename = path.basename(rl_config.file.filename);
+            }
+        } catch (err) {
+            res.err.push(`RocketLogger configuration processing error: ${err}`);
         }
 
-        res.config = rl_config;
         res.default = (config != null);
         res.cli = `rocketlogger ${args.join(' ')}`;
         return res;
@@ -161,6 +176,7 @@ module.exports = {
         if (cmd.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
+            return res;
         } else {
             res.version_string = cmd.stdout.toString();
             res.version = res.version_string.split('\n')[0].split(' ').reverse()[0];
@@ -174,7 +190,7 @@ module.exports = {
 
 /// get RocketLogger CLI arguments from JSON configuration
 function config_to_args(mode, config) {
-    const args = [mode];
+    const args = [mode, '--json'];
     if (config == null) {
         return args;
     }

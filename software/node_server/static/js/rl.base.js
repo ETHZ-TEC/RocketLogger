@@ -87,7 +87,12 @@ function status_set(status) {
 
 	// sampling information
 	$('#status_samples').text(status.sample_count + ' samples');
-	$('#status_time').text(unix_to_timespan_string(status.sample_time));
+	try {
+		let sampling_time = status.sample_count / status.config.sample_rate;
+		$('#status_time').text(unix_to_timespan_string(sampling_time));
+	} catch (err) {
+		// skip
+	}
 
 	// calibration
 	if (status.calibration_time <= 0) {

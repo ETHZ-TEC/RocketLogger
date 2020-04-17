@@ -340,7 +340,7 @@ int main(void) {
     }
 
     // create shared memory for state
-    ret = rl_status_init();
+    ret = rl_status_shm_init();
     if (ret < 0) {
         rl_log(RL_LOG_ERROR, "Failed initializing status shared memory.");
         exit(EXIT_FAILURE);
@@ -370,7 +370,7 @@ int main(void) {
     rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
 
     // remove shared memory for state
-    rl_status_deinit();
+    rl_status_shm_deinit();
 
     // deinitialize and shutdown hardware
     button_deinit();

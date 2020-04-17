@@ -65,8 +65,9 @@ bool rl_is_sampling(void) {
         if (errno == ENOENT) {
             return false;
         }
-        rl_log(RL_LOG_ERROR, "failed getting status to check sampling state."
-                             "%d message: %s",
+        rl_log(RL_LOG_ERROR,
+               "failed getting status to check sampling state."
+               "%d message: %s",
                errno, strerror(errno));
     }
 
@@ -122,6 +123,16 @@ int rl_run(rl_config_t *const config) {
     }
 
     // INITIATION
+
+    // init status
+    rl_status_reset(&rl_status);
+    rl_status.config = config;
+
+    // init status publishing and publish (to not be received, see zeromq docs)
+    rl_status_pub_init();
+    rl_status_write(&rl_status);
+
+    // init hardware
     hw_init(config);
 
     // check ambient sensor available
@@ -137,6 +148,7 @@ int rl_run(rl_config_t *const config) {
 
     // FINISH
     hw_deinit(config);
+    rl_status_pub_deinit();
 
     return SUCCESS;
 }

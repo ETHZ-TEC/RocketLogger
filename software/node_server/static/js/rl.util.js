@@ -97,8 +97,8 @@ function unix_to_timespan_string(seconds) {
 
     var date = new Date(seconds * 1000);
     var year = date.getUTCFullYear() - 1970;
-    var month = date.getUTCMonth() + 1;
-    var day = date.getUTCDate();
+    var month = date.getUTCMonth();
+    var day = date.getUTCDate() - 1;
     var hour = date.getUTCHours();
     var minute = date.getUTCMinutes();
     var second = date.getUTCSeconds();
