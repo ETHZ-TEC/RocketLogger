@@ -821,7 +821,7 @@ READ:
     XOR     ADC1_STATUS_REG.b2, ADC1_STATUS_REG.b2, 1
     XOR     ADC2_STATUS_REG.b2, ADC2_STATUS_REG.b2, 1
 
-    ; construct digital signal bit map
+    ; construct digital signal bit map, zero unused bits
     LSL     DI_REG.b0, ADC1_STATUS_REG.b3, 0
     LSL     DI_REG.b1, ADC2_STATUS_REG.b3, 3
     OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
@@ -829,6 +829,7 @@ READ:
     OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
     LSL     DI_REG.b1, ADC2_STATUS_REG.b2, 7
     OR      DI_REG.b0, DI_REG.b0, DI_REG.b1
+    ZERO    &DI_REG.b1, 3
 
     ; extend 16 bit data to 24 bit in case of lower precision data
     QBEQ    HIGHPRECISION, PRECISION, 24
