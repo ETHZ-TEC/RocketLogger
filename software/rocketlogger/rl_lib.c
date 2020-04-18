@@ -42,6 +42,7 @@
 #include "log.h"
 #include "rl.h"
 #include "rl_hw.h"
+#include "rl_socket.h"
 #include "util.h"
 
 #include "rl_lib.h"
@@ -124,6 +125,9 @@ int rl_run(rl_config_t *const config) {
 
     // INITIATION
 
+    // init hardware
+    hw_init(config);
+
     // init status
     rl_status_reset(&rl_status);
     rl_status.config = config;
@@ -132,8 +136,10 @@ int rl_run(rl_config_t *const config) {
     rl_status_pub_init();
     rl_status_write(&rl_status);
 
-    // init hardware
-    hw_init(config);
+    // initialize socket if webserver enabled
+    if (config->web_enable) {
+        rl_socket_init();
+    }
 
     // check ambient sensor available
     if (config->ambient_enable && rl_status.sensor_count == 0) {
@@ -147,8 +153,11 @@ int rl_run(rl_config_t *const config) {
     rl_log(RL_LOG_INFO, "sampling finished");
 
     // FINISH
-    hw_deinit(config);
+    if (config->web_enable) {
+        rl_socket_deinit();
+    }
     rl_status_pub_deinit();
+    hw_deinit(config);
 
     return SUCCESS;
 }

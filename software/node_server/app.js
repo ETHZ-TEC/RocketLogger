@@ -258,9 +258,22 @@ async function data_proxy() {
     console.log(`zmq data subscribe to ${rl.zmq_data_socket}`);
 
     sock.subscribe();
-    for await (const [time, data] of sock) {
-        console.log(`zmq new data with t=${time}`);
-        io.emit('data', { t: Date.now(), time: time, data: data });
+    for await (const data of sock) {
+        console.log(`zmq new data, with metadata: ${data[data.length - 1]}`);
+        try {
+            const rep = {
+                t: Date.now(),
+                metadata: JSON.parse(data[data.length - 1]),
+                timestamps: JSON.parse(data[data.length - 2]),
+                data: {},
+            };
+            for (let i = 0; i < data.length - 2; i++) {
+                rep.data[rep.metadata[i].name] = data[i];
+            }
+            io.emit('data', rep);
+        } catch (err) {
+            console.log(`zmq data processing error: ${err}`);
+        }
         // perform local data caching
     }
 }
@@ -277,7 +290,7 @@ async function status_proxy() {
         try {
             io.emit('status', { status: JSON.parse(status) });
         } catch (err) {
-            console.log(`zmq status pressing error: ${err}`);
+            console.log(`zmq status processing error: ${err}`);
         }
     }
 }

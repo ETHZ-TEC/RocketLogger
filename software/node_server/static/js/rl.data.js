@@ -28,12 +28,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/// Maximum data buffer length
+const RL_DATA_BUFFER_LENGTH = 10000;
+
+/// Data buffer struture
+let rl_data = {};
+/// Data buffer metadata
+let rl_metadata = {};
+
 /**
  * Initialization when document is fully loaded
  */
 $(() => {
-    rl_socket.on('data', (data) => {
-        let data_arr = new Float32Array(data.data);
-        console.log(`rl data: ${data.t}, ${data.time}, ${data_arr.toString()}`);
+    rl_socket.on('data', (res) => {
+        console.log(`rl data: t=${res.t}, ${res.metadata}`);
+        // decode and process channel data
+        for (const meta of res.metadata) {
+            // decode data
+            let data;
+            if (meta.digital) {
+                data = Array.from(new Uint32Array(res.data[meta.name]));
+            } else if (meta.scale) {
+                data = Array.from(new Int32Array(res.data[meta.name]),
+                    (val) => { return val * meta.scale; });
+            } else {
+                data = Array.from(new Int32Array(res.data[meta.name]));
+            }
+
+            // add data to un-typed array buffer
+            if (rl_data[meta.name]) {
+                rl_data[meta.name] = rl_data[meta.name].concat(data);
+            } else {
+                rl_data[meta.name] = data;
+            }
+
+            // drop old values
+            if (rl_data[meta.name].length > RL_DATA_BUFFER_LENGTH) {
+                rl_data[meta.name].splice(0,
+                    rl_data[meta.name].length - RL_DATA_BUFFER_LENGTH);
+            }
+        }
+        rl_metadata = res.metadata;
+        /// @todo trigger plot update
     });
 });

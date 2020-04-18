@@ -48,6 +48,7 @@
 #include "rl.h"
 
 #define RL_JSON_BUFFER_SIZE 10000
+
 /**
  * RocketLogger reset configuration definition.
  */
@@ -123,17 +124,6 @@ void *zmq_status_publisher = NULL;
  */
 static void print_config_line(char const *const description, char const *format,
                               ...);
-
-/**
- * Append formatted string to  setting line with formated string value.
- *
- * @param buffer The string buffer to append the formatted string to
- * @param length Maximum length of the buffer
- * @param format Formatting string passed to snprintf()
- * @param ... Variables used to format string
- */
-static int snprintfcat(char *const buffer, size_t length, char const *format,
-                       ...);
 
 void rl_config_print(rl_config_t const *const config) {
     // sampling in background or interactively
@@ -276,9 +266,8 @@ void rl_config_print_json(rl_config_t const *const config) {
 char *rl_config_get_json(rl_config_t const *const config) {
     int count;
     static char buffer[RL_JSON_BUFFER_SIZE];
-    buffer[0] = '\0'; // zero length string
 
-    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "{ ");
+    snprintf(buffer, RL_JSON_BUFFER_SIZE, "{ ");
     snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"ambient_enable\": %s, ",
                 config->ambient_enable ? "true" : "false");
     snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"background_enable\": %s, ",
@@ -728,9 +717,8 @@ void rl_status_print_json(rl_status_t const *const status) {
 
 char *rl_status_get_json(rl_status_t const *const status) {
     static char buffer[RL_JSON_BUFFER_SIZE];
-    buffer[0] = '\0'; // zero length string
 
-    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "{ ");
+    snprintf(buffer, RL_JSON_BUFFER_SIZE, "{ ");
     snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sampling\": %s, ",
                 status->sampling ? "true" : "false");
     snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"error\": %s, ",
@@ -787,15 +775,4 @@ static void print_config_line(char const *description, char const *format,
     vprintf(format, args);
     printf("\n");
     va_end(args);
-}
-
-static int snprintfcat(char *const buffer, size_t length, char const *format,
-                       ...) {
-    va_list args;
-    va_start(args, format);
-    char *const buffer_next = buffer + strlen(buffer);
-    size_t length_next = length - strlen(buffer);
-    int res = vsnprintf(buffer_next, length_next, format, args);
-    va_end(args);
-    return res;
 }
