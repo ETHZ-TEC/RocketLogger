@@ -82,10 +82,21 @@ int rl_socket_handle_data(int32_t const *analog_buffer,
                           rl_config_t const *const config) {
     // initialize metadata json
     char metadata_json[RL_SOCKET_METADATA_SIZE];
-    snprintf(metadata_json, RL_SOCKET_METADATA_SIZE, "[");
 
-    // allocate data send buffer
+    // publish timestamps, data rate and data buffer length
+    snprintf(metadata_json, RL_SOCKET_METADATA_SIZE,
+             "{\"time\":{\"realtime\":{\"sec\":%lli,\"nsec\":%lli},",
+             timestamp_realtime->sec, timestamp_realtime->nsec);
+    snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                "\"monotonic\":{\"sec\":%lli,\"nsec\":%lli}},",
+                timestamp_monotonic->sec, timestamp_monotonic->nsec);
+    snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                "\"data_rate\":%d,\"buffer_size\":%d,", config->sample_rate,
+                buffer_size);
+
+    // allocate data send buffer, init channel metadata
     int32_t *const data_buffer = malloc(buffer_size * sizeof(int32_t));
+    snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE, "\"channels\":[");
 
     // process analog channels
     for (int ch = 0; ch < RL_CHANNEL_COUNT; ch++) {
@@ -111,66 +122,51 @@ int rl_socket_handle_data(int32_t const *analog_buffer,
         }
 
         // generate metadata
-        snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                    "{\"name\": \"%s\", ", RL_CHANNEL_NAMES[ch]);
+        snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE, "{\"name\":\"%s\",",
+                    RL_CHANNEL_NAMES[ch]);
         if (is_current(ch)) {
             if (is_low_current(ch)) {
                 snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                            "\"unit\": \"A\", \"scale\": 1e-11},");
+                            "\"unit\":\"A\",\"scale\":1e-11},");
             } else {
                 snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                            "\"unit\": \"A\", \"scale\": 1e-9},");
+                            "\"unit\":\"A\",\"scale\":1e-9},");
             }
         } else if (is_voltage(ch)) {
             snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                        "\"unit\": \"V\", \"scale\": 1e-8},");
+                        "\"unit\":\"V\",\"scale\":1e-8},");
         } else {
             snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                        "\"unit\": null, \"scale\": null},");
+                        "\"unit\":null},");
         }
     }
-
-    /// @todo process merged analog channels
 
     // free channel data send buffer
     free(data_buffer);
 
     // publish digital data to socket
-    if (config->digital_enable) {
-        int zmq_res = zmq_send(zmq_data_socket, digital_buffer,
-                               buffer_size * sizeof(uint32_t), ZMQ_SNDMORE);
-        if (zmq_res < 0) {
-            rl_log(RL_LOG_ERROR,
-                   "failed publishing digital data; %d message: %s", errno,
-                   strerror(errno));
-            return ERROR;
-        }
-
-        snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                    "{\"name\": \"DI\", \"digital\": true, \"unit\": null},");
-    }
-
-    // publish timestamps and terminate metadata json
-    char timestamps_json[120];
-    snprintf(timestamps_json, 120,
-             "{\"realtime\":{\"sec\": %lli, \"nsec\": %lli},",
-             timestamp_realtime->sec, timestamp_realtime->nsec);
-    snprintfcat(timestamps_json, 120,
-                "\"monotonic\":{\"sec\": %lli, \"nsec\": %lli}}",
-                timestamp_monotonic->sec, timestamp_monotonic->nsec);
-
-    int zmq_res = zmq_send(zmq_data_socket, timestamps_json,
-                           strlen(timestamps_json), ZMQ_SNDMORE);
+    int zmq_res = zmq_send(zmq_data_socket, digital_buffer,
+                           buffer_size * sizeof(uint32_t), ZMQ_SNDMORE);
     if (zmq_res < 0) {
-        rl_log(RL_LOG_ERROR, "failed publishing timestamp data; %d message: %s",
+        rl_log(RL_LOG_ERROR, "failed publishing digital data; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
 
-    snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                "{\"name\": \"time\", \"unit\": \"ts\"}]");
+    if (config->digital_enable) {
+        for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
+            snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                        "{\"name\":\"DI%d\",\"digital\":true,\"bit\":%d},",
+                        i + 1, i);
+        }
+    }
+    snprintfcat(
+        metadata_json, RL_SOCKET_METADATA_SIZE,
+        "{\"name\":\"I1L_valid\",\"digital\":true,\"bit\":6,\"hidden\":true},"
+        "{\"name\":\"I2L_valid\",\"digital\":true,\"bit\":7,\"hidden\":true}]"
+        "}");
 
-    // publish channel metadata to socket
+    // publish metadata to socket
     zmq_res =
         zmq_send(zmq_data_socket, metadata_json, strlen(metadata_json), 0);
     if (zmq_res < 0) {

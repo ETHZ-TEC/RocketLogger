@@ -256,25 +256,39 @@ async function data_proxy() {
 
     sock.connect(rl.zmq_data_socket);
     console.log(`zmq data subscribe to ${rl.zmq_data_socket}`);
-
     sock.subscribe();
+
     for await (const data of sock) {
-        console.log(`zmq new data, with metadata: ${data[data.length - 1]}`);
+        const rep = {
+            t: Date.now(),
+            time: null,
+            metadata: {},
+            data: {},
+            digital: null,
+        };
+        // console.log(`zmq new data, with metadata: ${data[data.length - 1]}`);
         try {
-            const rep = {
-                t: Date.now(),
-                metadata: JSON.parse(data[data.length - 1]),
-                timestamps: JSON.parse(data[data.length - 2]),
-                data: {},
-            };
-            for (let i = 0; i < data.length - 2; i++) {
-                rep.data[rep.metadata[i].name] = data[i];
+            const meta = JSON.parse(data[data.length - 1]);
+            const time_realtime = meta.time.realtime.sec * 1e3 + meta.time.realtime.nsec / 1e6;
+            rep.time = Array.from({ length: meta.buffer_size },
+                (_, i) => time_realtime + i * 1e3 / meta.data_rate);
+            // process data
+            let i = 0;
+            for (const ch of meta.channels) {
+                rep.metadata[ch.name] = ch;
+                if (ch.digital) {
+                    continue;
+                }
+                rep.data[ch.name] = data[i];
+                i = i + 1;
             }
-            io.emit('data', rep);
+            rep.digital = data[data.length - 2];
         } catch (err) {
             console.log(`zmq data processing error: ${err}`);
         }
-        // perform local data caching
+        // send new data packet to clients
+        io.emit('data', rep);
+        /// @todo perform local data caching
     }
 }
 
@@ -283,10 +297,10 @@ async function status_proxy() {
 
     sock.connect(rl.zmq_status_socket);
     console.log(`zmq status subscribe to ${rl.zmq_status_socket}`);
-
     sock.subscribe();
+
     for await (const [status] of sock) {
-        console.log(`zmq new status: ${status}`);
+        // console.log(`zmq new status: ${status}`);
         try {
             io.emit('status', { status: JSON.parse(status) });
         } catch (err) {

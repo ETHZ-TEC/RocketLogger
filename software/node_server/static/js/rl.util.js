@@ -64,17 +64,17 @@ function date_zero_extend(value) {
 
 /// get formatted date string from date object
 function date_to_string(date, join = '-') {
-    var year = date.getUTCFullYear().toString();
-    var month = date_zero_extend(date.getUTCMonth() + 1);
-    var day = date_zero_extend(date.getUTCDate());
+    var year = date.getFullYear().toString();
+    var month = date_zero_extend(date.getMonth() + 1);
+    var day = date_zero_extend(date.getDate());
     return year + join + month + join + day;
 }
 
 /// get formatted time string from date object
 function time_to_string(time, join = ':') {
-    var hour = date_zero_extend(time.getUTCHours());
-    var minute = date_zero_extend(time.getUTCMinutes());
-    var second = date_zero_extend(time.getUTCSeconds());
+    var hour = date_zero_extend(time.getHours());
+    var minute = date_zero_extend(time.getMinutes());
+    var second = date_zero_extend(time.getSeconds());
     return hour + join + minute + join + second;
 }
 

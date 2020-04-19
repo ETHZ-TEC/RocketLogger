@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
   <script>if (typeof (io) === 'undefined') { document.write('<script src="/static/js/vendor/socket.io-2.3.0.min.js"><\/script>') }</script>
   <!-- plotting javascript -->
-  <script src="/static/js/vendor/jquery.flot-4.1.1.js"></script>
+  <script src="/static/js/vendor/jquery.flot-4.2.0.min.js"></script>
   <!-- local javascript -->
   <script src="/static/js/rl.util.js"></script>
   <script src="/static/js/rl.base.js"></script>
@@ -51,7 +51,7 @@ p:	Un-/Pause Plot Update
       <div class="row justify-content-between align-items-center">
         <div class="col-sm-auto">
           <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="plot_update">
+            <input type="checkbox" class="custom-control-input" id="plot_update" checked>
             <label class="custom-control-label" for="plot_update">Update plots</label>
           </div>
         </div>

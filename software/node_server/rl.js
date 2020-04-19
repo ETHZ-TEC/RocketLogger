@@ -33,23 +33,21 @@
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
-/// RocketLogger measurement data path
-const path_data = '/home/rocketlogger/data';
-/// RocketLogger measurement log file
-const path_system_logfile = '/var/log/rocketlogger.log';
-/// ZeroMQ socket identifier for data publishing status
-const zmq_status_socket = 'tcp://127.0.0.1:8276';
-/// ZeroMQ socket identifier for status publishing
-const zmq_data_socket = 'tcp://127.0.0.1:8277';
+/// RocketLogger status and data update rate [per second]
+const rl_update_rate = 10;
 
-module.exports = {
-    path_data: path_data,
-    path_system_logfile: path_system_logfile,
-    zmq_status_socket: zmq_status_socket,
-    zmq_data_socket: zmq_data_socket,
+const rl = {
+    /// RocketLogger measurement data path
+    path_data: '/home/rocketlogger/data',
+    /// RocketLogger measurement log file
+    path_system_logfile: '/var/log/rocketlogger.log',
+    /// ZeroMQ socket identifier for data publishing status
+    zmq_status_socket: 'tcp://127.0.0.1:8276',
+    /// ZeroMQ socket identifier for status publishing
+    zmq_data_socket: 'tcp://127.0.0.1:8277',
 
     /// get RocketLogger status
-    status() {
+    status: () => {
         const res = {
             err: [],
             warn: [],
@@ -76,7 +74,7 @@ module.exports = {
     },
 
     /// start RocketLogger measurement
-    start(config) {
+    start: (config) => {
         const res = {
             err: [],
             warn: [],
@@ -103,7 +101,7 @@ module.exports = {
     },
 
     /// stop RocketLogger measurement
-    stop() {
+    stop: () => {
         const res = {
             err: [],
             warn: [],
@@ -126,7 +124,7 @@ module.exports = {
     },
 
     /// load/store RocketLogger default configuration
-    config(config) {
+    config: (config) => {
         const res = {
             err: [],
             warn: [],
@@ -162,7 +160,7 @@ module.exports = {
     },
 
     /// get the RocketLogger CLI version
-    version() {
+    version: () => {
         const res = {
             err: [],
             warn: [],
@@ -187,6 +185,7 @@ module.exports = {
     },
 };
 
+module.exports = rl;
 
 /// get RocketLogger CLI arguments from JSON configuration
 function config_to_args(mode, config) {
@@ -197,7 +196,7 @@ function config_to_args(mode, config) {
 
     // force some defaults
     config.samples = 0; // continuous sampling
-    config.update_rate = 1;
+    config.update_rate = rl_update_rate;
 
     args.push(`--samples=${config.samples}`);
     args.push(`--update=${config.update_rate}`);
@@ -208,7 +207,7 @@ function config_to_args(mode, config) {
     if (config.file == null) {
         args.push('--output=0');
     } else {
-        args.push(`--output=${path.join(path_data, config.file.filename)}`);
+        args.push(`--output=${path.join(rl.path_data, config.file.filename)}`);
         args.push(`--format=${config.file.format}`);
         args.push(`--size=${config.file.size}`);
         args.push(`--comment=${config.file.comment.replace(/"/g, '')}`);
