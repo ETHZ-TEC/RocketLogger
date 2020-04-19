@@ -52,6 +52,9 @@ function plot_get_config(digital = false) {
             points: {
                 show: false,
             },
+            downsample: {
+                threshold: 1000,
+            },
         },
         xaxis: {
             show: true,
@@ -219,7 +222,7 @@ $(() => {
 
     /// initialize data reception handler
     rl_socket.on('data', (res) => {
-        console.log(`rl data: t=${res.t}, ${res.metadata}`);
+        // console.log(`rl data: t=${res.t}, ${res.metadata}`);
         // process data trigger plot update if enabled
         rl_data_process(res);
         if ($('#plot_update').prop('checked')) {

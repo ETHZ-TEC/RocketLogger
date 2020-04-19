@@ -166,7 +166,7 @@ $(() => {
 
 	// status update callback
 	rl_socket.on('status', (res) => {
-		console.log(`rl status: ${JSON.stringify(res)}`);
+		// console.log(`rl status: ${JSON.stringify(res)}`);
 		status_set(res.status);
 	});
 
