@@ -61,6 +61,7 @@
     "P9.16",
     "P9.22",
     /* FlockLab pins */
+    "P8.10", /* USB_nRST */
     "P8.07", /* timer4/PPS */
     "P8.27", /* pps for PRU1 */
     "P8.28", /* actuation SIG2 */
@@ -110,6 +111,7 @@
     __overlay__ {
       /* FlockLab pins */
       P8_07_pinmux { status = "disabled"; }; /* pps */
+      P8_10_pinmux { status = "disabled"; }; /* USB_nRST */
       P8_27_pinmux { status = "disabled"; }; /* pps for PRU1 */
       P8_28_pinmux { status = "disabled"; }; /* actuation SIG2 */
       P8_30_pinmux { status = "disabled"; }; /* actuation SIG1 */
@@ -189,6 +191,11 @@
           BONE_P8_42 (PIN_INPUT | MUX_MODE6)
           BONE_P8_39 (PIN_INPUT | MUX_MODE6)
           //BONE_P8_40 (PIN_OUTPUT | MUX_MODE5)
+        >;
+      };
+      fl_ctrl_pins: pinmux_fl_ctrl_pins {
+        pinctrl-single,pins = <
+          BONE_P8_10 (PIN_OUTPUT_PULLUP | MUX_MODE7)   /* USB_nRST */
         >;
       };
       /* --- RL stuff --- */
@@ -291,14 +298,12 @@
         pinctrl-names = "default";
         pinctrl-0 = <&rl_range_pins>;
       };
-
       rl_user_pinmux: rl_user_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&rl_user_pins>;
       };
-
       rl_power_pinmux: rl_power_pinmux_helper {
         compatible = "bone-pinmux-helper";
         status = "okay";
@@ -354,7 +359,7 @@
     };
   };
 
-  /* fl actuation pins */
+  /* fl actuation / ctrl pins */
   fragment@13 {
     target = <&ocp>;
     __overlay__ {
@@ -363,6 +368,12 @@
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&fl_act_pins>;
+      };
+      fl_ctrl_pinmux: fl_ctrl_pinmux_helper {
+        compatible = "bone-pinmux-helper";
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&fl_ctrl_pins>;
       };
     };
   };
