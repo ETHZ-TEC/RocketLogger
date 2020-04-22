@@ -76,6 +76,9 @@ function status_set(status) {
 		status_message += 'sampling';
 	} else {
 		status_message += 'idle';
+		if (rl_plot_stop) {
+			rl_plot_stop();
+		}
 	}
 	if (status.error) {
 		status_message += ' with error';

@@ -28,8 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/// maximum data buffer length
+/// data buffer length to buffer locally
 const RL_DATA_BUFFER_LENGTH = 10000;
+/// minimum plot update interval [in ms]
+const RL_DATA_MIN_INTERVAL = 50;
 
 /// data buffer structure
 let rl_data = {};
@@ -38,9 +40,13 @@ let rl_metadata = {};
 /// plots to update
 let rl_plots = [];
 
+let plot_next = null;
+let plotting = null;
+
 /// initialize an analog data plot
 function plot_get_config(digital = false) {
     let now = Date.now();
+    const time_base = 1000;
 
     /// default plot configuration
     const config = {
@@ -58,22 +64,23 @@ function plot_get_config(digital = false) {
         },
         xaxis: {
             show: true,
-            position: "bottom",
-            mode: "time",
+            position: 'bottom',
+            mode: 'time',
+            min: now - 10 * time_base,
+            max: now,
+            autoScale: 'none',
+            ticks: Array.from({ length: 12 }, (_, i) => time_base * (Math.ceil(Date.now() / time_base) - 11 + i)),
             tickFormatter: (val, _) => {
                 var d = new Date(val);
                 return time_to_string(d);
             },
-            min: now - 10000,
-            max: now,
-            autoScale: "none",
             axisLabel: null,
             gridLines: false,
             showMinorTicks: true,
         },
         yaxis: {
             show: true,
-            position: "left",
+            position: 'left',
             axisLabel: null,
             gridLines: true,
             showMinorTicks: true,
@@ -81,13 +88,13 @@ function plot_get_config(digital = false) {
     };
 
     if (digital) {
-        config.yaxis.autoScale = "none";
         config.yaxis.min = -0.15;
         config.yaxis.max = 5.85;
+        config.yaxis.autoScale = 'none';
         config.yaxis.ticks = [
-            [0, "LO"], [0.7, "HI"], [1, "LO"], [1.7, "HI"],
-            [2, "LO"], [2.7, "HI"], [3, "LO"], [3.7, "HI"],
-            [4, "LO"], [4.7, "HI"], [5, "LO"], [5.7, "HI"],
+            [0, 'LO'], [0.7, 'HI'], [1, 'LO'], [1.7, 'HI'],
+            [2, 'LO'], [2.7, 'HI'], [3, 'LO'], [3.7, 'HI'],
+            [4, 'LO'], [4.7, 'HI'], [5, 'LO'], [5.7, 'HI'],
         ];
         config.yaxis.showMinorTicks = false;
         // config.yaxis.axisLabel = "Digital";
@@ -95,24 +102,45 @@ function plot_get_config(digital = false) {
     return config;
 }
 
-/// update the plots with new data
-function plot_update() {
-    for (p of rl_plots) {
+/// async update of all plots with new data
+async function update_plots() {
+    if (plotting != null) {
+        await plotting;
+    }
+    plot_next = setTimeout(update_plots, RL_DATA_MIN_INTERVAL);
+
+    let update_plot = async (plot) => {
         // collect data series to plot
         let data = [];
         for (ch in rl_data) {
             // check if enabled
-            if (rl_metadata[ch].unit == p.unit) {
+            if ((rl_metadata[ch].unit == plot.unit) ||
+                (plot.digital && rl_metadata[ch].digital)) {
                 data.push(rl_data[ch]);
             }
         }
 
         // get plot config
-        const config = plot_get_config(p.digital);
+        const config = plot_get_config(plot.digital);
 
         // update plot
-        p.placeholder.plot(data, config);
-    }
+        plot.placeholder.plot(data, config);
+    };
+    plotting = Promise.all(rl_plots.map((p) => update_plot(p)));
+}
+
+function rl_plot_start() {
+    update_plots();
+}
+
+async function rl_plot_stop() {
+    clearTimeout(plot_next);
+    plot_next = null;
+    await plotting;
+}
+
+function rl_plot_active() {
+    return (plot_next != null);
 }
 
 /**
@@ -214,9 +242,8 @@ $(() => {
 
     // plot update change handler if enabled
     $('#plot_update').change(() => {
-        // trigger plot update if enabled
-        if ($('#plot_update').prop('checked')) {
-            plot_update();
+        if (!$('#plot_update').prop('checked')) {
+            rl_plot_stop();
         }
     });
 
@@ -225,8 +252,9 @@ $(() => {
         // console.log(`rl data: t=${res.t}, ${res.metadata}`);
         // process data trigger plot update if enabled
         rl_data_process(res);
-        if ($('#plot_update').prop('checked')) {
-            plot_update();
+        if (!rl_plot_active() && $('#plot_update').prop('checked')) {
+            rl_plot_start();
+            $('#collapseConfiguration').collapse('hide');
         }
     });
 });
