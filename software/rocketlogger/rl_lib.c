@@ -125,9 +125,6 @@ int rl_run(rl_config_t *const config) {
 
     // INITIATION
 
-    // init hardware
-    hw_init(config);
-
     // init status
     rl_status_reset(&rl_status);
     rl_status.config = config;
@@ -135,6 +132,9 @@ int rl_run(rl_config_t *const config) {
     // init status publishing and publish (to not be received, see zeromq docs)
     rl_status_pub_init();
     rl_status_write(&rl_status);
+
+    // init hardware
+    hw_init(config);
 
     // initialize socket if webserver enabled
     if (config->web_enable) {

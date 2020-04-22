@@ -28,146 +28,198 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// check RocketLogger base functionality is loaded
+if (typeof (rl) == 'undefined') {
+	throw 'need to load rl.base.js before loading rl.control.js'
+}
+
 /// RocketLogger channel names
 const RL_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4', 'I1L', 'I1H', 'I2L', 'I2H'];
 /// RocketLogger force range channel names
 const RL_CHANNEL_FORCE_NAMES = ['I1H', 'I2H'];
 
-/// RocketLogger config reset value
-const RL_CONFIG_RESET = {
-	/// ambient sensor enable
-	ambient_enable: false,
-	/// channels enabled
-	channel_enable: RL_CHANNEL_NAMES,
-	/// channels force high range
-	channel_force_range: [],
-	/// digital input enable
-	digital_enable: true,
-	/// file storage, file config structure or null to disable
-	file: {
-		/// file header comment
-		comment: 'Sampled using the RocketLogger web interface.',
-		/// filename
-		filename: 'data.rld',
-		/// file format
-		format: 'rld',
-		/// maximum size before split in multiple files (0 disable)
-		size: 1e9,
-	},
-	/// sample rate
-	sample_rate: 1000,
-	/// web interface data enable
-	web_enable: true,
-};
+/// initialize RocketLogger control functionality
+function rocketlogger_init_control() {
+	// check RocketLogger base functionality is initialized
+	if (rl.status === null) {
+		throw 'need RocketLogger base functionality to be initialized first.'
+	}
 
-/// start RocketLogger measurement
-function rl_start(config) {
-	req = {
-		cmd: 'start',
-		config: config,
+	// init config with reset default
+	rl._data.default_config = config_get_reset();
+
+	// provide start(), stop() and config() request methods
+	rl.start = () => {
+		req = {
+			cmd: 'start',
+			config: rl._data.config,
+		};
+		rl._conn.socket.emit('control', req);
 	};
-	rl_socket.emit('control', req);
+	rl.stop = () => {
+		req = {
+			cmd: 'stop',
+			config: null,
+		};
+		rl._conn.socket.emit('control', req);
+	};
+	rl.config = (set_default) => {
+		req = {
+			cmd: 'config',
+			config: rl._data.config,
+			set_default: set_default,
+		};
+		rl._conn.socket.emit('control', req);
+	};
+
+	// init config update callback
+	rl._conn.socket.on('control', (res) => {
+		console.log(`rl control: ${JSON.stringify(res)}`);
+		const cmd = res.req.cmd;
+		/// @todo handle control feedback
+		if (cmd == 'start') {
+			rl._data.config = res.config;
+		} else if (cmd == 'stop') {
+			// no actions
+		} else if (cmd == 'config') {
+			rl._data.default_config = res.config;
+			config_reset_default();
+			if (res.default) {
+				$("#alert_config_saved").show();
+			} else {
+				$("#alert_config_loaded").show();
+			}
+		}
+	});
 }
 
-/// stop RocketLogger measurement
-function rl_stop() {
-	req = {
-		cmd: 'stop',
-		config: null,
+/// get configuration reset value
+function config_get_reset() {
+	const config = {
+		/// ambient sensor enable
+		ambient_enable: false,
+		/// channels enabled
+		channel_enable: RL_CHANNEL_NAMES,
+		/// channels force high range
+		channel_force_range: [],
+		/// digital input enable
+		digital_enable: true,
+		/// file storage, file config structure or null to disable
+		file: {
+			/// file header comment
+			comment: 'Sampled using the RocketLogger web interface.',
+			/// filename
+			filename: 'data.rld',
+			/// file format
+			format: 'rld',
+			/// maximum size before split in multiple files (0 disable)
+			size: 1e9,
+		},
+		/// sample rate
+		sample_rate: 1000,
+		/// web interface data enable
+		web_enable: true,
 	};
-	rl_socket.emit('control', req);
+	return config;
+
 }
 
-/// load/store RocketLogger default configuration
-function rl_config(config) {
-	req = {
-		cmd: 'config',
-		config: config,
-		default: (config != null),
-	};
-	rl_socket.emit('control', req);
-}
+/// update RocketLogger config on interface changes
+function config_change() {
+	// new configuration structure
+	const config = {
+		ambient_enable: $('#ambient_enable').prop('checked'),
+		channel_enable: [],
+		channel_force_range: [],
+		digital_enable: $('#digital_enable').prop('checked'),
+		file: null,
+		sample_rate: $('#sample_rate').val(),
+		web_enable: $('#web_enable').prop('checked'),
+	}
 
-/// get configuration from inputs
-function config_get() {
 	// get channel config
-	let channel_enable_config = [];
 	for (ch of RL_CHANNEL_NAMES) {
 		if ($(`#channel_${ch.toLowerCase()}_enable`).prop('checked')) {
-			channel_enable_config.push(ch);
+			config.channel_enable.push(ch);
 		}
 	}
 
 	// get force channel range config
-	let channel_force_range_config = [];
 	for (ch of RL_CHANNEL_FORCE_NAMES) {
 		if ($(`#channel_${ch.toLowerCase()}_force`).prop('checked')) {
-			channel_force_range_config.push(ch);
+			config.channel_force_range.push(ch);
 		}
 	}
 
 	// get file config
-	let file_config = null;
 	if ($('#file_enable').prop('checked')) {
-		let file_size = 0;
-		if ($('#file_split').prop('checked')) {
-			file_size = $('#file_size').val() * $('#file_size_scale').val();
-		}
-		file_config = {
+		config.file = {
 			comment: $('#file_comment').val(),
 			filename: $('#file_filename').val(),
 			format: $('#file_format').val(),
-			size: file_size,
+			size: 0,
+		}
+		if ($('#file_split').prop('checked')) {
+			config.file.size = $('#file_size').val() * $('#file_size_scale').val();
 		}
 	}
 
-	// assemble config structure
-	let config = {
-		ambient_enable: $('#ambient_enable').prop('checked'),
-		channel_enable: channel_enable_config,
-		channel_force_range: channel_force_range_config,
-		digital_enable: $('#digital_enable').prop('checked'),
-		file: file_config,
-		sample_rate: $('#sample_rate').val(),
-		web_enable: $('#web_enable').prop('checked'),
-	};
-	return config;
+	// update stored config
+	rl._data.config = config;
+
+	// perform necessary interface updates
+	$('#file_group').prop('disabled', (config.file == null));
+	$('#file_split_group').prop('disabled', (config.file && (config.file.size == 0)));
+	$('#web_group').prop('disabled', !config.web_enable);
+	$('#collapsePreview').collapse(config.web_enable ? 'show' : 'hide');
+
+	// estimate remaining time from configuration
+	let use_rate_estimated = (config.channel_enable.length +
+		(config.digital_enable ? 1 : 0)) * 4 * config.sample_rate;
+	if (use_rate_estimated > 0 && config.file !== null) {
+		$('#status_remaining').text(
+			`~ ${unix_to_timespan_string(rl._data.status.disk_free_bytes / use_rate_estimated)}`);
+	} else {
+		$('#status_remaining').text('indefinite');
+	}
 }
 
-/// set inputs to specified or reset configuration
-function config_set(config) {
-	if (config === null) {
-		config = RL_CONFIG_RESET;
+/// update configuration interface to RocketLogger default configuration
+function config_reset_default() {
+	if (rl._data.default_config === null) {
+		throw 'undefined RocketLogger default configuration.'
 	}
+	const config = rl._data.default_config;
 
-	$('#ambient_enable').prop('checked', config.ambient_enable).change();
-	$('#digital_enable').prop('checked', config.digital_enable).change();
-	$('#sample_rate').val(config.sample_rate).change();
-	$('#web_enable').prop('checked', config.web_enable).change();
+	// set direct value inputs
+	$('#ambient_enable').prop('checked', config.ambient_enable);
+	$('#digital_enable').prop('checked', config.digital_enable);
+	$('#sample_rate').val(config.sample_rate);
+	$('#web_enable').prop('checked', config.web_enable);
 
 	// set channel switches
 	for (ch of RL_CHANNEL_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked',
-			(config.channel_enable.indexOf(ch) >= 0)).change();
+			(config.channel_enable.indexOf(ch) >= 0));
 	}
 
 	// set force channel range config
 	for (ch of RL_CHANNEL_FORCE_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_force`).prop('checked',
-			(config.channel_force_range.indexOf(ch) >= 0)).change();
+			(config.channel_force_range.indexOf(ch) >= 0));
 	}
 
-	// set file config
+	// set file config inputs
 	if (config.file === null) {
-		$('#file_enable').prop('checked', false).change();
+		$('#file_enable').prop('checked', false);
 	} else {
-		$('#file_enable').prop('checked', true).change();
-		$('#file_comment').val(config.file.comment).change();
-		$('#file_filename').val(config.file.filename).change();
-		$('#file_format').val(config.file.format).change();
+		$('#file_enable').prop('checked', true);
+		$('#file_comment').val(config.file.comment);
+		$('#file_filename').val(config.file.filename);
+		$('#file_format').val(config.file.format);
 
 		// set file split and size config
-		$('#file_split').prop('checked', config.file.size > 0).change();
+		$('#file_split').prop('checked', config.file.size > 0);
 		if (config.file.size === 0) {
 			config.file.size = RL_CONFIG_RESET.file.size;
 		} else if (config.file.size < 1e6) {
@@ -182,40 +234,49 @@ function config_set(config) {
 			$('#file_size_scale').val('1000000');
 		}
 	}
+
+	// trigger configuration interface update handler
+	config_change();
 }
 
 /// enable all measurement channels without forcing high range
-function config_enable_channels() {
+function config_channels_enable() {
 	// enable channel switches
 	for (ch of RL_CHANNEL_NAMES) {
-		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', true).change();
+		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', true);
 	}
 
 	// unset force channel range
 	for (ch of RL_CHANNEL_FORCE_NAMES) {
-		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false).change();
+		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
 	}
-	$('#digital_enable').prop('checked', true).change();
-	$('#ambient_enable').prop('checked', true).change();
+	$('#digital_enable').prop('checked', true);
+	$('#ambient_enable').prop('checked', true);
+
+	// trigger configuration interface update handler
+	config_change();
 }
 
 /// disable all measurement channels
-function config_disable_channels() {
+function config_channels_disable() {
 	// disable channels
 	for (ch of RL_CHANNEL_NAMES) {
-		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', false).change();
+		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', false);
 	}
 
 	// unset force channel range
 	for (ch of RL_CHANNEL_FORCE_NAMES) {
-		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false).change();
+		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
 	}
-	$('#digital_enable').prop('checked', false).change();
-	$('#ambient_enable').prop('checked', false).change();
+	$('#digital_enable').prop('checked', false);
+	$('#ambient_enable').prop('checked', false);
+
+	// trigger configuration interface update handler
+	config_change();
 }
 
 /// add date prefix to filename if not existing
-function config_add_file_prefix() {
+function config_file_add_prefix() {
 	const date_pattern = /\d{8}_\d{6}_/;
 
 	// check filename for existing prefix
@@ -224,74 +285,51 @@ function config_add_file_prefix() {
 		filename = filename.slice(16);
 	}
 	$('#file_filename').val(`${date_to_prefix_string(new Date())}_${filename}`);
+
+	// trigger configuration interface update handler
+	config_change();
 }
 
-/**
- * Initialization when document is fully loaded
- */
+/// document ready callback handler for initialization
 $(() => {
-	// reset configuration controls
-	config_set(null);
+	// initialize RocketLogger control functionality
+	rocketlogger_init_control();
+
+	// initialize configuration interface update handler
+	$('#configuration_group').on('change', config_change);
+
+	// initialize configuration interface helper action buttons
+	$('#button_config_all').click(() => {
+		config_channels_enable();
+	});
+	$('#button_config_none').click(() => {
+		config_channels_disable();
+	});
+	$('#button_file_prefix').click(() => {
+		config_file_add_prefix();
+	});
 
 	// initialize measurement control buttons
 	$('#button_start').click(() => {
-		rl_start(config_get());
+		rl.start();
 	});
 	$('#button_stop').click(() => {
-		rl_stop();
+		rl.stop();
 	});
 
 	// initialize default configuration control buttons
 	$('#button_config_save').click(() => {
 		$("#alert_config_saved").hide();
 		$("#alert_config_loaded").hide();
-		rl_config(config_get());
+		rl.config(true);
 	});
 	$('#button_config_load').click(() => {
 		$("#alert_config_saved").hide();
 		$("#alert_config_loaded").hide();
-		rl_config();
+		rl.config();
 	});
 
-	// initialize configuration helper action buttons
-	$('#button_config_all').click(() => {
-		config_enable_channels();
-	});
-	$('#button_config_none').click(() => {
-		config_disable_channels();
-	});
-	$('#button_file_prefix').click(() => {
-		config_add_file_prefix();
-	});
-
-	// initialize configuration check boxes
-	$('#file_enable').change(() => {
-		$('#file_group').prop('disabled', !$('#file_enable').prop('checked'));
-	});
-	$('#file_split').change(() => {
-		$('#file_split_group').prop('disabled', !$('#file_split').prop('checked'));
-	});
-	$('#web_enable').change(() => {
-		$('#web_group').prop('disabled', !$('#web_enable').prop('checked'));
-		$('#collapsePreview').collapse($('#web_enable').prop('checked') ? 'show' : 'hide');
-	});
-
-	// status update callback
-	rl_socket.on('control', (res) => {
-		console.log(`rl control: ${JSON.stringify(res)}`);
-		const cmd = res.req.cmd;
-		// @todo handle control feedback
-		if (cmd == 'start') {
-			// rl_status();
-		} else if (cmd == 'stop') {
-			// setTimeout(rl_status, 300);
-		} else if (cmd == 'config') {
-			config_set(res.config);
-			if (res.default) {
-				$("#alert_config_saved").show();
-			} else {
-				$("#alert_config_loaded").show();
-			}
-		}
-	});
+	// update configuration interface and trigger load config
+	config_reset_default();
+	rl.config();
 });

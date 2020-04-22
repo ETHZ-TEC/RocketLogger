@@ -29,46 +29,97 @@
  */
 
 /// Disk space critically low warning thresholds in permille
-const DISK_CRITICAL_THRESHOLD = 50;
+const RL_DISK_CRITICAL_THRESHOLD = 50;
 /// Disk space low warning thresholds in permille
-const DISK_WARNING_THRESHOLD = 150;
+const RL_DISK_WARNING_THRESHOLD = 150;
 
-/// RocketLogger status reset value
-const RL_STATUS_RESET = {
-	/// calibration timestamp, -1 no calibration
-	calibration: -1,
-	/// free disk space in bytes
-	disk_free_bytes: 0,
-	/// free disk space in permille
-	disk_free_permille: 0,
-	/// disk space required per minute when sampling
-	disk_use_per_min: 0,
-	/// error while sampling
-	error: false,
-	/// status message
-	message: 'waiting for status...',
-	/// recorded sample count
-	sample_count: 0,
-	/// recorded sample time in seconds
-	sample_time: 0,
-	/// sampling state, true: sampling, false: idle
-	sampling: false,
+/// RocketLogger structure for interaction and data management
+const rl = {
+	// RocketLogger connection and control handling
+	_conn: {
+		socket: null,
+	},
+	// RocketLogger data structures
+	_data: {
+		status: null,
+		config: null,
+		buffer: null,
+		metadata: null,
+	},
+
+	// methods to interface with the RocketLogger
+	status: null,
+	config: null, // provided by rl.control.js
+	start: null, // provided by rl.control.js
+	stop: null, // provided by rl.control.js
+	plot: null, // provided by rl._data.js
 };
 
-/// global socket.io socket object for RocketLogger interaction
-const rl_socket = io(`http://${location.hostname}:5000/`);
+/// initialize RocketLogger interfacing base functionality
+function rocketlogger_init_base() {
+	// new socket.io socket for RocketLogger interaction
+	rl._conn.socket = io(window.location.origin);
 
-/// request status update from server
-function rl_status() {
-	req = { cmd: 'status' };
-	rl_socket.emit('status', req);
+	// init connection handler callbacks
+	rl._conn.socket.on('connect', () => {
+		console.log(`socket.io connection established (${rl._conn.socket.id}).`);
+	});
+	rl._conn.socket.on('disconnect', () => {
+		console.log(`socket.io connection closed.`);
+	});
+	// init default message callback
+	rl._conn.socket.on('message', (msg) => {
+		console.log(`socket.io message: ${msg}`);
+	});
+
+	// init status with reset default
+	rl._data.status = status_get_reset();
+
+	// init default status and provide status() request method
+	rl.status = () => {
+		req = { cmd: 'status' };
+		rl._conn.socket.emit('status', req);
+	};
+
+	// init status update callback
+	rl._conn.socket.on('status', (res) => {
+		// console.log(`rl status: ${JSON.stringify(res)}`);
+		rl._data.status = res.status;
+		update_status();
+	});
 }
 
-/// set the status fields with the status, null to reset
-function status_set(status) {
-	if (status === null) {
-		status = RL_STATUS_RESET;
+/// get status reset value
+function status_get_reset() {
+	const status = {
+		/// calibration timestamp, -1 no calibration
+		calibration: -1,
+		/// free disk space in bytes
+		disk_free_bytes: 0,
+		/// free disk space in permille
+		disk_free_permille: 0,
+		/// disk space required per minute when sampling
+		disk_use_per_min: 0,
+		/// error while sampling
+		error: false,
+		/// status message
+		message: 'waiting for status...',
+		/// recorded sample count
+		sample_count: 0,
+		/// recorded sample time in seconds
+		sample_time: 0,
+		/// sampling state, true: sampling, false: idle
+		sampling: false,
+	};
+	return status;
+}
+
+/// update the status interface with the current RocketLogger status
+function update_status() {
+	if (rl._data.status === null) {
+		throw 'undefined RocketLogger status.'
 	}
+	const status = rl._data.status;
 
 	// status message
 	let status_message = '';
@@ -76,15 +127,15 @@ function status_set(status) {
 		status_message += 'sampling';
 	} else {
 		status_message += 'idle';
-		if (rl_plot_stop) {
-			rl_plot_stop();
+		if (rl.plot) {
+			rl.plot.stop();
 		}
 	}
 	if (status.error) {
 		status_message += ' with error';
-		$('#warn_calibration').show();
+		$('#warn_error').show();
 	} else {
-		$('#warn_calibration').hide();
+		$('#warn_error').hide();
 	}
 	$('#status_message').text(status_message).change();
 
@@ -111,28 +162,18 @@ function status_set(status) {
 		`${(status.disk_free_permille / 10).toFixed(1)}%) free`);
 	$('#warn_storage_critical').hide();
 	$('#warn_storage_low').hide();
-	if (status.disk_free_permille <= DISK_WARNING_THRESHOLD) {
-		if (status.disk_free_permille <= DISK_CRITICAL_THRESHOLD) {
+	if (status.disk_free_permille <= RL_DISK_WARNING_THRESHOLD) {
+		if (status.disk_free_permille <= RL_DISK_CRITICAL_THRESHOLD) {
 			$('#warn_storage_critical').show();
 		} else {
 			$('#warn_storage_low').show();
 		}
 	}
 
-	// calc remaining time @todo update calculation
-	if (status.disk_use_rate > 0) {
+	// remaining sampling time
+	if (status.sampling && status.disk_use_rate > 0) {
 		$('#status_remaining').text(unix_to_timespan_string(
 			status.disk_free_bytes / status.disk_use_rate));
-	} else {
-		let config = config_get();
-		let use_rate_estimated = (config.channel_enable.length +
-			(config.digital_enable ? 1 : 0)) * 4 * config.sample_rate;
-		if (use_rate_estimated > 0 && config.file !== null) {
-			$('#status_remaining').text(
-				`~ ${unix_to_timespan_string(status.disk_free_bytes / use_rate_estimated)}`);
-		} else {
-			$('#status_remaining').text('indefinite');
-		}
 	}
 
 	// control buttons and config form
@@ -148,41 +189,22 @@ function status_set(status) {
 	$('#configuration_group').prop('disabled', status.sampling);
 }
 
-/**
- * Initialization when document is fully loaded
- */
+/// document ready callback handler for initialization
 $(() => {
-	// reset status fields to default
-	status_set(null);
-
-	// connection handler callbacks
-	rl_socket.on('connect', () => {
-		console.log(`socket.io connection established (${rl_socket.id}).`);
-	});
-	rl_socket.on('disconnect', () => {
-		console.log(`socket.io connection closed.`);
-	});
-	// log default message callback
-	rl_socket.on('message', (msg) => {
-		console.log(`socket.io message: ${msg}`);
-	});
-
-	// status update callback
-	rl_socket.on('status', (res) => {
-		// console.log(`rl status: ${JSON.stringify(res)}`);
-		status_set(res.status);
-	});
+	// initialize RocketLogger interface and display default status
+	rocketlogger_init_base();
 
 	// status update button
 	$('#button_status').click(() => {
-		rl_status();
+		rl.status();
 	});
 
 	// status update on window focus
 	window.addEventListener('focus', () => {
-		rl_status();
+		rl.status();
 	});
 
-	// trigger status update on load
-	rl_status();
+	// update status interface and trigger status update
+	update_status();
+	rl.status();
 });

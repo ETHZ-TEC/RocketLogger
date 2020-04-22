@@ -148,7 +148,7 @@ const rl = {
         try {
             res.config = JSON.parse(cmd.stdout.toString());
             if (res.config.file) {
-                res.config.file.filename = path.basename(rl_config.file.filename);
+                res.config.file.filename = path.basename(res.config.file.filename);
             }
         } catch (err) {
             res.err.push(`RocketLogger configuration processing error: ${err}`);

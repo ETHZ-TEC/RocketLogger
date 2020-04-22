@@ -28,20 +28,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// check RocketLogger base functionality is loaded
+if (typeof (rl) == 'undefined') {
+    throw 'need to load rl.base.js before loading rl._data.js'
+}
+
 /// data buffer length to buffer locally
 const RL_DATA_BUFFER_LENGTH = 10000;
-/// minimum plot update interval [in ms]
-const RL_DATA_MIN_INTERVAL = 50;
+/// maximum plot update rate [frames/sec]
+const RL_PLOT_MAX_FPS = 50;
 
-/// data buffer structure
-let rl_data = {};
-/// data buffer metadata
-let rl_metadata = {};
-/// plots to update
-let rl_plots = [];
+/// initialize RocketLogger data and plot functionality
+function rocketlogger_init_data() {
+    // check RocketLogger base functionality is initialized
+    if (rl.status === null) {
+        throw 'need RocketLogger base functionality to be initialized first.'
+    }
 
-let plot_next = null;
-let plotting = null;
+    // initialize data buffers
+    reset_buffer();
+
+    // initialize plotting data structure
+    rl.plot = {
+        plots: [],
+        auto_scroll: true,
+        plotting: null,
+        timeout: null,
+    };
+
+    // provide data() method
+    rl.data = () => {
+        /// @todo init buffer from data cache
+        req = {
+            cmd: 'data',
+            time: Date.now(),
+        };
+        rl._conn.socket.emit('data', req);
+    }
+
+    // provide plot.start() and plot.stop() methods
+    rl.plot.start = async () => {
+        await update_plots();
+    };
+    rl.plot.stop = async () => {
+        clearTimeout(rl.plot.timeout);
+        rl.plot.timeout = null;
+        await rl.plot.plotting;
+    };
+
+    // init data update callback
+    rl._conn.socket.on('data', (res) => {
+        // console.log(`rl data: t=${res.t}, ${res.metadata}`);
+        // process data trigger plot update if enabled
+        process_data(res);
+        if ((rl.plot.timeout == null) && $('#plot_update').prop('checked')) {
+            rl.plot.start();
+            $('#collapseConfiguration').collapse('hide');
+        }
+    });
+}
+
+/// reset local data buffers
+function reset_buffer() {
+    rl._data.buffer = {};
+    rl._data.metadata = {};
+}
 
 /// initialize an analog data plot
 function plot_get_config(digital = false) {
@@ -104,43 +155,28 @@ function plot_get_config(digital = false) {
 
 /// async update of all plots with new data
 async function update_plots() {
-    if (plotting != null) {
-        await plotting;
+    if (rl.plot.plotting != null) {
+        await rl.plot.plotting;
     }
-    plot_next = setTimeout(update_plots, RL_DATA_MIN_INTERVAL);
+    rl.plot.timeout = setTimeout(update_plots, 1000 / RL_PLOT_MAX_FPS);
 
     let update_plot = async (plot) => {
         // collect data series to plot
         let data = [];
-        for (ch in rl_data) {
+        for (ch in rl._data.buffer) {
             // check if enabled
-            if ((rl_metadata[ch].unit == plot.unit) ||
-                (plot.digital && rl_metadata[ch].digital)) {
-                data.push(rl_data[ch]);
+            if ((rl._data.metadata[ch].unit == plot.unit)) {
+                data.push(rl._data.buffer[ch]);
             }
         }
 
         // get plot config
-        const config = plot_get_config(plot.digital);
+        const config = plot_get_config(plot.unit == 'digital');
 
         // update plot
         plot.placeholder.plot(data, config);
     };
-    plotting = Promise.all(rl_plots.map((p) => update_plot(p)));
-}
-
-function rl_plot_start() {
-    update_plots();
-}
-
-async function rl_plot_stop() {
-    clearTimeout(plot_next);
-    plot_next = null;
-    await plotting;
-}
-
-function rl_plot_active() {
-    return (plot_next != null);
+    rl.plot.plotting = Promise.all(rl.plot.plots.map((p) => update_plot(p)));
 }
 
 /**
@@ -148,7 +184,7 @@ function rl_plot_active() {
  * 
  * @param {Object} res Data result structure from server
  */
-function rl_data_process(res) {
+function process_data(res) {
     for (const ch in res.metadata) {
         // skip hidden channel
         if (res.metadata[ch].hidden) {
@@ -156,15 +192,15 @@ function rl_data_process(res) {
         }
 
         // init array buffer if necessary
-        if (!rl_data[ch]) {
-            rl_data[ch] = [];
+        if (!rl._data.buffer[ch]) {
+            rl._data.buffer[ch] = [];
         }
 
         // decode data
         if (res.metadata[ch].digital) {
             const buf = new Uint32Array(res.digital);
             for (let i = 0; i < buf.length; i++) {
-                rl_data[ch].push([
+                rl._data.buffer[ch].push([
                     res.time[i],
                     (buf[i] & (0x01 << res.metadata[ch].bit)) ? 0.7 : 0
                         + res.metadata[ch].bit]);
@@ -172,89 +208,56 @@ function rl_data_process(res) {
         } else if (res.metadata[ch].scale) {
             const buf = new Int32Array(res.data[ch]);
             for (let i = 0; i < buf.length; i++) {
-                rl_data[ch].push([res.time[i], buf[i] * res.metadata[ch].scale]);
+                rl._data.buffer[ch].push([res.time[i], buf[i] * res.metadata[ch].scale]);
             }
         } else {
             const buf = new Int32Array(res.data[ch]);
             for (let i = 0; i < buf.length; i++) {
-                rl_data[ch].push([res.time[i], buf[i]]);
+                rl._data.buffer[ch].push([res.time[i], buf[i]]);
             }
         }
 
-        // // decode data (legacy)
-        // let data = [];
-        // if (res.metadata[ch].digital) {
-        //     const buf = new Uint32Array(res.digital);
-        //     for (let i = 0; i < buf.length; i++) {
-        //         data.push([res.time[i], (buf[i] >>> res.metadata[ch].bit) & 0x01]);
-        //     }
-        //     data = Array.from(new Uint32Array(res.digital),
-        //         (val, idx) => [res.time[idx], (val >>> res.metadata[ch].bit) & 0x01]);
-        // } else if (res.metadata[ch].scale) {
-        //     const buf = new Int32Array(res.data[ch]);
-        //     for (let i = 0; i < buf.length; i++) {
-        //         data.push([res.time[i], buf[i] * res.metadata[ch].scale]);
-        //     }
-        //     data = Array.from(new Int32Array(res.data[ch]),
-        //         (val, idx) => [res.time[idx], val * res.metadata[ch].scale]);
-        // } else {
-        //     const buf = new Int32Array(res.data[ch]);
-        //     for (let i = 0; i < buf.length; i++) {
-        //         data.push([res.time[i], buf[i]]);
-        //     }
-        //     data = Array.from(new Int32Array(res.data[ch]));
-        // }
-
-        // // add data to un-typed array buffer
-        // if (rl_data[ch]) {
-        //     rl_data[ch] = rl_data[ch].concat(data);
-        // } else {
-        //     rl_data[ch] = data;
-        // }
-
         // drop old values
-        if (rl_data[ch].length > RL_DATA_BUFFER_LENGTH) {
-            rl_data[ch].splice(0,
-                rl_data[ch].length - RL_DATA_BUFFER_LENGTH);
+        if (rl._data.buffer[ch].length > RL_DATA_BUFFER_LENGTH) {
+            rl._data.buffer[ch].splice(0,
+                rl._data.buffer[ch].length - RL_DATA_BUFFER_LENGTH);
         }
     }
-    rl_metadata = res.metadata;
+
+    // store metadata and set digital unit
+    rl._data.metadata = res.metadata;
+    for (ch in rl._data.metadata) {
+        if (rl._data.metadata[ch].digital) {
+            rl._data.metadata[ch].unit = 'digital';
+        }
+    }
 }
 
 /**
  * Initialization when document is fully loaded.
  */
 $(() => {
+    // initialize RocketLogger data and plot functionality
+    rocketlogger_init_data();
+
     // register plots to update
-    rl_plots.push({
+    rl.plot.plots.push({
         placeholder: $('#plot_voltage'),
         unit: 'V',
     });
-    rl_plots.push({
+    rl.plot.plots.push({
         placeholder: $('#plot_current'),
         unit: 'A',
     });
-    rl_plots.push({
+    rl.plot.plots.push({
         placeholder: $('#plot_digital'),
-        digital: true,
-        unit: null,
+        unit: 'digital',
     });
 
     // plot update change handler if enabled
     $('#plot_update').change(() => {
         if (!$('#plot_update').prop('checked')) {
-            rl_plot_stop();
-        }
-    });
-
-    /// initialize data reception handler
-    rl_socket.on('data', (res) => {
-        // console.log(`rl data: t=${res.t}, ${res.metadata}`);
-        // process data trigger plot update if enabled
-        rl_data_process(res);
-        if (!rl_plot_active() && $('#plot_update').prop('checked')) {
-            rl_plot_start();
-            $('#collapseConfiguration').collapse('hide');
+            rl.plot.stop();
         }
     });
 });
