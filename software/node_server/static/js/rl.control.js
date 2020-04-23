@@ -46,7 +46,7 @@ function rocketlogger_init_control() {
 	}
 
 	// init config with reset default
-	rl._data.default_config = config_get_reset();
+	rl._data.default_config = null;
 
 	// provide start(), stop() and config() request methods
 	rl.start = () => {
@@ -67,7 +67,7 @@ function rocketlogger_init_control() {
 		req = {
 			cmd: 'config',
 			config: rl._data.config,
-			set_default: set_default,
+			default: set_default,
 		};
 		rl._conn.socket.emit('control', req);
 	};
@@ -82,12 +82,17 @@ function rocketlogger_init_control() {
 		} else if (cmd == 'stop') {
 			// no actions
 		} else if (cmd == 'config') {
+			const init = (rl._data.default_config == null);
 			rl._data.default_config = res.config;
 			config_reset_default();
-			if (res.default) {
-				$("#alert_config_saved").show();
-			} else {
-				$("#alert_config_loaded").show();
+
+			// indicate update except on initial load
+			if (!init) {
+				if (res.default) {
+					$("#alert_config_saved").show();
+				} else {
+					$("#alert_config_loaded").show();
+				}
 			}
 		}
 	});
@@ -168,6 +173,8 @@ function config_change() {
 	rl._data.config = config;
 
 	// perform necessary interface updates
+	$("#alert_config_saved").hide();
+	$("#alert_config_loaded").hide();
 	$('#file_group').prop('disabled', (config.file == null));
 	$('#file_split_group').prop('disabled', (config.file && (config.file.size == 0)));
 	$('#web_group').prop('disabled', !config.web_enable);
@@ -330,6 +337,5 @@ $(() => {
 	});
 
 	// update configuration interface and trigger load config
-	config_reset_default();
 	rl.config();
 });

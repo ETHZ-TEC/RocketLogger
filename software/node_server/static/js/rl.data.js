@@ -30,7 +30,7 @@
 
 // check RocketLogger base functionality is loaded
 if (typeof (rl) == 'undefined') {
-    throw 'need to load rl.base.js before loading rl._data.js'
+    throw 'need to load rl.base.js before loading rl.data.js'
 }
 
 /// data buffer length to buffer locally
@@ -153,6 +153,27 @@ function plot_get_config(digital = false) {
     return config;
 }
 
+/// initialize plots
+async function init_plots() {
+    // register plots to update
+    rl.plot.plots.push({
+        placeholder: $('#plot_voltage'),
+        unit: 'V',
+    });
+    rl.plot.plots.push({
+        placeholder: $('#plot_current'),
+        unit: 'A',
+    });
+    rl.plot.plots.push({
+        placeholder: $('#plot_digital'),
+        unit: 'digital',
+    });
+
+    // plot once
+    update_plots();
+    await rl.plot.plotting;
+}
+
 /// async update of all plots with new data
 async function update_plots() {
     if (rl.plot.plotting != null) {
@@ -240,19 +261,8 @@ $(() => {
     // initialize RocketLogger data and plot functionality
     rocketlogger_init_data();
 
-    // register plots to update
-    rl.plot.plots.push({
-        placeholder: $('#plot_voltage'),
-        unit: 'V',
-    });
-    rl.plot.plots.push({
-        placeholder: $('#plot_current'),
-        unit: 'A',
-    });
-    rl.plot.plots.push({
-        placeholder: $('#plot_digital'),
-        unit: 'digital',
-    });
+    // init plots
+    init_plots();
 
     // plot update change handler if enabled
     $('#plot_update').change(() => {
