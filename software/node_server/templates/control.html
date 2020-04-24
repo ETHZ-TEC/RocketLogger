@@ -10,8 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
   <script>if (typeof (io) === 'undefined') { document.write('<script src="/static/js/vendor/socket.io-2.3.0.min.js"><\/script>') }</script>
   <!-- plotting javascript -->
-  <script src="/static/js/vendor/jquery.flot-4.2.0.min.js"></script>
-  <script src="/static/js/vendor/jquery.flot.downsample.js"></script>
+  <script src="https://cdn.plot.ly/plotly-1.53.0.min.js" integrity="sha384-6/7lLgC8S4OZGAEvTu4UOjhY+SsoRYHhPL8fA4KJLTTT2rQysDLzqKnkZVFYYsTx" crossorigin="anonymous"></script>
+  <script>if (typeof (Plotly) === 'undefined') { document.write('<script src="/static/js/vendor/plotly-1.53.0.min.js"><\/script>') }</script>
   <!-- local javascript -->
   <script src="/static/js/rl.util.js"></script>
   <script src="/static/js/rl.base.js"></script>
@@ -58,12 +58,25 @@ p:	Un-/Pause Plot Update
         </div>
         <div class="col-sm-auto form-group">
           <div class="row justify-content-end">
+            <label class="col-sm-auto col-form-label" for="plot_update_rate">Update interval</label>
+            <div class="col-sm-auto">
+              <select class="custom-select" id="plot_update_rate">
+                <option value="100" selected>auto scroll</option>
+                <option value="10">0.1 s</option>
+                <option value="2">0.5 s</option>
+                <option value="1">1 s</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-auto form-group">
+          <div class="row justify-content-end">
             <label class="col-sm-auto col-form-label" for="plot_time_scale">Time scale</label>
             <div class="col-sm-auto">
               <select class="custom-select" id="plot_time_scale">
-                <option value="0" selected>1 s/div</option>
-                <option value="1">10 s/div</option>
-                <option value="2">100 s/div</option>
+                <option value="1e3" selected>1 s/div</option>
+                <option value="10e3">10 s/div</option>
+                <option value="100e3">100 s/div</option>
               </select>
             </div>
           </div>
@@ -75,32 +88,6 @@ p:	Un-/Pause Plot Update
         <h3>Voltage Channels</h3>
         <div class="row justify-content-between align-items-center">
           <div class="col-auto">
-            <div class="row justify-content-start align-items-center">
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_voltage_1" checked>
-                  <label class="custom-control-label color-1" for="plot_voltage_1">V1</label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_voltage_2" checked>
-                  <label class="custom-control-label color-2" for="plot_voltage_2">V2</label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_voltage_3" checked>
-                  <label class="custom-control-label color-3" for="plot_voltage_3">V3</label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_voltage_4" checked>
-                  <label class="custom-control-label color-4" for="plot_voltage_4">V4</label>
-                </div>
-              </div>
-            </div>
           </div>
           <div class="col-auto">
             <div class="form-group row justify-content-end">
@@ -108,13 +95,13 @@ p:	Un-/Pause Plot Update
               <div class="col-auto">
                 <select class="custom-select" id="plot_voltage_range">
                   <option value="0">Auto</option>
-                  <option value="0.1">100 µV</option>
-                  <option value="1">1 mV</option>
-                  <option value="10">10 mV</option>
-                  <option value="100">100 mV</option>
-                  <option value="1000">1 V</option>
-                  <option value="6000">6 V</option>
-                  <option value="10000">10 V</option>
+                  <option value="100e-6">100 µV</option>
+                  <option value="1e-3">1 mV</option>
+                  <option value="10e-2">10 mV</option>
+                  <option value="100e-3">100 mV</option>
+                  <option value="1">1 V</option>
+                  <option value="6">6 V</option>
+                  <option value="10">10 V</option>
                 </select>
               </div>
             </div>
@@ -127,21 +114,7 @@ p:	Un-/Pause Plot Update
         <hr />
         <h3>Current Channels</h3>
         <div class="row justify-content-between align-items-center">
-            <div class="col-auto">
-                <div class="row justify-content-start align-items-center">
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_current_1" checked>
-                  <label class="custom-control-label color-1" for="plot_current_1">I1</label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <div class="custom-control custom-checkbox mb-3">
-                  <input type="checkbox" class="custom-control-input" id="plot_current_2" checked>
-                  <label class="custom-control-label color-2" for="plot_current_2">I2</label>
-                </div>
-              </div>
-            </div>
+          <div class="col-auto">
           </div>
           <div class="col-auto">
             <div class="form-group row justify-content-start">
@@ -149,15 +122,15 @@ p:	Un-/Pause Plot Update
               <div class="col-auto">
                 <select class="custom-select" id="plot_current_range">
                   <option value="0">Auto</option>
-                  <option value="0.01">10 nA</option>
-                  <option value="0.1">100 nA</option>
-                  <option value="1">1 µA</option>
-                  <option value="10">10 µA</option>
-                  <option value="100">100 µA</option>
-                  <option value="1000">1 mA</option>
-                  <option value="10000">10 mA</option>
-                  <option value="100000">100 mA</option>
-                  <option value="1000000">1 A</option>
+                  <option value="10e-9">10 nA</option>
+                  <option value="100e-9">100 nA</option>
+                  <option value="1e-6">1 µA</option>
+                  <option value="10e-6">10 µA</option>
+                  <option value="100e-6">100 µA</option>
+                  <option value="1e-3">1 mA</option>
+                  <option value="10e-3">10 mA</option>
+                  <option value="100e-3">100 mA</option>
+                  <option value="1.0">1 A</option>
                 </select>
               </div>
             </div>
@@ -169,64 +142,12 @@ p:	Un-/Pause Plot Update
       <div id="plot_group_digital">
         <hr />
         <h3>Digital Channels</h3>
-        <div class="row align-items-center">
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_1" checked>
-              <label class="custom-control-label color-1" for="plot_digital_1">DI1</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_2" checked>
-              <label class="custom-control-label color-2" for="plot_digital_2">DI2</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_3" checked>
-              <label class="custom-control-label color-3" for="plot_digital_3">DI3</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_4" checked>
-              <label class="custom-control-label color-4" for="plot_digital_4">DI4</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_5" checked>
-              <label class="custom-control-label color-5" for="plot_digital_5">DI5</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_digital_6" checked>
-              <label class="custom-control-label color-6" for="plot_digital_6">DI6</label>
-            </div>
-          </div>
-        </div>
         <div class="rl-plot mb-3" id="plot_digital"></div>
       </div>
 
       <div id="plot_group_ambient" class="d-none">
         <hr />
         <h3>Ambient Sensors</h3>
-        <div class="row align-items-center">
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_ambient_1" checked>
-              <label class="custom-control-label color-1" for="plot_ambient_1">DI1</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="plot_ambient_2" checked>
-              <label class="custom-control-label color-2" for="plot_ambient_2">DI2</label>
-            </div>
-          </div>
-        </div>
         <div class="rl-plot mb-3" id="plot_ambient"></div>
       </div>
     </fieldset>

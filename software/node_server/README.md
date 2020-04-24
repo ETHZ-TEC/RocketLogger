@@ -36,11 +36,11 @@ Install dependencies using `npm`:
 - `popper.js` - tooltip and popover positioning engine (used by bootstrap)
 - `jquery` - general purpose JavaScript library
 - `socket.io.js` - websockets client side JavaScript library
-- `flot` - JavaScript plotting library
+- `plotly.js` - JavaScript plotting library
 
 Install dependencies using `npm`:
 
-`npm install bootstrap jquery @popperjs/core socket.io-client flot`
+`npm install bootstrap jquery @popperjs/core socket.io-client plotly.js`
 
 
 ## Installation

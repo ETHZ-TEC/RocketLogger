@@ -51,7 +51,7 @@ function rocketlogger_init_data() {
     // initialize plotting data structure
     rl.plot = {
         plots: [],
-        auto_scroll: true,
+        update_rate: RL_PLOT_MAX_FPS,
         plotting: null,
         timeout: null,
     };
@@ -95,83 +95,127 @@ function reset_buffer() {
 }
 
 /// initialize an analog data plot
-function plot_get_config(digital = false) {
-    let now = Date.now();
-    const time_base = 1000;
+function plot_get_layout(plot_config, update_only = false) {
+    const now = Date.now();
 
-    /// default plot configuration
-    const config = {
-        series: {
-            shadowSize: 0,
-            lines: {
-                show: true,
-            },
-            points: {
-                show: false,
-            },
-            downsample: {
-                threshold: 1000,
-            },
-        },
+    /// default plotly axis configuration
+    const layout = {
         xaxis: {
-            show: true,
-            position: 'bottom',
-            mode: 'time',
-            min: now - 10 * time_base,
-            max: now,
-            autoScale: 'none',
-            ticks: Array.from({ length: 12 }, (_, i) => time_base * (Math.ceil(Date.now() / time_base) - 11 + i)),
-            tickFormatter: (val, _) => {
-                var d = new Date(val);
-                return time_to_string(d);
-            },
-            axisLabel: null,
-            gridLines: false,
-            showMinorTicks: true,
+            range: [now - 10 * plot_config.time_scale, now],
+            linewidth: 1,
+            mirror: true,
+            tickvals: [],
+            ticktext: [],
+            ticklen: 5,
+            tickwidth: 1,
+            tickfont: { size: 14, },
+            fixedrange: true,
         },
         yaxis: {
-            show: true,
-            position: 'left',
-            axisLabel: null,
-            gridLines: true,
-            showMinorTicks: true,
-        }
+            linewidth: 1,
+            mirror: true,
+            ticklen: 5,
+            tickwidth: 1,
+            tickfont: { size: 14, },
+            autorange: true,
+            fixedrange: true,
+            showgrid: true,
+            zeroline: true,
+        },
     };
 
-    if (digital) {
-        config.yaxis.min = -0.15;
-        config.yaxis.max = 5.85;
-        config.yaxis.autoScale = 'none';
-        config.yaxis.ticks = [
-            [0, 'LO'], [0.7, 'HI'], [1, 'LO'], [1.7, 'HI'],
-            [2, 'LO'], [2.7, 'HI'], [3, 'LO'], [3.7, 'HI'],
-            [4, 'LO'], [4.7, 'HI'], [5, 'LO'], [5.7, 'HI'],
-        ];
-        config.yaxis.showMinorTicks = false;
-        // config.yaxis.axisLabel = "Digital";
+    // generate new xticks
+    for (let i = 0; i < 12; i++) {
+        const tick = plot_config.time_scale * (Math.ceil(now / plot_config.time_scale) - 11 + i)
+        layout.xaxis.tickvals.push(tick);
+        layout.xaxis.ticktext.push(time_to_string(new Date(tick)));
     }
-    return config;
+
+    // plot type dependent yaxis format
+    if (plot_config.digital) {
+        layout.yaxis.autorange = false;
+        layout.yaxis.range = [-0.15, 5.85];
+        layout.yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
+        layout.yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
+    } else {
+        layout.yaxis.autorange = (plot_config.range == 0);
+        layout.yaxis.range = [-plot_config.range, +plot_config.range];
+    }
+
+    if (update_only) {
+        return layout;
+    }
+
+    // general plot settings
+    layout.font = { size: 16, };
+    layout.showlegend = true;
+    layout.legend = {
+        x: 0.0,
+        xanchor: 'left',
+        y: 1.01,
+        yanchor: 'bottom',
+        orientation: 'h',
+        font: { size: 18, },
+    };
+    layout.margin = {
+        l: 60,
+        r: 20,
+        t: 5,
+        b: 50,
+        autoexpand: true,
+    };
+
+    return layout;
 }
 
 /// initialize plots
 async function init_plots() {
     // register plots to update
     rl.plot.plots.push({
-        placeholder: $('#plot_voltage'),
+        id: 'plot_voltage',
+        digital: false,
+        time_scale: 1000,
+        range_control: $('#plot_voltage_range'),
+        range: 0,
         unit: 'V',
     });
     rl.plot.plots.push({
-        placeholder: $('#plot_current'),
+        id: 'plot_current',
+        digital: false,
+        time_scale: 1000,
+        range_control: $('#plot_current_range'),
+        range: 0,
         unit: 'A',
     });
     rl.plot.plots.push({
-        placeholder: $('#plot_digital'),
+        id: 'plot_digital',
+        digital: true,
+        time_scale: 1000,
+        range_control: null,
+        range: null,
         unit: 'digital',
     });
 
-    // plot once
-    update_plots();
-    await rl.plot.plotting;
+    for (let i = 0; i < rl.plot.plots.length; i++) {
+        const p = rl.plot.plots[i];
+
+        // init new plot with default layout
+        const layout = plot_get_layout(p);
+        Plotly.newPlot(p.id, [], layout, { responsive: true, displayModeBar: false });
+
+        // init range control callback handlers
+        if (p.range_control) {
+            p.range_control.on('change', () => {
+                p.range = p.range_control.val();
+            }).trigger('change');
+        }
+    }
+    // init time control callback handlers
+    $('#plot_time_scale').on('change', () => {
+        for (plot of rl.plot.plots) {
+            plot.time_scale = $('#plot_time_scale').val();
+        }
+    }).trigger('change');
 }
 
 /// async update of all plots with new data
@@ -179,7 +223,7 @@ async function update_plots() {
     if (rl.plot.plotting != null) {
         await rl.plot.plotting;
     }
-    rl.plot.timeout = setTimeout(update_plots, 1000 / RL_PLOT_MAX_FPS);
+    rl.plot.timeout = setTimeout(update_plots, 1000 / rl.plot.update_rate);
 
     let update_plot = async (plot) => {
         // collect data series to plot
@@ -187,24 +231,32 @@ async function update_plots() {
         for (ch in rl._data.buffer) {
             // check if enabled
             if ((rl._data.metadata[ch].unit == plot.unit)) {
-                data.push(rl._data.buffer[ch]);
+                data.push({
+                    x: rl._data.time,
+                    y: rl._data.buffer[ch],
+                    type: 'scattergl',
+                    mode: 'lines',
+                    name: ch,
+                    hoverinfo: 'y+name',
+                });
             }
         }
 
-        // get plot config
-        const config = plot_get_config(plot.unit == 'digital');
-
-        // update plot
-        plot.placeholder.plot(data, config);
+        // check for existing traces
+        if (document.getElementById(plot.id).data.length) {
+            const layout = plot_get_layout(plot, true);
+            Plotly.update(plot.id, data, layout);
+        } else {
+            const layout = plot_get_layout(plot);
+            Plotly.newPlot(plot.id, data, layout, { responsive: true, displayModeBar: false });
+        }
     };
-    rl.plot.plotting = Promise.all(rl.plot.plots.map((p) => update_plot(p)));
+    if (rl.plot.plots) {
+        rl.plot.plotting = Promise.all(rl.plot.plots.map((p) => update_plot(p)));
+    }
 }
 
-/**
- * Process new measurement data.
- * 
- * @param {Object} res Data result structure from server
- */
+/// process new measurement data.
 function process_data(res) {
     for (const ch in res.metadata) {
         // skip hidden channel
@@ -219,22 +271,16 @@ function process_data(res) {
 
         // decode data
         if (res.metadata[ch].digital) {
-            const buf = new Uint32Array(res.digital);
-            for (let i = 0; i < buf.length; i++) {
-                rl._data.buffer[ch].push([
-                    res.time[i],
-                    (buf[i] & (0x01 << res.metadata[ch].bit)) ? 0.7 : 0
-                        + res.metadata[ch].bit]);
-            }
-        } else if (res.metadata[ch].scale) {
-            const buf = new Int32Array(res.data[ch]);
-            for (let i = 0; i < buf.length; i++) {
-                rl._data.buffer[ch].push([res.time[i], buf[i] * res.metadata[ch].scale]);
+            const digital_view = new Uint8Array(res.digital);
+            for (let i = 0; i < digital_view.length; i++) {
+                rl._data.buffer[ch].push(
+                    ((digital_view[i] & (0x01 << res.metadata[ch].bit)) ? 0.7 : 0)
+                    + res.metadata[ch].bit);
             }
         } else {
-            const buf = new Int32Array(res.data[ch]);
-            for (let i = 0; i < buf.length; i++) {
-                rl._data.buffer[ch].push([res.time[i], buf[i]]);
+            const analog_view = new Float32Array(res.data[ch]);
+            for (let i = 0; i < analog_view.length; i++) {
+                rl._data.buffer[ch].push(analog_view[i]);
             }
         }
 
@@ -243,6 +289,19 @@ function process_data(res) {
             rl._data.buffer[ch].splice(0,
                 rl._data.buffer[ch].length - RL_DATA_BUFFER_LENGTH);
         }
+    }
+
+    // handle timestamp buffer
+    if (!rl._data.time) {
+        rl._data.time = [];
+    }
+    const time_view = new Float64Array(res.time);
+    for (let i = 0; i < time_view.length; i++) {
+        rl._data.time.push(time_view[i]);
+    }
+    if (rl._data.time.length > RL_DATA_BUFFER_LENGTH) {
+        rl._data.time.splice(0,
+            rl._data.time.length - RL_DATA_BUFFER_LENGTH);
     }
 
     // store metadata and set digital unit
@@ -265,9 +324,12 @@ $(() => {
     init_plots();
 
     // plot update change handler if enabled
-    $('#plot_update').change(() => {
+    $('#plot_update').on('change', () => {
         if (!$('#plot_update').prop('checked')) {
             rl.plot.stop();
         }
     });
+    $('#plot_update_rate').on('change', () => {
+        rl.plot.update_rate = Math.min(RL_PLOT_MAX_FPS, $('#plot_update_rate').val());
+    }).trigger('change');
 });

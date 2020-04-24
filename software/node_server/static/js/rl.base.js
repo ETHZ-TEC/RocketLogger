@@ -137,7 +137,7 @@ function update_status() {
 	} else {
 		$('#warn_error').hide();
 	}
-	$('#status_message').text(status_message).change();
+	$('#status_message').text(status_message);
 
 	// sampling information
 	$('#status_samples').text(status.sample_count + ' samples');
@@ -179,9 +179,9 @@ function update_status() {
 	// control buttons and config form
 	if (status.sampling) {
 		$('#button_start').removeClass('btn-success').addClass('btn-dark');
-		$('#button_stop').addClass('btn-danger').removeClass('btn-dark');
+		$('#button_stop').removeClass('btn-dark').addClass('btn-danger');
 	} else {
-		$('#button_start').addClass('btn-success').removeClass('btn-dark');
+		$('#button_start').removeClass('btn-dark').addClass('btn-success');
 		$('#button_stop').removeClass('btn-danger').addClass('btn-dark');
 	}
 	$('#button_start').prop('disabled', status.sampling);

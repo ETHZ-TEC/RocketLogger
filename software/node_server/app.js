@@ -261,33 +261,88 @@ async function data_proxy() {
     for await (const data of sock) {
         const rep = {
             t: Date.now(),
-            time: null,
             metadata: {},
             data: {},
             digital: null,
         };
-        // console.log(`zmq new data, with metadata: ${data[data.length - 1]}`);
+
+        // parse metadata
+        let meta;
         try {
-            const meta = JSON.parse(data[data.length - 1]);
-            const time_realtime = meta.time.realtime.sec * 1e3 + meta.time.realtime.nsec / 1e6;
-            rep.time = Array.from({ length: meta.buffer_size },
-                (_, i) => time_realtime + i * 1e3 / meta.data_rate);
-            // process data
-            let i = 0;
-            for (const ch of meta.channels) {
-                rep.metadata[ch.name] = ch;
-                if (ch.digital) {
-                    continue;
-                }
-                rep.data[ch.name] = data[i];
-                i = i + 1;
-            }
-            rep.digital = data[data.length - 2];
+            meta = JSON.parse(data[data.length - 1]);
         } catch (err) {
-            console.log(`zmq data processing error: ${err}`);
+            console.log(`zmq data: metadata processing error: ${err}`);
+            continue;
         }
+
+        // generate timestamps
+        const time_realtime = meta.time.realtime.sec * 1e3 + meta.time.realtime.nsec / 1e6;
+        rep.time = new ArrayBuffer(meta.buffer_size * Float64Array.BYTES_PER_ELEMENT);
+        const time_view = new Float64Array(rep.time);
+        for (let i = 0; i < time_view.length; i++) {
+            time_view[i] = time_realtime + i * 1e3 / meta.data_rate;
+        }
+
+        // process digital data
+        const digital_in_view = new Uint32Array(data[data.length - 2].buffer);
+        const digital_out = new ArrayBuffer(digital_in_view.length * Uint8Array.BYTES_PER_ELEMENT);
+        const digital_out_view = new Uint8Array(digital_out);
+        for (let j = 0; j < digital_out_view.length; j++) {
+            digital_out_view[j] = digital_in_view[j];
+            /// @todo any/none down sampling
+        }
+        rep.digital = digital_out;
+
+        // process channel data
+        let i = 0;
+        for (const ch of meta.channels) {
+            rep.metadata[ch.name] = ch;
+            if (ch.digital) {
+                continue;
+            }
+
+            const data_in_view = new Int32Array(data[i].buffer);
+            const data_out = new ArrayBuffer(data_in_view.length * Float32Array.BYTES_PER_ELEMENT);
+            const data_out_view = new Float32Array(data_out);
+            for (let j = 0; j < data_out_view.length; j++) {
+                data_out_view[j] = 1.0 * data_in_view[j] * ch.scale;
+            }
+            rep.data[ch.name] = data_out;
+            i = i + 1;
+        }
+
+        // merge current channel data if available
+        for (const ch of [1, 2]) {
+            // try getting channel merge inputs
+            const merge_lo_view = new Float32Array(rep.data[`I${ch}L`]);
+            const merge_hi_view = new Float32Array(rep.data[`I${ch}H`]);
+            const merge_valid_view = new Uint8Array(rep.digital);
+            const merge_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
+
+            // generate new channel data and info
+            const merge_out = new ArrayBuffer(merge_hi_view.byteLength);
+            const merge_out_view = new Float32Array(merge_out);
+            for (let j = 0; j < merge_out_view.length; j++) {
+                if (merge_valid_view[j] & merge_valid_mask) {
+                    merge_out_view[j] = merge_lo_view[j];
+                } else {
+                    merge_out_view[j] = merge_hi_view[j];
+                }
+            }
+            rep.data[`I${ch}`] = merge_out;
+            rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
+
+            // delete merged channels
+            delete rep.data[`I${ch}L`];
+            delete rep.metadata[`I${ch}L`];
+            delete rep.data[`I${ch}H`];
+            delete rep.metadata[`I${ch}H`];
+            delete rep.metadata[`I${ch}L_valid`];
+        }
+
         // send new data packet to clients
         io.emit('data', rep);
+
         /// @todo perform local data caching
     }
 }
