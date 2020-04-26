@@ -55,6 +55,7 @@ function rocketlogger_init_control() {
 			config: rl._data.config,
 		};
 		rl._conn.socket.emit('control', req);
+		rl._data.buffer_clear = true;
 	};
 	rl.stop = () => {
 		req = {
@@ -306,34 +307,58 @@ $(() => {
 	$('#configuration_group').on('change', config_change);
 
 	// initialize configuration interface helper action buttons
-	$('#button_config_all').click(() => {
+	$('#button_config_all').on('click', () => {
 		config_channels_enable();
 	});
-	$('#button_config_none').click(() => {
+	$('#button_config_none').on('click', () => {
 		config_channels_disable();
 	});
-	$('#button_file_prefix').click(() => {
+	$('#button_file_prefix').on('click', () => {
 		config_file_add_prefix();
 	});
 
 	// initialize measurement control buttons
-	$('#button_start').click(() => {
+	$('#button_start').on('click', () => {
 		rl.start();
 	});
-	$('#button_stop').click(() => {
+	$('#button_stop').on('click', () => {
 		rl.stop();
 	});
 
 	// initialize default configuration control buttons
-	$('#button_config_save').click(() => {
+	$('#button_config_save').on('click', () => {
 		$("#alert_config_saved").hide();
 		$("#alert_config_loaded").hide();
 		rl.config(true);
 	});
-	$('#button_config_load').click(() => {
+	$('#button_config_load').on('click', () => {
 		$("#alert_config_saved").hide();
 		$("#alert_config_loaded").hide();
 		rl.config();
+	});
+
+	// register control hotkeys
+	$(document).on('keypress', (event) => {
+		if (event.target.nodeName == 'INPUT' || event.target.nodeName == 'CHECKBOX' ||
+			event.target.nodeName == 'TEXTAREA') {
+			return;
+		}
+
+		switch (event.which) {
+			case ascii('s'):
+				$('#button_stop:enabled').trigger('click');
+				$('#button_start:enabled').trigger('click');
+				break;
+			case ascii('d'):
+				$('#button_config_save').trigger('click');
+				break;
+			case ascii('l'):
+				$('#button_config_load').trigger('click');
+				break;
+			default:
+				return;
+		}
+		event.preventDefault();
 	});
 
 	// update configuration interface and trigger load config

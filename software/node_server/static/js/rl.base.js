@@ -43,7 +43,8 @@ const rl = {
 	_data: {
 		status: null,
 		config: null,
-		buffer: null,
+		buffer: true,
+		buffer_clear: true,
 		metadata: null,
 	},
 
@@ -84,6 +85,9 @@ function rocketlogger_init_base() {
 	// init status update callback
 	rl._conn.socket.on('status', (res) => {
 		// console.log(`rl status: ${JSON.stringify(res)}`);
+		if (!rl._data.status.sampling && res.status.sampling) {
+			rl._data.buffer_clear = true;
+		}
 		rl._data.status = res.status;
 		update_status();
 	});

@@ -137,6 +137,7 @@ function plot_get_layout(plot_config, update_only = false) {
         layout.yaxis.range = [-0.15, 5.85];
         layout.yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
         layout.yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
+        layout.yaxis.zeroline = false;
     } else {
         layout.yaxis.autorange = (plot_config.range == 0);
         layout.yaxis.range = [-plot_config.range, +plot_config.range];
@@ -258,6 +259,14 @@ async function update_plots() {
 
 /// process new measurement data.
 function process_data(res) {
+    // clear buffers and plots if necessary
+    if (rl._data.buffer_clear) {
+        rl._data.buffer = {};
+        rl._data.time = [];
+        rl.plot.plots.forEach((p) => { document.getElementById(p.id).data = []; })
+        rl._data.buffer_clear = false;
+    }
+
     for (const ch in res.metadata) {
         // skip hidden channel
         if (res.metadata[ch].hidden) {
@@ -332,4 +341,33 @@ $(() => {
     $('#plot_update_rate').on('change', () => {
         rl.plot.update_rate = Math.min(RL_PLOT_MAX_FPS, $('#plot_update_rate').val());
     }).trigger('change');
+
+    // register plotting hotkeys
+    $(document).on('keypress', (event) => {
+        if (event.target.nodeName == 'INPUT' || event.target.nodeName == 'CHECKBOX' ||
+            event.target.nodeName == 'TEXTAREA') {
+            return;
+        }
+
+        switch (event.which) {
+            case ascii('p'):
+            case ascii(' '):
+                $('#plot_update').trigger('click')
+                break;
+            case ascii('1'):
+                $('#plot_time_scale').val(1000).trigger('change');
+                break;
+            case ascii('2'):
+                $('#plot_time_scale').val(10000).trigger('change');
+                break;
+            case ascii('3'):
+                $('#plot_time_scale').val(100000).trigger('change');
+                break;
+            default:
+                return;
+        }
+        event.preventDefault();
+    });
+
+
 });

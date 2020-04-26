@@ -30,6 +30,9 @@
 
 "use strict";
 
+/// ASCII value of character
+const ascii = (a) => a.charCodeAt(0);
+
 /// format display byte values
 function bytes_to_string(bytes) {
     if (bytes === 0) {
