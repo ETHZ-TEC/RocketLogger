@@ -52,6 +52,14 @@ int rl_socket_init(void);
 int rl_socket_deinit(void);
 
 /**
+ * Initialize metadata for data socket.
+ *
+ * @param config Current measurement configuration
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_socket_metadata(rl_config_t const *const config);
+
+/**
  * Process the data buffer for publishing to data socket.
  *
  * @param analog_buffer Analog data buffer to process

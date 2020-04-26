@@ -33,8 +33,10 @@
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
-/// RocketLogger status and data update rate [per second]
+/// RocketLogger status and data update rate [in 1/s]
 const rl_update_rate = 10;
+/// RocketLogger maximum rate of data [in 1/s]
+const rl_web_data_rate = 1000;
 
 const rl = {
     /// RocketLogger measurement data path
@@ -45,6 +47,8 @@ const rl = {
     zmq_status_socket: 'tcp://127.0.0.1:8276',
     /// ZeroMQ socket identifier for status publishing
     zmq_data_socket: 'tcp://127.0.0.1:8277',
+    /// web downstream data rate [in 1/s]
+    web_data_rate: rl_web_data_rate,
 
     /// get RocketLogger status
     status: () => {

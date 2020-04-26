@@ -139,6 +139,7 @@ int rl_run(rl_config_t *const config) {
     // initialize socket if webserver enabled
     if (config->web_enable) {
         rl_socket_init();
+        rl_socket_metadata(config);
     }
 
     // check ambient sensor available

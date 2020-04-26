@@ -269,43 +269,54 @@ async function data_proxy() {
         // parse metadata
         let meta;
         try {
-            meta = JSON.parse(data[data.length - 1]);
+            meta = JSON.parse(data[0]);
         } catch (err) {
             console.log(`zmq data: metadata processing error: ${err}`);
             continue;
         }
 
-        // generate timestamps
-        const time_realtime = meta.time.realtime.sec * 1e3 + meta.time.realtime.nsec / 1e6;
-        rep.time = new ArrayBuffer(meta.buffer_size * Float64Array.BYTES_PER_ELEMENT);
-        const time_view = new Float64Array(rep.time);
-        for (let i = 0; i < time_view.length; i++) {
-            time_view[i] = time_realtime + i * 1e3 / meta.data_rate;
-        }
+        // get downsample factor
+        const downsample_factor = Math.max(1, meta.data_rate / rl.web_data_rate);
+        const buffer_length = data[data.length - 1].length / Uint32Array.BYTES_PER_ELEMENT / downsample_factor;
 
         // process digital data
-        const digital_in_view = new Uint32Array(data[data.length - 2].buffer);
-        const digital_out = new ArrayBuffer(digital_in_view.length * Uint8Array.BYTES_PER_ELEMENT);
+        const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
+        const digital_out = new ArrayBuffer(buffer_length * Uint8Array.BYTES_PER_ELEMENT);
         const digital_out_view = new Uint8Array(digital_out);
         for (let j = 0; j < digital_out_view.length; j++) {
-            digital_out_view[j] = digital_in_view[j];
+            digital_out_view[j] = digital_in_view[j * downsample_factor];
             /// @todo any/none down sampling
         }
         rep.digital = digital_out;
 
-        // process channel data
-        let i = 0;
+        // generate timestamps
+        const time_in_view = new BigInt64Array(data[1].buffer);
+        const time_out = new ArrayBuffer(buffer_length * Float64Array.BYTES_PER_ELEMENT);
+        const time_out_view = new Float64Array(time_out);
+        for (let j = 0; j < time_out_view.length; j++) {
+            time_out_view[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
+                + j * 1e3 / rl.web_data_rate;
+        }
+        rep.time = time_out;
+
+        // process channel data starting at index 2
+        let i = 2;
         for (const ch of meta.channels) {
-            rep.metadata[ch.name] = ch;
+            rep.metadata[ch.name] = {
+                digital: ch.digital,
+                scale: ch.scale,
+                unit: ch.unit,
+                bit: ch.bit,
+            };
             if (ch.digital) {
                 continue;
             }
 
             const data_in_view = new Int32Array(data[i].buffer);
-            const data_out = new ArrayBuffer(data_in_view.length * Float32Array.BYTES_PER_ELEMENT);
+            const data_out = new ArrayBuffer(buffer_length * Float32Array.BYTES_PER_ELEMENT);
             const data_out_view = new Float32Array(data_out);
             for (let j = 0; j < data_out_view.length; j++) {
-                data_out_view[j] = 1.0 * data_in_view[j] * ch.scale;
+                data_out_view[j] = data_in_view[j * downsample_factor] * ch.scale;
             }
             rep.data[ch.name] = data_out;
             i = i + 1;
@@ -315,21 +326,19 @@ async function data_proxy() {
         for (const ch of [1, 2]) {
             // try getting channel merge inputs
             const merge_lo_view = new Float32Array(rep.data[`I${ch}L`]);
-            const merge_hi_view = new Float32Array(rep.data[`I${ch}H`]);
+            // const merge_hi_view = new Float32Array(rep.data[`I${ch}H`]);
             const merge_valid_view = new Uint8Array(rep.digital);
             const merge_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
 
-            // generate new channel data and info
-            const merge_out = new ArrayBuffer(merge_hi_view.byteLength);
-            const merge_out_view = new Float32Array(merge_out);
+            // generate new channel data and info (in-place update HI channel)
+            rep.data[`I${ch}`] = rep.data[`I${ch}H`];
+            const merge_out_view = new Float32Array(rep.data[`I${ch}`]);
             for (let j = 0; j < merge_out_view.length; j++) {
                 if (merge_valid_view[j] & merge_valid_mask) {
                     merge_out_view[j] = merge_lo_view[j];
-                } else {
-                    merge_out_view[j] = merge_hi_view[j];
                 }
             }
-            rep.data[`I${ch}`] = merge_out;
+            // rep.data[`I${ch}`] = merge_out;
             rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
 
             // delete merged channels
