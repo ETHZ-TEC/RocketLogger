@@ -86,6 +86,7 @@ apt install --assume-yes        \
   gcc                           \
   g++                           \
   ti-pru-cgt-installer          \
+  libzmq3-dev                   \
   libncurses5-dev               \
   libi2c-dev                    \
   linux-headers-$(uname -r)
@@ -147,16 +148,22 @@ cp -f system/issue.net /etc/issue.net
 
 ## filesystem, system and user config directories setup
 
-# external SD card
+# external SD card mount
 mkdir -p /media/sdcard/
 echo -e "# mount external sdcard on boot if available" >> /etc/fstab
-echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro,gid=rocketlogger,uid=rocketlogger\t0\t2" >> /etc/fstab
+echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\t0\t2" >> /etc/fstab
+
 
 # create RocketLogger system config folder
 mkdir -p /etc/rocketlogger
 
-# user configuration folder for rocketlogger
+# user configuration and data folder for rocketlogger, bind sdcard folders if available
 mkdir -p /home/rocketlogger/.config/rocketlogger/
+mkdir -p /home/rocketlogger/data/
+echo -e "# bind sdcard folders if available" >> /etc/fstab
+
+echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
+echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 
 # make user owner of its own files
 chown rocketlogger:rocketlogger -R /home/rocketlogger/

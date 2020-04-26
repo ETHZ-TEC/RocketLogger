@@ -440,6 +440,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         do {
             // wait for PRU event (returns 0 on timeout, -1 on error with errno)
             res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
+            // timestamp received data
+            create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
         } while (res < 0 && errno == EINTR);
         if (res < 0) {
             // error checking interrupt occurred
@@ -453,16 +455,13 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             break;
         }
 
-        // timestamp received data
-        create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
-
-        // adjust time with buffer latency
-        timestamp_realtime.nsec -= (uint64_t)1e9 / config->update_rate;
+        // adjust data timestamps with buffer latency (adjusted relative nanoseconds)
+        timestamp_realtime.nsec -= (uint64_t)2048e3 * 49e2 / config->update_rate;
         if (timestamp_realtime.nsec < 0) {
             timestamp_realtime.sec -= 1;
             timestamp_realtime.nsec += (uint64_t)1e9;
         }
-        timestamp_monotonic.nsec -= (uint64_t)1e9 / config->update_rate;
+        timestamp_monotonic.nsec -= (uint64_t)2048e3 * 49e2 / config->update_rate;
         if (timestamp_monotonic.nsec < 0) {
             timestamp_monotonic.sec -= 1;
             timestamp_monotonic.nsec += (uint64_t)1e9;
