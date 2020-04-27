@@ -29,7 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <signal.h>
 #include <unistd.h>
@@ -256,15 +258,37 @@ int fhr_deinit(void) {
  * @param value GPIO value after interrupt
  */
 void button_interrupt_handler(int value) {
-    if (value == 0) { // only react if button pressed enough long
+    // check button pressed for long enough
+    if (value == 0) {
+        // get RocketLogger status
+        rl_status_t status;
+        int ret = rl_status_read(&status);
+        if (ret < 0) {
+            rl_log(RL_LOG_ERROR, "Failed reading status.");
+        }
 
-        // get RL status
-        int status = system("rocketlogger status > /dev/null");
-
-        if (status > 0) {
-            system("rocketlogger stop > /dev/null");
+        char *cmd[3] = { "rocketlogger", NULL, NULL};
+        if (status.sampling) {
+            cmd[1] = "stop";
         } else {
-            system("rocketlogger cont > /dev/null");
+            cmd[1] = "start";
+        }
+
+        // create child process to start RocketLogger
+        pid_t pid = fork();
+        if (pid < 0) {
+            rl_log(RL_LOG_ERROR, "Failed forking process. %d message: %s",
+                   errno, strerror(errno));
+        }
+        if (pid == 0) {
+            // in child process, execute RocketLogger
+            execvp(cmd[0], cmd);
+            rl_log(RL_LOG_ERROR,
+                   "Failed executing `rocketlogger %s`. %d message: %s", cmd,
+                   errno, strerror(errno));
+        } else {
+            // in parent process log pid
+            rl_log(RL_LOG_INFO, "Started RocketLogger with pid=%d.", pid);
         }
 
         // interrupt rate control
