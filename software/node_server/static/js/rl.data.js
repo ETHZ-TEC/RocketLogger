@@ -28,6 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+"use strict";
+
 // check RocketLogger base functionality is loaded
 if (typeof (rl) == 'undefined') {
     throw 'need to load rl.base.js before loading rl.data.js'
@@ -59,7 +61,7 @@ function rocketlogger_init_data() {
     // provide data() method
     rl.data = () => {
         /// @todo init buffer from data cache
-        req = {
+        const req = {
             cmd: 'data',
             time: Date.now(),
         };
@@ -213,7 +215,7 @@ async function init_plots() {
     }
     // init time control callback handlers
     $('#plot_time_scale').on('change', () => {
-        for (plot of rl.plot.plots) {
+        for (const plot of rl.plot.plots) {
             plot.time_scale = $('#plot_time_scale').val();
         }
     }).trigger('change');
@@ -229,7 +231,7 @@ async function update_plots() {
     let update_plot = async (plot) => {
         // collect data series to plot
         let data = [];
-        for (ch in rl._data.buffer) {
+        for (const ch in rl._data.buffer) {
             // check if enabled
             if ((rl._data.metadata[ch].unit == plot.unit)) {
                 data.push({
@@ -315,7 +317,7 @@ function process_data(res) {
 
     // store metadata and set digital unit
     rl._data.metadata = res.metadata;
-    for (ch in rl._data.metadata) {
+    for (const ch in rl._data.metadata) {
         if (rl._data.metadata[ch].digital) {
             rl._data.metadata[ch].unit = 'digital';
         }
@@ -368,6 +370,4 @@ $(() => {
         }
         event.preventDefault();
     });
-
-
 });

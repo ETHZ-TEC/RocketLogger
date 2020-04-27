@@ -35,12 +35,12 @@ Install dependencies using `npm`:
 - `bootstrap` - responsive, mobile-first front-end component library
 - `popper.js` - tooltip and popover positioning engine (used by bootstrap)
 - `jquery` - general purpose JavaScript library
-- `socket.io.js` - websockets client side JavaScript library
+- `socket.io-client` - websockets client side JavaScript library
 - `plotly.js` - JavaScript plotting library
 
 Install dependencies using `npm`:
 
-`npm install bootstrap jquery @popperjs/core socket.io-client plotly.js`
+`npm install bootstrap@4.4.1 popper.js@1.16.0 jquery@3.4.1 socket.io-client@2.3.0 plotly.js@1.53.0`
 
 
 ## Installation

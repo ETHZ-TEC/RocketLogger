@@ -38,8 +38,8 @@ function bytes_to_string(bytes) {
     if (bytes === 0) {
         return "0 B";
     }
-    var log1k = Math.floor(Math.log10(bytes) / 3);
-    var value = (bytes / Math.pow(1000, log1k));
+    const log1k = Math.floor(Math.log10(bytes) / 3);
+    const value = (bytes / Math.pow(1000, log1k));
 
     switch (log1k) {
         case 0:
@@ -67,17 +67,17 @@ function date_zero_extend(value) {
 
 /// get formatted date string from date object
 function date_to_string(date, join = '-') {
-    var year = date.getFullYear().toString();
-    var month = date_zero_extend(date.getMonth() + 1);
-    var day = date_zero_extend(date.getDate());
+    const year = date.getFullYear().toString();
+    const month = date_zero_extend(date.getMonth() + 1);
+    const day = date_zero_extend(date.getDate());
     return year + join + month + join + day;
 }
 
 /// get formatted time string from date object
 function time_to_string(time, join = ':') {
-    var hour = date_zero_extend(time.getHours());
-    var minute = date_zero_extend(time.getMinutes());
-    var second = date_zero_extend(time.getSeconds());
+    const hour = date_zero_extend(time.getHours());
+    const minute = date_zero_extend(time.getMinutes());
+    const second = date_zero_extend(time.getSeconds());
     return hour + join + minute + join + second;
 }
 
@@ -88,7 +88,7 @@ function date_to_prefix_string(date) {
 
 /// get time string from unit timestamp
 function unix_to_datetime_string(seconds) {
-    var date = new Date(seconds * 1000);
+    const date = new Date(seconds * 1000);
     return date_to_string(date) + " " + time_to_string(date);
 }
 
@@ -98,15 +98,15 @@ function unix_to_timespan_string(seconds) {
         return "0 s";
     }
 
-    var date = new Date(seconds * 1000);
-    var year = date.getUTCFullYear() - 1970;
-    var month = date.getUTCMonth();
-    var day = date.getUTCDate() - 1;
-    var hour = date.getUTCHours();
-    var minute = date.getUTCMinutes();
-    var second = date.getUTCSeconds();
+    const date = new Date(seconds * 1000);
+    const year = date.getUTCFullYear() - 1970;
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate() - 1;
+    const hour = date.getUTCHours();
+    const minute = date.getUTCMinutes();
+    const second = date.getUTCSeconds();
 
-    var str = "";
+    let str = "";
     if (year > 0 || str.length > 0) {
         str = str + year.toFixed() + " year" + ((year != 1) ? "s " : " ");
     }

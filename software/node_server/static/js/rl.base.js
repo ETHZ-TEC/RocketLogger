@@ -16,7 +16,7 @@
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
  * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
@@ -27,6 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+"use strict";
 
 /// Disk space critically low warning thresholds in permille
 const RL_DISK_CRITICAL_THRESHOLD = 50;
@@ -78,18 +80,20 @@ function rocketlogger_init_base() {
 
 	// init default status and provide status() request method
 	rl.status = () => {
-		req = { cmd: 'status' };
+		const req = { cmd: 'status' };
 		rl._conn.socket.emit('status', req);
 	};
 
 	// init status update callback
 	rl._conn.socket.on('status', (res) => {
 		// console.log(`rl status: ${JSON.stringify(res)}`);
-		if (!rl._data.status.sampling && res.status.sampling) {
-			rl._data.buffer_clear = true;
+		if (res.status) {
+			if (!rl._data.status.sampling && res.status.sampling) {
+				rl._data.buffer_clear = true;
+			}
+			rl._data.status = res.status;
+			update_status();
 		}
-		rl._data.status = res.status;
-		update_status();
 	});
 }
 

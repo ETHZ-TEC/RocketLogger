@@ -16,7 +16,7 @@
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
  * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
@@ -27,6 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+"use strict";
 
 // check RocketLogger base functionality is loaded
 if (typeof (rl) == 'undefined') {
@@ -50,7 +52,7 @@ function rocketlogger_init_control() {
 
 	// provide start(), stop() and config() request methods
 	rl.start = () => {
-		req = {
+		const req = {
 			cmd: 'start',
 			config: rl._data.config,
 		};
@@ -58,14 +60,14 @@ function rocketlogger_init_control() {
 		rl._data.buffer_clear = true;
 	};
 	rl.stop = () => {
-		req = {
+		const req = {
 			cmd: 'stop',
 			config: null,
 		};
 		rl._conn.socket.emit('control', req);
 	};
 	rl.config = (set_default) => {
-		req = {
+		const req = {
 			cmd: 'config',
 			config: rl._data.config,
 			default: set_default,
@@ -144,14 +146,14 @@ function config_change() {
 	}
 
 	// get channel config
-	for (ch of RL_CHANNEL_NAMES) {
+	for (const ch of RL_CHANNEL_NAMES) {
 		if ($(`#channel_${ch.toLowerCase()}_enable`).prop('checked')) {
 			config.channel_enable.push(ch);
 		}
 	}
 
 	// get force channel range config
-	for (ch of RL_CHANNEL_FORCE_NAMES) {
+	for (const ch of RL_CHANNEL_FORCE_NAMES) {
 		if ($(`#channel_${ch.toLowerCase()}_force`).prop('checked')) {
 			config.channel_force_range.push(ch);
 		}
@@ -206,13 +208,13 @@ function config_reset_default() {
 	$('#web_enable').prop('checked', config.web_enable);
 
 	// set channel switches
-	for (ch of RL_CHANNEL_NAMES) {
+	for (const ch of RL_CHANNEL_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked',
 			(config.channel_enable.indexOf(ch) >= 0));
 	}
 
 	// set force channel range config
-	for (ch of RL_CHANNEL_FORCE_NAMES) {
+	for (const ch of RL_CHANNEL_FORCE_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_force`).prop('checked',
 			(config.channel_force_range.indexOf(ch) >= 0));
 	}
@@ -250,12 +252,12 @@ function config_reset_default() {
 /// enable all measurement channels without forcing high range
 function config_channels_enable() {
 	// enable channel switches
-	for (ch of RL_CHANNEL_NAMES) {
+	for (const ch of RL_CHANNEL_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', true);
 	}
 
 	// unset force channel range
-	for (ch of RL_CHANNEL_FORCE_NAMES) {
+	for (const ch of RL_CHANNEL_FORCE_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
 	}
 	$('#digital_enable').prop('checked', true);
@@ -268,12 +270,12 @@ function config_channels_enable() {
 /// disable all measurement channels
 function config_channels_disable() {
 	// disable channels
-	for (ch of RL_CHANNEL_NAMES) {
+	for (const ch of RL_CHANNEL_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_enable`).prop('checked', false);
 	}
 
 	// unset force channel range
-	for (ch of RL_CHANNEL_FORCE_NAMES) {
+	for (const ch of RL_CHANNEL_FORCE_NAMES) {
 		$(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
 	}
 	$('#digital_enable').prop('checked', false);

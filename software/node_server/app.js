@@ -40,9 +40,18 @@ const express = require('express');
 const nunjucks = require('nunjucks');
 const socketio = require('socket.io');
 const zmq = require('zeromq');
-const util = require('./util.js');
-const rl = require('./rl.js');
 
+const rl = require('./rl.js');
+const util = require('./util.js');
+
+// get version if installed client-side assets
+const asset_version = {
+    bootstrap: require('bootstrap/package.json').version,
+    jquery: require('jquery/package.json').version,
+    popperjs: require('popper.js/package.json').version,
+    plotly: require('plotly.js/package.json').version,
+    socketio: require('socket.io-client/package.json').version,
+}
 
 // configuration
 const port = 5000;
@@ -82,9 +91,11 @@ function render_page(req, res, template_name, context = null) {
     };
     context.hostname = os.hostname();
 
+    context.asset_version = asset_version;
+
     // validate compatibility of binary and web interface
     const rl_version = rl.version();
-    for (err of rl_version.err) {
+    for (const err of rl_version.err) {
         context.err.push(err);
     }
     if (rl_version.version) {
@@ -101,6 +112,14 @@ function render_page(req, res, template_name, context = null) {
 
 
 // routing of static files
+app.use('/assets', [
+    express.static(__dirname + '/node_modules/bootstrap/dist/css'),
+    express.static(__dirname + '/node_modules/bootstrap/dist/js'),
+    express.static(__dirname + '/node_modules/jquery/dist'),
+    express.static(__dirname + '/node_modules/popper.js/dist/umd'),
+    express.static(__dirname + '/node_modules/plotly.js/dist'),
+    express.static(__dirname + '/node_modules/socket.io-client/dist'),
+]);
 app.use('/static', express.static(path_static));
 app.get('/robots.txt', express.static(path_static));
 app.get('/sitemap.xml', express.static(path_static));
