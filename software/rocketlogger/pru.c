@@ -456,15 +456,15 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         }
 
         // adjust data timestamps with buffer latency (adjusted relative nanoseconds)
-        timestamp_realtime.nsec -= (uint64_t)2048e3 * 49e2 / config->update_rate;
+        timestamp_realtime.nsec -= (int64_t)2048e3 * 490 / config->update_rate;
         if (timestamp_realtime.nsec < 0) {
             timestamp_realtime.sec -= 1;
-            timestamp_realtime.nsec += (uint64_t)1e9;
+            timestamp_realtime.nsec += (int64_t)1e9;
         }
-        timestamp_monotonic.nsec -= (uint64_t)2048e3 * 49e2 / config->update_rate;
+        timestamp_monotonic.nsec -= (int64_t)2048e3 * 490 / config->update_rate;
         if (timestamp_monotonic.nsec < 0) {
             timestamp_monotonic.sec -= 1;
-            timestamp_monotonic.nsec += (uint64_t)1e9;
+            timestamp_monotonic.nsec += (int64_t)1e9;
         }
 
         // clear event
