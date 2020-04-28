@@ -1,0 +1,33 @@
+# RocketLogger web interface service
+[Unit]
+Description=RocketLogger web interface
+Documentation=https://rocketlogger.ethz.ch/
+#Requires=rocketlogger.service
+
+[Service]
+Type=simple
+Type=simple
+ExecStart=/usr/bin/node /home/rocketlogger/web/app.js
+WorkingDirectory=/home/rocketlogger/web
+
+User=rocketlogger
+Group=rocketlogger
+
+# Environment variables:
+Environment=NODE_ENV=production
+
+# Allow many incoming connections
+#LimitNOFILE=infinity
+
+# Allow core dumps for debugging
+#LimitCORE=infinity
+
+StandardInput=null
+StandardOutput=syslog
+StandardError=syslog
+
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
