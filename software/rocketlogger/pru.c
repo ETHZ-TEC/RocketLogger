@@ -232,24 +232,29 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     // write PID in file (only after potential forking using daemon)
     pid_t pid = getpid();
     rl_pid_set(pid);
-    
+
     // wait for start timestamp
     if (config->t_start) {
         rl_log(RL_LOG_INFO, "Waiting for start time %ld...", config->t_start);
         rl_status.sampling = true;
         rl_status_write(&rl_status);
-        // alternatively, use sem_timedwait()
+
         struct timespec currtime;
         clock_gettime(CLOCK_REALTIME, &currtime);
-        long int starttime = config->t_start - 1;
-        while (currtime.tv_sec < starttime && rl_status.sampling) {
-            usleep(100000);
-            clock_gettime(CLOCK_REALTIME, &currtime);
+        uint32_t diff_sec  = (config->t_start - currtime.tv_sec);
+        uint32_t diff_usec = (1000000 - (currtime.tv_nsec / 1000));
+        // assume the execution of the following code until the sampling start takes ~5ms
+        if (diff_usec < 5000) {
+          diff_sec--;
+          diff_usec = 1000000 - (5000 - diff_usec);
+        } else {
+          diff_usec -= 5000;
         }
-        // wait for T minus 10ms
-        while (currtime.tv_nsec < 990000000 && rl_status.sampling) {
-            usleep(1000);
-            clock_gettime(CLOCK_REALTIME, &currtime);
+        if (currtime.tv_sec < config->t_start) {
+          if (diff_sec > 0) {
+            sleep(diff_sec - 1);
+          }
+          usleep(diff_usec);
         }
         if (!rl_status.sampling) {
             rl_log(RL_LOG_WARNING, "Abort signal received");
