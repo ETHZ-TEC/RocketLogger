@@ -49,6 +49,7 @@
 #include "rl_file.h"
 #include "rl_socket.h"
 #include "sem.h"
+#include "sensor/sensor.h"
 #include "util.h"
 
 #include "pru.h"
@@ -263,9 +264,12 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         pru.buffer_length * RL_CHANNEL_COUNT * sizeof(int32_t));
     uint32_t *const digital_buffer =
         (uint32_t *)malloc(pru.buffer_length * sizeof(uint32_t));
+    int32_t sensor_buffer[SENSOR_REGISTRY_SIZE];
 
     pru_buffer_t const *pru_buffer = NULL;
     size_t buffer_size; // number of data samples per buffer
+    size_t sensor_buffer_size = 0;
+    uint32_t sensor_rate_counter = 0;
     rl_timestamp_t timestamp_monotonic;
     rl_timestamp_t timestamp_realtime;
     uint32_t buffers_lost = 0;
@@ -392,6 +396,21 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             buffer_size = (size_t)(pru.sample_limit % pru.buffer_length);
         }
 
+        // trigger new ambient sensor read out if enabled
+        sensor_buffer_size = 0;
+        if (config->ambient_enable) {
+            // rate limit sampling of the ambient sensors
+            if (sensor_rate_counter < RL_SENSOR_SAMPLE_RATE) {
+                // trigger sensor readout
+                sensor_buffer_size =
+                    sensors_read(sensor_buffer, rl_status.sensor_available);
+            }
+            // increment rate limiting counter
+            sensor_rate_counter =
+                (sensor_rate_counter + RL_SENSOR_SAMPLE_RATE) %
+                config->update_rate;
+        }
+
         // wait for PRU event indicating new data (repeat wait on interrupts)
         do {
             // wait for PRU event (returns 0 on timeout, -1 on error with errno)
@@ -411,7 +430,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             break;
         }
 
-        // adjust data timestamps with buffer latency (adjusted relative nanoseconds)
+        // adjust data timestamps with buffer latency (adjusted relative
+        // nanoseconds)
         timestamp_realtime.nsec -= (int64_t)2048e3 * 490 / config->update_rate;
         if (timestamp_realtime.nsec < 0) {
             timestamp_realtime.sec -= 1;
@@ -506,11 +526,11 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             }
         }
 
-        // handle ambient data
-        if (config->ambient_enable) {
+        // handle ambient data if enabled and available
+        if (config->ambient_enable && sensor_buffer_size > 0) {
             // fetch and write data
             int block_count = rl_file_add_ambient_block(
-                ambient_file, analog_buffer, digital_buffer, buffer_size,
+                ambient_file, sensor_buffer, sensor_buffer_size,
                 &timestamp_realtime, &timestamp_monotonic, config);
 
             // stop sampling on file error

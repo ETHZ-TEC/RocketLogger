@@ -61,55 +61,73 @@ int sensor_bus = -1;
  */
 const rl_sensor_t SENSOR_REGISTRY[SENSOR_REGISTRY_SIZE] = {
     {
-        "TSL4531_left", TSL4531_I2C_ADDRESS_LEFT, TSL4531_CHANNEL_DEFAULT,
-        RL_UNIT_LUX, RL_SCALE_UNIT, &tsl4531_init, &tsl4531_deinit,
-        &tsl4531_read, &tsl4531_get_value,
+        "TSL4531_left",
+        TSL4531_I2C_ADDRESS_LEFT,
+        TSL4531_CHANNEL_DEFAULT,
+        RL_UNIT_LUX,
+        RL_SCALE_UNIT,
+        &tsl4531_init,
+        &tsl4531_deinit,
+        &tsl4531_read,
+        &tsl4531_get_value,
     },
     {
-        "TSL4531_right", TSL4531_I2C_ADDRESS_RIGHT, TSL4531_CHANNEL_DEFAULT,
-        RL_UNIT_LUX, RL_SCALE_UNIT, &tsl4531_init, &tsl4531_deinit,
-        &tsl4531_read, &tsl4531_get_value,
+        "TSL4531_right",
+        TSL4531_I2C_ADDRESS_RIGHT,
+        TSL4531_CHANNEL_DEFAULT,
+        RL_UNIT_LUX,
+        RL_SCALE_UNIT,
+        &tsl4531_init,
+        &tsl4531_deinit,
+        &tsl4531_read,
+        &tsl4531_get_value,
     },
     {
-        "BME280_temp", BME280_I2C_ADDRESS_LEFT, BME280_CHANNEL_TEMPERATURE,
-        RL_UNIT_DEG_C, RL_SCALE_MILLI, &bme280_init, &bme280_deinit,
-        &bme280_read, &bme280_get_value,
+        "BME280_temp",
+        BME280_I2C_ADDRESS_LEFT,
+        BME280_CHANNEL_TEMPERATURE,
+        RL_UNIT_DEG_C,
+        RL_SCALE_MILLI,
+        &bme280_init,
+        &bme280_deinit,
+        &bme280_read,
+        &bme280_get_value,
     },
     {
-        "BME280_rh", BME280_I2C_ADDRESS_LEFT, BME280_CHANNEL_HUMIDITY,
-        RL_UNIT_INTEGER, RL_SCALE_MICRO, &bme280_init, &bme280_deinit,
-        &bme280_read, &bme280_get_value,
+        "BME280_rh",
+        BME280_I2C_ADDRESS_LEFT,
+        BME280_CHANNEL_HUMIDITY,
+        RL_UNIT_INTEGER,
+        RL_SCALE_MICRO,
+        &bme280_init,
+        &bme280_deinit,
+        &bme280_read,
+        &bme280_get_value,
     },
     {
-        "BME280_press", BME280_I2C_ADDRESS_LEFT, BME280_CHANNEL_PRESSURE,
-        RL_UNIT_PASCAL, RL_SCALE_MILLI, &bme280_init, &bme280_deinit,
-        &bme280_read, &bme280_get_value,
+        "BME280_press",
+        BME280_I2C_ADDRESS_LEFT,
+        BME280_CHANNEL_PRESSURE,
+        RL_UNIT_PASCAL,
+        RL_SCALE_MILLI,
+        &bme280_init,
+        &bme280_deinit,
+        &bme280_read,
+        &bme280_get_value,
     },
 };
 
-/**
- * Initialize the shared I2C sensor bus.
- * @return Status (error) code
- */
 int sensors_init(void) {
     sensor_bus = sensors_open_bus();
     return sensor_bus;
 }
 
-/**
- * Deinitialize the shared I2C sensor bus.
- * @return Status (error) code
- */
 void sensors_deinit(void) {
     sensors_close_bus(sensor_bus);
     int sensor_bus = -1;
     (void)sensor_bus; // suppress unused parameter warning
 }
 
-/**
- * Open a new handle of the I2C bus.
- * @return The bus handle
- */
 int sensors_open_bus(void) {
     int bus = open(I2C_BUS_FILENAME, O_RDWR);
     if (bus < 0) {
@@ -118,11 +136,6 @@ int sensors_open_bus(void) {
     return bus;
 }
 
-/**
- * Close a I2C sensor bus.
- * @param bus The I2C bus to close
- * @return Status (error) code
- */
 int sensors_close_bus(int bus) {
     int result = close(bus);
     if (result < 0) {
@@ -131,38 +144,22 @@ int sensors_close_bus(int bus) {
     return result;
 }
 
-/**
- * Get the shared I2C bus handle.
- * @return The I2C bus handle
- */
 int sensors_get_bus(void) { return sensor_bus; }
 
-/**
- * Initiate an I2C communication with a device.
- * @param sensor_address The I2C address of the device
- * @return Status (error) code
- */
 int sensors_init_comm(uint8_t device_address) {
     return ioctl(sensor_bus, I2C_SLAVE, device_address);
 }
 
-/**
- * Scan the I2C sensor for sensor in the registry and initialize them.
- * @param sensor_available List of sensors of the registry available
- * @return Number of sensors from the registry found on the bus
- */
-uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
+int sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
 
     // log message
     char message[MAX_MESSAGE_LENGTH] =
         "List of available ambient sensors:\n\t- ";
 
     // Scan for available sensors //
-    uint16_t sensor_count = 0;
-
-    // scan
+    int sensor_count = 0;
     int multi_channel_initialized = -1;
-    for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         // do not initialize multi channel sensors more than once
         int result = SUCCESS;
         if (SENSOR_REGISTRY[i].identifier != multi_channel_initialized) {
@@ -195,12 +192,32 @@ uint16_t sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
     return sensor_count;
 }
 
-/**
- * Close all sensors used on the I2C bus.
- * @param sensor_available List of available (previously initialized) sensors
- */
+int sensors_read(int32_t *const sensor_data,
+                 bool const sensor_available[SENSOR_REGISTRY_SIZE]) {
+    int sensor_count = 0;
+    int multi_channel_read = -1;
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+        // only read registered sensors
+        if (sensor_available[i]) {
+            // read multi-channel sensor data only once
+            if (SENSOR_REGISTRY[i].identifier != multi_channel_read) {
+                int res =
+                    SENSOR_REGISTRY[i].read(SENSOR_REGISTRY[i].identifier);
+                if (res < 0) {
+                    return res;
+                }
+                multi_channel_read = SENSOR_REGISTRY[i].identifier;
+            }
+            sensor_data[sensor_count] = SENSOR_REGISTRY[i].get_value(
+                SENSOR_REGISTRY[i].identifier, SENSOR_REGISTRY[i].channel);
+            sensor_count++;
+        }
+    }
+    return sensor_count;
+}
+
 void sensors_close(bool const sensor_available[SENSOR_REGISTRY_SIZE]) {
-    for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
+    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (sensor_available[i]) {
             SENSOR_REGISTRY[i].deinit(SENSOR_REGISTRY[i].identifier);
         }

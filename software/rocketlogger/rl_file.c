@@ -63,9 +63,6 @@ void rl_file_setup_data_channels(rl_file_header_t *const header,
  */
 void rl_file_setup_ambient_channels(rl_file_header_t *const header);
 
-// counter to control ambient sample rate
-static uint32_t ambient_rate_counter = 0;
-
 /// Global variable to determine i1l valid channel index
 int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel index
@@ -139,9 +136,6 @@ void rl_file_setup_data_lead_in(rl_file_lead_in_t *const lead_in,
 
 void rl_file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
                                    rl_config_t const *const config) {
-    // reset rate limiting counter
-    ambient_rate_counter = 0;
-
     // number channels
     uint16_t channel_count = rl_status.sensor_count;
 
@@ -165,9 +159,9 @@ void rl_file_setup_ambient_lead_in(rl_file_lead_in_t *const lead_in,
     lead_in->data_block_size = RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
     lead_in->data_block_count = 0; // needs to be updated
     lead_in->sample_count = 0;     // needs to be updated
-    lead_in->sample_rate = (config->update_rate < RL_FILE_AMBIENT_SAMPLING_RATE
-                                ? config->update_rate
-                                : RL_FILE_AMBIENT_SAMPLING_RATE);
+    lead_in->sample_rate =
+        (config->update_rate < RL_SENSOR_SAMPLE_RATE ? config->update_rate
+                                                     : RL_SENSOR_SAMPLE_RATE);
     get_mac_addr(lead_in->mac_address);
     lead_in->start_time = time_real;
     lead_in->comment_length = comment_length;
@@ -495,55 +489,20 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
     return 1;
 }
 
-int rl_file_add_ambient_block(FILE *ambient_file, int32_t const *analog_buffer,
-                              uint32_t const *digital_buffer,
+int rl_file_add_ambient_block(FILE *ambient_file, int32_t const *ambient_buffer,
                               size_t buffer_size,
                               rl_timestamp_t const *const timestamp_realtime,
                               rl_timestamp_t const *const timestamp_monotonic,
                               rl_config_t const *const config) {
     // suppress unused parameter warning
-    (void)analog_buffer;
-    (void)digital_buffer;
-    (void)buffer_size;
-
-    // rate limit sampling of the ambient sensors
-    if (ambient_rate_counter >= RL_FILE_AMBIENT_SAMPLING_RATE) {
-        // increment rate limiting counter before exit
-        ambient_rate_counter =
-            (ambient_rate_counter + RL_FILE_AMBIENT_SAMPLING_RATE) %
-            config->update_rate;
-        return 0;
-    }
-    // increment rate limiting counter
-    ambient_rate_counter =
-        (ambient_rate_counter + RL_FILE_AMBIENT_SAMPLING_RATE) %
-        config->update_rate;
+    (void)config;
 
     // store timestamps
     fwrite(timestamp_realtime, sizeof(rl_timestamp_t), 1, ambient_file);
     fwrite(timestamp_monotonic, sizeof(rl_timestamp_t), 1, ambient_file);
 
-    // FETCH VALUES //
-    int32_t sensor_data[SENSOR_REGISTRY_SIZE];
-
-    int ch = 0;
-    int multi_channel_read = -1;
-    for (int i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
-        // only read registered sensors
-        if (rl_status.sensor_available[i]) {
-            // read multi-channel sensor data only once
-            if (SENSOR_REGISTRY[i].identifier != multi_channel_read) {
-                SENSOR_REGISTRY[i].read(SENSOR_REGISTRY[i].identifier);
-                multi_channel_read = SENSOR_REGISTRY[i].identifier;
-            }
-            sensor_data[ch] = SENSOR_REGISTRY[i].get_value(
-                SENSOR_REGISTRY[i].identifier, SENSOR_REGISTRY[i].channel);
-            ch++;
-        }
-    }
-
-    // WRITE VALUES //
-    fwrite(sensor_data, sizeof(int32_t), rl_status.sensor_count, ambient_file);
+    // store sensor data
+    fwrite(ambient_buffer, sizeof(int32_t), buffer_size, ambient_file);
 
     return 1;
 }

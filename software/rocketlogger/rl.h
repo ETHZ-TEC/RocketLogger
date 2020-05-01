@@ -62,6 +62,8 @@
 #define RL_SAMPLE_RATE_MIN 1000
 /// Maximum number of sensors that can be connected to the system
 #define RL_SENSOR_COUNT_MAX 128
+/// Ambient sensor read out rate in samples per second
+#define RL_SENSOR_SAMPLE_RATE 1
 
 /// User folder calibration file path
 #define RL_CALIBRATION_USER_FILE                                               \
