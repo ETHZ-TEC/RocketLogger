@@ -490,7 +490,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // process data for web when enabled
         if (config->web_enable && !web_failure_disable) {
             res = rl_socket_handle_data(analog_buffer, digital_buffer,
-                                        buffer_size, &timestamp_realtime,
+                                        sensor_buffer, buffer_size,
+                                        sensor_buffer_size, &timestamp_realtime,
                                         &timestamp_monotonic, config);
             if (res < 0) {
                 // disable web interface on failure, but continue sampling

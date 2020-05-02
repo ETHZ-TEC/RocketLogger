@@ -64,14 +64,18 @@ int rl_socket_metadata(rl_config_t const *const config);
  *
  * @param analog_buffer Analog data buffer to process
  * @param digital_buffer Digital data buffer to process
- * @param buffer_size Number of samples in the buffer
+ * @param ambient_buffer Ambient sensor data buffer to process
+ * @param buffer_size Number of data samples in the buffer
+ * @param ambient_buffer_size Number of sensor samples in the buffer
  * @param timestamp_realtime Timestamp sampled from realtime clock
  * @param timestamp_monotonic Timestamp sampled from monotonic clock
  * @param config Current measurement configuration
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int rl_socket_handle_data(int32_t const *analog_buffer,
-                          uint32_t const *digital_buffer, size_t buffer_size,
+                          uint32_t const *digital_buffer,
+                          int32_t const *ambient_buffer, size_t buffer_size,
+                          size_t ambient_buffer_size,
                           rl_timestamp_t const *const timestamp_realtime,
                           rl_timestamp_t const *const timestamp_monotonic,
                           rl_config_t const *const config);

@@ -46,6 +46,20 @@
 
 #include "rl_file.h"
 
+char *RL_UNIT_NAMES[] = {
+    "",   //!< 0 -> Unitless
+    "V",  //!< 1 -> Voltage (electric)
+    "A",  //!< 2 -> Current (electric)
+    "",   //!< 3 -> Binary signal
+    "",   //!< 4 -> Range valid information
+    "lx", //!< 5 -> Lux (illuminance)
+    "C",  //!< 6 -> Degree celsius (temperature)
+    "",   //!< 7 -> Integer channel (numeric)
+    "%",  //!< 8 -> Percent (numeric, humidity)
+    "P",  //!< 9 -> Pascal (pressure)
+    "s",  //!< 10 -> Second (time delta)
+};
+
 /**
  * Set up channel information of the data file header.
  *
@@ -67,6 +81,15 @@ void rl_file_setup_ambient_channels(rl_file_header_t *const header);
 int i1l_valid_channel = 0;
 /// Global variable to determine i2l valid channel index
 int i2l_valid_channel = 0;
+
+char *rl_unit_to_string(rl_unit_t const unit) {
+    if ((unsigned int)unit <
+        (sizeof(RL_UNIT_NAMES) / sizeof(RL_UNIT_NAMES[0]))) {
+        return RL_UNIT_NAMES[unit];
+    } else {
+        return NULL;
+    }
+}
 
 char *rl_file_get_ambient_file_name(char const *const data_file_name) {
     static char ambient_file_name[PATH_MAX];

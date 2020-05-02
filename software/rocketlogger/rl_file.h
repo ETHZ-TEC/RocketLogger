@@ -176,6 +176,14 @@ struct rl_file_header {
 typedef struct rl_file_header rl_file_header_t;
 
 /**
+ * Get the string representing the unit.
+ *
+ * @param unit The unit to convert into a string
+ * @return Pointer to the unit string or NULL if unit not defined
+ */
+char *rl_unit_to_string(rl_unit_t unit);
+
+/**
  * Derive the ambient file name from the data file name.
  *
  * @param data_file_name The data file name

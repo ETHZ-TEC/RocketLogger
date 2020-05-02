@@ -38,6 +38,8 @@
 
 #include "log.h"
 #include "rl.h"
+#include "rl_file.h"
+#include "sensor/sensor.h"
 #include "util.h"
 
 #include "rl_socket.h"
@@ -116,6 +118,19 @@ int rl_socket_metadata(rl_config_t const *const config) {
         }
     }
 
+    // ambient channel metadata
+    if (config->ambient_enable) {
+        for (int ch = 0; ch < SENSOR_REGISTRY_SIZE; ch++) {
+            if (rl_status.sensor_available[ch]) {
+                snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                            "{\"name\":\"%s\",\"unit\":\"%s\",\"scale\":1e%d},",
+                            SENSOR_REGISTRY[ch].name,
+                            rl_unit_to_string(SENSOR_REGISTRY[ch].unit),
+                            SENSOR_REGISTRY[ch].scale);
+            }
+        }
+    }
+
     // current range valid metadata and JSON end
     snprintfcat(
         metadata_json, RL_SOCKET_METADATA_SIZE,
@@ -127,7 +142,9 @@ int rl_socket_metadata(rl_config_t const *const config) {
 }
 
 int rl_socket_handle_data(int32_t const *analog_buffer,
-                          uint32_t const *digital_buffer, size_t buffer_size,
+                          uint32_t const *digital_buffer,
+                          int32_t const *ambient_buffer, size_t buffer_size,
+                          size_t ambient_buffer_size,
                           rl_timestamp_t const *const timestamp_realtime,
                           rl_timestamp_t const *const timestamp_monotonic,
                           rl_config_t const *const config) {
@@ -181,6 +198,22 @@ int rl_socket_handle_data(int32_t const *analog_buffer,
         }
     }
     free(data_buffer);
+
+    // publish ambient data to socket
+    if (config->ambient_enable) {
+        for (int ch = 0; ch < rl_status.sensor_count; ch++) {
+            // publish channel data to socket
+            int zmq_res = zmq_send(zmq_data_socket, &ambient_buffer[ch],
+                                   sizeof(int32_t) * (ambient_buffer_size > 0),
+                                   ZMQ_SNDMORE);
+            if (zmq_res < 0) {
+                rl_log(RL_LOG_ERROR,
+                       "failed publishing sensor data; %d message: %s", errno,
+                       strerror(errno));
+                return ERROR;
+            }
+        }
+    }
 
     // publish digital data to socket
     zmq_res = zmq_send(zmq_data_socket, digital_buffer,
