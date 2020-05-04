@@ -36,22 +36,22 @@ const ascii = (a) => a.charCodeAt(0);
 /// format display byte values
 function bytes_to_string(bytes) {
     if (bytes === 0) {
-        return "0 B";
+        return '0 B';
     }
     const log1k = Math.floor(Math.log10(bytes) / 3);
     const value = (bytes / Math.pow(1000, log1k));
 
     switch (log1k) {
         case 0:
-            return value.toFixed(0) + " B";
+            return value.toFixed(0) + ' B';
         case 1:
-            return value.toFixed(2) + " kB";
+            return value.toFixed(2) + ' kB';
         case 2:
-            return value.toFixed(2) + " MB";
+            return value.toFixed(2) + ' MB';
         case 3:
-            return value.toFixed(2) + " GB";
+            return value.toFixed(2) + ' GB';
         case 4:
-            return value.toFixed(2) + " TB";
+            return value.toFixed(2) + ' TB';
         default:
             return bytes.toPrecision(5);
     }
@@ -60,7 +60,7 @@ function bytes_to_string(bytes) {
 /// extend single digit date values
 function date_zero_extend(value) {
     if (value < 10) {
-        return "0" + value.toFixed();
+        return '0' + value.toFixed();
     }
     return value.toFixed();
 }
@@ -83,19 +83,19 @@ function time_to_string(time, join = ':') {
 
 /// get file prefix string from date object
 function date_to_prefix_string(date) {
-    return date_to_string(date, '') + "_" + time_to_string(date, '');
+    return date_to_string(date, '') + '_' + time_to_string(date, '');
 }
 
 /// get time string from unit timestamp
 function unix_to_datetime_string(seconds) {
     const date = new Date(seconds * 1000);
-    return date_to_string(date) + " " + time_to_string(date);
+    return date_to_string(date) + ' ' + time_to_string(date);
 }
 
 /// get time duration string from unit timestamp
 function unix_to_timespan_string(seconds) {
-    if (seconds == null || isNaN(seconds) || seconds === 0) {
-        return "0 s";
+    if (seconds === null || isNaN(seconds) || seconds === 0) {
+        return '0 s';
     }
 
     const date = new Date(seconds * 1000);
@@ -106,24 +106,24 @@ function unix_to_timespan_string(seconds) {
     const minute = date.getUTCMinutes();
     const second = date.getUTCSeconds();
 
-    let str = "";
+    let str = '';
     if (year > 0 || str.length > 0) {
-        str = str + year.toFixed() + " year" + ((year != 1) ? "s " : " ");
+        str = str + year.toFixed() + ' year' + ((year !== 1) ? 's ' : ' ');
     }
     if (month > 0 || str.length > 0) {
-        str = str + date_zero_extend(month) + " month" + ((month != 1) ? "s " : " ");
+        str = str + date_zero_extend(month) + ' month' + ((month !== 1) ? 's ' : ' ');
     }
     if (day > 0 || str.length > 0) {
-        str = str + date_zero_extend(day) + " day" + ((day != 1) ? "s " : " ");
+        str = str + date_zero_extend(day) + ' day' + ((day !== 1) ? 's ' : ' ');
     }
     if (hour > 0 || str.length > 0) {
-        str = str + date_zero_extend(hour) + " h ";
+        str = str + date_zero_extend(hour) + ' h ';
     }
     if (minute > 0 || str.length > 0) {
-        str = str + date_zero_extend(minute) + " min ";
+        str = str + date_zero_extend(minute) + ' min ';
     }
     if (second > 0 || str.length > 0) {
-        str = str + date_zero_extend(second) + " s";
+        str = str + date_zero_extend(second) + ' s';
     }
 
     return str.trim();

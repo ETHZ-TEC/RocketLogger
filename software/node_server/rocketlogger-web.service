@@ -2,10 +2,12 @@
 [Unit]
 Description=RocketLogger web interface
 Documentation=https://rocketlogger.ethz.ch/
-#Requires=rocketlogger.service
+
+After=rocketlogger.service
+Requires=rocketlogger.service
+PartOf=rocketlogger.service
 
 [Service]
-Type=simple
 Type=simple
 ExecStart=/usr/bin/node /home/rocketlogger/web/app.js
 WorkingDirectory=/home/rocketlogger/web

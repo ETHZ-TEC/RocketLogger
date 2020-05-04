@@ -285,7 +285,7 @@ async function data_proxy() {
             digital: null,
         };
 
-        // parse metadata
+        // parse metadata (first data element)
         let meta;
         try {
             meta = JSON.parse(data[0]);
@@ -298,7 +298,7 @@ async function data_proxy() {
         const downsample_factor = Math.max(1, meta.data_rate / rl.web_data_rate);
         const buffer_length = data[data.length - 1].length / Uint32Array.BYTES_PER_ELEMENT / downsample_factor;
 
-        // generate timestamps
+        // generate timestamps (second data element)
         const time_in_view = new BigInt64Array(data[1].buffer);
         const time_out = new ArrayBuffer(buffer_length * Float64Array.BYTES_PER_ELEMENT);
         const time_out_view = new Float64Array(time_out);
@@ -308,34 +308,33 @@ async function data_proxy() {
         }
         rep.time = time_out;
 
-        // process digital data
+        // process digital data (last data element)
         const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
         const digital_out = new ArrayBuffer(buffer_length * Uint8Array.BYTES_PER_ELEMENT);
         const digital_out_view = new Uint8Array(digital_out);
-        for (let j = 0; j < Math.min(digital_in_view.length, digital_out_view.length); j += downsample_factor) {
-            digital_out_view[j] = digital_in_view[j];
+        for (let j = 0; j < Math.min(digital_out_view.length, digital_in_view.length / downsample_factor); j++) {
+            digital_out_view[j] = digital_in_view[j * downsample_factor];
             /// @todo any/none down sampling
         }
         rep.digital = digital_out;
 
-        // process channel data starting at index 2
+        // process channel data (starting at third data element)
         let i = 2;
         for (const ch of meta.channels) {
             rep.metadata[ch.name] = {
-                digital: ch.digital,
                 scale: ch.scale,
                 unit: ch.unit,
                 bit: ch.bit,
             };
-            if (ch.digital) {
+            if (ch.unit === 'binary') {
                 continue;
             }
 
             const data_in_view = new Int32Array(data[i].buffer);
             const data_out = new ArrayBuffer(buffer_length * Float32Array.BYTES_PER_ELEMENT);
             const data_out_view = new Float32Array(data_out).fill(NaN);
-            for (let j = 0; j < Math.min(data_in_view.length, data_out_view.length); j += downsample_factor) {
-                data_out_view[j] = data_in_view[j] * ch.scale;
+            for (let j = 0; j < Math.min(data_out_view.length, data_in_view.length / downsample_factor); j++) {
+                data_out_view[j] = data_in_view[j * downsample_factor] * ch.scale;
             }
             rep.data[ch.name] = data_out;
             i = i + 1;
@@ -382,7 +381,7 @@ async function status_proxy() {
     console.log(`zmq status subscribe to ${rl.zmq_status_socket}`);
     sock.subscribe();
 
-    for await (const [status] of sock) {
+    for await (const status of sock) {
         // console.log(`zmq new status: ${status}`);
         try {
             io.emit('status', { status: JSON.parse(status) });

@@ -31,7 +31,7 @@
 "use strict";
 
 // check RocketLogger base functionality is loaded
-if (typeof (rl) == 'undefined') {
+if (typeof (rl) === 'undefined') {
     throw 'need to load rl.base.js before loading rl.data.js'
 }
 
@@ -47,8 +47,8 @@ function rocketlogger_init_data() {
         throw 'need RocketLogger base functionality to be initialized first.'
     }
 
-    // initialize data buffers
-    reset_buffer();
+    // force initial reset of data buffers
+    rl._data.reset = true;
 
     // initialize plotting data structure
     rl.plot = {
@@ -65,7 +65,7 @@ function rocketlogger_init_data() {
             cmd: 'data',
             time: Date.now(),
         };
-        rl._conn.socket.emit('data', req);
+        rl._data.socket.emit('data', req);
     }
 
     // provide plot.start() and plot.stop() methods
@@ -79,93 +79,147 @@ function rocketlogger_init_data() {
     };
 
     // init data update callback
-    rl._conn.socket.on('data', (res) => {
+    rl._data.socket.on('data', (res) => {
         // console.log(`rl data: t=${res.t}, ${res.metadata}`);
         // process data trigger plot update if enabled
         process_data(res);
-        if ((rl.plot.timeout == null) && $('#plot_update').prop('checked')) {
+        if ((rl.plot.timeout === null) && $('#plot_update').prop('checked')) {
             rl.plot.start();
             $('#collapseConfiguration').collapse('hide');
         }
     });
 }
 
-/// reset local data buffers
-function reset_buffer() {
-    rl._data.buffer = {};
-    rl._data.metadata = {};
+/// process new measurement data
+function process_data(res) {
+    // reset and initialize metadata, buffers and plots
+    if (rl._data.reset) {
+        rl._data.metadata = res.metadata;
+        rl._data.time = [];
+        rl._data.buffer = {};
+        for (const ch in rl._data.metadata) {
+            rl._data.buffer[ch] = [];
+        }
+        for (const p of rl.plot.plots) {
+            document.getElementById(p.id).data = [];
+        }
+        rl._data.reset = false;
+    }
+
+    // handle timestamp buffer, drop overflow values
+    const time_view = new Float64Array(res.time);
+    for (let i = 0; i < time_view.length; i++) {
+        rl._data.time.push(time_view[i]);
+    }
+    if (rl._data.time.length > RL_DATA_BUFFER_LENGTH) {
+        rl._data.time.splice(0,
+            rl._data.time.length - RL_DATA_BUFFER_LENGTH);
+    }
+
+    // decode channel data
+    for (const ch in rl._data.metadata) {
+        if (rl._data.metadata[ch].unit === 'binary') {
+            const digital_view = new Uint8Array(res.digital);
+            for (let i = 0; i < digital_view.length; i++) {
+                rl._data.buffer[ch].push(
+                    ((digital_view[i] & (0x01 << rl._data.metadata[ch].bit)) ? 0.7 : 0)
+                    + rl._data.metadata[ch].bit);
+            }
+        } else {
+            const analog_view = new Float32Array(res.data[ch]);
+            for (let i = 0; i < analog_view.length; i++) {
+                rl._data.buffer[ch].push(analog_view[i]);
+            }
+        }
+
+        // drop overflow values
+        if (rl._data.buffer[ch].length > RL_DATA_BUFFER_LENGTH) {
+            rl._data.buffer[ch].splice(0,
+                rl._data.buffer[ch].length - RL_DATA_BUFFER_LENGTH);
+        }
+    }
+}
+
+
+/// initialize an analog data plot
+function plot_get_xlayout(time_scale) {
+    const now = Date.now();
+
+    /// default x-axis configuration
+    const xaxis = {
+        range: [now - 10 * time_scale, now],
+        linewidth: 1,
+        mirror: true,
+        tickvals: [],
+        ticktext: [],
+        ticklen: 5,
+        tickwidth: 1,
+        tickfont: { size: 14, },
+        fixedrange: true,
+    };
+
+    // generate x-ticks
+    for (let i = -10; i <= 0; i++) {
+        const tick = time_scale * (Math.floor(now / time_scale) + i)
+        xaxis.tickvals.push(tick);
+        xaxis.ticktext.push(time_to_string(new Date(tick)));
+    }
+
+    return xaxis;
 }
 
 /// initialize an analog data plot
-function plot_get_layout(plot_config, update_only = false) {
-    const now = Date.now();
-
-    /// default plotly axis configuration
-    const layout = {
-        xaxis: {
-            range: [now - 10 * plot_config.time_scale, now],
-            linewidth: 1,
-            mirror: true,
-            tickvals: [],
-            ticktext: [],
-            ticklen: 5,
-            tickwidth: 1,
-            tickfont: { size: 14, },
-            fixedrange: true,
-        },
-        yaxis: {
-            linewidth: 1,
-            mirror: true,
-            ticklen: 5,
-            tickwidth: 1,
-            tickfont: { size: 14, },
-            autorange: true,
-            fixedrange: true,
-            showgrid: true,
-            zeroline: true,
-        },
+function plot_get_ylayout(plot_config) {
+    /// default y-axis configuration
+    const yaxis = {
+        linewidth: 1,
+        mirror: true,
+        ticklen: 5,
+        tickwidth: 1,
+        tickfont: { size: 14, },
+        autorange: true,
+        fixedrange: true,
+        showgrid: true,
+        zeroline: true,
     };
 
-    // generate new xticks
-    for (let i = 0; i < 12; i++) {
-        const tick = plot_config.time_scale * (Math.ceil(now / plot_config.time_scale) - 11 + i)
-        layout.xaxis.tickvals.push(tick);
-        layout.xaxis.ticktext.push(time_to_string(new Date(tick)));
-    }
-
-    // plot type dependent yaxis format
-    if (plot_config.digital) {
-        layout.yaxis.autorange = false;
-        layout.yaxis.range = [-0.15, 5.85];
-        layout.yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
-        layout.yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
-        layout.yaxis.zeroline = false;
+    // plot type dependent y-axis format
+    if (plot_config.unit === 'binary') {
+        yaxis.autorange = false;
+        yaxis.range = [-0.15, 5.85];
+        yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
+        yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
+        yaxis.zeroline = false;
     } else {
-        layout.yaxis.autorange = (plot_config.range == 0);
-        layout.yaxis.range = [-plot_config.range, +plot_config.range];
+        yaxis.autorange = (plot_config.range == 0);
+        yaxis.range = [-plot_config.range, +plot_config.range];
     }
 
-    if (update_only) {
-        return layout;
-    }
+    return yaxis;
+}
 
-    // general plot settings
-    layout.font = { size: 16, };
-    layout.showlegend = true;
-    layout.legend = {
-        x: 0.0,
-        xanchor: 'left',
-        y: 1.01,
-        yanchor: 'bottom',
-        orientation: 'h',
-        font: { size: 18, },
-    };
-    layout.margin = {
-        l: 60,
-        r: 20,
-        t: 5,
-        b: 50,
-        autoexpand: true,
+/// initialize an analog data plot
+function plot_get_base_layout() {
+    /// default plotly layout configuration
+    const layout = {
+        connectgaps: true,
+        font: { size: 16, },
+        showlegend: true,
+        legend: {
+            x: 0.0,
+            xanchor: 'left',
+            y: 1.01,
+            yanchor: 'bottom',
+            orientation: 'h',
+            font: { size: 18, },
+        },
+        margin: {
+            l: 60,
+            r: 20,
+            t: 5,
+            b: 50,
+            autoexpand: true,
+        }
     };
 
     return layout;
@@ -173,37 +227,43 @@ function plot_get_layout(plot_config, update_only = false) {
 
 /// initialize plots
 async function init_plots() {
+    // set default timescale
+    rl.plot.time_scale = 1000;
+
     // register plots to update
     rl.plot.plots.push({
         id: 'plot_voltage',
-        digital: false,
-        time_scale: 1000,
         range_control: $('#plot_voltage_range'),
         range: 0,
         unit: 'V',
     });
     rl.plot.plots.push({
         id: 'plot_current',
-        digital: false,
-        time_scale: 1000,
         range_control: $('#plot_current_range'),
         range: 0,
         unit: 'A',
     });
     rl.plot.plots.push({
         id: 'plot_digital',
-        digital: true,
-        time_scale: 1000,
         range_control: null,
         range: null,
-        unit: 'digital',
+        unit: 'binary',
+    });
+    rl.plot.plots.push({
+        id: 'plot_ambient',
+        range_control: null,
+        range: 0,
+        unit: 'ambient',
     });
 
+    const xaxis = plot_get_xlayout(rl.plot.time_scale);
     for (let i = 0; i < rl.plot.plots.length; i++) {
         const p = rl.plot.plots[i];
 
         // init new plot with default layout
-        const layout = plot_get_layout(p);
+        const layout = plot_get_base_layout(p);
+        layout.xaxis = xaxis;
+        layout.yaxis = plot_get_ylayout(p);
         Plotly.newPlot(p.id, [], layout, { responsive: true, displayModeBar: false });
 
         // init range control callback handlers
@@ -215,25 +275,33 @@ async function init_plots() {
     }
     // init time control callback handlers
     $('#plot_time_scale').on('change', () => {
-        for (const plot of rl.plot.plots) {
-            plot.time_scale = $('#plot_time_scale').val();
-        }
+        rl.plot.time_scale = $('#plot_time_scale').val();
+        // for (const plot of rl.plot.plots) {
+        //     plot.time_scale = $('#plot_time_scale').val();
+        // }
     }).trigger('change');
 }
 
 /// async update of all plots with new data
 async function update_plots() {
-    if (rl.plot.plotting != null) {
+    // rate limit plotting
+    if (rl.plot.plotting !== null) {
         await rl.plot.plotting;
     }
     rl.plot.timeout = setTimeout(update_plots, 1000 / rl.plot.update_rate);
 
-    let update_plot = async (plot) => {
-        // collect data series to plot
+    // update plots
+    const xaxis = plot_get_xlayout(rl.plot.time_scale);
+    const update_plot = async (plot) => {
         let data = [];
+        let layout = {
+            xaxis: xaxis,
+        };
+
+        // collect data series to plot
         for (const ch in rl._data.buffer) {
-            // check if enabled
-            if ((rl._data.metadata[ch].unit == plot.unit)) {
+            // check if channel of current plot
+            if (rl._data.metadata[ch].unit === plot.unit) {
                 data.push({
                     x: rl._data.time,
                     y: rl._data.buffer[ch],
@@ -243,84 +311,42 @@ async function update_plots() {
                     hoverinfo: 'y+name',
                 });
             }
+            // check if channel of ambient plot
+            if (plot.unit === 'ambient') {
+                // exclude channels of other plots
+                if ((rl._data.metadata[ch].unit === 'A') ||
+                    (rl._data.metadata[ch].unit === 'V') ||
+                    (rl._data.metadata[ch].unit === 'binary')) {
+                    continue;
+                }
+
+                // add data
+                data.push({
+                    x: rl._data.time,
+                    y: rl._data.buffer[ch],
+                    type: 'scattergl',
+                    mode: 'lines+markers',
+                    name: ch,
+                    hoverinfo: 'y+name',
+                });
+                layout.connectgaps = true;
+            }
         }
 
         // check for existing traces
         if (document.getElementById(plot.id).data.length) {
-            const layout = plot_get_layout(plot, true);
+            layout.yaxis = plot_get_ylayout(plot);
             Plotly.update(plot.id, data, layout);
         } else {
-            const layout = plot_get_layout(plot);
+            // init new plot with default layout
+            layout = plot_get_base_layout(plot);
+            layout.xaxis = xaxis;
+            layout.yaxis = plot_get_ylayout(plot);
             Plotly.newPlot(plot.id, data, layout, { responsive: true, displayModeBar: false });
         }
     };
     if (rl.plot.plots) {
         rl.plot.plotting = Promise.all(rl.plot.plots.map((p) => update_plot(p)));
-    }
-}
-
-/// process new measurement data.
-function process_data(res) {
-    // clear buffers and plots if necessary
-    if (rl._data.buffer_clear) {
-        rl._data.buffer = {};
-        rl._data.time = [];
-        rl.plot.plots.forEach((p) => { document.getElementById(p.id).data = []; })
-        rl._data.buffer_clear = false;
-    }
-
-    for (const ch in res.metadata) {
-        // skip hidden channel
-        if (res.metadata[ch].hidden) {
-            continue;
-        }
-
-        // init array buffer if necessary
-        if (!rl._data.buffer[ch]) {
-            rl._data.buffer[ch] = [];
-        }
-
-        // decode data
-        if (res.metadata[ch].digital) {
-            const digital_view = new Uint8Array(res.digital);
-            for (let i = 0; i < digital_view.length; i++) {
-                rl._data.buffer[ch].push(
-                    ((digital_view[i] & (0x01 << res.metadata[ch].bit)) ? 0.7 : 0)
-                    + res.metadata[ch].bit);
-            }
-        } else {
-            const analog_view = new Float32Array(res.data[ch]);
-            for (let i = 0; i < analog_view.length; i++) {
-                rl._data.buffer[ch].push(analog_view[i]);
-            }
-        }
-
-        // drop old values
-        if (rl._data.buffer[ch].length > RL_DATA_BUFFER_LENGTH) {
-            rl._data.buffer[ch].splice(0,
-                rl._data.buffer[ch].length - RL_DATA_BUFFER_LENGTH);
-        }
-    }
-
-    // handle timestamp buffer
-    if (!rl._data.time) {
-        rl._data.time = [];
-    }
-    const time_view = new Float64Array(res.time);
-    for (let i = 0; i < time_view.length; i++) {
-        rl._data.time.push(time_view[i]);
-    }
-    if (rl._data.time.length > RL_DATA_BUFFER_LENGTH) {
-        rl._data.time.splice(0,
-            rl._data.time.length - RL_DATA_BUFFER_LENGTH);
-    }
-
-    // store metadata and set digital unit
-    rl._data.metadata = res.metadata;
-    for (const ch in rl._data.metadata) {
-        if (rl._data.metadata[ch].digital) {
-            rl._data.metadata[ch].unit = 'digital';
-        }
     }
 }
 
@@ -346,8 +372,8 @@ $(() => {
 
     // register plotting hotkeys
     $(document).on('keypress', (event) => {
-        if (event.target.nodeName == 'INPUT' || event.target.nodeName == 'CHECKBOX' ||
-            event.target.nodeName == 'TEXTAREA') {
+        if (event.target.nodeName === 'INPUT' || event.target.nodeName === 'CHECKBOX' ||
+            event.target.nodeName === 'TEXTAREA') {
             return;
         }
 

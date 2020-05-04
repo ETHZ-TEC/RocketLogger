@@ -113,7 +113,7 @@ int rl_socket_metadata(rl_config_t const *const config) {
     if (config->digital_enable) {
         for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
             snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                        "{\"name\":\"DI%d\",\"digital\":true,\"bit\":%d},",
+                        "{\"name\":\"DI%d\",\"unit\":\"binary\",\"bit\":%d},",
                         i + 1, i);
         }
     }
@@ -134,8 +134,8 @@ int rl_socket_metadata(rl_config_t const *const config) {
     // current range valid metadata and JSON end
     snprintfcat(
         metadata_json, RL_SOCKET_METADATA_SIZE,
-        "{\"name\":\"I1L_valid\",\"digital\":true,\"bit\":6,\"hidden\":true},"
-        "{\"name\":\"I2L_valid\",\"digital\":true,\"bit\":7,\"hidden\":true}]"
+        "{\"name\":\"I1L_valid\",\"unit\":\"binary\",\"bit\":6,\"hidden\":true},"
+        "{\"name\":\"I2L_valid\",\"unit\":\"binary\",\"bit\":7,\"hidden\":true}]"
         "}");
 
     return SUCCESS;

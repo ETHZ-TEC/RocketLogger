@@ -37,41 +37,39 @@ const RL_DISK_WARNING_THRESHOLD = 150;
 
 /// RocketLogger structure for interaction and data management
 const rl = {
-	// RocketLogger connection and control handling
-	_conn: {
-		socket: null,
-	},
-	// RocketLogger data structures
-	_data: {
-		status: null,
-		config: null,
-		buffer: true,
-		buffer_clear: true,
-		metadata: null,
-	},
-
 	// methods to interface with the RocketLogger
 	status: null,
 	config: null, // provided by rl.control.js
 	start: null, // provided by rl.control.js
 	stop: null, // provided by rl.control.js
 	plot: null, // provided by rl._data.js
+
+	// RocketLogger data structures
+	_data: {
+		socket: null,
+		status: null,
+		config: null,
+		metadata: null,
+		buffer: null,
+		time: null,
+		reset: true,
+	}
 };
 
 /// initialize RocketLogger interfacing base functionality
 function rocketlogger_init_base() {
 	// new socket.io socket for RocketLogger interaction
-	rl._conn.socket = io(window.location.origin);
+	rl._data.socket = io(window.location.origin);
 
 	// init connection handler callbacks
-	rl._conn.socket.on('connect', () => {
-		console.log(`socket.io connection established (${rl._conn.socket.id}).`);
+	rl._data.socket.on('connect', () => {
+		console.log(`socket.io connection established (${rl._data.socket.id}).`);
 	});
-	rl._conn.socket.on('disconnect', () => {
+	rl._data.socket.on('disconnect', () => {
 		console.log(`socket.io connection closed.`);
 	});
 	// init default message callback
-	rl._conn.socket.on('message', (msg) => {
+	rl._data.socket.on('message', (msg) => {
 		console.log(`socket.io message: ${msg}`);
 	});
 
@@ -81,15 +79,15 @@ function rocketlogger_init_base() {
 	// init default status and provide status() request method
 	rl.status = () => {
 		const req = { cmd: 'status' };
-		rl._conn.socket.emit('status', req);
+		rl._data.socket.emit('status', req);
 	};
 
 	// init status update callback
-	rl._conn.socket.on('status', (res) => {
+	rl._data.socket.on('status', (res) => {
 		// console.log(`rl status: ${JSON.stringify(res)}`);
 		if (res.status) {
 			if (!rl._data.status.sampling && res.status.sampling) {
-				rl._data.buffer_clear = true;
+				rl._data.reset = true;
 			}
 			rl._data.status = res.status;
 			update_status();

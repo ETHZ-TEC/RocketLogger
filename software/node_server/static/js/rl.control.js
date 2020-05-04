@@ -31,7 +31,7 @@
 "use strict";
 
 // check RocketLogger base functionality is loaded
-if (typeof (rl) == 'undefined') {
+if (typeof (rl) === 'undefined') {
 	throw 'need to load rl.base.js before loading rl.control.js'
 }
 
@@ -56,15 +56,15 @@ function rocketlogger_init_control() {
 			cmd: 'start',
 			config: rl._data.config,
 		};
-		rl._conn.socket.emit('control', req);
-		rl._data.buffer_clear = true;
+		rl._data.socket.emit('control', req);
+		rl._data.reset = true;
 	};
 	rl.stop = () => {
 		const req = {
 			cmd: 'stop',
 			config: null,
 		};
-		rl._conn.socket.emit('control', req);
+		rl._data.socket.emit('control', req);
 	};
 	rl.config = (set_default) => {
 		const req = {
@@ -72,29 +72,29 @@ function rocketlogger_init_control() {
 			config: rl._data.config,
 			default: set_default,
 		};
-		rl._conn.socket.emit('control', req);
+		rl._data.socket.emit('control', req);
 	};
 
 	// init config update callback
-	rl._conn.socket.on('control', (res) => {
+	rl._data.socket.on('control', (res) => {
 		console.log(`rl control: ${JSON.stringify(res)}`);
 		const cmd = res.req.cmd;
 		/// @todo handle control feedback
-		if (cmd == 'start') {
+		if (cmd === 'start') {
 			rl._data.config = res.config;
-		} else if (cmd == 'stop') {
+		} else if (cmd === 'stop') {
 			// no actions
-		} else if (cmd == 'config') {
-			const init = (rl._data.default_config == null);
+		} else if (cmd === 'config') {
+			const init = (rl._data.default_config === null);
 			rl._data.default_config = res.config;
 			config_reset_default();
 
 			// indicate update except on initial load
 			if (!init) {
 				if (res.default) {
-					$("#alert_config_saved").show();
+					$('#alert_config_saved').show('fast');
 				} else {
-					$("#alert_config_loaded").show();
+					$('#alert_config_loaded').show('fast');
 				}
 			}
 		}
@@ -106,7 +106,7 @@ function config_get_reset() {
 	const config = {
 		/// ambient sensor enable
 		ambient_enable: false,
-		/// channels enabled
+		/// channels enable
 		channel_enable: RL_CHANNEL_NAMES,
 		/// channels force high range
 		channel_force_range: [],
@@ -176,12 +176,13 @@ function config_change() {
 	rl._data.config = config;
 
 	// perform necessary interface updates
-	$("#alert_config_saved").hide();
-	$("#alert_config_loaded").hide();
-	$('#file_group').prop('disabled', (config.file == null));
-	$('#file_split_group').prop('disabled', (config.file && (config.file.size == 0)));
+	$('#alert_config_saved').hide();
+	$('#alert_config_loaded').hide();
+	$('#file_group').prop('disabled', (config.file === null));
+	$('#file_split_group').prop('disabled', (config.file && (config.file.size === 0)));
 	$('#web_group').prop('disabled', !config.web_enable);
 	$('#collapsePreview').collapse(config.web_enable ? 'show' : 'hide');
+	config.ambient_enable ? $('#plot_group_ambient').show() : $('#plot_group_ambient').hide();
 
 	// estimate remaining time from configuration
 	let use_rate_estimated = (config.channel_enable.length +
@@ -329,20 +330,20 @@ $(() => {
 
 	// initialize default configuration control buttons
 	$('#button_config_save').on('click', () => {
-		$("#alert_config_saved").hide();
-		$("#alert_config_loaded").hide();
+		$('#alert_config_saved').hide();
+		$('#alert_config_loaded').hide();
 		rl.config(true);
 	});
 	$('#button_config_load').on('click', () => {
-		$("#alert_config_saved").hide();
-		$("#alert_config_loaded").hide();
+		$('#alert_config_saved').hide();
+		$('#alert_config_loaded').hide();
 		rl.config();
 	});
 
 	// register control hotkeys
 	$(document).on('keypress', (event) => {
-		if (event.target.nodeName == 'INPUT' || event.target.nodeName == 'CHECKBOX' ||
-			event.target.nodeName == 'TEXTAREA') {
+		if (event.target.nodeName === 'INPUT' || event.target.nodeName === 'CHECKBOX' ||
+			event.target.nodeName === 'TEXTAREA') {
 			return;
 		}
 
