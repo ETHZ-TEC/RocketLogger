@@ -36,7 +36,9 @@ if (typeof (rl) === 'undefined') {
 }
 
 /// data buffer length to buffer locally
-const RL_DATA_BUFFER_LENGTH = 10000;
+const RL_DATA_BUFFER_LENGTH = 1e6;
+/// data points to sample for plotting
+const RL_PLOT_POINTS = 10000;
 /// maximum plot update rate [frames/sec]
 const RL_PLOT_MAX_FPS = 50;
 
@@ -101,7 +103,7 @@ function process_data(res) {
             rl._data.buffer[ch] = [];
         }
         for (const p of rl.plot.plots) {
-            document.getElementById(p.id).data = [];
+            Plotly.purge(p.id);
         }
         rl._data.reset = false;
     }
@@ -202,7 +204,6 @@ function plot_get_ylayout(plot_config) {
 function plot_get_base_layout() {
     /// default plotly layout configuration
     const layout = {
-        connectgaps: true,
         font: { size: 16, },
         showlegend: true,
         legend: {
@@ -276,9 +277,6 @@ async function init_plots() {
     // init time control callback handlers
     $('#plot_time_scale').on('change', () => {
         rl.plot.time_scale = $('#plot_time_scale').val();
-        // for (const plot of rl.plot.plots) {
-        //     plot.time_scale = $('#plot_time_scale').val();
-        // }
     }).trigger('change');
 }
 
@@ -293,56 +291,90 @@ async function update_plots() {
     // update plots
     const xaxis = plot_get_xlayout(rl.plot.time_scale);
     const update_plot = async (plot) => {
-        let data = [];
+        // initialize plot data array
+        if (!plot.data) {
+            plot.data = [];
+        }
+
         let layout = {
             xaxis: xaxis,
         };
 
         // collect data series to plot
         for (const ch in rl._data.buffer) {
-            // check if channel of current plot
-            if (rl._data.metadata[ch].unit === plot.unit) {
-                data.push({
-                    x: rl._data.time,
-                    y: rl._data.buffer[ch],
+            const meta = rl._data.metadata[ch];
+            const buffer = rl._data.buffer[ch];
+            let trace = null;
+
+            // find existing channel trace or initialize new
+            let trace_index = 0;
+            while (trace_index < plot.data.length) {
+                if (plot.data[trace_index].name === ch) {
+                    trace = plot.data[trace_index];
+                    trace.x.length = 0;
+                    trace.y.length = 0;
+                    break;
+                }
+                trace_index++;
+            }
+            if (trace_index === plot.data.length) {
+                trace = {
+                    x: [],
+                    y: [],
                     type: 'scattergl',
                     mode: 'lines',
                     name: ch,
                     hoverinfo: 'y+name',
-                });
+                }
             }
+
             // check if channel of ambient plot
-            if (plot.unit === 'ambient') {
-                // exclude channels of other plots
-                if ((rl._data.metadata[ch].unit === 'A') ||
-                    (rl._data.metadata[ch].unit === 'V') ||
-                    (rl._data.metadata[ch].unit === 'binary')) {
-                    continue;
+            if ((plot.unit === 'ambient') && (meta.unit !== 'A') &&
+                (meta.unit !== 'V') && (meta.unit !== 'binary')) {
+                // time scale dependent display mode
+                if (rl.plot.time_scale > 1e3) {
+                    trace.mode = 'lines';
+                } else {
+                    trace.mode = 'markers';
                 }
 
-                // add data
-                data.push({
-                    x: rl._data.time,
-                    y: rl._data.buffer[ch],
-                    type: 'scattergl',
-                    mode: 'lines+markers',
-                    name: ch,
-                    hoverinfo: 'y+name',
-                });
-                layout.connectgaps = true;
+                // downsample to non NaN values
+                for (let i = Math.max(0, buffer.length - 11 * rl.plot.time_scale);
+                    i < buffer.length; i++) {
+                    if (isNaN(buffer[i])) {
+                        continue;
+                    }
+                    trace.x.push(rl._data.time[i]);
+                    trace.y.push(buffer[i]);
+                }
+            } else if (meta.unit === plot.unit) {
+                // downsample to correct scale
+                const step = Math.floor(10 * rl.plot.time_scale / RL_PLOT_POINTS);
+                for (let i = Math.max(0, buffer.length - 10 * rl.plot.time_scale);
+                    i < buffer.length; i += step) {
+                    trace.x.push(rl._data.time[i]);
+                    trace.y.push(buffer[i]);
+                }
+            } else {
+                continue;
+            }
+
+            // add data trace if not existing
+            if (trace_index === plot.data.length) {
+                plot.data.push(trace);
             }
         }
 
         // check for existing traces
-        if (document.getElementById(plot.id).data.length) {
+        if (document.getElementById(plot.id).data) {
             layout.yaxis = plot_get_ylayout(plot);
-            Plotly.update(plot.id, data, layout);
+            Plotly.update(plot.id, plot.data, layout);
         } else {
             // init new plot with default layout
             layout = plot_get_base_layout(plot);
             layout.xaxis = xaxis;
             layout.yaxis = plot_get_ylayout(plot);
-            Plotly.newPlot(plot.id, data, layout, { responsive: true, displayModeBar: false });
+            Plotly.newPlot(plot.id, plot.data, layout, { responsive: true, displayModeBar: false });
         }
     };
     if (rl.plot.plots) {
