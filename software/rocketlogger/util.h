@@ -172,4 +172,14 @@ void print_json_bool(bool const *const data, const int length);
  */
 void print_json_int64(int64_t const *const data, const int length);
 
+/**
+ * Append formatted string to setting line with formated string value.
+ *
+ * @param buffer The string buffer to append the formatted string to
+ * @param length Maximum length of the buffer
+ * @param format Formatting string passed to snprintf()
+ * @param ... Variables used to format string
+ */
+int snprintfcat(char *const buffer, size_t length, char const *format, ...);
+
 #endif /* UTIL_H_ */

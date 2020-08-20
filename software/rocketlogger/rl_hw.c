@@ -42,10 +42,6 @@
 #include "rl_hw.h"
 
 void hw_init(rl_config_t const *const config) {
-
-    // STATUS reset to default
-    rl_status_reset(&rl_status);
-
     // GPIO configuration
     // force high range (negative enable)
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
@@ -69,16 +65,6 @@ void hw_init(rl_config_t const *const config) {
 
     // STATE
     if (config->file_enable) {
-        // int64_t disk_free = fs_space_free(FS_ROOT_PATH);
-        // int64_t disk_total = fs_space_total(FS_ROOT_PATH);
-
-        // rl_status.disk_free = disk_free;
-        // if (disk_total > 0) {
-        //     rl_status.disk_free_permille = (1000 * disk_free) / disk_total;
-        // } else {
-        //     rl_status.disk_free_permille = 0;
-        // }
-
         // calculate disk use rate in bytes per second:
         // - int32_t/channel + uint32_t bytes/sample for digital at sample rate
         // - 2 timestamp at update rate

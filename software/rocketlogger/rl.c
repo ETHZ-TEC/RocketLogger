@@ -40,11 +40,14 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <zmq.h>
 
 #include "log.h"
 #include "sensor/sensor.h"
 
 #include "rl.h"
+
+#define RL_JSON_BUFFER_SIZE 10000
 
 /**
  * RocketLogger reset configuration definition.
@@ -85,34 +88,42 @@ const rl_status_t rl_status_default = {
     .disk_use_rate = 0,
     .sensor_count = 0,
     .sensor_available = {false},
+    .config = NULL,
 };
 
 /// RocketLogger channel names
-const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {
+char const *const RL_CHANNEL_NAMES[RL_CHANNEL_COUNT] = {
     "V1", "V2", "V3", "V4", "I1L", "I1H", "I2L", "I2H", "DT"};
 
 /// RocketLogger force range channel names
-const char *RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1H", "I2H"};
+char const *const RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1H",
+                                                                       "I2H"};
 
 /// RocketLogger digital channel names
-const char *RL_CHANNEL_DIGITAL_NAMES[RL_CHANNEL_DIGITAL_COUNT] = {
+char const *const RL_CHANNEL_DIGITAL_NAMES[RL_CHANNEL_DIGITAL_COUNT] = {
     "DI1", "DI2", "DI3", "DI4", "DI5", "DI6"};
 
 /// RocketLogger valid channel names
-const char *RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {"I1L_valid",
-                                                                 "I2L_valid"};
+char const *const RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {
+    "I1L_valid", "I2L_valid"};
 
 /// Global RocketLogger status variable.
 rl_status_t rl_status = rl_status_default;
+
+/// The ZeroMQ context for status publishing
+void *zmq_status_context = NULL;
+/// The ZeroMQ status publisher
+void *zmq_status_publisher = NULL;
 
 /**
  * Print a configuration setting line with formated string value.
  *
  * @param description Configuration description
- * @param value Configuration value formatting string passed to fprintf()
+ * @param format Configuration formatting string passed to printf()
  * @param ... Variables used to format value string
  */
-static void print_config_line(char const *description, char const *value, ...);
+static void print_config_line(char const *const description, char const *format,
+                              ...);
 
 void rl_config_print(rl_config_t const *const config) {
     // sampling in background or interactively
@@ -248,72 +259,88 @@ void rl_config_print_cmd(rl_config_t const *const config) {
 }
 
 void rl_config_print_json(rl_config_t const *const config) {
+    char const *const config_json = rl_config_get_json(config);
+    printf(config_json);
+}
+
+char *rl_config_get_json(rl_config_t const *const config) {
     int count;
+    static char buffer[RL_JSON_BUFFER_SIZE];
 
-    printf("{ ");
-    printf("\"ambient_enable\": %s, ",
-           config->ambient_enable ? "true" : "false");
-    printf("\"background_enable\": %s, ",
-           config->background_enable ? "true" : "false");
-    printf("\"interactive_enable\": %s, ",
-           config->interactive_enable ? "true " : "false");
-    printf("\"calibration_ignore\": %s, ",
-           config->calibration_ignore ? "true" : "false");
+    snprintf(buffer, RL_JSON_BUFFER_SIZE, "{ ");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"ambient_enable\": %s, ",
+                config->ambient_enable ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"background_enable\": %s, ",
+                config->background_enable ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"interactive_enable\": %s, ",
+                config->interactive_enable ? "true " : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"calibration_ignore\": %s, ",
+                config->calibration_ignore ? "true" : "false");
 
-    printf("\"channel_enable\": [");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"channel_enable\": [");
     count = 0;
     for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
         if (!config->channel_enable[i]) {
             continue;
         }
         if (count > 0) {
-            printf(", ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, ", ");
         }
-        printf("\"%s\"", RL_CHANNEL_NAMES[i]);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"%s\"", RL_CHANNEL_NAMES[i]);
         count++;
     }
-    printf("], ");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "], ");
 
-    printf("\"channel_force_range\": [");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"channel_force_range\": [");
     count = 0;
     for (int i = 0; i < RL_CHANNEL_SWITCHED_COUNT; i++) {
         if (!config->channel_force_range[i]) {
             continue;
         }
         if (count > 0) {
-            printf(", ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, ", ");
         }
-        printf("\"%s\"", RL_CHANNEL_FORCE_NAMES[i]);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"%s\"",
+                    RL_CHANNEL_FORCE_NAMES[i]);
         count++;
     }
-    printf("], ");
-    printf("\"digital_enable\": %s, ",
-           config->digital_enable ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "], ");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"digital_enable\": %s, ",
+                config->digital_enable ? "true" : "false");
     if (config->file_enable == false) {
-        printf("\"file\": null, ");
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"file\": null, ");
     } else {
-        printf("\"file\": { ");
-        printf("\"comment\": \"%s\", ", config->file_comment);
-        printf("\"filename\": \"%s\", ", config->file_name);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"file\": { ");
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"comment\": \"%s\", ",
+                    config->file_comment);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"filename\": \"%s\", ",
+                    config->file_name);
         switch (config->file_format) {
         case RL_FILE_FORMAT_RLD:
-            printf("\"format\": \"rld\", ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"format\": \"rld\", ");
             break;
         case RL_FILE_FORMAT_CSV:
-            printf("\"format\": \"csv\", ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"format\": \"csv\", ");
             break;
         default:
-            printf("\"format\": null, ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"format\": null, ");
             break;
         }
-        printf("\"size\": %llu", config->file_size);
-        printf(" }, ");
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"size\": %llu",
+                    config->file_size);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, " }, ");
     }
-    printf("\"sample_limit\": %llu, ", config->sample_limit);
-    printf("\"sample_rate\": %u, ", config->sample_rate);
-    printf("\"update_rate\": %u, ", config->update_rate);
-    printf("\"web_enable\": %s", config->web_enable ? "true" : "false");
-    printf(" }");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sample_limit\": %llu, ",
+                config->sample_limit);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sample_rate\": %u, ",
+                config->sample_rate);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"update_rate\": %u, ",
+                config->update_rate);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"web_enable\": %s",
+                config->web_enable ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, " }");
+
+    return buffer;
 }
 
 void rl_config_reset(rl_config_t *const config) {
@@ -402,8 +429,9 @@ int rl_config_validate(rl_config_t const *const config) {
     if (config->sample_rate == 0 ||
         (!sample_rate_native &&
          ((RL_SAMPLE_RATE_MIN % config->sample_rate) > 0))) {
-        rl_log(RL_LOG_ERROR, "invalid sample rate (%u). Needs to be natively "
-                             "supported value, or valid divisor of %u.",
+        rl_log(RL_LOG_ERROR,
+               "invalid sample rate (%u). Needs to be natively supported "
+               "value, or valid divisor of %u.",
                config->sample_rate, RL_SAMPLE_RATE_MIN);
         return ERROR;
     }
@@ -411,8 +439,9 @@ int rl_config_validate(rl_config_t const *const config) {
     // check supported update rate (non-zero, divisor of the sample rate)
     if (config->update_rate == 0 ||
         ((config->sample_rate % config->update_rate) > 0)) {
-        rl_log(RL_LOG_ERROR, "invalid update rate (%u). Needs to be a valid "
-                             "divisor of the sample rate (%u).",
+        rl_log(RL_LOG_ERROR,
+               "invalid update rate (%u). Needs to be a valid divisor of the "
+               "sample rate (%u).",
                config->update_rate, config->sample_rate);
         return ERROR;
     }
@@ -489,7 +518,33 @@ void rl_status_reset(rl_status_t *const status) {
     memcpy(status, &rl_status_default, sizeof(rl_status_t));
 }
 
-int rl_status_init(void) {
+int rl_status_pub_init(void) {
+    // open and bind zmq status publisher
+    zmq_status_context = zmq_ctx_new();
+    zmq_status_publisher = zmq_socket(zmq_status_context, ZMQ_PUB);
+    int zmq_res = zmq_bind(zmq_status_publisher, RL_ZMQ_STATUS_SOCKET);
+    if (zmq_res < 0) {
+        rl_log(RL_LOG_ERROR,
+               "failed binding zeromq status publisher; %d message: %s", errno,
+               strerror(errno));
+        return ERROR;
+    }
+
+    return SUCCESS;
+}
+
+int rl_status_pub_deinit(void) {
+    // close and destroy zmq status publisher
+    zmq_close(zmq_status_publisher);
+    zmq_ctx_destroy(zmq_status_context);
+
+    zmq_status_publisher = NULL;
+    zmq_status_context = NULL;
+
+    return SUCCESS;
+}
+
+int rl_status_shm_init(void) {
     // create shared memory
     int shm_id = shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t),
                         IPC_CREAT | RL_SHMEM_PERMISSIONS);
@@ -503,7 +558,7 @@ int rl_status_init(void) {
     return SUCCESS;
 }
 
-int rl_status_deinit(void) {
+int rl_status_shm_deinit(void) {
     // get ID and attach shared memory
     int shm_id =
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
@@ -531,8 +586,9 @@ int rl_status_read(rl_status_t *const status) {
     int shm_id =
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR, "failed getting shared memory id for reading the "
-                             "status; message: %s",
+        rl_log(RL_LOG_ERROR,
+               "failed getting shared memory id for reading the "
+               "status; message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -540,14 +596,16 @@ int rl_status_read(rl_status_t *const status) {
     rl_status_t const *const shm_status =
         (rl_status_t const *const)shmat(shm_id, NULL, 0);
     if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR, "failed mapping shared memory for reading the "
-                             "status; %d message: %s",
+        rl_log(RL_LOG_ERROR,
+               "failed mapping shared memory for reading the "
+               "status; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
 
     // copy status read from shared memory
     memcpy(status, shm_status, sizeof(rl_status_t));
+    status->config = NULL;
 
     // detach shared memory
     int res = shmdt(shm_status);
@@ -562,21 +620,23 @@ int rl_status_read(rl_status_t *const status) {
     return SUCCESS;
 }
 
-int rl_status_write(rl_status_t const *const status) {
+int rl_status_write(rl_status_t *const status) {
     // get ID and attach shared memory
     int shm_id =
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
-        rl_log(RL_LOG_ERROR, "failed getting shared memory id for writing the "
-                             "status; message: %s",
+        rl_log(RL_LOG_ERROR,
+               "failed getting shared memory id for writing the status; "
+               "message: %s",
                errno, strerror(errno));
         return ERROR;
     }
 
-    rl_status_t *const shm_status = (rl_status_t * const)shmat(shm_id, NULL, 0);
+    rl_status_t *const shm_status = (rl_status_t *const)shmat(shm_id, NULL, 0);
     if (shm_status == (void *)-1) {
-        rl_log(RL_LOG_ERROR, "failed mapping shared memory for writing the "
-                             "status; %d message: %s",
+        rl_log(RL_LOG_ERROR,
+               "failed mapping shared memory for writing the status; %d "
+               "message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -592,6 +652,37 @@ int rl_status_write(rl_status_t const *const status) {
             "failed detaching shared memory after status write; %d message: %s",
             errno, strerror(errno));
         return ERROR;
+    }
+
+    // write status json to zmq socket if enabled
+    if (zmq_status_publisher != NULL) {
+        // update file system state
+        int64_t disk_free = 0;
+        int64_t disk_total = 0;
+        if (status->config != NULL) {
+            disk_free = fs_space_free(status->config->file_name);
+            disk_total = fs_space_total(status->config->file_name);
+        } else {
+            disk_free = fs_space_free(FS_ROOT_PATH);
+            disk_total = fs_space_total(FS_ROOT_PATH);
+        }
+
+        status->disk_free = disk_free;
+        if (disk_total > 0) {
+            status->disk_free_permille = (1000 * disk_free) / disk_total;
+        } else {
+            status->disk_free_permille = 0;
+        }
+
+        // get status as json string and publish to zeromq
+        char const *const status_json = rl_status_get_json(status);
+        int zmq_res =
+            zmq_send(zmq_status_publisher, status_json, strlen(status_json), 0);
+        if (zmq_res < 0) {
+            rl_log(RL_LOG_ERROR, "failed publishing status; %d message: %s",
+                   errno, strerror(errno));
+            return ERROR;
+        }
     }
 
     return SUCCESS;
@@ -620,34 +711,60 @@ void rl_status_print(rl_status_t const *const status) {
 }
 
 void rl_status_print_json(rl_status_t const *const status) {
-    printf("{ ");
-    printf("\"sampling\": %s, ", status->sampling ? "true" : "false");
-    printf("\"error\": %s, ", status->error ? "true" : "false");
-    printf("\"sample_count\": %llu, ", status->sample_count);
-    printf("\"buffer_count\": %llu, ", status->buffer_count);
-    printf("\"calibration_time\": %llu, ", status->calibration_time);
+    char const *const status_json = rl_status_get_json(status);
+    printf(status_json);
+}
+
+char *rl_status_get_json(rl_status_t const *const status) {
+    static char buffer[RL_JSON_BUFFER_SIZE];
+
+    snprintf(buffer, RL_JSON_BUFFER_SIZE, "{ ");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sampling\": %s, ",
+                status->sampling ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"error\": %s, ",
+                status->error ? "true" : "false");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sample_count\": %llu, ",
+                status->sample_count);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"buffer_count\": %llu, ",
+                status->buffer_count);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"calibration_time\": %llu, ",
+                status->calibration_time);
     if (status->calibration_time > 0) {
-        printf("\"calibration_file\": \"%s\", ", status->calibration_file);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE,
+                    "\"calibration_file\": \"%s\", ", status->calibration_file);
     } else {
-        printf("\"calibration_file\": null, ");
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE,
+                    "\"calibration_file\": null, ");
     }
-    printf("\"disk_free_bytes\": %llu, ", status->disk_free);
-    printf("\"disk_free_permille\": %u, ", status->disk_free_permille);
-    printf("\"disk_use_rate\": %u, ", status->disk_use_rate);
-    printf("\"sensor_count\": %u, ", status->sensor_count);
-    printf("\"sensor_names\": [");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"disk_free_bytes\": %llu, ",
+                status->disk_free);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"disk_free_permille\": %u, ",
+                status->disk_free_permille);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"disk_use_rate\": %u, ",
+                status->disk_use_rate);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sensor_count\": %u, ",
+                status->sensor_count);
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"sensor_names\": [");
     for (uint16_t i = 0; i < SENSOR_REGISTRY_SIZE; i++) {
         if (i > 0) {
-            printf(", ");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, ", ");
         }
         if (status->sensor_available[i]) {
-            printf("\"%s\"", SENSOR_REGISTRY[i].name);
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "\"%s\"",
+                        SENSOR_REGISTRY[i].name);
         } else {
-            printf("null");
+            snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "null");
         }
     }
-    printf("]");
-    printf(" }");
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, "]");
+    if (status->config != NULL) {
+        char const *config_json = rl_config_get_json(status->config);
+        snprintfcat(buffer, RL_JSON_BUFFER_SIZE, ", \"config\": %s",
+                    config_json);
+    }
+    snprintfcat(buffer, RL_JSON_BUFFER_SIZE, " }");
+
+    return buffer;
 }
 
 static void print_config_line(char const *description, char const *format,

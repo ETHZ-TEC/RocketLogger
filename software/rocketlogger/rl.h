@@ -114,6 +114,11 @@
 /// Permissions for shared memory
 #define RL_SHMEM_PERMISSIONS 0666
 
+/// ZeroMQ socket identifier for status publishing
+#define RL_ZMQ_STATUS_SOCKET "tcp://127.0.0.1:8276"
+/// ZeroMQ socket identifier for data publishing status
+#define RL_ZMQ_DATA_SOCKET "tcp://127.0.0.1:8277"
+
 /**
  * RocketLogger data aggregation modes.
  */
@@ -213,6 +218,8 @@ struct rl_status {
     uint16_t sensor_count;
     /// Identifiers of sensors found
     bool sensor_available[RL_SENSOR_COUNT_MAX];
+    /// (local) reference to current config
+    rl_config_t const *config;
 };
 
 /**
@@ -221,16 +228,16 @@ struct rl_status {
 typedef struct rl_status rl_status_t;
 
 /// RocketLogger channel names sorted by name
-extern const char *RL_CHANNEL_NAMES[RL_CHANNEL_COUNT];
+extern char const *const RL_CHANNEL_NAMES[RL_CHANNEL_COUNT];
 
 /// RocketLogger force range channel names
-extern const char *RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT];
+extern char const *const RL_CHANNEL_FORCE_NAMES[RL_CHANNEL_SWITCHED_COUNT];
 
 /// RocketLogger digital channel names
-extern const char *RL_CHANNEL_DIGITAL_NAMES[RL_CHANNEL_DIGITAL_COUNT];
+extern char const *const RL_CHANNEL_DIGITAL_NAMES[RL_CHANNEL_DIGITAL_COUNT];
 
 /// RocketLogger valid channel names
-extern const char *RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT];
+extern char const *const RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT];
 
 /**
  * Print RocketLogger configuration as text output.
@@ -253,6 +260,14 @@ void rl_config_print_cmd(rl_config_t const *const config);
  * @param config The measurement configuration to print
  */
 void rl_config_print_json(rl_config_t const *const config);
+
+/**
+ * Get RocketLogger configuration as JSON data structure string.
+ *
+ * @param config The measurement configuration
+ * @return The configuration as JSON formatted string
+ */
+char *rl_config_get_json(rl_config_t const *const config);
 
 /**
  * Reset configuration to standard values.
@@ -306,23 +321,37 @@ int rl_pid_set(pid_t pid);
 /**
  * Get the RocketLogger default status.
  *
- * @param status The status data strcuture to write the default value to
+ * @param status The status data structure to write the default value to
  */
 void rl_status_reset(rl_status_t *const status);
+
+/**
+ * Initialize the RocketLogger status publishing.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_pub_init(void);
+
+/**
+ * Deinitialize the RocketLogger status publishing.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_status_pub_deinit(void);
 
 /**
  * Create and initialize the shared memory for the RocketLogger status.
  *
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int rl_status_init(void);
+int rl_status_shm_init(void);
 
 /**
  * Deinitialize and remove the shared memory for the RocketLogger status.
  *
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int rl_status_deinit(void);
+int rl_status_shm_deinit(void);
 
 /**
  * Read the status of the RocketLogger from shared memory.
@@ -338,21 +367,29 @@ int rl_status_read(rl_status_t *const status);
  * @param status The status data structure to copy to the shared memory
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int rl_status_write(rl_status_t const *const status);
+int rl_status_write(rl_status_t *const status);
 
 /**
  * Print RocketLogger status as text output.
  *
- * @param status The status data strcuture to print
+ * @param status The status data structure to print
  */
 void rl_status_print(rl_status_t const *const status);
 
 /**
  * Print RocketLogger status as JSON data structure.
  *
- * @param status The status data strcuture to print
+ * @param status The status data structure to print
  */
 void rl_status_print_json(rl_status_t const *const status);
+
+/**
+ * Get RocketLogger status as JSON data structure string.
+ *
+ * @param status The status data structure
+ * @return The status as JSON formatted string
+ */
+char *rl_status_get_json(rl_status_t const *const status);
 
 /// Global RocketLogger status variable.
 extern rl_status_t rl_status;

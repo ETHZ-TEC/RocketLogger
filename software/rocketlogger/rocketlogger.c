@@ -289,12 +289,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    /// @todo temporarily disabled web interface buffer handling
-    // disable incompatible web interface
-    if (config.web_enable) {
-        config.web_enable = false;
-    }
-
     // reset config if requested
     if (arguments.config_reset) {
         if (strcmp(action, "config") != 0) {
@@ -308,7 +302,7 @@ int main(int argc, char *argv[]) {
     // store config as default
     if (arguments.config_set_default) {
         rl_config_write_default(&config);
-        if (!arguments.silent) {
+        if (!(arguments.silent || arguments.json | arguments.cli)) {
             printf("The following configuration was saved as new default:\n");
             rl_config_print(&config);
         }

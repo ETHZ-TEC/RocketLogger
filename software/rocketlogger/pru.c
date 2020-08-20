@@ -47,10 +47,10 @@
 #include "meter.h"
 #include "rl.h"
 #include "rl_file.h"
+#include "rl_socket.h"
 #include "sem.h"
 #include "sensor/sensor.h"
 #include "util.h"
-#include "web.h"
 
 #include "pru.h"
 
@@ -135,46 +135,6 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     uint32_t aggregates = 1;
     if (config->sample_rate < RL_SAMPLE_RATE_MIN) {
         aggregates = (uint32_t)(RL_SAMPLE_RATE_MIN / config->sample_rate);
-    }
-
-    // WEBSERVER
-    int sem_id = -1;
-    web_shm_t *web_data = (web_shm_t *)-1;
-
-    if (config->web_enable) {
-        // semaphores
-        sem_id = sem_create(SEM_KEY, SEM_SEM_COUNT);
-        sem_set(sem_id, SEM_INDEX_DATA, 1);
-
-        // shared memory
-        web_data = web_create_shm();
-
-        // determine web channels count (merged)
-        int num_web_channels = count_channels(config->channel_enable);
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I1H] &&
-            config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
-            num_web_channels--;
-        }
-        if (config->channel_enable[RL_CONFIG_CHANNEL_I2H] &&
-            config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
-            num_web_channels--;
-        }
-        if (config->digital_enable) {
-            num_web_channels += RL_CHANNEL_DIGITAL_COUNT;
-        }
-        web_data->num_channels = num_web_channels;
-
-        // web buffer sizes
-        int buffer_sizes[WEB_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
-                                              BUFFER100_SIZE};
-
-        for (int i = 0; i < WEB_BUFFER_COUNT; i++) {
-            int web_buffer_element_size =
-                buffer_sizes[i] * num_web_channels * sizeof(int64_t);
-            int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
-            web_buffer_reset(&web_data->buffer[i], web_buffer_element_size,
-                             web_buffer_length);
-        }
     }
 
     // PRU SETUP
@@ -336,11 +296,6 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
             // check if max file size reached
             uint64_t file_size = (uint64_t)ftello(data_file);
-            // uint64_t margin =
-            //     config->sample_rate * sizeof(int32_t) * (RL_CHANNEL_COUNT +
-            //     1) +
-            //     sizeof(rl_timestamp_t);
-
             if (config->file_size > 0 &&
                 file_size + rl_status.disk_use_rate > config->file_size) {
 
@@ -534,23 +489,15 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
         // process data for web when enabled
         if (config->web_enable && !web_failure_disable) {
-            res =
-                web_handle_data(web_data, sem_id, analog_buffer, digital_buffer,
-                                buffer_size, &timestamp_realtime, config);
+            res = rl_socket_handle_data(analog_buffer, digital_buffer,
+                                        sensor_buffer, buffer_size,
+                                        sensor_buffer_size, &timestamp_realtime,
+                                        &timestamp_monotonic, config);
             if (res < 0) {
                 // disable web interface on failure, but continue sampling
                 web_failure_disable = true;
                 rl_log(RL_LOG_WARNING, "Web server connection failed. "
                                        "Disabling web interface.");
-            } else {
-                // notify web clients
-                /**
-                 * @todo: There is a possible race condition here, which might
-                 * result in one web client not getting notified once, do we
-                 * care?
-                 */
-                int num_web_clients = sem_get(sem_id, SEM_INDEX_WAIT);
-                sem_set(sem_id, SEM_INDEX_WAIT, num_web_clients);
             }
         }
 
@@ -640,13 +587,6 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         fflush(data_file);
         rl_log(RL_LOG_INFO, "stored %llu samples to file",
                rl_status.sample_count);
-    }
-
-    // WEBSERVER FINISH
-    // unmap shared memory
-    if (config->web_enable) {
-        sem_remove(sem_id);
-        web_close_shm(web_data);
     }
 
     // STATE

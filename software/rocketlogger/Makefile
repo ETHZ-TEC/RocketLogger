@@ -50,7 +50,6 @@ INSTALL_SERVICE_DIR = /etc/systemd/system
 ## binary names
 BINARY_NAME = rocketlogger
 DEAMON_NAME = rocketloggerd
-SERVER_NAME = rocketloggers
 
 ## config file names
 SERVICE_CONFIG = rocketlogger.service
@@ -72,7 +71,6 @@ OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .o, $(basename $(SRC)))))
 ## target binary
 TARGET_BINARY = $(BIN_DIR)/$(BINARY_NAME)
 TARGET_DAEMON = $(BIN_DIR)/$(DEAMON_NAME)
-TARGET_SERVER = $(BIN_DIR)/$(SERVER_NAME)
 
 
 #####  PROGRAMMS AND TOOLS  #####
@@ -96,6 +94,7 @@ CXXSTD = -std=c++11
 LIBS = -lprussdrv
 LIBS += -li2c
 LIBS += -lncurses
+LIBS += -lzmq
 LIBS += -lrt
 
 ## defines
@@ -135,12 +134,11 @@ LDFLAGS = $(LIBS)
 #####  TARGETS  #####
 
 ## build targets
-all:  $(BIN_DIR) $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_SERVER)
+all: $(BIN_DIR) $(TARGET_BINARY) $(TARGET_DAEMON)
 
 install: all
 	$(INSTALL) --mode=4755 $(TARGET_BINARY) $(INSTALL_BIN_DIR)
 	$(INSTALL) --mode=4755 $(TARGET_DAEMON) $(INSTALL_BIN_DIR)
-	$(INSTALL) --mode=4755 $(TARGET_SERVER) $(INSTALL_BIN_DIR)
 	$(INSTALL) --mode=644 $(SERVICE_CONFIG) $(INSTALL_SERVICE_DIR)
 	systemctl enable rocketlogger
 	systemctl restart rocketlogger
@@ -148,19 +146,14 @@ install: all
 uninstall:
 	$(REMOVE) $(INSTALL_BIN_DIR)/$(BINARY_NAME)
 	$(REMOVE) $(INSTALL_BIN_DIR)/$(DEAMON_NAME)
-	$(REMOVE) $(INSTALL_BIN_DIR)/$(SERVER_NAME)
 	systemctl disable rocketlogger
 	$(REMOVE) $(INSTALL_SERVICE_DIR)/$(SERVICE_CONFIG)
 
-$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rocketloggerd.o $(OBJ_DIR)/rl_server.o, $(OBJ))
+$(TARGET_BINARY): $(filter-out $(OBJ_DIR)/rocketloggerd.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-$(TARGET_DAEMON): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rl_server.o, $(OBJ))
-	@$(MAKEDIR) $(@D)
-	$(CXX) $(LDFLAGS) -o $@ $^
-
-$(TARGET_SERVER): $(filter-out $(OBJ_DIR)/rocketlogger.o $(OBJ_DIR)/rocketloggerd.o, $(OBJ))
+$(TARGET_DAEMON): $(filter-out $(OBJ_DIR)/rocketlogger.o, $(OBJ))
 	@$(MAKEDIR) $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
@@ -203,7 +196,7 @@ $(BIN_DIR):
 .PHONY: clean code-format
 
 clean:
-	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON) $(TARGET_SERVER)
+	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON)
 
 code-format:
 	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;

@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -184,4 +185,14 @@ void print_json_int64(int64_t const *const data, const int length) {
         printf("%lld", data[i]);
     }
     printf("]");
+}
+
+int snprintfcat(char *const buffer, size_t length, char const *format, ...) {
+    va_list args;
+    va_start(args, format);
+    char *const buffer_next = buffer + strlen(buffer);
+    size_t length_next = length - strlen(buffer);
+    int res = vsnprintf(buffer_next, length_next, format, args);
+    va_end(args);
+    return res;
 }
