@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}RocketLogger Measurement Files{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
+{% block content %}
+<!-- Page Title -->
+<div class="row justify-content-between align-items-center mb-4">
+  <div class="col">
+    <h1>RocketLogger Measurement Files{% if hostname %} ({{ hostname }}){% endif %}</h1>
+  </div>
+</div>
+
+<!-- File List Container -->
+<div class="card mb-3">
+  <h2 class="card-header">Measurement Files</h2>
+  <div class="card-body">
+    <p><a href="/control/" class="btn btn-primary" role="button">&lt; Return to measurements</a></p>
+
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th scope="col-auto">Name</th>
+          <th scope="col">Date Modified</th>
+          <th scope="col">Size</th>
+          <th scope="col">File Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for file in files %}
+        <tr>
+          <th>{{ file.name }}</th>
+          <td>{{ file.modified }}</td>
+          <td>{{ file.size }}</td>
+          <td class="dropdown">
+            <a href="{{ file.href_download }}" class="btn btn-primary btn-sm" role="button">Download</a>
+            <button class="btn btn-outline-danger btn-sm dropdown-toggle" type="button" id="dropdownDeleteButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Delete
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownDeleteButton">
+              <a class="dropdown-item" href="{{ file.href_delete }}">Delete file: {{ file.name }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

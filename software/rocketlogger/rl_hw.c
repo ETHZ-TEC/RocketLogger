@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,31 +35,19 @@
 #include "gpio.h"
 #include "log.h"
 #include "pru.h"
-#include "pwm.h"
+#include "rl.h"
+#include "rl_file.h"
 #include "sensor/sensor.h"
-#include "types.h"
-#include "util.h"
 
 #include "rl_hw.h"
 
-void hw_init(rl_config_t *const config) {
-
-    // PWM configuration
-    pwm_init();
-
-    if (config->sample_rate < MIN_ADC_RATE) {
-        pwm_setup_range_reset(MIN_ADC_RATE);
-    } else {
-        pwm_setup_range_reset(config->sample_rate);
-    }
-    pwm_setup_adc_clock();
-
+void hw_init(rl_config_t const *const config) {
     // GPIO configuration
-    // force high range
+    // force high range (negative enable)
     gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
     gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_FHR1, (config->force_high_channels[0] ? 0 : 1));
-    gpio_set_value(GPIO_FHR2, (config->force_high_channels[1] ? 0 : 1));
+    gpio_set_value(GPIO_FHR1, (config->channel_force_range[0] ? 0 : 1));
+    gpio_set_value(GPIO_FHR2, (config->channel_force_range[1] ? 0 : 1));
     // leds
     gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
     gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
@@ -69,94 +57,108 @@ void hw_init(rl_config_t *const config) {
     // PRU
     pru_init();
 
-    // SENSORS
-    if (config->ambient.enabled) {
+    // SENSORS (if enabled)
+    if (config->ambient_enable) {
         sensors_init();
-        config->ambient.sensor_count =
-            sensors_scan(config->ambient.available_sensors);
+        rl_status.sensor_count = sensors_scan(rl_status.sensor_available);
     }
 
     // STATE
-    status.state = RL_RUNNING;
-    status.sampling = RL_SAMPLING_OFF;
-    status.samples_taken = 0;
-    status.buffer_number = 0;
-    status.config = *config;
-    write_status(&status);
+    if (config->file_enable) {
+        // calculate disk use rate in bytes per second:
+        // - int32_t/channel + uint32_t bytes/sample for digital at sample rate
+        // - 2 timestamp at update rate
+        // - int32_t/sensor channel + 2 timestamps at 1 Hz
+        rl_status.disk_use_rate =
+            (sizeof(int32_t) * count_channels(config->channel_enable) *
+             config->sample_rate) +
+            (sizeof(rl_timestamp_t) * 2 * config->update_rate) +
+            (sizeof(uint32_t) * (config->digital_enable ? 1 : 0) *
+             config->sample_rate) +
+            (sizeof(int32_t) * rl_status.sensor_count) +
+            (sizeof(rl_timestamp_t) * 2 * (rl_status.sensor_count > 0 ? 1 : 0));
+    }
+    rl_status_write(&rl_status);
 }
 
 void hw_deinit(rl_config_t const *const config) {
 
-    // PWM
-    pwm_deinit();
+    // GPIO (set to default state only, (un)export is handled by daemon)
+    // reset force high range GPIOs to force high range (negative enable)
+    gpio_set_value(GPIO_FHR1, 0);
+    gpio_set_value(GPIO_FHR2, 0);
 
-    // GPIO
-    // deinitialize force high range GPIOS
-    gpio_deinit(GPIO_FHR1);
-    gpio_deinit(GPIO_FHR2);
-    // reset LED (do not unexport)
+    // reset status LED, leave error LED in current state
     gpio_set_value(GPIO_LED_STATUS, 0);
 
     // PRU
-    if (config->mode != LIMIT) {
+    // stop first if running in background
+    if (config->background_enable) {
         pru_stop();
     }
     pru_deinit();
 
-    // SENSORS
-    if (config->ambient.enabled) {
-        sensors_close(config->ambient.available_sensors);
+    // SENSORS (if enabled)
+    if (config->ambient_enable) {
+        sensors_close(rl_status.sensor_available);
         sensors_deinit();
     }
 
-    // RESET SHARED MEM
-    status.samples_taken = 0;
-    status.buffer_number = 0;
-    write_status(&status);
+    // RESET sampling specific state
+    rl_status.disk_use_rate = 0;
+    rl_status_write(&rl_status);
 }
 
-int hw_sample(rl_config_t const *const config, char const *const file_comment) {
+int hw_sample(rl_config_t const *const config) {
     int ret;
-    // open data file
-    FILE *data = (FILE *)-1;
-    if (config->file_format !=
-        RL_FILE_NONE) { // open file only if storing requested
-        data = fopen64(config->file_name, "w+");
-        if (data == NULL) {
-            rl_log(ERROR, "failed to open data-file '%s'", config->file_name);
-            return FAILURE;
-        }
-    }
-
-    // open ambient file
+    FILE *data_file = (FILE *)-1;
     FILE *ambient_file = (FILE *)-1;
-    if (config->ambient.enabled) {
-        ambient_file = fopen64(config->ambient.file_name, "w+");
-        if (ambient_file == NULL) {
-            rl_log(ERROR, "failed to open ambient-file '%s'",
-                   config->ambient.file_name);
-            return FAILURE;
+
+    // reset calibration if ignored, load otherwise
+    if (config->calibration_ignore) {
+        calibration_reset_offsets();
+        calibration_reset_scales();
+    } else {
+        ret = calibration_load();
+        if (ret < 0) {
+            rl_log(RL_LOG_WARNING,
+                   "no calibration file, returning uncalibrated values");
         }
     }
 
-    // read calibration
-    ret = calibration_load(config);
-    if (ret != SUCCESS) {
-        rl_log(WARNING, "no calibration file, returning uncalibrated values");
+    // create/open measurement files
+    if (config->file_enable) {
+        data_file = fopen64(config->file_name, "w+");
+        if (data_file == NULL) {
+            rl_log(RL_LOG_ERROR, "failed to open data file '%s'",
+                   config->file_name);
+            return ERROR;
+        }
+    }
+
+    if (config->ambient_enable) {
+        char *ambient_file_name =
+            rl_file_get_ambient_file_name(config->file_name);
+        ambient_file = fopen64(ambient_file_name, "w+");
+        if (data_file == NULL) {
+            rl_log(RL_LOG_ERROR, "failed to open ambient file '%s'",
+                   ambient_file);
+            return ERROR;
+        }
     }
 
     // SAMPLE
-    ret = pru_sample(data, ambient_file, config, file_comment);
-    if (ret != SUCCESS) {
+    ret = pru_sample(data_file, ambient_file, config);
+    if (ret < 0) {
         // error occurred
         gpio_set_value(GPIO_LED_ERROR, 1);
     }
 
-    // close data file
-    if (config->file_format != RL_FILE_NONE) {
-        fclose(data);
+    // close data files
+    if (config->file_enable) {
+        fclose(data_file);
     }
-    if (config->ambient.enabled) {
+    if (config->ambient_enable) {
         fclose(ambient_file);
     }
 

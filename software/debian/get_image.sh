@@ -1,7 +1,7 @@
 #!/bin/bash
 # Download the beagle bone image from the beaglebone archive
 #
-# Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,16 @@
 #
 
 # Debian buster IoT image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2019-05-12/buster-iot/"
-IMAGE_FILE="bone-debian-buster-iot-armhf-2019-05-12-4gb.img.xz"
-IMAGE_SHA256="95b8089074db528e2985f8e9ea4af4dc3ccc3a4dc42b1dd37e3a45ba3f885b58"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-04-06/buster-console/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.3-console-armhf-2020-04-06-1gb.img.xz"
+IMAGE_FLASHER_SHA256="b6024ba8ea65bd5f44de282bfd044e38c8eb2b30fabf09d3792cc84f303cbb6c"
 
 # download image
-wget --progress=bar "$URL_DIRECTORY$IMAGE_FILE"
+wget --progress=bar "$URL_DIRECTORY$IMAGE_FLASHER_FILE"
 
 # check downloaded file hash
-SHA=`sha256sum "$IMAGE_FILE" | awk '{print $1}'`
-if [[ "$SHA" == "$IMAGE_SHA256" ]]; then
+SHA=`sha256sum "$IMAGE_FLASHER_FILE" | awk '{print $1}'`
+if [[ "$SHA" == "$IMAGE_FLASHER_SHA256" ]]; then
   echo "SHA256 hash checked successfully."
   exit 0
 else

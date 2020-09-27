@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,13 +35,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "types.h"
+#include "rl.h"
 
 /// MAC address length in bytes
 #define MAC_ADDRESS_LENGTH 6
 
 /// File to read MAC address
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
+
+/// File system root path
+#define FS_ROOT_PATH "/"
 
 /**
  * Timestamp data structure definition (UNIX time, UTC)
@@ -58,22 +61,125 @@ struct rl_timestamp {
  */
 typedef struct rl_timestamp rl_timestamp_t;
 
-int is_current(int index);
-int is_low_current(int index);
-int count_channels(bool const channels[NUM_CHANNELS]);
+/**
+ * Checks whether a channel is a current channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a current, false otherwise
+ */
+bool is_current(int index);
 
-int read_status(rl_status_t *const status);
-int write_status(rl_status_t const *const status);
+/**
+ * Checks whether a channel is a low range current channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a low range current, false otherwise
+ */
+bool is_low_current(int index);
 
-int ceil_div(int n, int d);
+/**
+ * Checks whether a channel is a voltage channel.
+ *
+ * @param index Index of channel in array
+ * @return Returns true if channel is a voltage, false otherwise
+ */
+bool is_voltage(int index);
 
-void sig_handler(int signo);
+/**
+ * Check whether a string is empty, i.e. does not contain visible characters.
+ *
+ * Validates to true if none of the characters belongs to either isgraph()
+ *
+ * @param str The string to validate
+ * @return True if string is empty, false otherwise
+ */
+bool is_empty_string(char const *str);
 
-int read_file_value(char filename[]);
+/**
+ * Check whether a string is printable.
+ *
+ * Validates to true if all characters belong to either isspace() or isprint()
+ *
+ * @param str The string to validate
+ * @return True if string is printable, false otherwise
+ */
+bool is_printable_string(char const *str);
 
-void create_time_stamp(rl_timestamp_t *const time_real,
+/**
+ * Counts the number of channels enabled.
+ *
+ * @param channels Channel enable array
+ * @return The number of enabled channels
+ */
+int count_channels(bool const channels[RL_CHANNEL_COUNT]);
+
+/**
+ * Integer division with ceiling.
+ *
+ * @param n Numerator
+ * @param d Denominator
+ * @return Division result rounded up to next integer
+ */
+int div_ceil(int n, int d);
+
+/**
+ * Create time stamps (real-time and monotonic).
+ *
+ * @param timestamp_realtime Timestamp data structure to store the time value
+ * read from the real-time clock to
+ * @param timestamp_monotonic Timestamp data structure to store the time value
+ * read from the monotonic clock to
+ */
+void create_time_stamp(rl_timestamp_t *const time_realtime,
                        rl_timestamp_t *const time_monotonic);
 
+/**
+ * Get MAC address of network device.
+ *
+ * @param mac_address Array to write the MAC address to
+ */
 void get_mac_addr(uint8_t mac_address[MAC_ADDRESS_LENGTH]);
+
+/**
+ * Get total disk space in a directory in bytes.
+ *
+ * @param path Path to selected directory
+ * @return Total disk space in bytes
+ */
+int64_t fs_space_total(char const *const path);
+
+/**
+ * Get free disk space in a directory in bytes.
+ *
+ * @param path Path to selected directory
+ * @return Free disk space in bytes
+ */
+int64_t fs_space_free(char const *const path);
+
+/**
+ * Print a boolean array in JSON format.
+ *
+ * @param data Data array to print
+ * @param length Length of array
+ */
+void print_json_bool(bool const *const data, const int length);
+
+/**
+ * Print a 64-bit integer array in JSON format.
+ *
+ * @param data Data array to print
+ * @param length Length of array
+ */
+void print_json_int64(int64_t const *const data, const int length);
+
+/**
+ * Append formatted string to setting line with formated string value.
+ *
+ * @param buffer The string buffer to append the formatted string to
+ * @param length Maximum length of the buffer
+ * @param format Formatting string passed to snprintf()
+ * @param ... Variables used to format string
+ */
+int snprintfcat(char *const buffer, size_t length, char const *format, ...);
 
 #endif /* UTIL_H_ */

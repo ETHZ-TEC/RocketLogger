@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,96 +40,96 @@
 #include <sys/types.h>
 
 #include "log.h"
-#include "types.h"
+#include "rl.h"
 
 #include "sem.h"
 
-int sem_create(key_t key, int num_sems) {
-    int sem_id = semget(key, num_sems, IPC_CREAT | S_IRWXU);
-    if (sem_id < 0) {
-        rl_log(ERROR, "Failed to create semaphore; %d message: %s", errno,
-               strerror(errno));
+int sem_create(key_t key, int count) {
+    int id = semget(key, count, IPC_CREAT | S_IRWXU);
+    if (id < 0) {
+        rl_log(RL_LOG_ERROR, "Failed to create semaphore; %d message: %s",
+               errno, strerror(errno));
     }
-    return sem_id;
+    return id;
 }
 
-int sem_remove(int sem_id) {
-    // remove semaphores
-    if (semctl(sem_id, 0, IPC_RMID) < 0) {
-        rl_log(ERROR, "Failed to remove semaphore; %d message: %s", errno,
-               strerror(errno));
-        return FAILURE;
+int sem_remove(int id) {
+    int ret = semctl(id, 0, IPC_RMID);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed to remove semaphore; %d message: %s",
+               errno, strerror(errno));
+        return ret;
     }
     return SUCCESS;
 }
 
-int sem_open(key_t key, int num_sems) {
-    int sem_id = semget(key, num_sems, S_IRWXU);
-    if (sem_id < 0) {
-        rl_log(ERROR, "Failed to open semaphore; %d message: %s", errno,
+int sem_open(key_t key, int count) {
+    int id = semget(key, count, S_IRWXU);
+    if (id < 0) {
+        rl_log(RL_LOG_ERROR, "Failed to open semaphore; %d message: %s", errno,
                strerror(errno));
+        return id;
     }
-    return sem_id;
+    return id;
 }
 
-int sem_wait(int sem_id, int sem_num, int time_out) {
-    // operation on semaphore
+int sem_wait(int id, int index, int timeout) {
     int num_ops = 1;
     int sem_op = -1;
-    struct sembuf sem_ops = {sem_num, sem_op, NO_FLAG};
-    struct timespec t_out = {time_out, 0};
+    struct sembuf sem_ops = {index, sem_op, SEM_OPT_NO_FLAG};
+    struct timespec timeout_struct = {timeout, 0};
 
-    if (semtimedop(sem_id, &sem_ops, num_ops, &t_out) < 0) {
+    int ret = semtimedop(id, &sem_ops, num_ops, &timeout_struct);
+    if (ret < 0) {
         if (errno == EAGAIN) {
-            rl_log(ERROR, "Timeout waiting on semaphore; %d message: %s", errno,
-                   strerror(errno));
-            rl_log(WARNING, "time-out waiting on semaphore");
-            return TIMEOUT;
+            rl_log(RL_LOG_ERROR, "Timeout waiting on semaphore; %d message: %s",
+                   errno, strerror(errno));
         } else if (errno == EIDRM) {
-            rl_log(ERROR, "Failed waiting on semaphore, semaphore removed; %d "
-                          "message: %s",
+            rl_log(RL_LOG_ERROR,
+                   "Failed waiting on semaphore, semaphore removed; %d "
+                   "message: %s",
                    errno, strerror(errno));
-            return TIMEOUT;
         } else if (errno == EINVAL) {
-            rl_log(ERROR, "Failed waiting on semaphore, semaphore inexistent; "
-                          "%d message: %s",
+            rl_log(RL_LOG_ERROR,
+                   "Failed waiting on semaphore, semaphore inexistent; "
+                   "%d message: %s",
                    errno, strerror(errno));
-            return FAILURE;
         } else {
-            rl_log(ERROR, "Failed waiting on semaphore; %d message: %s", errno,
-                   strerror(errno));
-            return FAILURE;
+            rl_log(RL_LOG_ERROR, "Failed waiting on semaphore; %d message: %s",
+                   errno, strerror(errno));
         }
+        return ret;
     }
     return SUCCESS;
 }
 
-int sem_set(int sem_id, int sem_num, int val) {
-    // operation on semaphore
+int sem_set(int id, int index, int value) {
     int num_ops = 1;
-    int sem_op = val;
-    struct sembuf sem_ops = {sem_num, sem_op, NO_FLAG};
-    struct timespec time_out = {SEM_SET_TIME_OUT, 0};
+    struct sembuf sem_ops = {index, value, SEM_OPT_NO_FLAG};
+    struct timespec timeout_struct = {SEM_TIMEOUT_WRITE, 0};
 
-    if (semtimedop(sem_id, &sem_ops, num_ops, &time_out) < 0) {
+    int ret = semtimedop(id, &sem_ops, num_ops, &timeout_struct);
+    if (ret < 0) {
         if (errno == EAGAIN) {
-            rl_log(ERROR, "Timeout on setting semaphore count; %d message: %s",
-                   errno, strerror(errno));
-            return TIMEOUT;
+            rl_log(RL_LOG_ERROR,
+                   "Timeout on setting semaphore count; %d message: %s", errno,
+                   strerror(errno));
         } else {
-            rl_log(ERROR, "Failed setting semaphore count; %d message: %s",
-                   errno, strerror(errno));
-            return FAILURE;
+            rl_log(RL_LOG_ERROR,
+                   "Failed setting semaphore count; %d message: %s", errno,
+                   strerror(errno));
         }
+        return ret;
     }
     return SUCCESS;
 }
 
-int sem_get(int sem_id, int sem_num) {
-    int count = semctl(sem_id, sem_num, GETNCNT);
+int sem_get(int id, int index) {
+    int count = semctl(id, index, GETNCNT);
     if (count < 0) {
-        rl_log(ERROR, "Failed getting semaphore count; %d message: %s", errno,
-               strerror(errno));
+        rl_log(RL_LOG_ERROR, "Failed getting semaphore count; %d message: %s",
+               errno, strerror(errno));
+        return count;
     }
     return count;
 }

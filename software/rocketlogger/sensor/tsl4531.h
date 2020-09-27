@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,7 +69,7 @@
 #define TSL4531_MULT_400 1
 
 /**
- * TSL4531 measurement ranges
+ * TSL4531 measurement ranges.
  */
 enum tsl4531_range {
     TSL4531_RANGE_LOW,
@@ -79,7 +79,7 @@ enum tsl4531_range {
 };
 
 /**
- * Typedef for TSL4531 measurement ranges
+ * Typedef for TSL4531 measurement ranges.
  */
 typedef enum tsl4531_range tsl4531_range_t;
 
@@ -87,23 +87,36 @@ typedef enum tsl4531_range tsl4531_range_t;
 #define TSL4531_RANGE_MEDIUM_MAX 130000
 #define TSL4531_RANGE_HYSTERESIS 5000
 
-/*
- * API FUNCTIONS
+/**
+ * Initialize the light sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int tsl4531_init(int);
-void tsl4531_deinit(int);
-int tsl4531_read(int);
-int32_t tsl4531_get_value(int, int);
+int tsl4531_init(int sensor_identifier);
 
-int tsl4531_set_range(int, int);
-int tsl4531_get_range(int);
-
-/*
- * Helper FUNCTIONS
+/**
+ * Deinitialize TSL sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
  */
-int tsl4531_get_id(void);
-int tsl4531_set_parameters(int);
-int tsl4531_send_range(int, int);
-int tsl4531_get_index(int);
+void tsl4531_deinit(int sensor_identifier);
+
+/**
+ * Read the sensor values.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int tsl4531_read(int sensor_identifier);
+
+/**
+ * Get the values read from the sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @param channel The channel of the sensor to get
+ * @return Sensor value in lux
+ */
+int32_t tsl4531_get_value(int sensor_identifier, int channel);
 
 #endif /* SENSOR_TSL4531_H_ */

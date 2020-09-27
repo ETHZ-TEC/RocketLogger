@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,22 +33,25 @@
 
 #include <ncurses.h>
 
-#include "calibration.h"
 #include "pru.h"
-#include "types.h"
+#include "rl.h"
 #include "util.h"
 
 #include "meter.h"
 
 /// Analog channel units
-char *channel_units[NUM_CHANNELS] = {"mA", "uA", "V", "V",
-                                     "mA", "uA", "V", "V"};
+char const *const RL_CHANNEL_UNITS[RL_CHANNEL_COUNT] = {
+    "V", "V", "V", "V", "uA", "mA", "uA", "mA", "ms"};
+
 /// Analog channel scales
-uint32_t channel_scales[NUM_CHANNELS] = {1000000, 100000, 100000000, 100000000,
-                                         1000000, 100000, 100000000, 100000000};
+double const RL_CHANNEL_SCALES[RL_CHANNEL_COUNT] = {
+    100000000, 100000000, 100000000, 100000000, 100000,
+    1000000,   100000,    1000000,   1000000};
+
 /// Digital input bit location in binary data
-const uint32_t digital_input_bits[NUM_DIGITAL_INPUTS] = {
-    DIGIN1_BIT, DIGIN2_BIT, DIGIN3_BIT, DIGIN4_BIT, DIGIN5_BIT, DIGIN6_BIT};
+uint32_t const DIGITAL_INPUT_BITS[RL_CHANNEL_DIGITAL_COUNT] = {
+    PRU_DIGITAL_INPUT1_MASK, PRU_DIGITAL_INPUT2_MASK, PRU_DIGITAL_INPUT3_MASK,
+    PRU_DIGITAL_INPUT4_MASK, PRU_DIGITAL_INPUT5_MASK, PRU_DIGITAL_INPUT6_MASK};
 
 void meter_init(void) {
     // init ncurses mode
@@ -62,109 +65,118 @@ void meter_init(void) {
 
 void meter_deinit(void) { endwin(); }
 
-void meter_print_buffer(rl_config_t const *const config,
-                        void const *buffer_addr) {
+void meter_print_buffer(int32_t const *analog_buffer,
+                        uint32_t const *digital_buffer, size_t buffer_size,
+                        rl_timestamp_t const *const timestamp_realtime,
+                        rl_timestamp_t const *const timestamp_monotonic,
+                        rl_config_t const *const config) {
+    // aggregation buffer and configuration
+    uint32_t aggregate_digital = ~(0);
+    double aggregate_analog[RL_CHANNEL_COUNT] = {0};
 
-    // clear screen
-    erase();
+    // process data buffers
+    for (size_t i = 0; i < buffer_size; i++) {
+        // point to sample buffer
+        int32_t const *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+        uint32_t const *const digital_data = digital_buffer + i;
 
-    // counter variables
-    uint32_t i = 0; // currents
-    uint32_t v = 0; // voltages
-
-    uint32_t num_channels = count_channels(config->channels);
-
-    // data
-    int64_t value = 0;
-    int32_t dig_data[2];
-    int32_t channel_data[num_channels];
-
-    // number of samples to average
-    uint32_t avg_number = config->sample_rate / config->update_rate;
-
-    // read digital channels
-    dig_data[0] = (int32_t)(*((int8_t *)(buffer_addr)));
-    dig_data[1] = (int32_t)(*((int8_t *)(buffer_addr + 1)));
-    buffer_addr += PRU_DIG_SIZE;
-
-    // read, average and scale values (if channel selected)
-    int k = 0;
-    for (int j = 0; j < NUM_CHANNELS; j++) {
-        if (config->channels[j]) {
-            value = 0;
-            for (uint32_t l = 0; l < avg_number; l++) {
-                value += *((int32_t *)(buffer_addr + j * PRU_SAMPLE_SIZE +
-                                       l * (NUM_CHANNELS * PRU_SAMPLE_SIZE +
-                                            PRU_DIG_SIZE)));
+        // aggregate data
+        switch (config->aggregation_mode) {
+        case RL_AGGREGATION_MODE_DOWNSAMPLE:
+            // use first sample of buffer only, skip storing others
+            if (i == 0) {
+                for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                    aggregate_analog[j] = (double)analog_data[j];
+                }
+                aggregate_digital = *digital_data;
             }
-            value = value / (int64_t)avg_number;
-            channel_data[k] =
-                (int32_t)(((int32_t)value + calibration_data.offsets[j]) *
-                          calibration_data.scales[j]);
-            k++;
+            break;
+
+        default:
+        case RL_AGGREGATION_MODE_AVERAGE:
+            // accumulate data of the aggregate window, store at the end
+            for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                aggregate_analog[j] += (double)*(analog_data + j);
+            }
+            aggregate_digital = aggregate_digital & *digital_data;
+            break;
         }
     }
 
-    // display values
-    mvprintw(1, 28, "RocketLogger Meter");
+    // on last sample of the window: average analog data and store
+    if (config->aggregation_mode == RL_AGGREGATION_MODE_AVERAGE) {
+        for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+            aggregate_analog[j] = aggregate_analog[j] / buffer_size;
+        }
+    }
 
-    for (int j = 0; j < NUM_CHANNELS; j++) {
-        if (config->channels[j]) {
-            if (is_current(j)) {
-                // current
-                mvprintw(i * 2 + 5, 10, "%s:", channel_names[j]);
-                mvprintw(i * 2 + 5, 15, "%12.6f%s",
-                         ((float)channel_data[v + i]) / channel_scales[j],
-                         channel_units[j]);
-                i++;
-            } else {
-                // voltage
-                mvprintw(v * 2 + 5, 55, "%s:", channel_names[j]);
-                mvprintw(v * 2 + 5, 60, "%9.6f%s",
-                         ((float)channel_data[v + i]) / channel_scales[j],
-                         channel_units[j]);
-                v++;
-            }
+    // display data
+    // clear screen
+    erase();
+
+    // display values
+    mvprintw(1, 28, "RocketLogger CLI Monitor");
+
+    mvprintw(3, 10, "Time:");
+    mvprintw(3, 20, "% 12lld.%09lld (monotonic)", timestamp_monotonic->sec,
+             timestamp_monotonic->nsec);
+    mvprintw(4, 20, "% 12lld.%09lld (realtime)", timestamp_realtime->sec,
+             timestamp_realtime->nsec);
+
+    int current_index = 0;
+    int voltage_index = 0;
+    for (int i = 0; i < RL_CHANNEL_COUNT; i++) {
+        if (is_current(i)) {
+            // current
+            mvprintw(9 + 2 * current_index, 40, "%s:", RL_CHANNEL_NAMES[i]);
+            mvprintw(9 + 2 * current_index, 50, "%12.6f %s",
+                     (aggregate_analog[i] / RL_CHANNEL_SCALES[i]),
+                     RL_CHANNEL_UNITS[i]);
+            current_index++;
+        } else {
+            // voltage
+            mvprintw(9 + 2 * voltage_index, 10, "%s:", RL_CHANNEL_NAMES[i]);
+            mvprintw(9 + 2 * voltage_index, 20, "%9.6f %s",
+                     (aggregate_analog[i] / RL_CHANNEL_SCALES[i]),
+                     RL_CHANNEL_UNITS[i]);
+            voltage_index++;
         }
     }
 
     // display titles, range information
-    if (i > 0) { // currents
-        mvprintw(3, 10, "Currents:");
-
-        // display range information
-        mvprintw(3, 33, "Low range:");
-        if ((dig_data[0] & I1L_VALID_BIT) > 0) {
-            mvprintw(5, 33, "I1L invalid");
-        } else {
-            mvprintw(5, 33, "I1L valid");
-        }
-        if ((dig_data[1] & I2L_VALID_BIT) > 0) {
-            mvprintw(11, 33, "I2L invalid");
-        } else {
-            mvprintw(11, 33, "I2L valid");
-        }
+    mvprintw(7, 10, "Voltages:");
+    mvprintw(7, 40, "Currents:");
+    if (aggregate_digital & PRU_DIGITAL_I1L_VALID_MASK) {
+        mvprintw(9, 70, "I1L valid");
+    } else {
+        mvprintw(9, 70, "I1L invalid");
     }
-
-    if (v > 0) { // voltages
-        mvprintw(3, 55, "Voltages:");
+    if (aggregate_digital & PRU_DIGITAL_I2L_VALID_MASK) {
+        mvprintw(13, 70, "I2L valid");
+    } else {
+        mvprintw(13, 70, "I2L invalid");
     }
 
     // digital inputs
-    if (config->digital_input_enable) {
+    if (config->digital_enable) {
         mvprintw(20, 10, "Digital Inputs:");
 
-        for (int j = 0; j < 3; j++) {
-            mvprintw(20 + 2 * j, 30, "%s:", digital_input_names[j]);
-            mvprintw(20 + 2 * j, 38, "%d",
-                     (dig_data[0] & digital_input_bits[j]) > 0);
+        for (int i = 0; i < 3; i++) {
+            mvprintw(20 + 2 * i, 30, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
+            mvprintw(20 + 2 * i, 38, "%d",
+                     (aggregate_digital & DIGITAL_INPUT_BITS[i]) > 0);
         }
-        for (int j = 0; j < 6; j++) {
-            mvprintw(20 + 2 * (j - 3), 50, "%s:", digital_input_names[j]);
-            mvprintw(20 + 2 * (j - 3), 58, "%d",
-                     (dig_data[1] & digital_input_bits[j]) > 0);
+        for (int i = 3; i < 6; i++) {
+            mvprintw(20 + 2 * (i - 3), 50, "%s:", RL_CHANNEL_DIGITAL_NAMES[i]);
+            mvprintw(20 + 2 * (i - 3), 58, "%d",
+                     (aggregate_digital & DIGITAL_INPUT_BITS[i]) > 0);
         }
+    } else {
+        mvprintw(20, 10, "Digital inputs disabled.");
     }
+
+    // move cursor for warning outputs on new line
+    mvprintw(27, 2, "");
 
     refresh();
 }

@@ -1,0 +1,164 @@
+## Makefile for RocketLogger Binaries
+##
+## Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
+## All rights reserved.
+## 
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions are met:
+## 
+## * Redistributions of source code must retain the above copyright notice, this
+##   list of conditions and the following disclaimer.
+## 
+## * Redistributions in binary form must reproduce the above copyright notice,
+##   this list of conditions and the following disclaimer in the documentation
+##   and/or other materials provided with the distribution.
+## 
+## * Neither the name of the copyright holder nor the names of its
+##   contributors may be used to endorse or promote products derived from
+##   this software without specific prior written permission.
+## 
+## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+## AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+## DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+## FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+## SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+## CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+## OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+##
+
+#####  DEFINITIONS  #####
+
+## code revision
+PROJECT_NAME = RocketLogger
+PROJECT_VERSION = 1.99
+
+## directories
+BIN_DIR = bin
+LIB_DIR = lib
+OBJ_DIR = obj
+DEP_DIR = $(OBJ_DIR)/.dep
+SRC_DIR = .
+
+## install directories
+INSTALL_BIN_DIR = /lib/firmware
+
+## binary names
+BINARY_NAME = rocketlogger.bin
+
+## code revision
+GIT_DESCRIPTION = `git describe --tags --dirty`
+GIT_DATE = `git show -s --format="%ci" HEAD`
+COMPILE_DATE = `date --rfc-3339=seconds`
+
+## source files
+SRC = $(wildcard  $(SRC_DIR)/*.asm)
+
+## object files
+OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .obj, $(basename $(SRC)))))
+
+## linker command file definition
+LD_CMD = AM335x_PRU.cmd
+
+## target binary
+TARGET_BINARY = $(BIN_DIR)/$(BINARY_NAME)
+
+
+#####  PROGRAMMS AND TOOLS  #####
+
+## program definitions
+# assume PRU code generation tools are added to PATH (by default on beaglebone)
+TOOLCHAIN_PREFIX =
+PRUCC = $(TOOLCHAIN_PREFIX)clpru
+AS = $(PRUCC)
+CC = $(PRUCC)
+CXX = $(PRUCC)
+LD = $(TOOLCHAIN_PREFIX)lnkpru
+OBJCOPY = $(TOOLCHAIN_PREFIX)hexpru
+DISAS = $(TOOLCHAIN_PREFIX)dispru
+MAKEDIR = mkdir -p
+INSTALL = install
+REMOVE = rm -f
+
+
+#####  COMPILER OPTIONS  #####
+
+## language standards
+CSTD = -std=gnu99
+CXXSTD = -std=c++11
+
+## libraries
+LIBS = 
+
+## defines
+DEFS = 
+
+## warnings
+WARNINGS = -Werror -Wall -Wextra -fmessage-length=0
+
+## optimization (at max -O1 when when checking for memory leaks)
+OPT = -O2 # -flto
+
+## debug (at least -g when checking for memory leaks)
+DEBUG = #-g3 -ggdb
+
+## misc ASM flags
+ASOTHER = --silicon_version=3 --asm_listing
+#ASOTHER += 
+
+## misc C flags
+COTHER = --silicon_version=3
+#COTHER += 
+
+## misc C++ flags
+CXXOTHER = -ffunction-sections -fdata-sections
+CXXOTHER += -finline-functions -finline-functions-called-once
+
+## C compiler flags
+CFLAGS = $(WARNINGS) $(GENDEP) $(OPT) $(DEBUG) $(CSTD) $(DEFS) $(COTHER) $(INCS)
+
+## C++ compiler flags
+CXXFLAGS = $(WARNINGS) $(GENDEP) $(OPT) $(DEBUG) $(CXXSTD) $(DEFS) $(CXXOTHER) $(INCS)
+
+
+## Linker options
+LDFLAGS = $(LIBS)
+
+
+#####  TARGETS  #####
+
+## build targets
+all:  $(BIN_DIR) $(TARGET_BINARY)
+
+install: all
+	$(INSTALL) --mode=644 $(TARGET_BINARY) $(INSTALL_BIN_DIR)
+
+uninstall:
+	$(UNINSTALL) $(INSTALL_BIN_DIR)/$(BINARY_NAME)
+
+$(OBJ_DIR)/%.obj: $(SRC_DIR)/%.asm
+	@$(MAKEDIR) $(@D)
+	$(AS) $(ASOTHER) --output_file=$@ $<
+	$(DISAS) $@ $(@:%.obj=%.lst)
+
+%.out: $(LD_CMD) $(OBJ)
+	@$(MAKEDIR) $(@D)
+	$(LD) --output_file=$@ --map_file=$(@:%.out=%.map) $^
+	$(DISAS) $@ $(@:%.out=%.lst)
+
+$(TARGET_BINARY): $(TARGET_BINARY:%.bin=%.out)
+	$(OBJCOPY) --binary --outfile=$@ $<
+
+
+## directories
+$(BIN_DIR):
+	$(MAKEDIR) $(BIN_DIR)
+
+
+## phony targets
+.PHONY: clean
+
+clean:
+	$(REMOVE) $(SRC_DIR)/*.lst $(OBJ_DIR)/*.obj $(OBJ_DIR)/*.lst $(BIN_DIR)/*

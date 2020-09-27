@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,24 +32,36 @@
 #ifndef METER_H_
 #define METER_H_
 
-#include "types.h"
+#include <stdint.h>
+
+#include "pru.h"
+#include "rl.h"
+#include "util.h"
 
 /**
- * Initialize meter window.
+ * Initialize interactive console window.
  */
 void meter_init(void);
 
 /**
- * Deinitialize meter window.
+ * Deinitialize interactive console window.
  */
 void meter_deinit(void);
 
 /**
- * Print data buffer in meter window.
+ * Print data buffer in interactive console window.
  *
- * @param conf Pointer to current {@link rl_config_t} configuration
- * @param buffer_addr Pointer to buffer to handle
+ * @param analog_buffer Analog data buffer to process
+ * @param digital_buffer Digital data buffer to process
+ * @param buffer_size Number of samples in the buffer
+ * @param timestamp_realtime Timestamp sampled from realtime clock
+ * @param timestamp_monotonic Timestamp sampled from monotonic clock
+ * @param config Current measurement configuration
  */
-void meter_print_buffer(rl_config_t const *const conf, void const *buffer_addr);
+void meter_print_buffer(int32_t const *analog_buffer,
+                        uint32_t const *digital_buffer, size_t buffer_size,
+                        rl_timestamp_t const *const timestamp_realtime,
+                        rl_timestamp_t const *const timestamp_monotonic,
+                        rl_config_t const *const config);
 
 #endif /* METER_H_ */

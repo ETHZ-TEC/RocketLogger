@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,18 +32,41 @@
 #ifndef RL_LIB_H_
 #define RL_LIB_H_
 
-#include "calibration.h"
-#include "types.h"
+#include "rl.h"
 
-rl_state_t rl_get_status(void);
+/**
+ * Check whether RocketLogger is sampling.
+ *
+ * @return The current sampling status
+ */
+bool rl_is_sampling(void);
 
-rl_state_t rl_read_status(rl_status_t *const status);
+/**
+ * Get the current status of the RocketLogger.
+ *
+ * @param status The status data structure to write to
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_get_status(rl_status_t *const status);
 
-void rl_read_calibration(rl_config_t const *const config,
-                         rl_calibration_t *const calibration);
+/**
+ * Run a new RocketLogger measurement.
+ *
+ * Returns when done unless configured to run in background in which case it
+ * returns after successful start.
+ *
+ * @param config Configuration of the measurement to run
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int rl_run(rl_config_t *const config);
 
-int rl_start(rl_config_t *const config, char const *const file_comment);
-
+/**
+ * RocketLogger stop function (to stop a measurement run in background).
+ *
+ * Sends stop signal to running RocketLogger process to terminate.
+ *
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
 int rl_stop(void);
 
 #endif /* RL_LIB_H_ */

@@ -2,7 +2,7 @@
 """
 Automated RocketLogger calibration measurement and generation using SMU2450.
 
-Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -40,34 +40,74 @@ from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_
 
 DATA_DIR = '/home/rocketlogger/.config/rocketlogger/'
 
-ROCKETLOGGER_CALIBRATION_V = ('rocketlogger sample 75000 '
-    '-r 1000 -ch 2,3,6,7 -fhr 0 -d 0 -a 0 -g 0 -w 0 -c 0 -f "{}" '
-    '-C \'RocketLogger voltage calibration measurement using automated SMU2450 sweep.\'')
-ROCKETLOGGER_CALIBRATION_I1L = ('rocketlogger sample 75000 '
-    '-r 1000 -ch 1 -fhr 0 -d 0 -a 0 -g 0 -w 0 -c 0 -f "{}" '
-    '-C \'RocketLogger current I1 low calibration measurement using automated SMU2450 sweep.\'')
-ROCKETLOGGER_CALIBRATION_I2L = ('rocketlogger sample 75000 '
-    '-r 1000 -ch 5 -fhr 0 -d 0 -a 0 -g 0 -w 0 -c 0 -f "{}" '
-    '-C \'RocketLogger current I2 low calibration measurement using automated SMU2450 sweep.\'')
-ROCKETLOGGER_CALIBRATION_IH = ('rocketlogger sample 75000 '
-    '-r 1000 -ch 0,4 -fhr 1,2 -d 0 -a 0 -g 0 -w 0 -c 0 -f "{}" '
-    '-C \'RocketLogger high current calibration measurement using automated SMU2450 sweep.\'')
+ROCKETLOGGER_SAMPLE_RATES = [1000, 2000, 4000, 8000, 16000, 32000, 64000]
+
+
+def get_rocketlogger_command(measurement_type, filename,
+                             sample_rate=1000, duration=75, calibration=True):
+    """
+    Get the RocketLogger command for automated measurements.
+    """
+    command = 'rocketlogger start'
+
+    # sample rate option
+    if sample_rate in ROCKETLOGGER_SAMPLE_RATES:
+        command += ' --rate={:d}'.format(sample_rate)
+    else:
+        raise ValueError('unsupported sample rate {:d}'.format(sample_rate))
+
+    # calibration option
+    if calibration:
+        command += ' --calibration'
+
+    # channel options
+    if action == 'v':
+        command += ' --channel=V1,V2,V3,V4'
+        command += ' --comment=\'RocketLogger voltage calibration measurement using automated SMU2450 sweep.\''
+    elif action == 'i1l':
+        command += ' --channel=I1L'
+        command += ' --comment=\'RocketLogger current I1 low calibration measurement using automated SMU2450 sweep.\''
+    elif action == 'i2l':
+        command += ' --channel=I2L'
+        command += ' --comment=\'RocketLogger current I2 low calibration measurement using automated SMU2450 sweep.\''
+    elif action == 'ih':
+        command += ' --channel=I1H,I2H --high-range=I1H,I2H'
+        command += ' --comment=\'RocketLogger high current calibration measurement using automated SMU2450 sweep.\''
+    else:
+        raise ValueError('unsupported measurement type {:s}'.format(measurement_type))
+
+    # total sample count
+    command += ' --samples={:d}'.format(sample_rate * duration)
+
+    # other options
+    command += ' --ambient=false'
+    command += ' --digital=false'
+    command += ' --output={}'.format(filename)
+    command += ' --format=rld'
+    command += ' --size=0'
+    command += ' --web=false'
+
+    return command
 
 
 if __name__ == "__main__":
 
     # handle first argument
-    if len(sys.argv) != 2:
-        raise TypeError('need at least one argument')
+    if len(sys.argv) < 2:
+        raise TypeError('need at least one argument specifying the action')
     action = str(sys.argv[1]).lower()
 
+    # create base directory path if not existing
+    os.makedirs(DATA_DIR, exist_ok=True)
+
     # generate filenames
-    filename_v = DATA_DIR + '{}_calibration_v.rld'.format(date.today())
-    filename_i1l = DATA_DIR + '{}_calibration_i1l.rld'.format(date.today())
-    filename_i2l = DATA_DIR + '{}_calibration_i2l.rld'.format(date.today())
-    filename_ih = DATA_DIR + '{}_calibration_ih.rld'.format(date.today())
-    filename_cal = DATA_DIR + '{}_calibration.dat'.format(date.today())
-    filename_log = DATA_DIR + '{}_calibration.log'.format(date.today())
+    filename_base = os.path.join(DATA_DIR, '{}_calibration'.format(date.today()))
+    filename_v = '{}_v.rld'.format(filename_base)
+    filename_i1l = '{}_i1l.rld'.format(filename_base)
+    filename_i2l = '{}_i2l.rld'.format(filename_base)
+    filename_ih = '{}_ih.rld'.format(filename_base)
+    filename_cal = '{}.dat'.format(filename_base)
+    filename_log = '{}.log'.format(filename_base)
 
     # for option "cal" perform calibration using todays measurements
     if action == 'cal':
@@ -79,7 +119,7 @@ if __name__ == "__main__":
             raise FileNotFoundError('Missing current I1 low calibration measurement.')
         elif not os.path.isfile(filename_i2l):
             raise FileNotFoundError('Missing current I2 low calibration measurement.')
-        elif not os.path.isfile(filename_i1l):
+        elif not os.path.isfile(filename_ih):
             raise FileNotFoundError('Missing current high calibration measurement.')
 
         # perform calibration and print statistics
@@ -121,22 +161,20 @@ if __name__ == "__main__":
 
         if action == 'v':
             filename = filename_v
-            rocketlogger_command = ROCKETLOGGER_CALIBRATION_V.format(filename)
             smu.calibrate_voltage()
         elif action == 'i1l':
             filename = filename_i1l
-            rocketlogger_command = ROCKETLOGGER_CALIBRATION_I1L.format(filename)
             smu.calibrate_current_low()
         elif action == 'i2l':
             filename = filename_i2l
-            rocketlogger_command = ROCKETLOGGER_CALIBRATION_I2L.format(filename)
             smu.calibrate_current_low()
         elif action == 'ih':
             filename = filename_ih
-            rocketlogger_command = ROCKETLOGGER_CALIBRATION_IH.format(filename)
             smu.calibrate_current_high()
 
         # start rocketlogger measurement
+        rocketlogger_command = get_rocketlogger_command(action, filename)
+        print(rocketlogger_command)
         os.system(rocketlogger_command)
 
         print('Calibration measurement done.')

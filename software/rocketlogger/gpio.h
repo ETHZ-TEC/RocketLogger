@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,17 +77,17 @@ typedef enum gpio_interrupt {
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @param mode GPIO mode (input or output) to configure
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int gpio_init(int gpio_number, gpio_mode_t mode);
 
 /**
- * Denitialize a GPIO.
+ * Deinitialize a GPIO.
  *
  * Unexport an exported sysfs GPIO resource.
  *
  * @param gpio_number Linux sysfs GPIO resource number
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int gpio_deinit(int gpio_number);
 
@@ -97,7 +97,7 @@ int gpio_deinit(int gpio_number);
  * Unexport sysfs GPIO resource if not exported.
  *
  * @param gpio_number Linux sysfs GPIO resource number
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int gpio_reset(int gpio_number);
 
@@ -106,7 +106,7 @@ int gpio_reset(int gpio_number);
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @param value GPIO state to set (0 or 1)
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int gpio_set_value(int gpio_number, int value);
 
@@ -123,7 +123,7 @@ int gpio_get_value(int gpio_number);
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @param interrupt_mode GPIO interrupt mode to configure
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise.
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode);
 
@@ -132,7 +132,8 @@ int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode);
  *
  * @param gpio_number Linux sysfs GPIO resource number
  * @param timeout Maximum waiting time (in milliseconds), negative for infinite
- * @return {@link SUCCESS} in case of interrupt, {@link FAILURE} otherwise.
+ * @return Returns the GPIO pin value (0 or 1) on success, negative on failure
+ * with errno set accordingly
  */
 int gpio_wait_interrupt(int gpio_number, int timeout);
 

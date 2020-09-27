@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+  {% block head %}
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Language" content="en">
+  <title>{% block title %}RocketLogger Web Interface{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}</title>
+  <meta name="description" content="{% block description %}RocketLogger web interface for remote controlling and observing measurements{% endblock %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="author" content="ETH Zurich, Computer Engineering Group">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/static/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/static/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#f08018">
+  <meta name="apple-mobile-web-app-title" content="RocketLogger">
+  <meta name="application-name" content="RocketLogger">
+  <meta name="theme-color" content="#ff0000">
+  
+  {% block css_head %}
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script>
+    "use strict";
+    // replace document root no-js class with js to confirm javascript is enabled
+    document.documentElement.classList.replace('no-js', 'js');
+    // Bootstrap CSS local fallback, source: https://stackoverflow.com/questions/26192897/should-i-use-bootstrap-from-cdn-or-make-a-copy-on-my-server/26198380#26198380 -->
+    let test = document.createElement('div');
+    test.className = 'hidden d-none';
+    document.head.appendChild(test);
+    if (window.getComputedStyle(test).display !== 'none') {
+      let link = document.createElement('link');
+      link.type = 'text/css';
+      link.rel = 'stylesheet';
+      link.href = '/assets/bootstrap.min.css';
+      document.head.appendChild(link);
+    }
+    document.head.removeChild(test);
+  </script>
+  <!-- site CSS -->
+  <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+  {% endblock %}
+  {% block js_head %}{% endblock %}
+  {% endblock %}
+</head>
+
+<body>
+	<div class="container">
+		<!-- Header Container -->
+		<header id="header">
+      {% block header %}
+      {% endblock %}
+    </header>
+
+    <!-- Notifications Bar Section -->
+    {% if err %}
+      {% for msg in err %}
+      <div class="alert alert-danger alert-dismissible" role="alert">
+        <strong>Error:</strong> {{ msg }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% if warn %}
+      {% for msg in warn %}
+      <div class="alert alert-warning alert-dismissible" role="alert">
+        <strong>Warning:</strong> {{ msg }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+    {% if notification_messages %}
+      {% for notification_message in notification_messages %}
+      <div class="alert alert-info alert-dismissible" role="alert">
+        {{ notification_message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <main id="content">
+      {% block content %}
+      <!-- Page Title -->
+      <div class="row justify-content-between align-items-center mb-4">
+        <div class="col">
+          <h1>RocketLogger Web Interface{% if hostname %} ({{ hostname }}){% endif %}</h1>
+          <p>Your base template renders!</p>
+        </div>
+      </div>
+      {% endblock %}
+    </main>
+    <footer id="footer">
+      {% block footer %}
+      <div class="row justify-content-around">
+        <div class="col-auto">
+          <img class="img-fluid float-left" src="/static/img/eth_logo_small.png" alt="Logo ETH Zurich">
+        </div>
+        <div class="col-auto">
+          <img class="img-fluid float-right" src="/static/img/tik_logo_small.png" alt="Logo TIK">
+        </div>
+      </div>
+
+      <p><span {% if version_string %}data-toggle="tooltip" title="{{ version_string }}"{% endif %}>
+        RocketLogger version {% if version %}{{ version }}{% else %}<span class="badge badge-danger" id="warn_calibration">unknown</span>{% endif %}
+        </span> - <a href="https://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
+        &copy; {{ today.year }}, ETH Zurich, Computer Engineering Group.
+      </p>
+      {% endblock %}
+    </footer>
+
+    {% block js_footer %}
+    <!-- jQuery first, then Popper.js, then Bootstrap Javascript -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="/assets/jquery.min.js"><\/script>')</script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script>if (typeof (Popper) === 'undefined') { document.write('<script src="/assets/popper.min.js"><\/script>') }</script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script>if (typeof ($.fn.modal) === 'undefined') { document.write('<script src="/assets/bootstrap.min.js"><\/script>') }</script>
+    <script src="/static/js/base.js"></script>
+    {% endblock %}
+	</div>
+</body>
+</html>

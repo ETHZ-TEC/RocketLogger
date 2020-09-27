@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,22 +32,26 @@
 #ifndef CALIBRATION_H_
 #define CALIBRATION_H_
 
-#include "types.h"
+#include <stdint.h>
 
-/// Calibration file name
-#define CALIBRATION_FILE "/etc/rocketlogger/calibration.dat"
+#include "rl.h"
+
+/// Calibration file header magic
+#define RL_CALIBRATION_FILE_MAGIC 0x434C5225
+/// Calibration file header version
+#define RL_CALIBRATION_FILE_VERSION 0x02
+/// Calibration file header length
+#define RL_CALIBRATION_FILE_HEADER_LENGTH 0x10
 
 /**
  * RocketLogger calibration data structure.
  */
 struct rl_calibration {
-    /// Time stamp of calibration run
-    uint64_t time;
     /// Channel offsets (in bit)
-    int offsets[NUM_CHANNELS];
-    /// Channel scalings
-    double scales[NUM_CHANNELS];
-};
+    int offsets[RL_CHANNEL_COUNT];
+    /// Channel scales
+    double scales[RL_CHANNEL_COUNT];
+} __attribute__((packed));
 
 /**
  * Typedef for RocketLogger calibration data.
@@ -55,9 +59,25 @@ struct rl_calibration {
 typedef struct rl_calibration rl_calibration_t;
 
 /**
- * Calibration data structure.
+ * RocketLogger calibration file data structure.
  */
-extern rl_calibration_t calibration_data;
+struct rl_calibration_file {
+    /// File magic constant
+    uint32_t file_magic;
+    /// File version number
+    uint16_t file_version;
+    /// Total size of the header in bytes
+    uint16_t header_length;
+    /// Timestamp of the measurements used for calibration generation
+    uint64_t calibration_time;
+    /// The actual calibration data
+    rl_calibration_t data;
+} __attribute__((packed));
+
+/**
+ * Typedef for RocketLogger calibration file structure.
+ */
+typedef struct rl_calibration_file rl_calibration_file_t;
 
 /**
  * Reset all calibration offsets to default state (0).
@@ -72,10 +92,17 @@ void calibration_reset_scales(void);
 /**
  * Load the calibration values from calibration file.
  *
+ * @note Updates the RocketLogger status. Manually update shared status after
+ * loading the calibraion as needed.
+ *
  * @param config Pointer to {@link rl_config_t} struct.
- * @return {@link FAILURE} if calibration file not existing, {@link SUCCESS}
- * otherwise.
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int calibration_load(rl_config_t const *const config);
+int calibration_load(void);
+
+/**
+ * Global calibration data structure.
+ */
+extern rl_calibration_t rl_calibration;
 
 #endif /* CALIBRATION_H_ */

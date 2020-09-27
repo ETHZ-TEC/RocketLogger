@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run python library tests and report code coverage
 #
-# Copyright (c) 2019, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2019-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -29,9 +29,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
+export MATPLOTLIB_AVAILABLE="true"
+export PANDAS_AVAILABLE="true"
+
 python setup.py nosetests \
   --with-coverage \
   --cover-package=rocketlogger \
   --cover-html \
   --cover-html-dir=build/coverage
-  

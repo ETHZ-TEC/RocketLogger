@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block css_head %}
+  {{ super() }}
+  <!-- local CSS -->
+  <link rel="stylesheet" type="text/css" href="/static/css/rocketlogger.css">
+{% endblock %}
+{% block js_footer %}
+  {{ super() }}
+  <!-- socket.io client -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" integrity="sha256-bQmrZe4yPnQrLTY+1gYylfNMBuGfnT/HKsCGX+9Xuqo=" crossorigin="anonymous"></script>
+  <script>if (typeof (io) === 'undefined') { document.write('<script src="/assets/socket.io.js"><\/script>') }</script>
+  <!-- plotting javascript -->
+  <script src="https://cdn.plot.ly/plotly-1.53.0.min.js" integrity="sha384-6/7lLgC8S4OZGAEvTu4UOjhY+SsoRYHhPL8fA4KJLTTT2rQysDLzqKnkZVFYYsTx" crossorigin="anonymous"></script>
+  <script>if (typeof (Plotly) === 'undefined') { document.write('<script src="/assets/plotly.min.js"><\/script>') }</script>
+  <!-- local javascript -->
+  <script src="/static/js/rl.util.js"></script>
+  <script src="/static/js/rl.base.js"></script>
+  <script src="/static/js/rl.control.js"></script>
+  <script src="/static/js/rl.data.js"></script>
+{% endblock %}
+
+{% block title %}RocketLogger Control{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
+{% block content %}
+<!-- Page Title -->
+<div class="row justify-content-between align-items-center mb-4">
+  <div class="col-auto">
+    <h1>RocketLogger Control Interface{% if hostname %} ({{ hostname }}){% endif %}</h1>
+  </div>
+  <div class="col-auto">
+    <div class="badge badge-info" data-toggle="tooltip" data-placement="bottom" title="RocketLogger Hotkeys:
+s:	Start/Stop
+d:	Store Configuration as Default
+l:	Load Default Configuration
+p:	Un-/Pause Plot Update
+1-3:	Change Plot Time Scale">HELP</div>
+  </div>
+</div>
+
+{% include "rocketlogger/control.html" %}
+
+{% include "rocketlogger/config.html" %}
+
+<!-- Live Data Preview Panel Container -->
+<div class="card mb-3">
+  <div class="card-header">
+    <h2 class="accordion-toggle" data-toggle="collapse" href="#collapsePreview">
+      Live Data Preview
+    </h2>
+  </div>
+  <div class="card-body collapse show" id="collapsePreview">
+    <fieldset id="web_group">
+      <div class="row justify-content-between align-items-center">
+        <div class="col-sm-auto">
+          <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" class="custom-control-input" id="plot_update" checked>
+            <label class="custom-control-label" for="plot_update">Update plots</label>
+          </div>
+        </div>
+        <div class="col-sm-auto form-group">
+          <div class="row justify-content-end">
+            <label class="col-sm-auto col-form-label" for="plot_update_rate">Update interval</label>
+            <div class="col-sm-auto">
+              <select class="custom-select" id="plot_update_rate">
+                <option value="100" selected>auto scroll</option>
+                <option value="10">0.1 s</option>
+                <option value="2">0.5 s</option>
+                <option value="1">1 s</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-auto form-group">
+          <div class="row justify-content-end">
+            <label class="col-sm-auto col-form-label" for="plot_time_scale">Time scale</label>
+            <div class="col-sm-auto">
+              <select class="custom-select" id="plot_time_scale">
+                <option value="1000" selected>1 s/div</option>
+                <option value="10000">10 s/div</option>
+                <option value="100000">100 s/div</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="plot_group_voltage">
+        <hr />
+        <h3>Voltage Channels</h3>
+        <div class="row justify-content-between align-items-center">
+          <div class="col-auto">
+          </div>
+          <div class="col-auto">
+            <div class="form-group row justify-content-end">
+              <label class="col-auto col-form-label" for="plot_voltage_range">Range</label>
+              <div class="col-auto">
+                <select class="custom-select" id="plot_voltage_range">
+                  <option value="0">Auto</option>
+                  <option value="100e-6">100 µV</option>
+                  <option value="1e-3">1 mV</option>
+                  <option value="10e-2">10 mV</option>
+                  <option value="100e-3">100 mV</option>
+                  <option value="1">1 V</option>
+                  <option value="6">6 V</option>
+                  <option value="10">10 V</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-plot mb-3" id="plot_voltage"></div>
+      </div>
+
+      <div id="plot_group_current">
+        <hr />
+        <h3>Current Channels</h3>
+        <div class="row justify-content-between align-items-center">
+          <div class="col-auto">
+          </div>
+          <div class="col-auto">
+            <div class="form-group row justify-content-start">
+              <label class="col-auto col-form-label" for="plot_current_range">Range</label>
+              <div class="col-auto">
+                <select class="custom-select" id="plot_current_range">
+                  <option value="0">Auto</option>
+                  <option value="10e-9">10 nA</option>
+                  <option value="100e-9">100 nA</option>
+                  <option value="1e-6">1 µA</option>
+                  <option value="10e-6">10 µA</option>
+                  <option value="100e-6">100 µA</option>
+                  <option value="1e-3">1 mA</option>
+                  <option value="10e-3">10 mA</option>
+                  <option value="100e-3">100 mA</option>
+                  <option value="1.0">1 A</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-plot mb-3" id="plot_current"></div>
+      </div>
+
+      <div id="plot_group_digital">
+        <hr />
+        <h3>Digital Channels</h3>
+        <div class="rl-plot mb-3" id="plot_digital"></div>
+      </div>
+
+      <div id="plot_group_ambient">
+        <hr />
+        <h3>Ambient Sensors</h3>
+        <div class="rl-plot mb-3" id="plot_ambient"></div>
+      </div>
+    </fieldset>
+  </div>
+</div>
+{% endblock %}

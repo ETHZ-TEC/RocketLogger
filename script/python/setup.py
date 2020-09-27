@@ -1,7 +1,7 @@
 """
 RocketLogger Python Library.
 
-Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -40,11 +40,11 @@ def readme():
 
 
 setup(name='rocketlogger',
-      version='1.99a2',
+      version='1.99a7',
       description='RocketLogger Python Support',
       long_description=readme(),
       url='https://rocketlogger.ethz.ch/',
-      author='Computer Engineering Group, ETH Zurich',
+      author='ETH Zurich, Computer Engineering Group',
       author_email='lukas.sigrist@tik.ee.ethz.ch',
       license='BSD 3-Clause',
       classifiers=[
@@ -52,21 +52,23 @@ setup(name='rocketlogger',
           'Intended Audience :: Science/Research',
           'Topic :: Scientific/Engineering :: Information Analysis',
           'License :: OSI Approved :: BSD License',
-          'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Operating System :: OS Independent',
       ],
-      keywords='rocketlogger data analysis',
+      keywords='rocketlogger data analysis calibration',
       packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-      python_requires='>=3.4, <4',
+      python_requires='>=3.5, <4',
       install_requires=[
           'numpy',
       ],
       extras_require={
-          'plot': 'matplotlib',
+          'plot': ['matplotlib'],
+          'dataframe': ['pandas'],
       },
       test_suite='nose.collector',
       tests_require=[

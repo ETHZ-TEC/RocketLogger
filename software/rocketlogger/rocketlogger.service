@@ -6,7 +6,16 @@ Documentation=https://rocketlogger.ethz.ch/
 [Service]
 Type=simple
 ExecStart=/bin/rocketloggerd
-PIDFile=/var/run/rocketloggerd.pid
+PIDFile=/run/rocketloggerd.pid
+
+User=rocketlogger
+Group=rocketlogger
+
+TimeoutStopSec=2s
+KillMode=mixed
+KillSignal=SIGTERM
+FinalKillSignal=SIGKILL
+
 Restart=always
 RestartSec=2s
 

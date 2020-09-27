@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'RocketLogger Python Support'
-copyright = '2018-2019, ETH Zurich, Computer Engineering Group'
+copyright = '2018-2020, ETH Zurich, Computer Engineering Group'
 author = 'ETH Zurich, Computer Engineering Group'
 
 # The version info for the project you're documenting, acts as replacement for

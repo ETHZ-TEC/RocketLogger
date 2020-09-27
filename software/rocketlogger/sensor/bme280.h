@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,9 +54,9 @@
 #define BME280_REG_STATUS 0xF3
 #define BME280_REG_CONTROL_MEASURE 0xF4
 #define BME280_REG_CONFIG 0xF5
-#define BME280_REG_PREASURE_MSB 0xF7
-#define BME280_REG_PREASURE_LSB 0xF8
-#define BME280_REG_PREASURE_XLSB 0xF9
+#define BME280_REG_PRESSURE_MSB 0xF7
+#define BME280_REG_PRESSURE_LSB 0xF8
+#define BME280_REG_PRESSURE_XLSB 0xF9
 #define BME280_REG_TEMPERATURE_MSB 0xFA
 #define BME280_REG_TEMPERATURE_LSB 0xFB
 #define BME280_REG_TEMPERATURE_XLSB 0xFC
@@ -86,12 +86,12 @@
 #define BME280_OVERSAMPLE_TEMPERATURE_4 0x60
 #define BME280_OVERSAMPLE_TEMPERATURE_8 0x80
 #define BME280_OVERSAMPLE_TEMPERATURE_16 0xA0
-#define BME280_OVERSAMPLE_PREASURE_OFF 0x00
-#define BME280_OVERSAMPLE_PREASURE_1 0x04
-#define BME280_OVERSAMPLE_PREASURE_2 0x08
-#define BME280_OVERSAMPLE_PREASURE_4 0x0C
-#define BME280_OVERSAMPLE_PREASURE_8 0x10
-#define BME280_OVERSAMPLE_PREASURE_16 0x14
+#define BME280_OVERSAMPLE_PRESSURE_OFF 0x00
+#define BME280_OVERSAMPLE_PRESSURE_1 0x04
+#define BME280_OVERSAMPLE_PRESSURE_2 0x08
+#define BME280_OVERSAMPLE_PRESSURE_4 0x0C
+#define BME280_OVERSAMPLE_PRESSURE_8 0x10
+#define BME280_OVERSAMPLE_PRESSURE_16 0x14
 #define BME280_MODE_SLEEP 0x00
 #define BME280_MODE_FORCE 0x01
 #define BME280_MODE_NORMAL 0x03
@@ -120,7 +120,7 @@ struct bme280_calibration {
     int16_t T2;
     int16_t T3;
 
-    // preasure
+    // pressure
     uint16_t P1;
     int16_t P2;
     int16_t P3;
@@ -145,25 +145,36 @@ struct bme280_calibration {
  */
 typedef struct bme280_calibration bme280_calibration_t;
 
-/*
- * API FUNCTIONS
+/**
+ * Initialize the BME280 ambient sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int bme280_init(int);
-void bme280_deinit(int);
-int bme280_read(int);
-int32_t bme280_get_value(int, int);
 
-/*
- * Helper FUNCTIONS
+/**
+ * Deinitialize BME280 ambient sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
  */
-int bme280_get_id(void);
-int bme280_read_calibration(int);
-int bme280_set_parameters(int);
-int bme280_get_index(int);
+void bme280_deinit(int);
 
-int32_t bme280_compensate_temperature_fine(int, int32_t);
-int32_t bme280_compensate_temperature(int, int32_t);
-uint32_t bme280_compensate_preasure(int, int32_t, int32_t);
-uint32_t bme280_compensate_humidity(int, int32_t, int32_t);
+/**
+ * Read the sensor values.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int bme280_read(int);
+
+/**
+ * Get the values read from the sensor.
+ *
+ * @param sensor_identifier The I2C address of the sensor
+ * @param channel The channel of the sensor to get
+ * @return Sensor value in lux
+ */
+int32_t bme280_get_value(int, int);
 
 #endif /* SENSOR_BME280_H_ */

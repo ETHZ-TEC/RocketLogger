@@ -3,7 +3,7 @@ RocketLogger Calibration Support.
 
 Calibration file generation and accuracy verification.
 
-Copyright (c) 2019, ETH Zurich, Computer Engineering Group
+Copyright (c) 2019-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,52 +36,58 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 
-# from datetime import datetime, timezone
-# from math import ceil, floor
-
 import numpy as np
-# import matplotlib.pyplot as plt
 
-from .data import RocketLoggerData
+from .data import RocketLoggerData, RocketLoggerFileError
 
 ROCKETLOGGER_CALIBRATION_FILE = '/etc/rocketlogger/calibration.dat'
 """Default RocketLogger calibration file location."""
 
-# channel count and indexes
-_ROCKETLOGGER_CHANNELS_COUNT = 8
-_ROCKETLOGGER_CHANNELS_VOLTAGE = [2, 3, 6, 7]
-_ROCKETLOGGER_CHANNELS_CURRENT_LOW = [1, 5]
-_ROCKETLOGGER_CHANNELS_CURRENT_HIGH = [0, 4]
+# # scales (per bit) for the values, that are stored in the binary files
+# _ROCKETLOGGER_FILE_SCALE_V = 1e-8
+# _ROCKETLOGGER_FILE_SCALE_IL = 1e-11
+# _ROCKETLOGGER_FILE_SCALE_IH = 1e-9
 
-# scales (per bit) for the values, that are stored in the binary files
-_ROCKETLOGGER_FILE_SCALE_V = 1e-8
-_ROCKETLOGGER_FILE_SCALE_IL = 1e-11
-_ROCKETLOGGER_FILE_SCALE_IH = 1e-9
-
-# voltage/current increment per ADC LSB
+# hardware design values of voltage/current increment per ADC LSB
 _ROCKETLOGGER_ADC_STEP_V = -1.22e-6
 _ROCKETLOGGER_ADC_STEP_IL = 1.755e-10
 _ROCKETLOGGER_ADC_STEP_IH = 3.18e-08
 
-# data format of the calibration file
-_CALIBRATION_FILE_DTYPE = np.dtype([
-    ('timestamp', '<M8[s]'),
-    ('offset', ('<i4', 8)),
-    ('scale', ('<f8', 8)),
-])
+# calibration file format magic
+_CALIBRATION_FILE_MAGIC = 0x434C5225
+
+# calibration file format version
+_CALIBRATION_FILE_VERSION = 0x02
+
+# calibration file header length
+_CALIBRATION_FILE_HEADER_LENGTH = 0x10
 
 # data format channel name sequence
-_CALIBRATION_CHANNEL_NAMES = ['I1H', 'I1L', 'V1', 'V2',
-                              'I2H', 'I2L', 'V3', 'V4']
+_CALIBRATION_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4',
+                              'I1L', 'I1H', 'I2L', 'I2H', 'DT']
 
-# RocketLogger data file scales for channels
-_CALIBRATION_CHANNEL_SCALES = [
-    _ROCKETLOGGER_FILE_SCALE_IH, _ROCKETLOGGER_FILE_SCALE_IL,
-    _ROCKETLOGGER_FILE_SCALE_V, _ROCKETLOGGER_FILE_SCALE_V] * 2
+# data format of the calibration file
+_CALIBRATION_FILE_DTYPE = np.dtype([
+    ('file_magic', '<u4'),
+    ('file_version', '<u2'),
+    ('header_length', '<u2'),
+    ('calibration_time', '<M8[s]'),
+    ('offset', ('<i4', len(_CALIBRATION_CHANNEL_NAMES))),
+    ('scale', ('<f8', len(_CALIBRATION_CHANNEL_NAMES))),
+])
 
 # channels with positive scales
-_CALIBRATION_POSITIVE_SCALE_CHANNELS = (_ROCKETLOGGER_CHANNELS_CURRENT_LOW +
-                                        _ROCKETLOGGER_CHANNELS_CURRENT_HIGH)
+_CALIBRATION_CHANNEL_SCALES_POSITIVE = ([False] * 4 + [True] * 4)
+
+# RocketLogger calibration scale scales for channels
+_CALIBRATION_CHANNEL_SCALES = ([1e-8] * 4 + [1e-11, 1e-9] * 2)
+
+# Calculated PRU cycle counter offset
+# (2 MEM write + 1 MEM read + 2 ALU op readout)
+_CALIBRATION_PRU_CYCLES_OFFSET = 3 * 4  # 2 * 1 + 1 * 4 + 2 * 1
+
+# Calculated PRU cycle counter scale (200 MHz clock)
+_CALIBRATION_PRU_CYCLES_SCALE = 5
 
 
 def regression_linear(measurement, reference, zero_weight=1):
@@ -104,50 +110,68 @@ def regression_linear(measurement, reference, zero_weight=1):
 
 
 def _extract_setpoint_measurement(measurement_data, setpoint_step,
-                                  filter_window_length=150,
-                                  filter_threshold_relative=0.01):
+                                  filter_window_length=150):
     """
-    Extract aggregated setpoints from a measurement trace.
+    Extract aggregated set-points from a measurement trace.
 
-    :param measurement_data: vector of measurement data to extract
-                                setpoints from
+    :param measurement_data: vector of measurement data to extract set-points
+                             from
 
-    :param setpoint_step: the setpoint step (in measurement units)
+    :param setpoint_step: the set-point step (in measurement units)
 
     :param filter_window_length: width of the square filter window used for
-                                 setpoint filtering
+                                 set-point filtering
 
-    :param filter_threshold_relative: setpoint step relative threshold for
-                                      stable measurement detection
-
-    :returns: vector of the extracted setpoint measurements
+    :returns: vector of the extracted set-point measurements
     """
-    # find stable measurement intervals
-    measurement_diff_abs = np.abs(np.diff(np.hstack([0, measurement_data])))
-    measurement_stable = (np.abs(measurement_diff_abs) <
-                          filter_threshold_relative * setpoint_step)
+
+    # locate calibration sweep
+    measurement_sweep_bound = np.nonzero(np.abs(np.diff(measurement_data)) >
+                                         2 * setpoint_step)
+    measurement_sweep_start = np.min(measurement_sweep_bound)
+    measurement_sweep_end = np.max(measurement_sweep_bound)
+
+    # smooth raw measurements
+    smoothing_window_length = filter_window_length // 100
+    if smoothing_window_length > 0:
+        smoothing_window = \
+            np.ones(smoothing_window_length) / smoothing_window_length
+        measurement_smooth = np.convolve(
+            measurement_data, smoothing_window, mode='same')
+    else:
+        measurement_smooth = measurement_data
+
+    # find stable measurement intervals using rms of smoothed signal signals
+    measurement_diff_abs = np.abs(
+        np.diff(np.concatenate(([0], measurement_smooth))))
+    measurement_diff_rms = np.sqrt(np.mean(
+        measurement_diff_abs[measurement_diff_abs < setpoint_step]**2))
+    measurement_stable = (measurement_diff_abs < 2 * measurement_diff_rms)
+
     filter_window = np.ones(filter_window_length) / filter_window_length
-    measurement_filtered = (np.convolve(measurement_stable, filter_window,
-                                        mode='same') >= np.sum(filter_window))
+    measurement_filtered = \
+        np.convolve(measurement_stable, filter_window,
+                    mode='same') > np.sum(filter_window[:-1])
 
-    # if no setpoint is found report error
-    if not np.any(measurement_filtered):
-        raise Warning('No setpoints found. You might want to check the '
-                      'setpoint step scale?')
-
-    # extract setpoint measurement intervals
-    setpoint_boundary = np.diff(np.hstack([0, measurement_filtered]))
+    # extract set-point measurement intervals
+    setpoint_boundary = np.diff(np.concatenate(([0], measurement_filtered)))
     setpoint_start = np.array((setpoint_boundary > 0).nonzero()) - \
         int(filter_window_length / 2)
     setpoint_end = np.array((setpoint_boundary < 0).nonzero()) + \
         int(filter_window_length / 2)
 
-    setpoint_trim = (setpoint_start > filter_window_length) & \
-        (setpoint_end < len(measurement_data) - filter_window_length)
+    setpoint_trim = (setpoint_start > measurement_sweep_start -
+                     filter_window_length // 2) & \
+        (setpoint_end < measurement_sweep_end + filter_window_length // 2)
     setpoint_intervals = zip(setpoint_start[setpoint_trim],
                              setpoint_end[setpoint_trim])
 
-    # aggregate measurements by setpoint interval
+    # if no set-point was found report error
+    if not np.any(setpoint_trim):
+        raise Warning('No set-points found. You might want to check the '
+                      'set-point step scale?')
+
+    # aggregate measurements by set-point interval
     setpoint_mean = [np.mean(measurement_data[start:end])
                      for start, end in setpoint_intervals]
     return setpoint_mean
@@ -166,19 +190,20 @@ class RocketLoggerCalibrationSetup:
 
     def __init__(self, setpoint_count, setpoint_step_voltage,
                  setpoint_step_current_low, setpoint_step_current_high,
-                 dual_sweep):
+                 setpoint_delay, dual_sweep):
         """
         Initialize RocketLogger calibration setup class.
 
-        :param setpoint_count: number of calibration setpoints per channel
+        :param setpoint_count: number of calibration set-points per channel
 
-        :param setpoint_step_voltage: voltage step between setpoints
+        :param setpoint_step_voltage: voltage step between set-points
 
-        :param setpoint_step_current_low: low current step between setpoints
+        :param setpoint_step_current_low: low current step between set-points
 
-        :param setpoint_step_current_high: high current step between setpoints
+        :param setpoint_step_current_high: high current step between set-points
 
-        :param min_stable_samples: min number of stable samples required
+        :param setpoint_delay: minimum delay in seconds between switching the
+                               set-point
 
         :param dual_sweep: set True if dual sweep (up/down) is used
         """
@@ -195,35 +220,36 @@ class RocketLoggerCalibrationSetup:
         self._step_voltage = setpoint_step_voltage
         self._step_current_low = setpoint_step_current_low
         self._step_current_high = setpoint_step_current_high
+        self._delay = setpoint_delay
         self._dual_sweep = dual_sweep
 
     def get_voltage_setpoints(self, calibration=False):
         """
-        Get the real voltage setpoints used in the measurement setup.
+        Get the real voltage set-points used in the measurement setup.
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: vector of the calibration setpoints in volt or ADC bits
+        :returns: vector of the calibration set-points in volt or ADC bits
         """
         return self._get_setpoints(self.get_voltage_step(calibration))
 
     def get_current_low_setpoints(self, calibration=False):
         """
-        Get the real low current setpoints used in the measurement setup.
+        Get the real low current set-points used in the measurement setup.
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: vector of the calibration setpoints in ampere or ADC bits
+        :returns: vector of the calibration set-points in ampere or ADC bits
         """
         return self._get_setpoints(self.get_current_low_step(calibration))
 
     def get_current_high_setpoints(self, calibration=False):
         """
-        Get the real low current setpoints used in the measurement setup.
+        Get the real low current set-points used in the measurement setup.
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: vector of the calibration setpoints in ampere or ADC bits
+        :returns: vector of the calibration set-points in ampere or ADC bits
         """
         return self._get_setpoints(self.get_current_high_step(calibration))
 
@@ -232,7 +258,7 @@ class RocketLoggerCalibrationSetup:
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: the absolute setpoint step value in volt or ADC bits
+        :returns: the absolute set-point step value in volt or ADC bits
         """
         if calibration:
             return abs(self._step_voltage / _ROCKETLOGGER_ADC_STEP_V)
@@ -243,7 +269,7 @@ class RocketLoggerCalibrationSetup:
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: the absolute setpoint step value in ampere or ADC bits
+        :returns: the absolute set-point step value in ampere or ADC bits
         """
         if calibration:
             return abs(self._step_current_low / _ROCKETLOGGER_ADC_STEP_IL)
@@ -254,27 +280,35 @@ class RocketLoggerCalibrationSetup:
 
         :param calibration: set True to get step in estimated ADC bits
 
-        :returns: the absolute setpoint step value in ampere or ADC bits
+        :returns: the absolute set-point step value in ampere or ADC bits
         """
         if calibration:
             return abs(self._step_current_high / _ROCKETLOGGER_ADC_STEP_IH)
         return abs(self._step_current_high)
 
+    def get_delay(self):
+        """
+        Get the minimal delay between changing a set-point.
+
+        :returns: the minimal delay in seconds.
+        """
+        return self._delay
+
     def get_setpoint_count(self):
         """
-        Get the number of setpoints used in the setup setpoint.
+        Get the number of set-points used in the setup set-point.
 
-        :returns: the number of setpoints
+        :returns: the number of set-points
         """
         return self._setpoint_count
 
     def _get_max_setpoint(self, setpoint_step):
         """
-        Get the maximum absolute value of the extreme setpoint.
+        Get the maximum absolute value of the extreme set-point.
 
-        :param setpoint_step: the step size between setpoints
+        :param setpoint_step: the step size between set-points
 
-        :returns: maximum absolute setpoint value
+        :returns: maximum absolute set-point value
         """
         if self._dual_sweep:
             return setpoint_step * (self._setpoint_count - 1) / 4
@@ -283,11 +317,11 @@ class RocketLoggerCalibrationSetup:
 
     def _get_setpoints(self, setpoint_step):
         """
-        Generate the setpoints using a given step size.
+        Generate the set-points using a given step size.
 
-        :param setpoint_step: the step size to use for the setpoint generation
+        :param setpoint_step: the step size to use for the set-point generation
 
-        :returns: vector of the setpoint values
+        :returns: vector of the set-point values
         """
         max_value = self._get_max_setpoint(setpoint_step)
         setpoints = np.arange(-max_value, max_value + setpoint_step,
@@ -295,7 +329,7 @@ class RocketLoggerCalibrationSetup:
 
         # add down sweep for dual sweep setups
         if self._dual_sweep:
-            setpoints = np.hstack([setpoints, setpoints[-2::-1]])
+            setpoints = np.concatenate((setpoints, setpoints[-2::-1]))
         return setpoints
 
 
@@ -304,6 +338,7 @@ CALIBRATION_SETUP_SMU2450 = RocketLoggerCalibrationSetup(
     setpoint_step_voltage=100e-3,
     setpoint_step_current_low=20e-6,
     setpoint_step_current_high=2e-3,
+    setpoint_delay=250e-3,
     dual_sweep=True,
 )
 """Reference calibration setup using the Keithley 2450 SMU setup."""
@@ -313,6 +348,7 @@ CALIBRATION_SETUP_BASIC = RocketLoggerCalibrationSetup(
     setpoint_step_voltage=5.0,
     setpoint_step_current_low=2e-3,
     setpoint_step_current_high=0.5,
+    setpoint_delay=250e-3,
     dual_sweep=False,
 )
 """Basic calibration setup with 3 point measurements (min, zero, max)."""
@@ -341,7 +377,7 @@ class RocketLoggerCalibration:
         self._data_i2l = None
         self._data_i2h = None
 
-        self._calibration_timestamp = None
+        self._calibration_time = None
         self._calibration_scale = None
         self._calibration_offset = None
         self._calibration_residuals = None
@@ -392,15 +428,18 @@ class RocketLoggerCalibration:
         self._data_i2l = _rld_copy_or_load(data_i2l)
         self._data_i2h = _rld_copy_or_load(data_i2h)
 
+        # validate consistency of data
+        self._validate_data()
+
         # reset existing error calculations, keep calibration values if loaded
         self._error_offset = None
         self._error_scale = None
         self._error_rmse = None
 
     def recalibrate(self, setup, fix_signs=True, target_offset_error=1,
-                    regression_alorithm=regression_linear, **kwargs):
+                    regression_algorithm=regression_linear, **kwargs):
         """
-        Perform channel calibration with loaded measeurement data, overwriting
+        Perform channel calibration with loaded measurement data, overwriting
         any loaded calibration parameters.
 
         :param setup: Calibration setup used for the measurements using the
@@ -413,10 +452,11 @@ class RocketLoggerCalibration:
                                     of the zero error to use as offset error
                                     for the error calculations
 
-        :param regression_alorithm: Alorithm to use for the regression, taking
-                                    the setpoint measurement and reference
-                                    values as arguments and providing the
-                                    resulting offset and scale as output
+        :param regression_algorithm: Algorithm to use for the regression,
+                                     taking the set-point measurement and
+                                     reference values as arguments and
+                                     providing the resulting offset and scale
+                                     as output
 
         :param kwargs: Optional names arguments passed to the regression
                        algorithm function
@@ -429,29 +469,33 @@ class RocketLoggerCalibration:
         v_ref = setup.get_voltage_setpoints()
         ih_ref = setup.get_current_high_setpoints()
         il_ref = setup.get_current_low_setpoints()
-        reference = [ih_ref, il_ref, v_ref, v_ref] * 2
+        reference = [v_ref] * 4 + [il_ref, ih_ref] * 2
 
         v_step = setup.get_voltage_step(calibration=True)
         ih_step = setup.get_current_high_step(calibration=True)
         il_step = setup.get_current_low_step(calibration=True)
-        reference_steps = [ih_step, il_step, v_step, v_step] * 2
+        reference_steps = [v_step] * 4 + [il_step, ih_step] * 2
 
-        # extract mesurement information
+        # extract measurement information
         measurement_data = [
-            self._data_i1h, self._data_i1l, self._data_v, self._data_v,
-            self._data_i2h, self._data_i2l, self._data_v, self._data_v]
-        measurement_traces = [data.get_data(channel).squeeze() / scale
-                              for data, channel, scale
+            self._data_v, self._data_v, self._data_v, self._data_v,
+            self._data_i1l, self._data_i1h, self._data_i2l, self._data_i2h]
+        measurement_traces = [data.get_data(channel).squeeze()
+                              for data, channel
                               in zip(measurement_data,
-                                     _CALIBRATION_CHANNEL_NAMES,
-                                     _CALIBRATION_CHANNEL_SCALES)]
+                                     _CALIBRATION_CHANNEL_NAMES)]
         timestamp = np.datetime64(min([x._header['start_time']
                                        for x in measurement_data]))
-        measurement = [_extract_setpoint_measurement(t, s)
-                       for t, s in zip(measurement_traces, reference_steps)]
+
+        # filter window length: 150 ms (=250-100 ms),
+        sample_rate = self._data_v.get_header()['sample_rate']
+        setpoint_filter_window = int(0.75 * sample_rate * setup.get_delay())
+        measurement = [_extract_setpoint_measurement(
+            t, s, filter_window_length=setpoint_filter_window)
+            for t, s in zip(measurement_traces, reference_steps)]
 
         # perform regression
-        regression_result = [regression_alorithm(x, y)
+        regression_result = [regression_algorithm(x, y)
                              for x, y in zip(measurement, reference)]
         offsets, scales = zip(*regression_result)
 
@@ -473,8 +517,7 @@ class RocketLoggerCalibration:
         self._calibration_scale = np.array(
             [scale / file_scale for scale, file_scale
              in zip(scales, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
-        self._calibration_timestamp = np.array(timestamp,
-                                               dtype='datetime64[s]')
+        self._calibration_time = np.array(timestamp, dtype='datetime64[s]')
         self._error_offset = np.array(offset_errors)
         self._error_scale = np.array(
             [np.max(scale_error[np.abs(ref) > 0.1 * np.abs(np.max(ref))])
@@ -483,9 +526,19 @@ class RocketLoggerCalibration:
 
         # check and invert scales where necessary
         if fix_signs:
-            for ch in _CALIBRATION_POSITIVE_SCALE_CHANNELS:
-                if self._calibration_scale[ch] < 0:
+            for ch, pos in enumerate(_CALIBRATION_CHANNEL_SCALES_POSITIVE):
+                if pos and self._calibration_scale[ch] < 0:
                     self._calibration_scale[ch] = -self._calibration_scale[ch]
+
+        # append PRU timestamp constant calibration values
+        self._calibration_offset = np.concatenate(
+            (self._calibration_offset, [_CALIBRATION_PRU_CYCLES_OFFSET]))
+        self._calibration_scale = np.concatenate(
+            (self._calibration_scale, [_CALIBRATION_PRU_CYCLES_SCALE]))
+        # error statistics do not exist for PRU timestamp (design values)
+        self._error_offset = np.concatenate((self._error_offset, [np.NaN]))
+        self._error_scale = np.concatenate((self._error_scale, [np.NaN]))
+        self._error_rmse = np.concatenate((self._error_rmse, [np.NaN]))
 
     def print_statistics(self):
         """
@@ -494,7 +547,7 @@ class RocketLoggerCalibration:
         print('RocketLogger Calibration Statistics')
         try:
             self._check_calibration_exists()
-            print('Measurement time:   {}'.format(self._calibration_timestamp))
+            print('Measurement time:   {}'.format(self._calibration_time))
             print()
             print('Calibration values:')
             print('  Channel  :  Offset [bit]  :  Scale [unit/bit]')
@@ -519,20 +572,41 @@ class RocketLoggerCalibration:
     def read_calibration_file(self, filename=ROCKETLOGGER_CALIBRATION_FILE):
         """
         Load an existing calibration file.
+
+        :param filename: Name of the file to read the calibration values from
         """
         data = np.fromfile(filename, dtype=_CALIBRATION_FILE_DTYPE).squeeze()
 
-        self._calibration_timestamp = data['timestamp']
+        # file consistency check
+        if data.size == 0:
+            raise RocketLoggerFileError(
+                'Invalid RocketLogger calibration file, unable to read data.')
+        if data['file_magic'] != _CALIBRATION_FILE_MAGIC:
+            raise RocketLoggerFileError('Invalid RocketLogger calibration '
+                                        'file, invalid file magic {:x}.'
+                                        .format(data['file_magic']))
+
+        if data['file_version'] != _CALIBRATION_FILE_VERSION:
+            raise RocketLoggerFileError(
+                'Unsupported RocketLogger data file version {}.'
+                .format(data['file_version']))
+
+        if data['header_length'] != _CALIBRATION_FILE_HEADER_LENGTH:
+            raise RocketLoggerFileError('Invalid RocketLogger calibration '
+                                        'file, invalid header length {:x}.'
+                                        .format(data['header_length']))
+
+        self._calibration_time = data['calibration_time']
         self._calibration_offset = data['offset']
         self._calibration_scale = data['scale']
 
-        if self._calibration_timestamp > np.datetime64('now'):
+        if self._calibration_time > np.datetime64('now'):
             raise RocketLoggerCalibrationError(
-                'Invalid timestamp in calibration file')
-        if len(self._calibration_offset) != 8:
+                'Invalid calibration time in calibration file')
+        if len(self._calibration_offset) != len(_CALIBRATION_CHANNEL_NAMES):
             raise RocketLoggerCalibrationError(
                 'Invalid offset data in calibration file')
-        if len(self._calibration_scale) != 8:
+        if len(self._calibration_scale) != len(_CALIBRATION_CHANNEL_NAMES):
             raise RocketLoggerCalibrationError(
                 'Invalid scale data in calibration file')
 
@@ -550,7 +624,10 @@ class RocketLoggerCalibration:
         self._check_calibration_exists()
 
         # assemble file data write to file
-        filedata = np.array([(self._calibration_timestamp,
+        filedata = np.array([(_CALIBRATION_FILE_MAGIC,
+                              _CALIBRATION_FILE_VERSION,
+                              _CALIBRATION_FILE_HEADER_LENGTH,
+                              self._calibration_time,
                               self._calibration_offset,
                               self._calibration_scale)],
                             dtype=_CALIBRATION_FILE_DTYPE)
@@ -580,7 +657,7 @@ class RocketLoggerCalibration:
 
     def _check_calibration_exists(self):
         """Check for existing calibration data, raise error if not."""
-        if any([self._calibration_timestamp is None,
+        if any([self._calibration_time is None,
                 self._calibration_offset is None,
                 self._calibration_scale is None]):
             raise RocketLoggerCalibrationError(
@@ -594,11 +671,20 @@ class RocketLoggerCalibration:
                 'No error calculation data available. '
                 'Perform calculation first.')
 
+    def _validate_data(self):
+        """Validate loaded measurement data for consistency."""
+        data = [self._data_v, self._data_i1l, self._data_i1h, self._data_i2l,
+                self._data_i2h]
+        sample_rates = [d.get_header()['sample_rate'] for d in data]
+        if not all(x == sample_rates[0] for x in sample_rates):
+            raise RocketLoggerCalibrationError(
+                'inconsistent sample rate across measurements!')
+
     def __eq__(self, other):
         """Return True if other is the same calibration."""
         if isinstance(other, RocketLoggerCalibration):
             return all(
-                [self._calibration_timestamp == other._calibration_timestamp,
+                [self._calibration_time == other._calibration_time,
                  np.array_equal(self._calibration_scale,
                                 other._calibration_scale),
                  np.array_equal(self._calibration_offset,

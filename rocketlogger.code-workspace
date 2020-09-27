@@ -4,7 +4,10 @@
 			"path": "software/rocketlogger"
 		},
 		{
-			"path": "software/webserver"
+			"path": "software/rocketlogger_pru"
+		},
+		{
+			"path": "software/node_server"
 		},
 		{
 			"path": "script/python"

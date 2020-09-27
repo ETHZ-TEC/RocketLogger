@@ -2,7 +2,7 @@
 # Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
 # Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]
 #
-# Copyright (c) 2016-2018, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -62,57 +62,14 @@ else
   echo "[ OK ] Copy system configuration scripts successful."
 fi
 
-
-# grow file system size and reboot
-echo "Set hostname and grow file system size. You will be asked twice for the user password, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "sudo sed s/beaglebone/${HOSTNAME}/g -i /etc/hostname /etc/hosts; cd /opt/scripts/tools/ && sudo ./grow_partition.sh && sudo reboot"
-
-# verify grow file system size worked
-GROW=$?
-
-if [ $GROW -ne 0 ]; then
-  echo "[ !! ] Grow file system size failed (code $GROW). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
-  exit $GROW
-else
-  echo "[ OK ] Grow file system size was successful."
-fi
-
-
-# wait for system to reboot
-echo -n "Waiting for the system to reboot..."
-sleep 5
-while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
-  REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
-  echo -n "."
-  ping -c1 -W2 ${HOST} > /dev/null
-  # break timeout loop on success
-  if [ $? -eq 0 ]; then
-    sleep 2
-    echo " done."
-    break
-  fi
-done
-
-# check for connectibity loss
-if [ $REBOOT_TIMEOUT -eq 0 ]; then
-  echo ""
-  echo "[ !! ] System reboot timed out. MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
-  exit 1
-fi
-
-# waiting for ssh login
-echo "Waiting for ssh connection. You will be aked for the default user password, which is 'temppwd', when the system is ready."
-sleep 5
-ssh -F /dev/null -p 22 -t debian@${HOST} "exit"
-
 # perform system configuration
 echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh)"
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh ${HOSTNAME})"
 
 # verify system configuration worked
 CONFIG=$?
 
-if [ $CONFIG -ne 255 ]; then
+if [ $CONFIG -ne 0 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
   exit $CONFIG
 else
