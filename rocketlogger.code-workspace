@@ -23,20 +23,21 @@
 		},
 		{
 			"path": "software/device_tree_overlay"
-		},
+		}
 	],
 	"settings": {
-		"C_Cpp.autoAddFileAssociations": false,
-		"mesonbuild.configureOnOpen": true
+		"C_Cpp.autocomplete": "Disabled",
+		"C_Cpp.intelliSenseEngine": "Disabled",
+		"C_Cpp.errorSquiggles": "Disabled",
+		"clangd.arguments": ["-log=verbose", "-pretty", "--background-index", "--compile-commands-dir=${workspaceFolder}/builddir"]
 	},
 	"extensions": {
 		"recommendations": [
+			"llvm-vs-code-extensions.vscode-clangd",
 			"ms-vscode.cpptools",
 			"ms-vscode-remote.remote-ssh",
 			"ms-python.python",
-			"asabil.meson",
-			"llvm-vs-code-extensions.vscode-clangd",
-			"yzhang.markdown-all-in-one",
+			"yzhang.markdown-all-in-one"
 		]
 	},
 }
