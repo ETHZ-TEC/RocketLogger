@@ -24,8 +24,19 @@
 		{
 			"path": "software/device_tree_overlay"
 		},
-		{
-			"path": "../rocketlogger.wiki"
-		},
 	],
+	"settings": {
+		"C_Cpp.autoAddFileAssociations": false,
+		"mesonbuild.configureOnOpen": true
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools",
+			"ms-vscode-remote.remote-ssh",
+			"ms-python.python",
+			"asabil.meson",
+			"llvm-vs-code-extensions.vscode-clangd",
+			"yzhang.markdown-all-in-one",
+		]
+	},
 }
