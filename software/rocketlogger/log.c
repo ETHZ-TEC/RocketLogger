@@ -106,7 +106,7 @@ int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     }
 
     // write time, log level, and message to log file
-    fprintf(log_fp, time_str);
+    fprintf(log_fp, "%s", time_str);
     switch (log_level) {
     case RL_LOG_ERROR:
         fprintf(log_fp, "ERROR\t");

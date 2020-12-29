@@ -83,18 +83,18 @@
  * Data unit definition
  */
 enum rl_unit {
-    RL_UNIT_UNITLESS = 0,           //!< Unitless
-    RL_UNIT_VOLT = 1,               //!< Voltage (electric)
-    RL_UNIT_AMPERE = 2,             //!< Current (electric)
-    RL_UNIT_BINARY = 3,             //!< Binary signal
-    RL_UNIT_RANGE_VALID = 4,        //!< Range valid information
-    RL_UNIT_LUX = 5,                //!< Lux (illuminance)
-    RL_UNIT_DEG_C = 6,              //!< Degree celsius (temperature)
-    RL_UNIT_INTEGER = 7,            //!< Integer channel (numeric)
-    RL_UNIT_PERCENT = 8,            //!< Percent (numeric, humidity)
-    RL_UNIT_PASCAL = 9,             //!< Pascal (pressure)
-    RL_UNIT_SECOND = 10,            //!< Second (time delta)
-    RL_UNIT_UNDEFINED = 0xffffffff, //!< Undefined unit
+    RL_UNIT_UNITLESS = 0,                   //!< Unitless
+    RL_UNIT_VOLT = 1,                       //!< Voltage (electric)
+    RL_UNIT_AMPERE = 2,                     //!< Current (electric)
+    RL_UNIT_BINARY = 3,                     //!< Binary signal
+    RL_UNIT_RANGE_VALID = 4,                //!< Range valid information
+    RL_UNIT_LUX = 5,                        //!< Lux (illuminance)
+    RL_UNIT_DEG_C = 6,                      //!< Degree celsius (temperature)
+    RL_UNIT_INTEGER = 7,                    //!< Integer channel (numeric)
+    RL_UNIT_PERCENT = 8,                    //!< Percent (numeric, humidity)
+    RL_UNIT_PASCAL = 9,                     //!< Pascal (pressure)
+    RL_UNIT_SECOND = 10,                    //!< Second (time delta)
+    RL_UNIT_UNDEFINED = (int)0xffffffff,    //!< Undefined unit
 };
 
 /**
