@@ -199,7 +199,10 @@ clean:
 	$(REMOVE) $(OBJ_DIR)/*.o $(DEP_DIR)/*.d $(TARGET_BINARY) $(TARGET_DAEMON)
 
 code-format:
-	find . -type f \( -iname "*.c" -o -iname "*.h" -o -iname "*.cpp" \) -exec clang-format -style=file -i {} \;
+	find . -type f \( -not -path "./builddir*" -a -iname "*.[ch]" -o -iname "*.cpp" \) -exec clang-format --style=file -i {} \;
+
+code-lint:
+	find . -type f \( -not -path "./builddir*" -a \( -iname "*.c" -o -iname "*.cpp" \) \) -exec clang-tidy -p builddir --config= {} +
 
 
 #####  INCLUDE DEPENDENCIES  #####
