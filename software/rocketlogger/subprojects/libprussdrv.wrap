@@ -1,0 +1,16 @@
+[wrap-file]
+directory = am335x_pru_package-master
+source_url = https://github.com/beagleboard/am335x_pru_package/archive/master.zip
+source_filename = am335x_pru_package-master.zip
+source_hash = fbe30e2e98cde36c44d5ef746e0d293b00ba41562c03f4a069156d6ae794058b
+
+#[wrap-git]
+#url =https://github.com/beagleboard/am335x_pru_package.git
+#revision = head
+
+patch_url = /dev/null
+patch_filename = am335x_pru_package-master.patch.tar.bz2
+patch_hash = 93275ccc4dbc0cc391d4185ed3afd84797d8fd74252c277f934801cb2dd51f92
+
+[provide]
+libprussdrv=libprussdrv_dep
