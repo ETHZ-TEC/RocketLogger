@@ -28,12 +28,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-project('rocketlogger', 'c', 'cpp',
-        version : '1.99',
-        default_options : ['buildtype=debugoptimized',
-            'c_std=c11', 'cpp_std=c++11', 'warning_level=3',
-            'prefix=/usr', 'install_umask=0022'],
-        license : 'BSD-3-Clause')
+project('rocketlogger', 'c',
+    version : '1.99',
+    default_options : ['buildtype=debugoptimized',
+        'c_std=c11', 'cpp_std=c++11', 'warning_level=3',
+        'prefix=/usr', 'install_umask=0022'],
+    license : 'BSD-3-Clause')
+
 
 ## subprojects
 libprussdrv_proj = subproject('libprussdrv')
@@ -43,29 +44,20 @@ libprussdrv_dep = libprussdrv_proj.get_variable('libprussdrv_dep')
 ## program executables
 prog_python = import('python').find_installation('python3')
 compiler_cc = meson.get_compiler('c')
-compiler_cxx = meson.get_compiler('cpp')
+compiler_pru = find_program('clpru')
+linker_pru = find_program('lnkpru')
+objcopy_pru = find_program('hexpru')
 
 
-# cross compilation for Beaglebone Black
-# SoC: AM335x 1GHz ARM® Cortex-A8 (ARM v7-a with NEON accelerator)
-
-## libraries
+## library dependencies
 libi2c_dep = dependency('libi2c', required : false)
 if not libi2c_dep.found()
-    libi2c_dep = compiler_cc.find_library('libi2c', required: false)
+    libi2c_dep = compiler_cc.find_library('libi2c', required : false)
     if not libi2c_dep.found()
         warning('manually adding libi2c linker flag')
-        add_project_link_arguments('-li2c', language: ['c', 'cpp'])
+        add_project_link_arguments('-li2c', language : 'c')
     endif
 endif
-
-# libprussdrv_dep = dependency('libprussdrv', required : false)
-# if not libprussdrv_dep.found()
-#     warning('manually adding libprussdrv linker flag')
-#     add_project_link_arguments('-lprussdrv', language: ['c', 'cpp'])
-#     # libprussdrv_proj = subproject('libprussdrv')
-#     # libprussdrv_dep = libprussdrv_proj.get_variable('libprussdrv_dep')
-# endif
 
 common_deps = [
     dependency('ncurses'),
@@ -79,15 +71,15 @@ daemon_deps = []
 
 ## compiler options
 add_project_arguments('-D_LARGEFILE64_SOURCE',
-                      language: ['c', 'cpp'])
+    language : 'c')
 
 
 ## linker options
+pru_linker_script = 'pru/AM335x_PRU.cmd'
 
 
 ## generated dependencies
-version_c = custom_target(
-    'version.c',
+version_c = custom_target('version.c',
     output : 'version.c',
     input : 'version_gen.py',
     command : [prog_python, '@INPUT@', '@OUTPUT@'],
@@ -97,6 +89,9 @@ version_c = custom_target(
 
 ## sources
 common_src = [
+    'sensor/bme280.c',
+    'sensor/sensor.c',
+    'sensor/tsl4531.c',
     'calibration.c',
     'gpio.c',
     'log.c',
@@ -113,23 +108,37 @@ common_src = [
     'util.c',
     version_c,
 ]
-sensor_src = [
-    'sensor/bme280.c',
-    'sensor/sensor.c',
-    'sensor/tsl4531.c',
-]
 binary_src = [
     'rocketlogger.c',
 ]
 daemon_src = [
     'rocketloggerd.c',
 ]
+pru_src = [
+    'pru/rocketlogger.asm',
+]
 
 
 ## targets
-binary_exe = executable('rocketlogger', binary_src + common_src + sensor_src,
-                        dependencies: binary_deps + common_deps,
-                        install : true, install_dir : '/usr/bin')
-daemon_exe = executable('rocketloggerd', daemon_src + common_src + sensor_src,
-                        dependencies: daemon_deps + common_deps,
-                        install : true, install_dir : '/usr/bin')
+binary_exe = executable('rocketlogger', binary_src + common_src,
+    dependencies: binary_deps + common_deps,
+    install : true)
+daemon_exe = executable('rocketloggerd', daemon_src + common_src,
+    dependencies: daemon_deps + common_deps,
+    install : true)
+
+# custom PRU targets
+pru_firmware_obj = custom_target('rocketlogger.asm.o',
+    output : 'rocketlogger.asm.o',
+    input : 'pru/rocketlogger.asm',
+    command : [compiler_pru, '--silicon_version=3', '--asm_listing', '--output_file=@OUTPUT@', '@INPUT0@'])
+pru_firmware_out = custom_target('rocketlogger.out',
+    output : 'rocketlogger.out',
+    input : [pru_linker_script, pru_firmware_obj],
+    command : [linker_pru, '--output_file=@OUTPUT@', '@INPUT@'])
+pru_firmware_bin = custom_target('rocketlogger.bin',
+    output : 'rocketlogger.bin',
+    input : pru_firmware_out,
+    command : [objcopy_pru, '--binary', '--outfile=@OUTPUT@', '@INPUT@'],
+    install : true,
+    install_dir : '/lib/firmware')
