@@ -5,7 +5,7 @@ Documentation=https://rocketlogger.ethz.ch/
 
 [Service]
 Type=simple
-ExecStart=/bin/rocketloggerd
+ExecStart=/usr/bin/rocketloggerd
 PIDFile=/run/rocketloggerd.pid
 
 User=rocketlogger

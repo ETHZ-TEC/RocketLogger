@@ -39,8 +39,9 @@ project('rocketlogger', 'c',
 ## subprojects
 libprussdrv_proj = subproject('libprussdrv')
 libprussdrv_dep = libprussdrv_proj.get_variable('libprussdrv_dep')
-dt_overlay_proj = subproject('bb-overlays')
-dt_overlay_dep = dt_overlay_proj.get_variable('bboverlays_dep')
+bb_overlay_proj = subproject('bb-overlays')
+bb_overlay_dep = bb_overlay_proj.get_variable('bboverlays_dep')
+dt_overlay_dep = bb_overlay_dep.partial_dependency(includes : true)
 
 
 ## program executables
@@ -124,20 +125,32 @@ dt_overlay_src = [
     'overlay/ROCKETLOGGER.dts',
 ]
 
+## configuration files
+systemd_service_src = [
+    'config/rocketlogger.service',
+]
+pru_module_config_src = [
+    'config/rocketlogger.conf',
+]
+
 
 ## targets
 binary_exe = executable('rocketlogger', binary_src + common_src,
     dependencies: binary_deps + common_deps,
-    install : true)
+    install : true,
+    install_mode : ['rwsr-xr-x', 0, 0])
 daemon_exe = executable('rocketloggerd', daemon_src + common_src,
     dependencies: daemon_deps + common_deps,
-    install : true)
-# @todo: configure sticky bit and install systemd service configuration
+    install : true,
+    install_mode : ['rwsr-xr-x', 0, 0])
+install_data(systemd_service_src,
+    install_dir : get_option('sysconfdir') / 'systemd' / 'system',
+    install_mode : ['rw-r--r--', 0, 0])
 
 # custom PRU targets
 pru_firmware_obj = custom_target('rocketlogger.asm.o',
     output : 'rocketlogger.asm.o',
-    input : 'pru/rocketlogger.asm',
+    input : pru_src,
     command : [compiler_pru, '--silicon_version=3', '--asm_listing', '--output_file=@OUTPUT@', '@INPUT0@'])
 pru_firmware_out = custom_target('rocketlogger.out',
     output : 'rocketlogger.out',
@@ -149,21 +162,23 @@ pru_firmware_bin = custom_target('rocketlogger.bin',
     command : [objcopy_pru, '--binary', '--outfile=@OUTPUT@', '@INPUT@'],
     install : true,
     install_dir : '/lib/firmware')
-# @todo: install shared memory size configuration file
+install_data(pru_module_config_src,
+    install_dir : get_option('sysconfdir') / 'modeprobe.d',
+    install_mode : ['rw-r--r--', 0, 0])
 
 # custom device tree overlay target
 dt_overlay_tmp = custom_target('ROCKETLOGGER.dts.tmp',
     output : 'ROCKETLOGGER.dts.tmp',
-    input : 'overlay/ROCKETLOGGER.dts',
-    command : ['cc', '-E', '-nostdinc', '-undef', '-x', 'assembler-with-cpp', '-D__DTS__',
-        '-I../subprojects/bb.org-overlays-master/include',
+    input : dt_overlay_src,
+    command : compiler_cc.cmd_array() + ['-E', '-nostdinc', '-undef', '-x', 'assembler-with-cpp', '-D__DTS__',
+        '-I../subprojects/bb.org-overlays-master/include',  # @todo: derive include path from subproject
         '-o', '@OUTPUT@', '@INPUT@'])
-# @todo: derive include path from bb_overlay_dep dependency
-
 dt_overlay_bin = custom_target('ROCKETLOGGER.dtbo',
     output : 'ROCKETLOGGER.dtbo',
     input : dt_overlay_tmp,
     command : [compiler_dt, '--out-format=dtb', '-@', '--out=@OUTPUT@', '@INPUT@'],
     install : true,
     install_dir : '/lib/firmware')
-# @todo: install uEnv.txt patches
+
+# post install configuration of systemd service and device tree overlay
+meson.add_install_script('install.sh')
