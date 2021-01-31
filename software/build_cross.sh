@@ -10,5 +10,5 @@ docker buildx inspect --bootstrap
 docker buildx build --platform linux/arm/v7 -t beaglebone_builder .
 
 # build rocketlogger binary
-docker run --platform linux/arm/v7 --mount type=bind,source="$(pwd)/rocketlogger",target=/home/rocketlogger \
+docker run --platform linux/arm/v7 --user "$(id -u):$(id -g)" --mount type=bind,source="$(pwd)/rocketlogger",target=/home/rocketlogger \
     -t beaglebone_builder /bin/bash -c "cd rocketlogger && meson builddir && cd builddir && ninja"

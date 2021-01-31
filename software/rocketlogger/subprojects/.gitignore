@@ -1,1 +1,10 @@
-*/
+# ignore all by default
+/*
+
+# include repository wrap files
+!*.wrap
+
+# include patch archives
+!packagecache
+packagecache/*
+!packagecache/*.patch.tar.bz2

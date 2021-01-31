@@ -1,6 +1,6 @@
 # Meson build configuration.
 #
-# Copyright (c) 2020, Lukas Sigrist <lsigrist@mailbox.org>
+# Copyright (c) 2020-2021, Lukas Sigrist <lsigrist@mailbox.org>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,8 @@ project('rocketlogger', 'c',
 ## subprojects
 libprussdrv_proj = subproject('libprussdrv')
 libprussdrv_dep = libprussdrv_proj.get_variable('libprussdrv_dep')
+dt_overlay_proj = subproject('bb-overlays')
+dt_overlay_dep = dt_overlay_proj.get_variable('bboverlays_dep')
 
 
 ## program executables
@@ -47,6 +49,7 @@ compiler_cc = meson.get_compiler('c')
 compiler_pru = find_program('clpru')
 linker_pru = find_program('lnkpru')
 objcopy_pru = find_program('hexpru')
+compiler_dt = find_program('dtc')
 
 
 ## library dependencies
@@ -117,6 +120,9 @@ daemon_src = [
 pru_src = [
     'pru/rocketlogger.asm',
 ]
+dt_overlay_src = [
+    'overlay/ROCKETLOGGER.dts',
+]
 
 
 ## targets
@@ -126,6 +132,7 @@ binary_exe = executable('rocketlogger', binary_src + common_src,
 daemon_exe = executable('rocketloggerd', daemon_src + common_src,
     dependencies: daemon_deps + common_deps,
     install : true)
+# @todo: configure sticky bit and install systemd service configuration
 
 # custom PRU targets
 pru_firmware_obj = custom_target('rocketlogger.asm.o',
@@ -142,3 +149,21 @@ pru_firmware_bin = custom_target('rocketlogger.bin',
     command : [objcopy_pru, '--binary', '--outfile=@OUTPUT@', '@INPUT@'],
     install : true,
     install_dir : '/lib/firmware')
+# @todo: install shared memory size configuration file
+
+# custom device tree overlay target
+dt_overlay_tmp = custom_target('ROCKETLOGGER.dts.tmp',
+    output : 'ROCKETLOGGER.dts.tmp',
+    input : 'overlay/ROCKETLOGGER.dts',
+    command : ['cc', '-E', '-nostdinc', '-undef', '-x', 'assembler-with-cpp', '-D__DTS__',
+        '-I../subprojects/bb.org-overlays-master/include',
+        '-o', '@OUTPUT@', '@INPUT@'])
+# @todo: derive include path from bb_overlay_dep dependency
+
+dt_overlay_bin = custom_target('ROCKETLOGGER.dtbo',
+    output : 'ROCKETLOGGER.dtbo',
+    input : dt_overlay_tmp,
+    command : [compiler_dt, '--out-format=dtb', '-@', '--out=@OUTPUT@', '@INPUT@'],
+    install : true,
+    install_dir : '/lib/firmware')
+# @todo: install uEnv.txt patches
