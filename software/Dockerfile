@@ -1,4 +1,4 @@
-# RocketLogger binary builder image
+# RocketLogger image build environment
 FROM arm32v7/debian:buster-slim
 WORKDIR /opt
 
