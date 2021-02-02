@@ -108,9 +108,10 @@ fi
 
 
 ## install RocketLogger software
-# copy software sources
+# copy software and web interface sources
 echo "> Copy RocketLogger sources"
 cp --recursive /home/rocketlogger/ ${ROOTFS}/home/rocketlogger/
+cp --recursive /home/node_server/ ${ROOTFS}/home/rocketlogger/
 chown --recursive 1001:1001 ${ROOTFS}/home/rocketlogger/
 
 # chroot to install software
@@ -124,6 +125,19 @@ if [ $INSTALL -ne 0 ]; then
   exit $INSTALL
 else
   echo "[ OK ] Software installation was successful."
+fi
+
+# chroot to install web interface
+echo "> Chroot to build and install web interface"
+chroot ${ROOTFS} /bin/bash -c "cd /home/rocketlogger/node_server && ./install.sh"
+
+# verify web interface installation configuration was successful
+WEB=$?
+if [ $WEB -ne 0 ]; then
+  echo "[ !! ] Web interface installation failed (code $WEB). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY WEB INTERFACE INSTALLATION."
+  exit $WEB
+else
+  echo "[ OK ] Web interface installation was successful."
 fi
 
 

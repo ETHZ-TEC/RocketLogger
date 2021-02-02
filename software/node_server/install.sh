@@ -47,7 +47,8 @@ PLOTLY_VERSION=1.53.0
 echo "> Install required system packages"
 sudo apt install --assume-yes \
   nodejs                      \
-  npm
+  npm                         \
+  rsync
 
 
 ## system configuration

@@ -67,8 +67,11 @@ apt-get install --assume-yes  \
     git                       \
     meson                     \
     ninja-build               \
+    nodejs                    \
+    npm                       \
     ntp                       \
     pkg-config                \
+    rsync                     \
     ti-pru-cgt-installer      \
     wget                      \
     libi2c-dev                \
