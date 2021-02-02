@@ -1,6 +1,8 @@
 #!/bin/bash
-# Flash the beagle bone image
+# Flash a BeagleBone image to an SD card
+# Usage: ./flash_image.sh <image.img[.xz]> <sdcard-dev>
 #
+# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 
@@ -39,6 +41,12 @@ SDCARD_DEV=$2
 echo "> Checking root permission"
 if [[ $(id -u) -ne 0 ]]; then
   echo "Need to run as root (e.g. using sudo)"
+  exit 1
+fi
+
+# check arguments
+if [ $# -lt 2 ]; then
+  echo "Usage: ./flash_image.sh <image.img[.xz]> <sdcard-dev>"
   exit 1
 fi
 

@@ -75,20 +75,17 @@ else
 fi
 
 # perform RocketLogger software installation
-
-#TODO:
-# 1) await reboot
-# 2) copy sources
-# 3) remotely build and install
+#TODO: a) await reboot, b) copy sources, c) remotely build and install
 
 # verify software installation configuration was successful
 INSTALL=$?
-if [ $INSTALL -ne 0 ]; then
-  echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
-  exit $INSTALL
-else
-  echo "[ OK ] Software installation was successful."
-fi
+echo "[ !! ] Software skipped as not (yet) supported. Installation software manually."
+# if [ $INSTALL -ne 0 ]; then
+#   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
+#   exit $INSTALL
+# else
+#   echo "[ OK ] Software installation was successful."
+# fi
 
 
 # hint on the next setup step

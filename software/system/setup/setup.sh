@@ -60,24 +60,21 @@ echo "> Update system and install software dependencies"
 # update package lists
 apt-get update
 
-# install dependencies (necessary)
+# install dependencies
 apt-get install --assume-yes  \
     device-tree-compiler      \
     gcc                       \
+    git                       \
     meson                     \
     ninja-build               \
     ntp                       \
     pkg-config                \
     ti-pru-cgt-installer      \
+    wget                      \
     libi2c-dev                \
     libncurses5-dev           \
     libzmq3-dev
 
-# # install optional dependencies
-# apt-get install --assume-yes  \
-#     git                       \
-#     nodejs                    \
-#     wget
 
 ## default login
 echo "> Create new user 'rocketlogger'"
