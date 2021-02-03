@@ -79,11 +79,10 @@ echo "> Mount image file '${IMAGE}' to ${ROOTFS}"
 mount -o loop,offset=$((512*8192)) "${IMAGE}" ${ROOTFS}
 
 echo "> Bind system mounts"
-mount --bind /dev ${ROOTFS}/dev/
-mount --bind /sys ${ROOTFS}/sys/
-mount --bind /proc ${ROOTFS}/proc/
+mount --bind /dev ${ROOTFS}/dev
+mount --bind /sys ${ROOTFS}/sys
+mount --bind /proc ${ROOTFS}/proc
 mount --bind /dev/pts ${ROOTFS}/dev/pts
-mount --bind setup ${ROOTFS}/root/
 
 # map resolv.conf for network connectivity
 echo "> Bind temporary network configuration"
@@ -92,10 +91,16 @@ touch ${ROOTFS}/run/connman/resolv.conf
 mount --bind /etc/resolv.conf ${ROOTFS}/run/connman/resolv.conf
 
 
+# copy setup scripts, software and web interface sources
+echo "> Copy RocketLogger setup scripts and software sources"
+cp --recursive /home/system/setup/ ${ROOTFS}/root/
+cp --recursive /home/rocketlogger/ ${ROOTFS}/root/
+cp --recursive /home/node_server/ ${ROOTFS}/root/
+
+
 ## setup operating system
-# chroot to setup system
 echo "> Chroot to configure operating system"
-chroot ${ROOTFS} /bin/bash -c "cd /root/ && ./setup.sh ${HOSTNAME}"
+chroot ${ROOTFS} /bin/bash -c "cd /root/setup && ./setup.sh ${HOSTNAME}"
 
 # verify system configuration was successful
 CONFIG=$?
@@ -108,15 +113,8 @@ fi
 
 
 ## install RocketLogger software
-# copy software and web interface sources
-echo "> Copy RocketLogger sources"
-cp --recursive /home/rocketlogger/ ${ROOTFS}/home/rocketlogger/
-cp --recursive /home/node_server/ ${ROOTFS}/home/rocketlogger/
-chown --recursive 1001:1001 ${ROOTFS}/home/rocketlogger/
-
-# chroot to install software
 echo "> Chroot to build and install rocketlogger"
-chroot ${ROOTFS} /bin/bash -c "cd /home/rocketlogger/rocketlogger && meson builddir && cd builddir && meson setup --wipe && ninja && sudo meson install --no-rebuild --only-changed"
+chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger && meson builddir && cd builddir && meson setup --wipe && ninja && sudo meson install --no-rebuild --only-changed"
 
 # verify software installation configuration was successful
 INSTALL=$?
@@ -126,20 +124,6 @@ if [ $INSTALL -ne 0 ]; then
 else
   echo "[ OK ] Software installation was successful."
 fi
-
-# chroot to install web interface
-echo "> Chroot to build and install web interface"
-chroot ${ROOTFS} /bin/bash -c "cd /home/rocketlogger/node_server && ./install.sh"
-
-# verify web interface installation configuration was successful
-WEB=$?
-if [ $WEB -ne 0 ]; then
-  echo "[ !! ] Web interface installation failed (code $WEB). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY WEB INTERFACE INSTALLATION."
-  exit $WEB
-else
-  echo "[ OK ] Web interface installation was successful."
-fi
-
 
 ## install RocketLogger web interface
 echo "> Chroot to build and install web interface"
@@ -154,7 +138,16 @@ else
   echo "[ OK ] Web interface installation was successful."
 fi
 
-## mount filesystem
+
+## post installation cleanups
+# fix user home permissions
+chroot ${ROOTFS} /bin/bash -c "chown --recursive rocketlogger:rocketlogger /home/rocketlogger/"
+
+# cleanup root home
+rm --force --recursive ${ROOTFS}/root/*/ ${ROOTFS}/root/.*/
+
+
+## unmount filesystem
 echo "> Sync, cleanup and unmount filesystems"
 sync
 
@@ -162,17 +155,16 @@ sync
 umount ${ROOTFS}/run/connman/resolv.conf
 rm --force --recursive ${ROOTFS}/run/connman
 
-# unmount
-umount ${ROOTFS}/root/
+# unmount system
 umount ${ROOTFS}/dev/pts
-umount ${ROOTFS}/proc/
-umount ${ROOTFS}/sys/
-umount ${ROOTFS}/dev/
+umount ${ROOTFS}/proc
+umount ${ROOTFS}/sys
+umount ${ROOTFS}/dev
 umount ${ROOTFS}
 
 # rename successfully patched image
 IMAGE_PATCHED="rocketlogger-${IMAGE}"
-echo "> Rename successfullt patched image file to '${IMAGE_PATCHED}'"
+echo "> Rename successfully patched image file to '${IMAGE_PATCHED}'"
 mv "${IMAGE}" "${IMAGE_PATCHED}"
 
 
