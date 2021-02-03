@@ -37,11 +37,11 @@ INSTALL_SERVICE_DIR=/etc/systemd/system/
 
 SERVICE_CONFIG=rocketlogger-web.service
 
-BOOTSTRAP_VERSION=4.4.1
-POPPER_VERSION=1.16.0
-JQUERY_VERSION=3.4.1
-SOCKETIO_VERSION=2.3.0
-PLOTLY_VERSION=1.53.0
+BOOTSTRAP_VERSION=4.6.0
+POPPER_VERSION=1.16.1
+JQUERY_VERSION=3.5.1
+SOCKETIO_VERSION=3.1.1
+PLOTLY_VERSION=1.58.4
 
 ## package install
 echo "> Install required system packages"
@@ -49,6 +49,8 @@ echo "> Install required system packages"
 # install latest nodejs LTS (using nodesource repository)
 curl -sL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt-get install --assume-yes \
+  g++                             \
+  make                            \
   nodejs                          \
   rsync
 
@@ -68,15 +70,15 @@ echo "> Setup nodejs environment"
 mkdir -p ${INSTALL_WEB_DIR} ${INSTALL_DATA_DIR}
 
 # install npm servers side packages
-npm install --prefix ${INSTALL_WEB_DIR} \
+npm install --production --prefix ${INSTALL_WEB_DIR} \
   express                               \
   nunjucks                              \
   gulp                                  \
-  socket.io                             \
+  socket.io@${SOCKETIO_VERSION}         \
   zeromq
 
 # install client side dependencies
-npm install --prefix ${INSTALL_WEB_DIR} \
+npm install --production --prefix ${INSTALL_WEB_DIR} \
   bootstrap@${BOOTSTRAP_VERSION}        \
   popper.js@${POPPER_VERSION}           \
   jquery@${JQUERY_VERSION}              \
