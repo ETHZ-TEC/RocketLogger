@@ -45,9 +45,11 @@ PLOTLY_VERSION=1.53.0
 
 ## package install
 echo "> Install required system packages"
-sudo apt install --assume-yes \
-  nodejs                      \
-  npm                         \
+
+# install latest nodejs LTS (using nodesource repository)
+curl -sL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install --assume-yes \
+  nodejs                          \
   rsync
 
 

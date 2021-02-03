@@ -62,13 +62,12 @@ apt-get update
 
 # install dependencies
 apt-get install --assume-yes  \
+    curl                      \
     device-tree-compiler      \
     gcc                       \
     git                       \
     meson                     \
     ninja-build               \
-    nodejs                    \
-    npm                       \
     ntp                       \
     pkg-config                \
     rsync                     \
@@ -77,6 +76,11 @@ apt-get install --assume-yes  \
     libi2c-dev                \
     libncurses5-dev           \
     libzmq3-dev
+
+# install latest nodejs LTS (using nodesource repository)
+curl -sL https://deb.nodesource.com/setup_lts.x | bash -
+apt-get install --assume-yes  \
+    nodejs
 
 
 ## default login
