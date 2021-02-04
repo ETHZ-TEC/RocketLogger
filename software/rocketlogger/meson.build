@@ -45,12 +45,11 @@ dt_overlay_dep = bb_overlay_dep.partial_dependency(includes : true)
 
 
 ## program executables
-prog_python = import('python').find_installation('python3')
 compiler_cc = meson.get_compiler('c')
+compiler_dt = find_program('dtc')
 compiler_pru = find_program('clpru')
 linker_pru = find_program('lnkpru')
 objcopy_pru = find_program('hexpru')
-compiler_dt = find_program('dtc')
 
 
 ## library dependencies
@@ -82,13 +81,16 @@ add_project_arguments('-D_LARGEFILE64_SOURCE',
 pru_linker_script = 'pru/AM335x_PRU.cmd'
 
 
-## generated dependencies
-version_c = custom_target('version.c',
+## generated files
+version_data = configuration_data({
+    'version' : meson.project_version(),
+    'git_description' : run_command(['git', 'describe', '--tags', '--dirty']).stdout().strip(),
+    'git_date' : run_command(['git', 'show', '--no-patch', '--format="%ci"', 'HEAD']).stdout().strip(),
+    'compile_date' : run_command(['date', '--rfc-3339=seconds']).stdout().strip(),
+})
+version_c = configure_file(input : 'version.c.in',
     output : 'version.c',
-    input : 'version_gen.py',
-    command : [prog_python, '@INPUT@', '@OUTPUT@'],
-    build_always_stale: true,
-)
+    configuration : version_data)
 
 
 ## sources
@@ -135,6 +137,7 @@ pru_module_config_src = [
 
 
 ## targets
+# system executables and services
 binary_exe = executable('rocketlogger', binary_src + common_src,
     dependencies: binary_deps + common_deps,
     install : true,
