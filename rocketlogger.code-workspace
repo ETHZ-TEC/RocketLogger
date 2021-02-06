@@ -7,6 +7,9 @@
 			"path": "software/node_server"
 		},
 		{
+			"path": "software/system"
+		},
+		{
 			"path": "script/python"
 		},
 		{
@@ -16,23 +19,29 @@
 			"path": "script/matlab"
 		},
 		{
-			"path": "software/debian"
-		},
-		{
-			"path": "software/device_tree_overlay"
+			"name": "rocketlogger_repo",
+			"path": "."
 		}
 	],
 	"settings": {
 		"C_Cpp.autocomplete": "Disabled",
 		"C_Cpp.intelliSenseEngine": "Disabled",
 		"C_Cpp.errorSquiggles": "Disabled",
-		"clangd.arguments": ["-log=verbose", "-pretty", "--background-index", "--compile-commands-dir=${workspaceFolder}/builddir"]
+		"clangd.arguments": [
+			"--log=verbose",
+			"--pretty",
+			"--background-index",
+			"--suggest-missing-includes",
+			"--clang-tidy",
+			"--compile-commands-dir=${workspaceFolder}/builddir"
+		]
 	},
 	"extensions": {
 		"recommendations": [
+			"asabil.meson",
+			"donjayamanne.githistory",
+			"eamodio.gitlens",
 			"llvm-vs-code-extensions.vscode-clangd",
-			"ms-vscode.cpptools",
-			"ms-vscode-remote.remote-ssh",
 			"ms-python.python",
 			"yzhang.markdown-all-in-one"
 		]

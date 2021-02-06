@@ -1,5 +1,2 @@
-builddir*/
-bin/
-obj/
+builddir/
 doc/
-version.c

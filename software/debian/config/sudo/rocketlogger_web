@@ -1,8 +1,0 @@
-# User alias specification
-User_Alias  ROCKETLOGGER_WEB = www-data, %www-data
-
-# Cmnd alias specification
-Cmnd_Alias  ROCKETLOGGER_CMDS = /bin/rocketlogger
-
-# Allow rocketlogger web interface to execute rocketlogger binary as root
-ROCKETLOGGER_WEB    ALL=NOPASSWD: ROCKETLOGGER_CMDS
