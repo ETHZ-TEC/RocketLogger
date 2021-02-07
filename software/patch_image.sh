@@ -1,7 +1,7 @@
 #!/bin/bash
-# Flash the beagle bone image
+# Patch a BeagleBone image to install the RocketLogger system
 #
-# Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
+# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -30,22 +30,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-# read command line arguments
-IMAGE_FILE=$1
-SDCARD_DEV=$2
+# register ARM executables
+docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 
+# inspect existing builder
+docker buildx inspect --bootstrap
 
-# need to run as root
-echo "> Checking root permission"
-if [[ $(id -u) -ne 0 ]]; then
-  echo "Need to run as root (e.g. using sudo)"
-  exit 1
-fi
+# build minimal armv7 debian image with compiler tools
+docker buildx build --platform linux/arm/v7 -t beaglebone_builder .
 
-# decompress and write SD card image, sync file system at the end
-echo "> Flashing SD card..."
-xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=4M conv=fsync status=progress
-echo "> Flashing SD card complete."
+# change to system folder to download and decompress base system image
+cd system
+source ./get_image.sh
+xz --decompress --keep --force "${IMAGE_FLASHER_FILE}"
+IMAGE=`basename "${IMAGE_FLASHER_FILE}" ".xz"`
+cd ..
 
-# hint on the next setup step
-echo "Remove SD card and insert into the RocketLogger to continue."
+# build rocketlogger binary
+docker run --privileged --platform linux/arm/v7  \
+    --mount type=bind,source="$(pwd)/rocketlogger",target=/home/rocketlogger  \
+    --mount type=bind,source="$(pwd)/system",target=/home/system  \
+    --mount type=bind,source="$(pwd)/node_server",target=/home/node_server  \
+    --tty beaglebone_builder /bin/bash -c "cd /home/system && ./chroot_setup.sh ${IMAGE}"  \
+  | tee "$(pwd)/system/patch_image.log"

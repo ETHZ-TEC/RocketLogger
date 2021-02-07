@@ -12,6 +12,18 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/app.js"
+        },
+        {
+            "address": "rocketlogger",
+            "localRoot": "${workspaceFolder}",
+            "name": "RocketLogger",
+            "port": 9229,
+            "remoteRoot": "/home/rocketlogger/node_server",
+            "request": "attach",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
         }
     ]
 }

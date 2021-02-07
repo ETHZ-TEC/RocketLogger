@@ -108,7 +108,21 @@ char const *const RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {
     "I1L_valid", "I2L_valid"};
 
 /// Global RocketLogger status variable.
-rl_status_t rl_status = rl_status_default;
+//rl_status_t rl_status = rl_status_default;
+rl_status_t rl_status = {
+    .sampling = false,
+    .error = false,
+    .sample_count = 0,
+    .buffer_count = 0,
+    .calibration_time = 0,
+    .calibration_file = RL_CALIBRATION_SYSTEM_FILE,
+    .disk_free = 0,
+    .disk_free_permille = 0,
+    .disk_use_rate = 0,
+    .sensor_count = 0,
+    .sensor_available = {false},
+    .config = NULL,
+};
 
 /// The ZeroMQ context for status publishing
 void *zmq_status_context = NULL;
@@ -260,7 +274,7 @@ void rl_config_print_cmd(rl_config_t const *const config) {
 
 void rl_config_print_json(rl_config_t const *const config) {
     char const *const config_json = rl_config_get_json(config);
-    printf(config_json);
+    printf("%s", config_json);
 }
 
 char *rl_config_get_json(rl_config_t const *const config) {
@@ -712,7 +726,7 @@ void rl_status_print(rl_status_t const *const status) {
 
 void rl_status_print_json(rl_status_t const *const status) {
     char const *const status_json = rl_status_get_json(status);
-    printf(status_json);
+    printf("%s", status_json);
 }
 
 char *rl_status_get_json(rl_status_t const *const status) {

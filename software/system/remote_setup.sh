@@ -1,6 +1,6 @@
 #!/bin/bash
-# Basic operating system configuration of a new BeagleBone Black/Green/Green Wireless
-# Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]
+# Remotely configure operating system of a new BeagleBone Black/Green/Green Wireless
+# Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -36,7 +36,7 @@ REBOOT_TIMEOUT=60
 
 # check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./deploy_system.sh <beaglebone-host-address> [<hostname>]"
+  echo "Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]"
   exit -1
 fi
 if [ $# -ge 2 ]; then
@@ -45,33 +45,48 @@ fi
 
 
 HOST=$1
-echo "Deploy system configuration on host '${HOST}'"
+echo "> Deploy system on host '${HOST}'"
 
 
 # copy system configuration scripts
-echo "Copying system configuration scripts. You will be asked for the default user password, which is 'temppwd'."
-scp -F /dev/null -P 22 -r config debian@${HOST}:
+echo "> Copy system configuration scripts. You will be asked for the default user password, which is 'temppwd'."
+scp -F /dev/null -P 22 -r setup debian@${HOST}:
 
-# verify copy new key worked
+# verify copy setup files was successful
 COPY=$?
-
 if [ $COPY -ne 0 ]; then
-  echo "[ !! ] Copy system configuration scripts failed (code $COPY). CHECK SSH CONFIGURATION."
+  echo "[ !! ] Copy setup files failed (code $COPY). CHECK SSH CONFIGURATION."
   exit $COPY
 else
-  echo "[ OK ] Copy system configuration scripts successful."
+  echo "[ OK ] Copy setup files successful."
 fi
 
 # perform system configuration
-echo "Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd config && sudo ./install.sh ${HOSTNAME})"
+echo "> Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./install.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
 
-# verify system configuration worked
+# verify system configuration was successful
 CONFIG=$?
-
 if [ $CONFIG -ne 0 ]; then
-  echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SSH CONFIGURATION."
+  echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
   exit $CONFIG
 else
   echo "[ OK ] System configuration was successful."
 fi
+
+# perform RocketLogger software installation
+#TODO: a) await reboot, b) copy sources, c) remotely build and install
+
+# verify software installation configuration was successful
+INSTALL=$?
+echo "[ !! ] Software skipped as not (yet) supported. Installation software manually."
+# if [ $INSTALL -ne 0 ]; then
+#   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
+#   exit $INSTALL
+# else
+#   echo "[ OK ] Software installation was successful."
+# fi
+
+
+# hint on the next setup step
+echo ">> Wait for the system to reboot and you are ready to go."

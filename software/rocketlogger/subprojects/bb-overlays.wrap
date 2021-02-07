@@ -1,0 +1,16 @@
+[wrap-file]
+directory = bb.org-overlays-master
+source_url = https://github.com/beagleboard/bb.org-overlays/archive/master.zip
+source_filename = bb.org-overlays-master.zip
+source_hash = 6ae60d9e9f6203ab3cb8375f4c754695301d39b0e6e5060e2e44e1be10e9b762
+
+#[wrap-git]
+#url = https://github.com/beagleboard/bb.org-overlays.git
+#revision = head
+
+patch_url = /dev/null
+patch_filename = bb.org-overlays-master.patch.tar.bz2
+patch_hash = 41be4b62fdb5922b1b48dde3fa9d6093731d201ac4bcba22511f936e3ffd5343
+
+[provide]
+bboverlays=bboverlays_dep

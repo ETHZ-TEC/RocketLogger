@@ -1,0 +1,11 @@
+# ignore all by default
+/*
+
+# include .gitignore and repository wrap files
+!.gitignore
+!*.wrap
+
+# include patch archives
+!packagecache
+packagecache/*
+!packagecache/*.patch.tar.bz2
