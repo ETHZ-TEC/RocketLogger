@@ -1,24 +1,37 @@
 
+## v1.99 (development)
 
-## v1.99 (20xx-xx-xx)
+Base operating system:
+- [ADDED] local operating system image patching to generate ready to use RocketLogger image (#60)
+- [ADDED] switch to Debian buster release (#10, #123)
+- [CHANGED] install operating system to BeagleBone's embedded EMMC memory
+- [CHANGED] simplify remote system setup procedure
 
-- [CHANGED] Base system: migration to latest Debian buster release (#10, #123)
-- [CHANGED] Base system: simplify system setup procedure
-- [CHANGED] Software: rework low level hardware interfacing for Debian buster compatibility (#123)
-- [CHANGED] Software: update an reorganize API and headers for increased consistency
-- [CHANGED] Python support: make plotting an optional feature to reduce package dependencies
-- [CHANGED] Python support: `get_time()` drop `absolute_time`, used `time_reference` only for timestamp reference selection
-- [ADDED] Python support: extended get data API to access relevant header fields and filename, add pandas DataFrame generation
-- [ADDED] Python support: add header only import, recovery mode for truncated file import (#109)
-- [ADDED] Python support: add calibration support (#125)
+RocketLogger software:
+- [ADDED] use meson build framework for combined build and installation of all software components
+- [ADDED] switch to ZeroMQ messaging library for data streaming to the webserver
+- [ADDED] NodeJS based web interface with server side data streaming capability (#51, #122)
+- [CHANGED] command line interface update: improved argument consistency and more robust argument parsing _(backward incompatible)_
+- [CHANGED] rework low level hardware interfacing for Debian buster compatibility (#123)
+- [CHANGED] update an reorganize API and headers for increased consistency
+- [CHANGED] update to latest and official compiler tools (#135)
+- [REMOVED] legacy web control interface
+
+Python support library:
+- [ADDED] extended get data API to access relevant header fields and filename, add pandas DataFrame generation
+- [ADDED] add header only import, recovery mode for truncated file import (#109)
+- [ADDED] add calibration support (#125)
+- [CHANGED] make plotting an optional feature to reduce package dependencies
+- [CHANGED] `get_time()` API: use `time_reference` for timestamp reference selection (using updated parameters!), drop `absolute_time` argument _(backward incompatible)_
+- [FIXED] deprecated NumPy API dependency (#129)
+
 
 _Notes:_
 
-This major release updates the base system to run the latest Debian version and includes many internal software changes.
+This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. Most noticable change for the user is the new web control interface that was reimplemented from scratch.
 Calibration feature was added to the Python support library and the data functionality extended. he updated web interface now allows on-device calibration.
 
-Due to the major upgrade of the base system from Debian version 7 to 10,
-we highly recommend performing an complete reinstall of the full system.
+Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location toation to the internal EMMC memory, the RocketLogger system needs to be reinstalled.
 
 
 ## v1.1.6 (2019-07-31)
