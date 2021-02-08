@@ -58,6 +58,8 @@ classdef rld
             %                            if numbered files following the
             %                            "<filename>_p#.rld" convention are found
             
+            warning('MATLAB support for RocketLogger is deprecated: consider switching to the `rocketlogger` Python package.')
+
             if ~exist('decimation_factor', 'var')
                 decimation_factor = 1;
             end

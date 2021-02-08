@@ -25,6 +25,9 @@ Python support library:
 - [CHANGED] `get_time()` API: use `time_reference` for timestamp reference selection (using updated parameters!), drop `absolute_time` argument _(backward incompatible)_
 - [FIXED] deprecated NumPy API dependency (#129)
 
+MATLAB support:
+- [DEPRECATED] the MATLAB support for processing RocketLogger data is deprecated and will be removed in a future release. It is recommended to switch to the more feature rich Python support library. (#126)
+
 
 _Notes:_
 
