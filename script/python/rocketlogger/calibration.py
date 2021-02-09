@@ -49,9 +49,13 @@ ROCKETLOGGER_CALIBRATION_FILE = '/etc/rocketlogger/calibration.dat'
 # _ROCKETLOGGER_FILE_SCALE_IH = 1e-9
 
 # hardware design values of voltage/current increment per ADC LSB
-_ROCKETLOGGER_ADC_STEP_V = -1.22e-6
-_ROCKETLOGGER_ADC_STEP_IL = 1.755e-10
-_ROCKETLOGGER_ADC_STEP_IH = 3.18e-08
+# - voltage: -1 * FS / 2^23 *10 / 3.9 * LSB
+# - current low: FS / 2^23 / R_fb / 2 * LSB
+# - current high: FS / 2^23 / R_sh / G_1 / 2 / G_2 * LSB
+# where FS = 4.0, R_1 = 10k, R_2 = 3.9k, R_fb = 680R, R_sh = 0.05R, G_1 = 75, G_2 = 2
+_ROCKETLOGGER_ADC_STEP_V = -1 * 4.0 / 2**23 * 10 / 3.9
+_ROCKETLOGGER_ADC_STEP_IL = 4.0 / 2**23 / 680 / 2 / 2
+_ROCKETLOGGER_ADC_STEP_IH = 4.0 / 2**23 / 0.05 / 75 / 2 / 2
 
 # calibration file format magic
 _CALIBRATION_FILE_MAGIC = 0x434C5225
@@ -366,7 +370,9 @@ class RocketLoggerCalibration:
         """
         Initialize RocketLogger Calibration helper class.
 
-        With 5 parameters it can be used as shortcut for
+        Without parameter it can be used as shortcut for
+        :load_design_data(): to load design calibration values.
+        With 1 parameter it can be used as shortcut for
         :read_calibration_file(): to load an existing calibration.
         With 5 parameters it can be used as shortcut for
         :load_measurement_data(): to load calibration measurement data.
@@ -386,6 +392,10 @@ class RocketLoggerCalibration:
         self._error_scale = None
         self._error_rmse = None
 
+        # treat no argument as fallback to default design calibraiton values
+        if len(args) == 0:
+            self.load_design_data()
+
         # treat 1 arguments as an existing calibration to load
         if len(args) == 1:
             self.read_calibration_file(*args)
@@ -393,6 +403,33 @@ class RocketLoggerCalibration:
         # treat 5 arguments as measurement data for a new calibration
         if len(args) == 5:
             self.load_measurement_data(*args)
+
+    def load_design_data(self):
+        """
+        Load calibration values derived from the design of RocketLogger.
+        """
+
+        # store design calibration values
+        design_scale = [_ROCKETLOGGER_ADC_STEP_V] * 4 + \
+            [_ROCKETLOGGER_ADC_STEP_IL, _ROCKETLOGGER_ADC_STEP_IH] * 2
+        design_offset = [0]*len(design_scale)
+
+        self._calibration_time = np.datetime64(0, 's')
+        self._calibration_offset = np.array(design_offset, dtype='<i4')
+        self._calibration_scale = np.array(
+            [scale / file_scale for scale, file_scale
+             in zip(design_scale, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
+
+        # append PRU timestamp constant calibration values
+        self._calibration_offset = np.concatenate(
+            (self._calibration_offset, [_CALIBRATION_PRU_CYCLES_OFFSET]))
+        self._calibration_scale = np.concatenate(
+            (self._calibration_scale, [_CALIBRATION_PRU_CYCLES_SCALE]))
+
+        # reset existing error calculations, keep measurement data if loaded
+        self._error_offset = None
+        self._error_scale = None
+        self._error_rmse = None
 
     def load_measurement_data(self, data_v, data_i1l, data_i1h,
                               data_i2l, data_i2h):
