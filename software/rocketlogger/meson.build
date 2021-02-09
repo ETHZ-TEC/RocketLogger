@@ -128,6 +128,9 @@ dt_overlay_src = [
 ]
 
 ## configuration files
+default_calibration_file = [
+    'config/calibration.dat',
+]
 systemd_service_src = [
     'config/rocketlogger.service',
 ]
@@ -148,6 +151,9 @@ daemon_exe = executable('rocketloggerd', daemon_src + common_src,
     install_mode : ['rwsr-xr-x', 0, 0])
 install_data(systemd_service_src,
     install_dir : get_option('sysconfdir') / 'systemd' / 'system',
+    install_mode : ['rw-r--r--', 0, 0])
+install_data(default_calibration_file,
+    install_dir : get_option('sysconfdir') / 'rocketlogger',
     install_mode : ['rw-r--r--', 0, 0])
 
 # custom PRU targets
