@@ -57,29 +57,35 @@ fi
 ## updates and software dependencies
 echo "> Update system and install software dependencies"
 
+# install buster-backports repository for meson and ninja
+echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+
 # update package lists
 apt-get update
 
-# install dependencies
-apt-get install --assume-yes  \
-    curl                      \
-    device-tree-compiler      \
-    gcc                       \
-    git                       \
-    meson                     \
-    ninja-build               \
-    ntp                       \
-    pkg-config                \
-    rsync                     \
-    ti-pru-cgt-installer      \
-    wget                      \
-    libi2c-dev                \
-    libncurses5-dev           \
+# install system packages
+apt-get install --assume-yes        \
+    curl                            \
+    device-tree-compiler            \
+    gcc                             \
+    g++                             \
+    git                             \
+    make                            \
+    meson/buster-backports          \
+    ninja-build/buster-backports    \
+    ntp                             \
+    pkg-config                      \
+    ti-pru-cgt-installer            \
+    wget                            \
+    libi2c-dev                      \
+    libncurses5-dev                 \
     libzmq3-dev
 
-# install latest nodejs LTS (using nodesource repository)
-curl -sL https://deb.nodesource.com/setup_lts.x | bash -
-apt-get install --assume-yes  \
+# install nodesource repository for nodejs 14.x LTS
+curl --silent --location https://deb.nodesource.com/setup_14.x | bash -
+
+# install nodejs
+apt-get install --assume-yes        \
     nodejs
 
 
