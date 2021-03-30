@@ -2,17 +2,20 @@
 FROM arm32v7/debian:buster-slim
 WORKDIR /opt
 
+# set up buster-backports for meson and ninja
+RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+
 # Debian package dependencies
 RUN apt-get update && apt-get install --assume-yes  \
-    device-tree-compiler    \
-    gcc                     \
-    git                     \
-    meson                   \
-    ninja-build             \
-    pkg-config              \
-    wget                    \
-    libi2c-dev              \
-    libncurses5-dev         \
+    device-tree-compiler            \
+    gcc                             \
+    git                             \
+    meson/buster-backports          \
+    ninja-build/buster-backports    \
+    pkg-config                      \
+    wget                            \
+    libi2c-dev                      \
+    libncurses5-dev                 \
     libzmq3-dev
 
 # TI Code Generation Tools for PRU
