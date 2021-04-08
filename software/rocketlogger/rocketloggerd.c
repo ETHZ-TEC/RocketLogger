@@ -33,8 +33,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <signal.h>
+#include <sys/reboot.h>
 #include <unistd.h>
 
 #include "gpio.h"
@@ -48,11 +50,20 @@
 /// Delay on cape power up (in microseconds)
 #define RL_POWERUP_DELAY_US 5000
 
+/// Min duration of long button press (in seconds)
+#define RL_BUTTON_LONG_PRESS 3
+
+/// Min duration of very long button press (in seconds)
+#define RL_BUTTON_VERY_LONG_PRESS 10
+
 /// RocketLogger daemon log file.
 static char const *const log_filename = RL_DAEMON_LOG_FILE;
 
 /// Flag to terminate the infinite daemon loop
 volatile bool daemon_shutdown = false;
+
+/// Flag to shutdown the system when exiting the daemon
+volatile bool system_reboot = false;
 
 /// GPIO handle for power switch
 gpio_t *gpio_power = NULL;
@@ -66,8 +77,24 @@ gpio_t *gpio_button = NULL;
  * @param value GPIO value after interrupt
  */
 void button_interrupt_handler(int value) {
-    // check button pressed for long enough
+    static time_t timestamp_down = -1;
+    time_t timestamp = time(NULL);
+
+    // capture timestamp on button press
+    if (value == 0) {
+        timestamp_down = timestamp;
+    }
+    // process button action on button release
     if (value == 1) {
+        // get duration and reset timestamp down
+        time_t duration = timestamp - timestamp_down;
+        timestamp_down = -1;
+
+        // skip further processing on invalid timestamp
+        if (duration > timestamp) {
+            return;
+        }
+
         // get RocketLogger status
         rl_status_t status;
         int ret = rl_status_read(&status);
@@ -75,7 +102,24 @@ void button_interrupt_handler(int value) {
             rl_log(RL_LOG_ERROR, "Failed reading status.");
         }
 
-        char *cmd[3] = { "rocketlogger", NULL, NULL};
+        if (duration >= RL_BUTTON_VERY_LONG_PRESS) {
+            rl_log(RL_LOG_INFO,
+                   "Registered very long press, requesting system shutdown.");
+            daemon_shutdown = true;
+            system_reboot = true;
+            if (!status.sampling) {
+                return;
+            }
+        } else if (duration >= RL_BUTTON_LONG_PRESS) {
+            rl_log(RL_LOG_INFO,
+                   "Registered long press, requesting daemon shutdown.");
+            daemon_shutdown = true;
+            if (!status.sampling) {
+                return;
+            }
+        }
+
+        char *cmd[3] = {"rocketlogger", NULL, NULL};
         if (status.sampling) {
             cmd[1] = "stop";
         } else {
@@ -213,6 +257,13 @@ int main(void) {
     gpio_release(gpio_power);
     gpio_release(gpio_button);
     gpio_deinit();
+
+    // reboot system if requested
+    if (system_reboot) {
+        rl_log(RL_LOG_INFO, "Rebooting system.");
+        sync();
+        reboot(RB_AUTOBOOT);
+    }
 
     exit(EXIT_SUCCESS);
 }
