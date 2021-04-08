@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <linux/limits.h>
+#include <unistd.h>
 
 #include "log.h"
 #include "rl.h"
@@ -264,6 +265,20 @@ int main(int argc, char *argv[]) {
     } else {
         rl_log_init(log_filename, RL_LOG_WARNING);
     }
+
+    // set effective user ID of the process
+    int ret = setuid(0);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed setting effective user ID. %d message: %s",
+               errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    rl_log(RL_LOG_VERBOSE, "running with real user ID: %d", getuid());
+    rl_log(RL_LOG_VERBOSE, "running with effective user ID: %d", geteuid());
+    rl_log(RL_LOG_VERBOSE, "running with real group ID: %d", getgid());
+    rl_log(RL_LOG_VERBOSE, "running with effective group ID: %d", getegid());
+
 
     char const *const action = arguments.args[0];
 

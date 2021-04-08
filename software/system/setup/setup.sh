@@ -77,6 +77,7 @@ apt-get install --assume-yes        \
     pkg-config                      \
     ti-pru-cgt-installer            \
     wget                            \
+    libgpiod-dev                    \
     libi2c-dev                      \
     libncurses5-dev                 \
     libzmq3-dev
