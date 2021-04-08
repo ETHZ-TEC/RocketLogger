@@ -41,18 +41,24 @@
 
 #include "rl_hw.h"
 
+gpio_t *gpio_fhr1 = NULL;
+gpio_t *gpio_fhr2 = NULL;
+gpio_t *gpio_led_status = NULL;
+gpio_t *gpio_led_error = NULL;
+
 void hw_init(rl_config_t const *const config) {
     // GPIO configuration
+    gpio_init();
     // force high range (negative enable)
-    gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
-    gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_FHR1, (config->channel_force_range[0] ? 0 : 1));
-    gpio_set_value(GPIO_FHR2, (config->channel_force_range[1] ? 0 : 1));
+    gpio_fhr1 = gpio_setup(GPIO_FHR1, GPIO_MODE_OUT, "rocketlogger");
+    gpio_fhr2 = gpio_setup(GPIO_FHR2, GPIO_MODE_OUT, "rocketlogger");
+    gpio_set_value(gpio_fhr1, (config->channel_force_range[0] ? 0 : 1));
+    gpio_set_value(gpio_fhr2, (config->channel_force_range[1] ? 0 : 1));
     // leds
-    gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
-    gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
-    gpio_set_value(GPIO_LED_STATUS, 1);
-    gpio_set_value(GPIO_LED_ERROR, 0);
+    gpio_led_status = gpio_setup(GPIO_LED_STATUS, GPIO_MODE_OUT, "rocketlogger");
+    gpio_led_error = gpio_setup(GPIO_LED_ERROR, GPIO_MODE_OUT, "rocketlogger");
+    gpio_set_value(gpio_led_status, 1);
+    gpio_set_value(gpio_led_error, 0);
 
     // PRU
     pru_init();
@@ -85,11 +91,17 @@ void hw_deinit(rl_config_t const *const config) {
 
     // GPIO (set to default state only, (un)export is handled by daemon)
     // reset force high range GPIOs to force high range (negative enable)
-    gpio_set_value(GPIO_FHR1, 0);
-    gpio_set_value(GPIO_FHR2, 0);
+    gpio_set_value(gpio_fhr1, 0);
+    gpio_set_value(gpio_fhr2, 0);
 
     // reset status LED, leave error LED in current state
-    gpio_set_value(GPIO_LED_STATUS, 0);
+    gpio_set_value(gpio_led_status, 0);
+
+    gpio_release(gpio_fhr1);
+    gpio_release(gpio_fhr2);
+    gpio_release(gpio_led_status);
+    gpio_release(gpio_led_error);
+    gpio_deinit();
 
     // PRU
     // stop first if running in background
@@ -151,7 +163,7 @@ int hw_sample(rl_config_t const *const config) {
     ret = pru_sample(data_file, ambient_file, config);
     if (ret < 0) {
         // error occurred
-        gpio_set_value(GPIO_LED_ERROR, 1);
+        gpio_set_value(gpio_led_error, 1);
     }
 
     // close data files

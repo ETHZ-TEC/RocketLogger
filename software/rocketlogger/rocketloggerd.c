@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
+ * Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,213 +45,20 @@
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
 
+/// Delay on cape power up (in microseconds)
+#define RL_POWERUP_DELAY_US 5000
+
 /// RocketLogger daemon log file.
 static char const *const log_filename = RL_DAEMON_LOG_FILE;
 
 /// Flag to terminate the infinite daemon loop
 volatile bool daemon_shutdown = false;
 
-/**
- * Setup power GPIO and power of RocketLogger cape.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int power_init(void) {
-    int ret = SUCCESS;
-    ret = gpio_init(GPIO_POWER, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
+/// GPIO handle for power switch
+gpio_t *gpio_power = NULL;
 
-    ret = gpio_set_value(GPIO_POWER, 1);
-    if (ret < 0) {
-        return ret;
-    }
-
-    // wait for converter soft start (> 1 ms)
-    usleep(5000);
-    return ret;
-}
-
-/**
- * Deinitialize power GPIO.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int power_deinit(void) {
-    int ret = SUCCESS;
-    ret = gpio_set_value(GPIO_POWER, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_POWER);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Setup button GPIO and enable interrupt.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int button_init(void) {
-    int ret = SUCCESS;
-    ret = gpio_init(GPIO_BUTTON, GPIO_MODE_IN);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_interrupt(GPIO_BUTTON, GPIO_INT_FALLING);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Deinitialize button GPIO.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int button_deinit(void) {
-    int ret = SUCCESS;
-    ret = gpio_interrupt(GPIO_BUTTON, GPIO_INT_NONE);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_BUTTON);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Setup LED GPIOs.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int leds_init(void) {
-    int ret = SUCCESS;
-    ret = gpio_init(GPIO_LED_STATUS, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_init(GPIO_LED_ERROR, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_LED_STATUS, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_LED_ERROR, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Deinitialize LED GPIOs.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int leds_deinit(void) {
-    int ret = SUCCESS;
-    ret = gpio_set_value(GPIO_LED_STATUS, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_LED_ERROR, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_LED_STATUS);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_LED_ERROR);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Setup range forcing GPIOs.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int fhr_init(void) {
-    int ret = SUCCESS;
-    ret = gpio_init(GPIO_FHR1, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_init(GPIO_FHR2, GPIO_MODE_OUT);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_FHR1, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_FHR2, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
-
-/**
- * Deinitialize range forcing GPIOs.
- *
- * @return Returns 0 on success, negative on failure with errno set accordingly
- */
-int fhr_deinit(void) {
-    int ret = SUCCESS;
-    ret = gpio_set_value(GPIO_FHR1, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_set_value(GPIO_FHR2, 0);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_FHR1);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = gpio_deinit(GPIO_FHR2);
-    if (ret < 0) {
-        return ret;
-    }
-
-    return ret;
-}
+/// GPIO handle for user button
+gpio_t *gpio_button = NULL;
 
 /**
  * GPIO interrupt handler
@@ -259,7 +67,7 @@ int fhr_deinit(void) {
  */
 void button_interrupt_handler(int value) {
     // check button pressed for long enough
-    if (value == 0) {
+    if (value == 1) {
         // get RocketLogger status
         rl_status_t status;
         int ret = rl_status_read(&status);
@@ -290,10 +98,9 @@ void button_interrupt_handler(int value) {
             // in parent process log pid
             rl_log(RL_LOG_INFO, "Started RocketLogger with pid=%d.", pid);
         }
-
-        // interrupt rate control
-        sleep(RL_DAEMON_MIN_INTERVAL);
     }
+    // interrupt rate control
+    sleep(RL_DAEMON_MIN_INTERVAL);
 }
 
 /**
@@ -305,6 +112,7 @@ static void signal_handler(int signal_number) {
     // signal to terminate the daemon (systemd stop)
     if (signal_number == SIGTERM) {
         signal(signal_number, SIG_IGN);
+        rl_log(RL_LOG_INFO, "Received SIGTERM, shutting down daemon.");
         daemon_shutdown = true;
     }
 }
@@ -320,40 +128,43 @@ int main(void) {
     int ret = SUCCESS;
 
     // init log module
-    rl_log_init(log_filename, RL_LOG_INFO);
+    rl_log_init(log_filename, RL_LOG_VERBOSE);
 
-    // reset all GPIOs to known reset state
-    gpio_reset(GPIO_POWER);
-    gpio_reset(GPIO_BUTTON);
-    gpio_reset(GPIO_FHR1);
-    gpio_reset(GPIO_FHR2);
-    gpio_reset(GPIO_LED_STATUS);
-    gpio_reset(GPIO_LED_ERROR);
+    // set effective user ID of the process
+    ret = setuid(0);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed setting effective user ID. %d message: %s",
+               errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
-    sleep(1);
+    rl_log(RL_LOG_VERBOSE, "running with real user ID: %d", getuid());
+    rl_log(RL_LOG_VERBOSE, "running with effective user ID: %d", geteuid());
+    rl_log(RL_LOG_VERBOSE, "running with real group ID: %d", getgid());
+    rl_log(RL_LOG_VERBOSE, "running with effective group ID: %d", getegid());
+
+    // initialize GPIO module
+    gpio_init();
 
     // hardware initialization
-    ret = power_init();
+    gpio_t *gpio_power = gpio_setup(GPIO_POWER, GPIO_MODE_OUT, "rocketloggerd");
+    if (gpio_power == NULL) {
+        rl_log(RL_LOG_ERROR, "Failed configuring power switch.");
+        exit(EXIT_FAILURE);
+    }
+    ret = gpio_set_value(gpio_power, 1);
     if (ret < 0) {
         rl_log(RL_LOG_ERROR, "Failed powering up cape.");
         exit(EXIT_FAILURE);
     }
 
-    ret = button_init();
-    if (ret < 0) {
+    // wait for converter soft start (> 1 ms)
+    usleep(RL_POWERUP_DELAY_US);
+
+    gpio_t *gpio_button =
+        gpio_setup_interrupt(GPIO_BUTTON, GPIO_INTERRUPT_BOTH, "rocketloggerd");
+    if (gpio_button == NULL) {
         rl_log(RL_LOG_ERROR, "Failed configuring button.");
-        exit(EXIT_FAILURE);
-    }
-
-    ret = leds_init();
-    if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring LEDs.");
-        exit(EXIT_FAILURE);
-    }
-
-    ret = fhr_init();
-    if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring range forcing.");
         exit(EXIT_FAILURE);
     }
 
@@ -387,7 +198,7 @@ int main(void) {
     daemon_shutdown = false;
     while (!daemon_shutdown) {
         // wait for interrupt with infinite timeout
-        int value = gpio_wait_interrupt(GPIO_BUTTON, GPIO_INT_TIMEOUT_INF);
+        int value = gpio_wait_interrupt(gpio_button, NULL);
         button_interrupt_handler(value);
     }
 
@@ -397,11 +208,11 @@ int main(void) {
     rl_status_shm_deinit();
 
     // deinitialize and shutdown hardware
-    button_deinit();
-    power_deinit();
-    leds_deinit();
-    fhr_deinit();
     pwm_deinit();
+    gpio_set_value(gpio_power, 0);
+    gpio_release(gpio_power);
+    gpio_release(gpio_button);
+    gpio_deinit();
 
     exit(EXIT_SUCCESS);
 }

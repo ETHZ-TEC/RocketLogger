@@ -64,6 +64,7 @@ endif
 
 common_deps = [
     dependency('ncurses'),
+    dependency('libgpiod'),
     dependency('libzmq'),
     libi2c_dep,
     libprussdrv_dep
