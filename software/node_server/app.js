@@ -159,11 +159,19 @@ app.get('/data', (req, res) => {
 
 // routing of file actions
 app.get('/log', (req, res) => {
+    const logfile = rl.path_system_logfile;
     try {
-        fs.accessSync(path_system_logfile, fs.constants.R_OK);
-        res.sendFile(path_system_logfile);
+        fs.accessSync(logfile, fs.constants.F_OK);
     } catch (err) {
         res.status(404).send('Log file was not found. Please check your systems configuration!');
+        return;
+    }
+
+    try {
+        res.sendFile(logfile);
+    } catch (err) {
+        res.status(403).send('Error accessing log file. Please check your systems configuration!');
+        return;
     }
 });
 
