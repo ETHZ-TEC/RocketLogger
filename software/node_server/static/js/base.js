@@ -32,9 +32,9 @@
 
 /// Initialization when document is fully loaded
 $(() => {
-	// convert bootstrap hidden class to jquery show/hide
-	$(".d-none").hide().removeClass("d-none");
+    // convert bootstrap hidden class to jquery show/hide
+    $(".d-none").hide().removeClass("d-none");
 
-	// activate tooltips
-	$('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+    // activate tooltips
+    $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
 });

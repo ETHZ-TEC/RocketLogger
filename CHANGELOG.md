@@ -10,10 +10,10 @@ Base operating system:
 RocketLogger software:
 - [ADDED] use meson build framework for combined build and installation of all software components
 - [ADDED] switch to ZeroMQ messaging library for data streaming to the webserver
-- [ADDED] NodeJS based web interface with server side data streaming capability (#51, #122)
+- [ADDED] Node.js based web interface with server side data streaming capability (#51, #122)
 - [CHANGED] command line interface update: improved argument consistency and more robust argument parsing _(backward incompatible)_
 - [CHANGED] rework low level hardware interfacing for Debian buster compatibility (#123)
-- [CHANGED] update an reorganize API and headers for increased consistency
+- [CHANGED] update an reorganize internal software API and headers for increased consistency
 - [CHANGED] update to latest and official compiler tools (#135)
 - [REMOVED] legacy web control interface
 

@@ -226,18 +226,39 @@ io.on('connection', (socket) => {
         console.log(`rl control: ${JSON.stringify(req)}`);
         // handle control command and emit on status channel
         let res = null;
-        if (req.cmd == 'start') {
+        if (req.cmd === 'start') {
             res = rl.start(req.config);
-        } else if (req.cmd == 'stop') {
+        } else if (req.cmd === 'stop') {
             res = rl.stop();
-        } else if (req.cmd == 'config') {
+        } else if (req.cmd === 'config') {
             if (req.config && req.default) {
                 res = rl.config(req.config);
             } else {
                 res = rl.config();
             }
+        } else if (req.cmd === 'reset') {
+            if (req.key === 'reset') {
+                rl.stop();
+                res = rl.reset();
+            } else {
+                res = { err: [`invalid reset key: ${req.key}`] };
+            }
+            res = rl.reset(req.key);
+        } else if (req.cmd === 'reboot') {
+            if (req.key === 'reboot') {
+                rl.stop();
+                res = { status: util.system_reboot() };
+            } else {
+                res = { err: [`invalid reboot key: ${req.key}`] };
+            }
+        } else if (req.cmd === 'poweroff') {
+            if (req.key === 'poweroff') {
+                rl.stop();
+                res = { status: util.system_poweroff() };
+            } else {
+                res = { err: [`invalid poweroff key: ${req.key}`] };
+            }
         }
-
         // process and send result
         if (res) {
             res.req = req;
@@ -252,7 +273,7 @@ io.on('connection', (socket) => {
         console.log(`rl status: ${JSON.stringify(req)}`);
 
         // poll status and emit on status channel
-        if (req.cmd == 'status') {
+        if (req.cmd === 'status') {
             const res = rl.status();
             res.req = req;
             socket.emit('status', res);

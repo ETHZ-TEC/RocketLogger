@@ -110,7 +110,6 @@ const rl = {
             err: [],
             warn: [],
             msg: [],
-            config: null,
             stop: null,
         };
 
@@ -124,6 +123,28 @@ const rl = {
 
         res.stop = cmd.status;
         res.cli = `rocketlogger ${args.join(' ')}`;
+        return res;
+    },
+
+    /// reset RocketLogger by restarting the rocketloggerd service
+    reset: () => {
+        const res = {
+            err: [],
+            warn: [],
+            msg: [],
+            reset: null,
+        };
+
+        const args = ['pkill', 'rocketloggerd'];
+        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        if (cmd.error) {
+            res.err.push('Restarting RocketLogger service failed. ' +
+                'Please check your system configuration!');
+            return res;
+        }
+
+        res.reset = cmd.status;
+        res.cli = `sudo ${args.join(' ')}`;
         return res;
     },
 

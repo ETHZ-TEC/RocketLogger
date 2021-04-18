@@ -17,6 +17,21 @@
           <button id="button_status" class="btn btn-outline-dark">Force Status Update</button>
         </div>
       </div>
+      <div class="col-sm-auto">
+        <div class="form-group">
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              System
+            </button>
+            <div class="dropdown-menu">
+              <h6 class="dropdown-header alert alert-warning">Stop mesaurement first to avoid data corruption!</h6>
+              <button id="button_reset" class="dropdown-item" type="button">Reset RocketLogger Hardware</a>
+              <button id="button_reboot" class="dropdown-item" type="button">Reboot RocketLogger System</a>
+              <button id="button_poweroff" class="dropdown-item" type="button">Shut down RocketLogger System</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   {% endblock %}
   {% block rocketlogger_download %}
@@ -29,7 +44,6 @@
           <a href="/log/" target="_blank" class="btn btn-outline-dark" role="button">Open log file</a>
         </div>
       </div>
-      <div class="col-sm-1"></div>
       <div class="col-auto">
         <div class="form-group">
           <a href="/calibration/" class="btn btn-outline-danger" role="button" aria-pressed="true">Calibrate</a>
