@@ -195,15 +195,17 @@ app.get('/data/delete/:filename', (req, res) => {
         fs.accessSync(filepath);
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
+        return;
     }
 
     try {
         fs.unlinkSync(filepath);
     } catch (err) {
         res.status(403).send(`Error deleting file ${req.params.filename}: ${err}`);
+        return;
     }
 
-    res.send(`deleted file: ${req.params.filename}`);
+    res.redirect('back');
 });
 
 // socket.io configure new connection
