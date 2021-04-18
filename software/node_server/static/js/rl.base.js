@@ -126,7 +126,7 @@ function status_get_reset() {
 /// update the status interface with the current RocketLogger status
 function update_status() {
     if (rl._data.status === null) {
-        throw 'undefined RocketLogger status.'
+        throw 'undefined RocketLogger status.';
     }
     const status = rl._data.status;
 
@@ -204,12 +204,12 @@ $(() => {
     rocketlogger_init_base();
 
     // status update button
-    $('#button_status').click(() => {
+    $('#button_status').on('click', () => {
         rl.status();
     });
 
     // status update on window focus
-    window.addEventListener('focus', () => {
+    $(window).on('focus', () => {
         rl.status();
     });
 

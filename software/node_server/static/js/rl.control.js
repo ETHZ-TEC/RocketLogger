@@ -32,7 +32,7 @@
 
 // check RocketLogger base functionality is loaded
 if (typeof (rl) === 'undefined') {
-    throw 'need to load rl.base.js before loading rl.control.js'
+    throw 'need to load rl.base.js before loading rl.control.js';
 }
 
 /// RocketLogger channel names
@@ -44,7 +44,7 @@ const RL_CHANNEL_FORCE_NAMES = ['I1H', 'I2H'];
 function rocketlogger_init_control() {
     // check RocketLogger base functionality is initialized
     if (rl.status === null) {
-        throw 'need RocketLogger base functionality to be initialized first.'
+        throw 'need RocketLogger base functionality to be initialized first.';
     }
 
     // init config with reset default
@@ -222,7 +222,7 @@ function config_change() {
 /// update configuration interface to RocketLogger default configuration
 function config_reset_default() {
     if (rl._data.default_config === null) {
-        throw 'undefined RocketLogger default configuration.'
+        throw 'undefined RocketLogger default configuration.';
     }
     const config = rl._data.default_config;
 
@@ -377,7 +377,7 @@ $(() => {
             'Enter "shutdown" to confirm and proceed:',
             '');
         if (res) {
-            rl.poweroff(res.trim().toLowerCase() ==='shutdown' ? 'poweroff' : '');
+            rl.poweroff(res.trim().toLowerCase() === 'shutdown' ? 'poweroff' : '');
         }
     });
 

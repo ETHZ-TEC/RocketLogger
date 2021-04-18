@@ -236,45 +236,60 @@ io.on('connection', (socket) => {
         console.log(`rl control: ${JSON.stringify(req)}`);
         // handle control command and emit on status channel
         let res = null;
-        if (req.cmd === 'start') {
-            res = rl.start(req.config);
-        } else if (req.cmd === 'stop') {
-            res = rl.stop();
-        } else if (req.cmd === 'config') {
-            if (req.config && req.default) {
-                res = rl.config(req.config);
-            } else {
-                res = rl.config();
-            }
-        } else if (req.cmd === 'reset') {
-            if (req.key === 'reset') {
+        switch (req.cmd) {
+            case 'start':
+                res = rl.start(req.config);
+                break;
+
+            case 'stop':
+                res = rl.stop();
+                break;
+
+            case 'config':
+                if (req.config && req.default) {
+                    res = rl.config(req.config);
+                } else {
+                    res = rl.config();
+                }
+                break;
+
+            case 'reset':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid reset key: ${req.key}`] };
+                    break;
+                }
                 rl.stop();
                 res = rl.reset();
-            } else {
-                res = { err: [`invalid reset key: ${req.key}`] };
-            }
-            res = rl.reset(req.key);
-        } else if (req.cmd === 'reboot') {
-            if (req.key === 'reboot') {
+                break;
+
+            case 'reboot':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid reboot key: ${req.key}`] };
+                    break;
+                }
                 rl.stop();
                 res = { status: util.system_reboot() };
-            } else {
-                res = { err: [`invalid reboot key: ${req.key}`] };
-            }
-        } else if (req.cmd === 'poweroff') {
-            if (req.key === 'poweroff') {
+                break;
+
+            case 'poweroff':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid poweroff key: ${req.key}`] };
+                    break;
+                }
                 rl.stop();
                 res = { status: util.system_poweroff() };
-            } else {
-                res = { err: [`invalid poweroff key: ${req.key}`] };
-            }
+                break;
+
+            default:
+                res = { err: [`invalid control command: ${req.cmd}`] };
+                break;
         }
         // process and send result
         if (res) {
             res.req = req;
             socket.emit('control', res);
         } else {
-            socket.emit('control', { err: [`invalid control command: ${req.cmd}`] });
+            socket.emit('control', { err: [`error processing command: ${req.cmd}`] });
         }
     });
 
