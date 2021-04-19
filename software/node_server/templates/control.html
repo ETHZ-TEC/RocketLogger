@@ -19,6 +19,16 @@
   <script src="/static/js/rl.data.js"></script>
 {% endblock %}
 
+{% block header %}
+  <div id="error_offline" class="banner-top d-none">
+    <div class="alert alert-danger fixed-top" role="alert">
+      <div class="container">
+        <strong>Error:</strong> RocketLogger offline!
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
 {% block title %}RocketLogger Control{% if hostname %} ({{ hostname }}){% endif %}{% endblock %}
 {% block content %}
 <!-- Page Title -->

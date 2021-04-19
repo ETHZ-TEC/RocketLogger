@@ -30,6 +30,8 @@
 
 "use strict";
 
+/// RocketLogger offline timeout for connection setup
+const RL_OFFLINE_TIMEOUT_MS = 2000;
 /// Disk space critically low warning thresholds in permille
 const RL_DISK_CRITICAL_THRESHOLD = 50;
 /// Disk space low warning thresholds in permille
@@ -61,15 +63,23 @@ const rl = {
 
 /// initialize RocketLogger interfacing base functionality
 function rocketlogger_init_base() {
+    // set connection timeout before showing offline banner
+    const offline_timeout = setTimeout(() => {
+        $('#error_offline').show();
+    }, RL_OFFLINE_TIMEOUT_MS);
+
     // new socket.io socket for RocketLogger interaction
     rl._data.socket = io(window.location.origin);
 
     // init connection handler callbacks
     rl._data.socket.on('connect', () => {
         console.log(`socket.io connection established (${rl._data.socket.id}).`);
+        clearTimeout(offline_timeout);
+        $('#error_offline').hide();
     });
     rl._data.socket.on('disconnect', () => {
         console.log(`socket.io connection closed.`);
+        $('#error_offline').show();
     });
     // init default message callback
     rl._data.socket.on('message', (msg) => {
