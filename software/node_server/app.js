@@ -51,6 +51,7 @@ const asset_version = {
     popperjs: require('popper.js/package.json').version,
     plotly: require('plotly.js/package.json').version,
     socketio: require('socket.io-client/package.json').version,
+    timesync: require('timesync/package.json').version,
 }
 
 // configuration
@@ -119,6 +120,7 @@ app.use('/assets', [
     express.static(__dirname + '/node_modules/popper.js/dist/umd'),
     express.static(__dirname + '/node_modules/plotly.js/dist'),
     express.static(__dirname + '/node_modules/socket.io-client/dist'),
+    express.static(__dirname + '/node_modules/timesync/dist')
 ]);
 app.use('/static', express.static(path_static));
 app.get('/robots.txt', express.static(path_static));
@@ -311,6 +313,15 @@ io.on('connection', (socket) => {
     socket.on('data', (req) => {
         // @todo: implement local data caching
         console.log(`rl data: ${JSON.stringify(req)}`);
+    });
+
+    // handle timesync request
+    socket.on('timesync', function (data) {
+        console.log(`timeync: ${JSON.stringify(data)}`);
+        socket.emit('timesync', {
+            id: data && 'id' in data ? data.id : null,
+            result: Date.now()
+        });
     });
 });
 

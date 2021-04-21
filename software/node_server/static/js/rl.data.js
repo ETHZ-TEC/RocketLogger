@@ -41,6 +41,8 @@ const RL_DATA_BUFFER_LENGTH = 1e6;
 const RL_PLOT_POINTS = 10000;
 /// maximum plot update rate [frames/sec]
 const RL_PLOT_MAX_FPS = 50;
+/// interval for server timesync [ms]
+const RL_TIMESYNC_INTERVAL_MS = 60e3;
 
 /// initialize RocketLogger data and plot functionality
 function rocketlogger_init_data() {
@@ -89,6 +91,34 @@ function rocketlogger_init_data() {
             rl.plot.start();
             $('#collapseConfiguration').collapse('hide');
         }
+    });
+
+    // setup timesync
+    const ts = timesync.create({
+        server: rl._data.socket,
+        interval: RL_TIMESYNC_INTERVAL_MS
+    });
+
+    ts.on('change', (offset) => {
+        console.log('server timesync update: ' + offset + ' ms');
+        rl._data.t_offset = offset;
+    });
+
+    ts.send = (socket, req, timeout) => {
+        // console.log(`timesync send: ${JSON.stringify(req)}`);
+        return new Promise((resolve, reject) => {
+            let sync_timeout = setTimeout(reject, timeout);
+            socket.emit('timesync', req, (res) => {
+                // console.log(`timesync response: ${JSON.stringify(res)}`);
+                clearTimeout(sync_timeout);
+                resolve();
+            });
+        });
+    };
+
+    // server timesync callback
+    rl._data.socket.on('timesync', (data) => {
+        ts.receive(null, data);
     });
 }
 
@@ -145,7 +175,7 @@ function process_data(res) {
 
 /// initialize an analog data plot
 function plot_get_xlayout(time_scale) {
-    const now = Date.now();
+    const now = Date.now() + rl._data.t_offset;
 
     /// default x-axis configuration
     const xaxis = {
