@@ -53,8 +53,8 @@ echo "> Deploy RocketLogger system to image '${IMAGE}'"
 ## grow image filesystem
 echo "> Grow system partition size to fit RocketLogger installation"
 
-# grow image size and partition by 700 MB
-dd if=/dev/zero of=${IMAGE} bs=1M count=700 oflag=append conv=notrunc status=progress
+# grow image size and partition by 900 MB
+dd if=/dev/zero of=${IMAGE} bs=1M count=900 oflag=append conv=notrunc status=progress
 sfdisk ${IMAGE} <<-__EOF__
 4M,,L,*
 __EOF__
