@@ -85,6 +85,11 @@ int rl_log(rl_log_level_t log_level, char const *const format, ...) {
         return 0;
     }
 
+    // log only if log level is equal or higher than configured verbosity
+    if (log_level > log_verbosity) {
+        return 0;
+    }
+
     // get arguments
     va_list args;
     va_start(args, format);
@@ -132,28 +137,26 @@ int rl_log(rl_log_level_t log_level, char const *const format, ...) {
     // close file
     fclose(log_fp);
 
-    // output to terminal if log more severe or equal to configured verbosity
-    if (log_level <= log_verbosity) {
-        switch (log_level) {
-        case RL_LOG_ERROR:
-            printf("Error: ");
-            break;
-        case RL_LOG_WARNING:
-            printf("Warning: ");
-            break;
-        case RL_LOG_INFO:
-            printf("Info: ");
-            break;
-        case RL_LOG_VERBOSE:
-            printf("Verbose: ");
-            break;
-        default:
-            // skip handled above
-            break;
-        }
-        vprintf(format, args);
-        printf("\n");
+    // output to terminal
+    switch (log_level) {
+    case RL_LOG_ERROR:
+        printf("Error: ");
+        break;
+    case RL_LOG_WARNING:
+        printf("Warning: ");
+        break;
+    case RL_LOG_INFO:
+        printf("Info: ");
+        break;
+    case RL_LOG_VERBOSE:
+        printf("Verbose: ");
+        break;
+    default:
+        // skip handled above
+        break;
     }
+    vprintf(format, args);
+    printf("\n");
 
     // facilitate return
     va_end(args);
