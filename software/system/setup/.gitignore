@@ -1,6 +1,3 @@
-# ignore all by default
-/*
-
 # include .gitignore and setup scripts
 !.gitignore
 !setup.sh

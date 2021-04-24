@@ -51,6 +51,7 @@ const asset_version = {
     popperjs: require('popper.js/package.json').version,
     plotly: require('plotly.js/package.json').version,
     socketio: require('socket.io-client/package.json').version,
+    timesync: require('timesync/package.json').version,
 }
 
 // configuration
@@ -119,6 +120,7 @@ app.use('/assets', [
     express.static(__dirname + '/node_modules/popper.js/dist/umd'),
     express.static(__dirname + '/node_modules/plotly.js/dist'),
     express.static(__dirname + '/node_modules/socket.io-client/dist'),
+    express.static(__dirname + '/node_modules/timesync/dist')
 ]);
 app.use('/static', express.static(path_static));
 app.get('/robots.txt', express.static(path_static));
@@ -159,11 +161,19 @@ app.get('/data', (req, res) => {
 
 // routing of file actions
 app.get('/log', (req, res) => {
+    const logfile = rl.path_system_logfile;
     try {
-        fs.accessSync(path_system_logfile, fs.constants.R_OK);
-        res.sendFile(path_system_logfile);
+        fs.accessSync(logfile, fs.constants.F_OK);
     } catch (err) {
         res.status(404).send('Log file was not found. Please check your systems configuration!');
+        return;
+    }
+
+    try {
+        res.sendFile(logfile);
+    } catch (err) {
+        res.status(403).send('Error accessing log file. Please check your systems configuration!');
+        return;
     }
 });
 
@@ -195,15 +205,17 @@ app.get('/data/delete/:filename', (req, res) => {
         fs.accessSync(filepath);
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
+        return;
     }
 
     try {
         fs.unlinkSync(filepath);
     } catch (err) {
         res.status(403).send(`Error deleting file ${req.params.filename}: ${err}`);
+        return;
     }
 
-    res.send(`deleted file: ${req.params.filename}`);
+    res.redirect('back');
 });
 
 // socket.io configure new connection
@@ -226,24 +238,60 @@ io.on('connection', (socket) => {
         console.log(`rl control: ${JSON.stringify(req)}`);
         // handle control command and emit on status channel
         let res = null;
-        if (req.cmd == 'start') {
-            res = rl.start(req.config);
-        } else if (req.cmd == 'stop') {
-            res = rl.stop();
-        } else if (req.cmd == 'config') {
-            if (req.config && req.default) {
-                res = rl.config(req.config);
-            } else {
-                res = rl.config();
-            }
-        }
+        switch (req.cmd) {
+            case 'start':
+                res = rl.start(req.config);
+                break;
 
+            case 'stop':
+                res = rl.stop();
+                break;
+
+            case 'config':
+                if (req.config && req.default) {
+                    res = rl.config(req.config);
+                } else {
+                    res = rl.config();
+                }
+                break;
+
+            case 'reset':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid reset key: ${req.key}`] };
+                    break;
+                }
+                rl.stop();
+                res = rl.reset();
+                break;
+
+            case 'reboot':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid reboot key: ${req.key}`] };
+                    break;
+                }
+                rl.stop();
+                res = { status: util.system_reboot() };
+                break;
+
+            case 'poweroff':
+                if (req.key !== req.cmd) {
+                    res = { err: [`invalid poweroff key: ${req.key}`] };
+                    break;
+                }
+                rl.stop();
+                res = { status: util.system_poweroff() };
+                break;
+
+            default:
+                res = { err: [`invalid control command: ${req.cmd}`] };
+                break;
+        }
         // process and send result
         if (res) {
             res.req = req;
             socket.emit('control', res);
         } else {
-            socket.emit('control', { err: [`invalid control command: ${req.cmd}`] });
+            socket.emit('control', { err: [`error processing command: ${req.cmd}`] });
         }
     });
 
@@ -252,7 +300,7 @@ io.on('connection', (socket) => {
         console.log(`rl status: ${JSON.stringify(req)}`);
 
         // poll status and emit on status channel
-        if (req.cmd == 'status') {
+        if (req.cmd === 'status') {
             const res = rl.status();
             res.req = req;
             socket.emit('status', res);
@@ -265,6 +313,15 @@ io.on('connection', (socket) => {
     socket.on('data', (req) => {
         // @todo: implement local data caching
         console.log(`rl data: ${JSON.stringify(req)}`);
+    });
+
+    // handle timesync request
+    socket.on('timesync', function (data) {
+        console.log(`timeync: ${JSON.stringify(data)}`);
+        socket.emit('timesync', {
+            id: data && 'id' in data ? data.id : null,
+            result: Date.now()
+        });
     });
 });
 

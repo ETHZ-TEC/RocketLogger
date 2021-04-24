@@ -31,8 +31,9 @@
     "nunjucks": "3.2.x",
     "plotly.js": "1.58.x",
     "popper.js": "1.16.x",
-    "socket.io-client": "3.1.x",
-    "socket.io": "3.1.x",
+    "socket.io": "4.0.x",
+    "socket.io-client": "4.0.x",
+    "timesync": "1.0.x",
     "zeromq": "6.0.0-beta.6"
   },
   "repository": {

@@ -1,0 +1,2 @@
+rocketlogger    ALL = NOPASSWD: /sbin/shutdown
+rocketlogger    ALL = NOPASSWD: /usr/bin/pkill rocketloggerd

@@ -30,28 +30,50 @@
 
 "use strict";
 
-module.exports = {
-	/// helper function to display byte values
-	bytes_to_string(bytes) {
-		if (bytes === 0) {
-			return "0 B";
-		}
-		let log1k = Math.floor(Math.log10(bytes) / 3);
-		let value = (bytes / Math.pow(1000, log1k));
+const { spawnSync } = require('child_process');
 
-		switch (log1k) {
-			case 0:
-				return value.toFixed(0) + " B";
-			case 1:
-				return value.toFixed(2) + " kB";
-			case 2:
-				return value.toFixed(2) + " MB";
-			case 3:
-				return value.toFixed(2) + " GB";
-			case 4:
-				return value.toFixed(2) + " TB";
-			default:
-				return bytes.toPrecision(5) + " B";
-		}
-	}
+module.exports = {
+    /// helper function to display byte values
+    bytes_to_string(bytes) {
+        if (bytes === 0) {
+            return "0 B";
+        }
+        let log1k = Math.floor(Math.log10(bytes) / 3);
+        let value = (bytes / Math.pow(1000, log1k));
+
+        switch (log1k) {
+            case 0:
+                return value.toFixed(0) + " B";
+            case 1:
+                return value.toFixed(2) + " kB";
+            case 2:
+                return value.toFixed(2) + " MB";
+            case 3:
+                return value.toFixed(2) + " GB";
+            case 4:
+                return value.toFixed(2) + " TB";
+            default:
+                return bytes.toPrecision(5) + " B";
+        }
+    },
+
+    /// helper function to reboot the system
+    system_reboot() {
+        const args = ['shutdown', '--reboot', 'now'];
+        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        if (cmd.error) {
+            return cmd.error;
+        }
+        return cmd.status;
+    },
+
+    /// helper function to shutdown the system
+    system_poweroff() {
+        const args = ['shutdown', '--poweroff', 'now'];
+        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        if (cmd.error) {
+            return cmd.error;
+        }
+        return cmd.status;
+    },
 };

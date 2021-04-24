@@ -98,8 +98,7 @@ useradd --create-home --shell /bin/bash rocketlogger
 # set default password
 cat user/password | chpasswd
 
-# add rocketlogger user to admin and sudo group for super user commands
-usermod --append --groups admin rocketlogger
+# add rocketlogger user to sudo group
 usermod --append --groups sudo rocketlogger
 
 # display updated user configuration
@@ -118,6 +117,7 @@ echo "> Set user permissions"
 
 # configure sudoers
 cp --force sudo/privacy /etc/sudoers.d/
+cp --force sudo/rocketlogger /etc/sudoers.d/
 chmod 440 /etc/sudoers.d/*
 
 
