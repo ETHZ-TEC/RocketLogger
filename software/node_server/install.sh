@@ -1,5 +1,5 @@
 #!/bin/bash
-# RocketLogger nodejs web interface install script
+# RocketLogger Node.js web interface install script
 #
 # Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2020, ETH Zurich, Computer Engineering Group
@@ -42,28 +42,46 @@ SERVICE_CONFIG=rocketlogger-web.service
 ## package install
 echo "> Install required system packages"
 
-# install latest nodejs and compiler for compiled dependencies
+# install latest Node.js and compiler for compiled dependencies
 sudo apt-get install --assume-yes \
   g++                             \
   make                            \
   nodejs
 
+# verify webserver dependencies installation was successful
+CONFIG=$?
+if [ $CONFIG -ne 0 ]; then
+  echo "[ !! ] Webserver dependencies installation failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  exit $CONFIG
+else
+  echo "[ OK ] Webserver dependencies installation was successful."
+fi
 
-## copy and install nodejs packages
-echo "> Setup nodejs environment"
+
+## copy and install Node.js packages
+echo "> Setup Node.js environment"
 
 # create traget install directory if not existing
 mkdir --parents ${INSTALL_WEB_DIR} ${INSTALL_DATA_DIR}
 
 ## create webserver install folder and install npm packets
-echo "> Copy RocketLogger nodejs web interface"
+echo "> Copy RocketLogger Node.js web interface"
 cp --force --recursive --verbose *.js ${INSTALL_WEB_DIR}
 cp --force --recursive --verbose static ${INSTALL_WEB_DIR}
 cp --force --recursive --verbose templates ${INSTALL_WEB_DIR}
 cp --force --recursive --verbose package.json ${INSTALL_WEB_DIR}
 
-echo "> Install RocketLogger nodejs web interface dependencies"
+echo "> Install RocketLogger Node.js web interface"
 npm install --production --prefix ${INSTALL_WEB_DIR} ${INSTALL_WEB_DIR}
+
+# verify Node.js package installation was successful
+CONFIG=$?
+if [ $CONFIG -ne 0 ]; then
+  echo "[ !! ] Node.js package installation failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  exit $CONFIG
+else
+  echo "[ OK ] Node.js package installation was successful."
+fi
 
 
 ## install web interface service and restart
@@ -73,3 +91,4 @@ sudo systemctl enable rocketlogger-web
 sudo systemctl restart rocketlogger-web
 
 echo "> Done installing RocketLogger web interface."
+exit 0
