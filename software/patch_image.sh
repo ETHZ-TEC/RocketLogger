@@ -41,9 +41,13 @@ IMAGE=`basename "${IMAGE_FLASHER_FILE}" ".xz"`
 cd ..
 
 # build rocketlogger binary
+set -o pipefail # report last non-zero exit code of piped commands
 docker run --privileged --platform linux/arm/v7  \
     --mount type=bind,source="$(pwd)/rocketlogger",target=/home/rocketlogger  \
     --mount type=bind,source="$(pwd)/system",target=/home/system  \
     --mount type=bind,source="$(pwd)/node_server",target=/home/node_server  \
     --tty arm32v7/debian:buster-slim /bin/bash -c "cd /home/system && ./chroot_setup.sh ${IMAGE}"  \
   | tee "$(pwd)/system/patch_image.log"
+STATUS=$?
+set +o pipefail # revert to default pipe exit code behavior
+exit $STATUS

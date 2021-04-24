@@ -61,9 +61,14 @@ __EOF__
 
 # mount partition and grow filesystem to partition size
 DISK=`losetup --verbose --offset=$((512*8192)) --find --show ${IMAGE}`
-if [[ ! -e ${DISK} ]]; then
-  echo "Error: could not mount image ${IMAGE}"
-  exit 1
+
+# verify system image mount was successful
+MOUNT=$?
+if [ $MOUNT -ne 0 ]; then
+  echo "[ !! ] System image mount for partition resize failed (code $MOUNT). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  exit $MOUNT
+else
+  echo "[ OK ] System image mount for partition resize was successful."
 fi
 
 e2fsck -f ${DISK}
@@ -77,6 +82,15 @@ echo "> Setup and configure filesystems"
 # mount the beaglebone base image to patch
 echo "> Mount image file '${IMAGE}' to ${ROOTFS}"
 mount -o loop,offset=$((512*8192)) "${IMAGE}" ${ROOTFS}
+
+# verify system image mount was successful
+MOUNT=$?
+if [ $MOUNT -ne 0 ]; then
+  echo "[ !! ] System image mount failed (code $MOUNT). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  exit $MOUNT
+else
+  echo "[ OK ] System image mount was successful."
+fi
 
 echo "> Bind system mounts"
 mount --bind /dev ${ROOTFS}/dev
@@ -125,6 +139,7 @@ else
   echo "[ OK ] Software installation was successful."
 fi
 
+
 ## install RocketLogger web interface
 echo "> Chroot to build and install web interface"
 chroot ${ROOTFS} /bin/bash -c "cd /root/node_server && ./install.sh"
@@ -170,3 +185,4 @@ mv "${IMAGE}" "${IMAGE_PATCHED}"
 
 ## hint on the next setup step
 echo ">> Flash the image to an SD card and insert it into any RocketLogger to install the system."
+exit 0

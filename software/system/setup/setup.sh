@@ -82,6 +82,15 @@ apt-get install --assume-yes        \
     libncurses5-dev                 \
     libzmq3-dev
 
+# verify system dependencies installation was successful
+INSTALL=$?
+if [ $INSTALL -ne 0 ]; then
+  echo "[ !! ] System dependencies installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  exit $INSTALL
+else
+  echo "[ OK ] System dependencies installation was successful."
+fi
+
 # install nodesource repository for nodejs 14.x LTS
 curl --silent --location https://deb.nodesource.com/setup_14.x | bash -
 
