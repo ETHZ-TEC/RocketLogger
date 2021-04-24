@@ -66,10 +66,10 @@ mkdir --parents ${INSTALL_WEB_DIR} ${INSTALL_DATA_DIR}
 
 ## create webserver install folder and install npm packets
 echo "> Copy RocketLogger Node.js web interface"
-cp --force --recursive --verbose *.js ${INSTALL_WEB_DIR}
 cp --force --recursive --verbose static ${INSTALL_WEB_DIR}
 cp --force --recursive --verbose templates ${INSTALL_WEB_DIR}
-cp --force --recursive --verbose package.json ${INSTALL_WEB_DIR}
+cp --force --verbose *.js ${INSTALL_WEB_DIR}
+cp --force --verbose *.json ${INSTALL_WEB_DIR}
 
 echo "> Install RocketLogger Node.js web interface"
 npm install --production --prefix ${INSTALL_WEB_DIR} ${INSTALL_WEB_DIR}
