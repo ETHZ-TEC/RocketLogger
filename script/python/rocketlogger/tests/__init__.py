@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # switch to a matplotlib backend not requiring display (before pyploy import!)
 import os
+
 if os.environ.get("MATPLOTLIB_AVAILABLE") == "true":
     import matplotlib as mpl
-    mpl.use('Agg')
+
+    mpl.use("Agg")

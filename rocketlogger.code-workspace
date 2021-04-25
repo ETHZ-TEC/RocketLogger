@@ -34,7 +34,8 @@
 			"--suggest-missing-includes",
 			"--clang-tidy",
 			"--compile-commands-dir=${workspaceFolder}/builddir"
-		]
+		],
+		"python.formatting.provider": "black",
 	},
 	"extensions": {
 		"recommendations": [

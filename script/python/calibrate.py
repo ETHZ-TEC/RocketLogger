@@ -32,26 +32,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
-from rocketlogger.calibration import RocketLoggerCalibration, \
-    CALIBRATION_SETUP_SMU2450
+from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_SMU2450
 
 
 # file input configuration
-filename_prefix = 'data/test_'
+filename_prefix = "data/test_"
 
 # automatically derive individual meausrement file names
-calibration_file_v = '{}calibration_v.rld'.format(filename_prefix)
-calibration_file_i1l = '{}calibration_i1l.rld'.format(filename_prefix)
-calibration_file_i2l = '{}calibration_i2l.rld'.format(filename_prefix)
-calibration_file_ih = '{}calibration_ih.rld'.format(filename_prefix)
+calibration_file_v = "{}calibration_v.rld".format(filename_prefix)
+calibration_file_i1l = "{}calibration_i1l.rld".format(filename_prefix)
+calibration_file_i2l = "{}calibration_i2l.rld".format(filename_prefix)
+calibration_file_ih = "{}calibration_ih.rld".format(filename_prefix)
 
 # calibration output file names
-calibration_file = 'calibration.dat'
-calibration_log_file = 'calibration.log'
-calibration_file_copy = '{}calibration.dat'.format(
-    filename_prefix.split('/')[-1])
-calibration_log_file_copy = '{}calibration.log'.format(
-    filename_prefix.split('/')[-1])
+calibration_file = "calibration.dat"
+calibration_log_file = "calibration.log"
+calibration_file_copy = "{}calibration.dat".format(filename_prefix.split("/")[-1])
+calibration_log_file_copy = "{}calibration.log".format(filename_prefix.split("/")[-1])
 
 
 # load the calibration measurement files
@@ -76,4 +73,4 @@ cal.write_log_file(calibration_log_file)
 cal.write_calibration_file(calibration_file_copy)
 cal.write_log_file(calibration_log_file_copy)
 
-print('calibration done.')
+print("calibration done.")

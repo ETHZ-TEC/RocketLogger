@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from rocketlogger.data import RocketLoggerData
 
 
-data_file = 'data/test-full.rld'
+data_file = "data/test-full.rld"
 
 # minimal example
 r = RocketLoggerData(data_file)
@@ -55,8 +55,8 @@ print(r._data[0].shape)
 
 # with plotting
 r = RocketLoggerData(data_file)
-r.plot(['voltages', 'currents'])
-r.plot(['digital'])
+r.plot(["voltages", "currents"])
+r.plot(["digital"])
 
 # straight loading, merging, plotting
 data = RocketLoggerData(data_file)

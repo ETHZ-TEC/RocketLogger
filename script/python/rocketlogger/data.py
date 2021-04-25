@@ -69,18 +69,18 @@ _CHANNEL_VALID_LINK_BYTES = 2
 _CHANNEL_NAME_BYTES = 16
 
 _CHANNEL_UNIT_NAMES = {
-    0: 'unit-less',
-    1: 'voltage',
-    2: 'current',
-    3: 'binary',
-    4: 'data valid (binary)',
-    5: 'illuminance',
-    6: 'temperature',
-    7: 'integer',
-    8: 'percent',
-    9: 'pressure',
-    10: 'time delta',
-    0xffffffff: 'undefined',
+    0: "unit-less",
+    1: "voltage",
+    2: "current",
+    3: "binary",
+    4: "data valid (binary)",
+    5: "illuminance",
+    6: "temperature",
+    7: "integer",
+    8: "percent",
+    9: "pressure",
+    10: "time delta",
+    0xFFFFFFFF: "undefined",
 }
 _CHANNEL_IS_BINARY = {
     0: False,
@@ -94,13 +94,13 @@ _CHANNEL_IS_BINARY = {
     8: False,
     9: False,
     10: False,
-    0xffffffff: False,
+    0xFFFFFFFF: False,
 }
 _CHANNEL_VALID_UNLINKED = 65535
 
 _CHANNEL_MERGE_CANDIDATES = [
-    {'low': 'I1L', 'high': 'I1H', 'merged': 'I1'},
-    {'low': 'I2L', 'high': 'I2H', 'merged': 'I2'},
+    {"low": "I1L", "high": "I1H", "merged": "I1"},
+    {"low": "I2L", "high": "I2H", "merged": "I2"},
 ]
 
 
@@ -118,10 +118,10 @@ def _decimate_binary(values, decimation_factor, threshold_value=0.5):
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
-    aggregated_values = np.reshape(values[0:count_old],
-                                   (count_new, decimation_factor))
-    return np.logical_not(np.sum(aggregated_values, axis=1) <
-                          (threshold_value * decimation_factor))
+    aggregated_values = np.reshape(values[0:count_old], (count_new, decimation_factor))
+    return np.logical_not(
+        np.sum(aggregated_values, axis=1) < (threshold_value * decimation_factor)
+    )
 
 
 def _decimate_min(values, decimation_factor):
@@ -136,9 +136,8 @@ def _decimate_min(values, decimation_factor):
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
-    aggregated_values = np.reshape(values[0:count_old],
-                                   (count_new, decimation_factor))
-    return (np.sum(aggregated_values, axis=1) >= decimation_factor)
+    aggregated_values = np.reshape(values[0:count_old], (count_new, decimation_factor))
+    return np.sum(aggregated_values, axis=1) >= decimation_factor
 
 
 def _decimate_max(values, decimation_factor):
@@ -153,9 +152,8 @@ def _decimate_max(values, decimation_factor):
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
-    aggregated_values = np.reshape(values[0:count_old],
-                                   (count_new, decimation_factor))
-    return (np.sum(aggregated_values, axis=1) > 0)
+    aggregated_values = np.reshape(values[0:count_old], (count_new, decimation_factor))
+    return np.sum(aggregated_values, axis=1) > 0
 
 
 def _decimate_mean(values, decimation_factor):
@@ -170,8 +168,7 @@ def _decimate_mean(values, decimation_factor):
     """
     count_new = floor(values.shape[0] / decimation_factor)
     count_old = count_new * decimation_factor
-    aggregated_values = np.reshape(values[0:count_old],
-                                   (count_new, decimation_factor))
+    aggregated_values = np.reshape(values[0:count_old], (count_new, decimation_factor))
     return np.mean(aggregated_values, axis=1)
 
 
@@ -185,8 +182,7 @@ def _read_uint(file_handle, data_size):
 
     :returns: The integer read and decoded
     """
-    return int.from_bytes(file_handle.read(data_size),
-                          byteorder='little', signed=False)
+    return int.from_bytes(file_handle.read(data_size), byteorder="little", signed=False)
 
 
 def _read_int(file_handle, data_size):
@@ -199,8 +195,7 @@ def _read_int(file_handle, data_size):
 
     :returns: The integer read and decoded
     """
-    return int.from_bytes(file_handle.read(data_size),
-                          byteorder='little', signed=True)
+    return int.from_bytes(file_handle.read(data_size), byteorder="little", signed=True)
 
 
 def _read_str(file_handle, length):
@@ -214,7 +209,7 @@ def _read_str(file_handle, length):
     :returns: The string read and decoded
     """
     raw_bytes = file_handle.read(length)
-    return raw_bytes.split(b'\x00')[0].decode(encoding='ascii')
+    return raw_bytes.split(b"\x00")[0].decode(encoding="ascii")
 
 
 def _read_timestamp(file_handle):
@@ -227,8 +222,7 @@ def _read_timestamp(file_handle):
     """
     seconds = _read_int(file_handle, _TIMESTAMP_SECONDS_BYTES)
     nanoseconds = _read_int(file_handle, _TIMESTAMP_NANOSECONDS_BYTES)
-    timestamp_ns = (np.datetime64(seconds, 's') +
-                    np.timedelta64(nanoseconds, 'ns'))
+    timestamp_ns = np.datetime64(seconds, "s") + np.timedelta64(nanoseconds, "ns")
     return timestamp_ns
 
 
@@ -258,9 +252,16 @@ class RocketLoggerData:
     files.
     """
 
-    def __init__(self, filename=None, join_files=True, header_only=False,
-                 exclude_part=None, decimation_factor=1, recovery=False,
-                 memory_mapped=True):
+    def __init__(
+        self,
+        filename=None,
+        join_files=True,
+        header_only=False,
+        exclude_part=None,
+        decimation_factor=1,
+        recovery=False,
+        memory_mapped=True,
+    ):
         """
         Constructor to create a RockerLoggerData object form data file.
 
@@ -296,16 +297,21 @@ class RocketLoggerData:
         self._timestamps_realtime = []
 
         if filename is None:
-            raise NotImplementedError('RocketLogger data file creation '
-                                      'currently unsupported.')
+            raise NotImplementedError(
+                "RocketLogger data file creation currently unsupported."
+            )
         if isfile(filename):
-            self.load_file(filename, join_files=join_files,
-                           exclude_part=exclude_part, header_only=header_only,
-                           decimation_factor=decimation_factor,
-                           recovery=recovery, memory_mapped=memory_mapped)
+            self.load_file(
+                filename,
+                join_files=join_files,
+                exclude_part=exclude_part,
+                header_only=header_only,
+                decimation_factor=decimation_factor,
+                recovery=recovery,
+                memory_mapped=memory_mapped,
+            )
         else:
-            raise FileNotFoundError('File "{:s}" does not exist.'.format(
-                                    filename))
+            raise FileNotFoundError('File "{:s}" does not exist.'.format(filename))
 
     def _read_file_header(self, file_handle):
         """
@@ -318,98 +324,111 @@ class RocketLoggerData:
         """
         header = {}
 
-        header['file_magic'] = _read_uint(file_handle, _FILE_MAGIC_BYTES)
-        header['file_version'] = _read_uint(file_handle, _FILE_VERSION_BYTES)
+        header["file_magic"] = _read_uint(file_handle, _FILE_MAGIC_BYTES)
+        header["file_version"] = _read_uint(file_handle, _FILE_VERSION_BYTES)
 
         # file consistency check
-        if header['file_magic'] != _ROCKETLOGGER_FILE_MAGIC:
+        if header["file_magic"] != _ROCKETLOGGER_FILE_MAGIC:
             raise RocketLoggerFileError(
-                'Invalid RocketLogger data file, file magic mismatch {:x}.'
-                .format(header['file_magic']))
+                "Invalid RocketLogger data file, file magic mismatch {:x}.".format(
+                    header["file_magic"]
+                )
+            )
 
-        if header['file_version'] not in _SUPPORTED_FILE_VERSIONS:
+        if header["file_version"] not in _SUPPORTED_FILE_VERSIONS:
             raise RocketLoggerFileError(
-                'Unsupported RocketLogger data file version {:d}.'.format(
-                    header['file_version']))
+                "Unsupported RocketLogger data file version {:d}.".format(
+                    header["file_version"]
+                )
+            )
 
         # read static header fields
-        header['header_length'] = _read_uint(file_handle, _HEADER_LENGTH_BYTES)
-        header['data_block_size'] = _read_uint(file_handle,
-                                               _DATA_BLOCK_SIZE_BYTES)
-        header['data_block_count'] = _read_uint(file_handle,
-                                                _DATA_BLOCK_COUNT_BYTES)
-        header['sample_count'] = _read_uint(file_handle, _SAMPLE_COUNT_BYTES)
-        header['sample_rate'] = _read_uint(file_handle, _SAMPLE_RATE_BYTES)
-        header['mac_address'] = bytearray(file_handle.read(_MAC_ADDRESS_BYTES))
-        header['start_time'] = _read_timestamp(file_handle)
-        header['comment_length'] = _read_uint(file_handle,
-                                              _COMMENT_LENGTH_BYTES)
-        header['channel_binary_count'] = _read_uint(
-            file_handle,
-            _CHANNEL_BINARY_COUNT_BYTES)
-        header['channel_analog_count'] = _read_uint(
-            file_handle,
-            _CHANNEL_ANALOG_COUNT_BYTES)
+        header["header_length"] = _read_uint(file_handle, _HEADER_LENGTH_BYTES)
+        header["data_block_size"] = _read_uint(file_handle, _DATA_BLOCK_SIZE_BYTES)
+        header["data_block_count"] = _read_uint(file_handle, _DATA_BLOCK_COUNT_BYTES)
+        header["sample_count"] = _read_uint(file_handle, _SAMPLE_COUNT_BYTES)
+        header["sample_rate"] = _read_uint(file_handle, _SAMPLE_RATE_BYTES)
+        header["mac_address"] = bytearray(file_handle.read(_MAC_ADDRESS_BYTES))
+        header["start_time"] = _read_timestamp(file_handle)
+        header["comment_length"] = _read_uint(file_handle, _COMMENT_LENGTH_BYTES)
+        header["channel_binary_count"] = _read_uint(
+            file_handle, _CHANNEL_BINARY_COUNT_BYTES
+        )
+        header["channel_analog_count"] = _read_uint(
+            file_handle, _CHANNEL_ANALOG_COUNT_BYTES
+        )
 
         # header consistency checks
-        if header['comment_length'] % 4 > 0:
-            warnings.warn('comment length unaligned {:d}.'.format(
-                header['comment_length']), RocketLoggerDataWarning)
-        if (ceil(header['sample_count'] / header['data_block_size']) !=
-                header['data_block_count']):
-            raise RocketLoggerFileError('inconsistent number of samples '
-                                        'taken!')
-        elif (header['sample_count'] < header['data_block_size'] *
-                header['data_block_count']):
-            old_count = header['sample_count']
-            header['data_block_count'] = floor(header['sample_count'] /
-                                               header['data_block_size'])
-            header['sample_count'] = (header['data_block_count'] *
-                                      header['data_block_size'])
+        if header["comment_length"] % 4 > 0:
             warnings.warn(
-                'Skipping incomplete data block at end of file ({:d} samples).'
-                .format(old_count - header['sample_count']),
-                RocketLoggerDataWarning)
+                "comment length unaligned {:d}.".format(header["comment_length"]),
+                RocketLoggerDataWarning,
+            )
+        if (
+            ceil(header["sample_count"] / header["data_block_size"])
+            != header["data_block_count"]
+        ):
+            raise RocketLoggerFileError("inconsistent number of samples taken!")
+        elif (
+            header["sample_count"]
+            < header["data_block_size"] * header["data_block_count"]
+        ):
+            old_count = header["sample_count"]
+            header["data_block_count"] = floor(
+                header["sample_count"] / header["data_block_size"]
+            )
+            header["sample_count"] = (
+                header["data_block_count"] * header["data_block_size"]
+            )
+            warnings.warn(
+                "Skipping incomplete data block at end of file ({:d} samples).".format(
+                    old_count - header["sample_count"]
+                ),
+                RocketLoggerDataWarning,
+            )
 
         # read comment field
-        header['comment'] = _read_str(file_handle, header['comment_length'])
+        header["comment"] = _read_str(file_handle, header["comment_length"])
 
         # FILE VERSION DEPENDENT FIXES (BACKWARD COMPATIBILITY)
         # - none -
 
         # read channel headers
-        header['channels'] = []
-        for ch in range(header['channel_binary_count'] +
-                        header['channel_analog_count']):
+        header["channels"] = []
+        for ch in range(
+            header["channel_binary_count"] + header["channel_analog_count"]
+        ):
             channel = {}
-            channel['unit_index'] = _read_uint(file_handle,
-                                               _CHANNEL_UNIT_INDEX_BYTES)
-            channel['scale'] = _read_int(file_handle, _CHANNEL_SCALE_BYTES)
-            channel['data_size'] = _read_uint(file_handle,
-                                              _CHANNEL_DATA_BYTES_BYTES)
-            channel['valid_link'] = _read_uint(file_handle,
-                                               _CHANNEL_VALID_LINK_BYTES)
-            channel['name'] = _read_str(file_handle, _CHANNEL_NAME_BYTES)
+            channel["unit_index"] = _read_uint(file_handle, _CHANNEL_UNIT_INDEX_BYTES)
+            channel["scale"] = _read_int(file_handle, _CHANNEL_SCALE_BYTES)
+            channel["data_size"] = _read_uint(file_handle, _CHANNEL_DATA_BYTES_BYTES)
+            channel["valid_link"] = _read_uint(file_handle, _CHANNEL_VALID_LINK_BYTES)
+            channel["name"] = _read_str(file_handle, _CHANNEL_NAME_BYTES)
 
             try:
-                channel['unit'] = _CHANNEL_UNIT_NAMES[channel['unit_index']]
+                channel["unit"] = _CHANNEL_UNIT_NAMES[channel["unit_index"]]
             except KeyError:
-                raise KeyError('Undefined channel unit with index {:d}.'
-                               .format(channel['unit_index']))
+                raise KeyError(
+                    "Undefined channel unit with index {:d}.".format(
+                        channel["unit_index"]
+                    )
+                )
 
             # FILE VERSION DEPENDENT FIXES (BACKWARD COMPATIBILITY)
             # fix 1 based indexing of valid channel links for file version <= 2
-            if ((header['file_version'] <= 2) &
-                    (channel['valid_link'] != _CHANNEL_VALID_UNLINKED)):
-                channel['valid_link'] = channel['valid_link'] - 1
+            if (header["file_version"] <= 2) & (
+                channel["valid_link"] != _CHANNEL_VALID_UNLINKED
+            ):
+                channel["valid_link"] = channel["valid_link"] - 1
 
             # add channel to header
-            header['channels'].append(channel)
+            header["channels"].append(channel)
 
         return header
 
-    def _read_file_data(self, file_handle, file_header, decimation_factor=1,
-                        memory_mapped=True):
+    def _read_file_data(
+        self, file_handle, file_header, decimation_factor=1, memory_mapped=True
+    ):
         """
         Read data block at the current position in the RocketLogger data file.
 
@@ -430,98 +449,109 @@ class RocketLoggerData:
             data
         """
         # generate data type to read from header info
-        total_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * \
-            ceil(file_header['channel_binary_count'] /
-                 (_BINARY_CHANNEL_STUFF_BYTES * 8))
-        binary_channels_linked = [channel['valid_link'] for
-                                  channel in file_header['channels']]
+        total_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * ceil(
+            file_header["channel_binary_count"] / (_BINARY_CHANNEL_STUFF_BYTES * 8)
+        )
+        binary_channels_linked = [
+            channel["valid_link"] for channel in file_header["channels"]
+        ]
         analog_data_formats = []
         analog_data_names = []
         data_formats = []
         data_names = []
 
         if total_bin_bytes > 0:
-            data_names = ['bin']
-            data_formats = ['<u{:d}'.format(total_bin_bytes)]
+            data_names = ["bin"]
+            data_formats = ["<u{:d}".format(total_bin_bytes)]
 
-        for channel in file_header['channels']:
-            if not _CHANNEL_IS_BINARY[channel['unit_index']]:
-                data_format = '<i{:d}'.format(channel['data_size'])
+        for channel in file_header["channels"]:
+            if not _CHANNEL_IS_BINARY[channel["unit_index"]]:
+                data_format = "<i{:d}".format(channel["data_size"])
                 analog_data_formats.append(data_format)
                 data_formats.append(data_format)
-                analog_data_names.append(channel['name'])
-                data_names.append(channel['name'])
+                analog_data_names.append(channel["name"])
+                data_names.append(channel["name"])
 
         # read raw data from file
-        data_dtype = np.dtype({'names': data_names, 'formats': data_formats})
-        block_dtype = np.dtype([
-            ('realtime_sec', '<M{:d}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
-            ('realtime_ns', '<m{:d}[ns]'.format(_TIMESTAMP_NANOSECONDS_BYTES)),
-            ('monotonic_sec', '<M{:d}[s]'.format(_TIMESTAMP_SECONDS_BYTES)),
-            ('monotonic_ns', '<m{:d}[ns]'.format(
-                _TIMESTAMP_NANOSECONDS_BYTES)),
-            ('data', (data_dtype, (file_header['data_block_size'],)))])
+        data_dtype = np.dtype({"names": data_names, "formats": data_formats})
+        block_dtype = np.dtype(
+            [
+                ("realtime_sec", "<M{:d}[s]".format(_TIMESTAMP_SECONDS_BYTES)),
+                ("realtime_ns", "<m{:d}[ns]".format(_TIMESTAMP_NANOSECONDS_BYTES)),
+                ("monotonic_sec", "<M{:d}[s]".format(_TIMESTAMP_SECONDS_BYTES)),
+                ("monotonic_ns", "<m{:d}[ns]".format(_TIMESTAMP_NANOSECONDS_BYTES)),
+                ("data", (data_dtype, (file_header["data_block_size"],))),
+            ]
+        )
 
         # access file data, either memory mapped or direct read to memory
-        file_handle.seek(file_header['header_length'])
+        file_handle.seek(file_header["header_length"])
         if memory_mapped:
-            file_data = np.memmap(file_handle,
-                                  offset=file_header['header_length'],
-                                  mode='r',
-                                  dtype=block_dtype,
-                                  shape=file_header['data_block_count'])
+            file_data = np.memmap(
+                file_handle,
+                offset=file_header["header_length"],
+                mode="r",
+                dtype=block_dtype,
+                shape=file_header["data_block_count"],
+            )
         else:
-            file_data = np.fromfile(file_handle,
-                                    dtype=block_dtype,
-                                    count=file_header['data_block_count'],
-                                    sep='')
+            file_data = np.fromfile(
+                file_handle,
+                dtype=block_dtype,
+                count=file_header["data_block_count"],
+                sep="",
+            )
 
         # reference for data blocks speeds up access time
-        block_data = np.array(file_data['data'], copy=False)
+        block_data = np.array(file_data["data"], copy=False)
 
         # extract timestamps
-        timestamps_realtime = (file_data['realtime_sec'] +
-                               file_data['realtime_ns'])
-        timestamps_monotonic = (file_data['monotonic_sec'] +
-                                file_data['monotonic_ns'])
+        timestamps_realtime = file_data["realtime_sec"] + file_data["realtime_ns"]
+        timestamps_monotonic = file_data["monotonic_sec"] + file_data["monotonic_ns"]
 
         # allocate empty list of channel data
-        data = [None] * (file_header['channel_binary_count'] +
-                         file_header['channel_analog_count'])
+        data = [None] * (
+            file_header["channel_binary_count"] + file_header["channel_analog_count"]
+        )
 
         # extract binary channels
-        for binary_channel_index in range(file_header['channel_binary_count']):
+        for binary_channel_index in range(file_header["channel_binary_count"]):
             channel_index = binary_channel_index
-            data[channel_index] = np.array(2**binary_channel_index &
-                                           block_data['bin'],
-                                           dtype=np.dtype('b1'))
+            data[channel_index] = np.array(
+                2 ** binary_channel_index & block_data["bin"], dtype=np.dtype("b1")
+            )
             data[channel_index] = data[channel_index].reshape(
-                file_header['sample_count'])
+                file_header["sample_count"]
+            )
 
             # values decimation
             if decimation_factor > 1:
                 # decimate to zero for valid links, threshold otherwise
                 if channel_index in binary_channels_linked:
                     data[channel_index] = _decimate_min(
-                        data[channel_index], decimation_factor)
+                        data[channel_index], decimation_factor
+                    )
                 else:
                     data[channel_index] = _decimate_binary(
-                        data[channel_index], decimation_factor)
+                        data[channel_index], decimation_factor
+                    )
 
         # extract analog channels
-        for analog_channel_index in range(file_header['channel_analog_count']):
-            channel_index = (file_header['channel_binary_count'] +
-                             analog_channel_index)
+        for analog_channel_index in range(file_header["channel_analog_count"]):
+            channel_index = file_header["channel_binary_count"] + analog_channel_index
             data[channel_index] = np.array(
                 block_data[analog_data_names[analog_channel_index]],
-                dtype=np.dtype(analog_data_formats[analog_channel_index]))
+                dtype=np.dtype(analog_data_formats[analog_channel_index]),
+            )
             data[channel_index] = data[channel_index].reshape(
-                file_header['sample_count'])
+                file_header["sample_count"]
+            )
 
             # values decimation
             if decimation_factor > 1:
-                data[channel_index] =\
-                    _decimate_mean(data[channel_index], decimation_factor)
+                data[channel_index] = _decimate_mean(
+                    data[channel_index], decimation_factor
+                )
 
         return timestamps_realtime, timestamps_monotonic, data
 
@@ -533,8 +563,7 @@ class RocketLoggerData:
 
         :returns: The index of the channel, None if not found
         """
-        channel_names = [channel['name'] for channel in
-                         self._header['channels']]
+        channel_names = [channel["name"] for channel in self._header["channels"]]
         try:
             channel_index = channel_names.index(channel_name)
         except ValueError:
@@ -554,11 +583,10 @@ class RocketLoggerData:
             channel_names = []
             if len(channel_indexes) > 0:
                 for index in channel_indexes:
-                    channel_names.append(
-                        self._header['channels'][index]['name'])
+                    channel_names.append(self._header["channels"][index]["name"])
             return channel_names
         else:
-            return self._header['channels'][channel_indexes]['name']
+            return self._header["channels"][channel_indexes]["name"]
 
     def add_channel(self, channel_info, channel_data):
         """
@@ -574,64 +602,69 @@ class RocketLoggerData:
         :param channel_data: The actual channel data to add, Numpy array
         """
         if not isinstance(channel_info, dict):
-            raise TypeError('Channel info structure is expected '
-                            'to be a dictionary.')
+            raise TypeError("Channel info structure is expected to be a dictionary.")
 
         # check full channel info available
-        if 'unit_index' not in channel_info:
-            raise ValueError('Channel info: unit not defined.')
-        if channel_info['unit_index'] not in _CHANNEL_UNIT_NAMES:
-            raise ValueError('Channel info: invalid channel unit.')
+        if "unit_index" not in channel_info:
+            raise ValueError("Channel info: unit not defined.")
+        if channel_info["unit_index"] not in _CHANNEL_UNIT_NAMES:
+            raise ValueError("Channel info: invalid channel unit.")
 
-        if 'scale' not in channel_info:
-            raise ValueError('Channel info: scale not defined.')
-        if not isinstance(channel_info['scale'], int):
-            raise TypeError('Channel info: invalid scale type.')
+        if "scale" not in channel_info:
+            raise ValueError("Channel info: scale not defined.")
+        if not isinstance(channel_info["scale"], int):
+            raise TypeError("Channel info: invalid scale type.")
 
-        if 'data_size' not in channel_info:
-            raise ValueError('Channel info: data size not defined.')
-        if not isinstance(channel_info['data_size'], int):
-            raise TypeError('Channel info: invalid scale type.')
+        if "data_size" not in channel_info:
+            raise ValueError("Channel info: data size not defined.")
+        if not isinstance(channel_info["data_size"], int):
+            raise TypeError("Channel info: invalid scale type.")
 
-        if 'valid_link' not in channel_info:
-            raise ValueError('Channel info: link not defined.')
-        if not isinstance(channel_info['valid_link'], int):
-            raise TypeError('Channel info: invalid link type.')
-        if ((channel_info['valid_link'] >= len(self._header['channels'])) &
-                (channel_info['valid_link'] != _CHANNEL_VALID_UNLINKED)):
-            raise ValueError('Channel info: invalid link.')
+        if "valid_link" not in channel_info:
+            raise ValueError("Channel info: link not defined.")
+        if not isinstance(channel_info["valid_link"], int):
+            raise TypeError("Channel info: invalid link type.")
+        if (channel_info["valid_link"] >= len(self._header["channels"])) & (
+            channel_info["valid_link"] != _CHANNEL_VALID_UNLINKED
+        ):
+            raise ValueError("Channel info: invalid link.")
 
-        if 'name' not in channel_info:
-            raise ValueError('Channel info: name undefined.')
-        if not isinstance(channel_info['name'], str):
-            raise TypeError('Channel info: invalid name type.')
-        if len(channel_info['name']) > _CHANNEL_NAME_BYTES:
-            raise ValueError('Channel info: name too long.')
-        if channel_info['name'] in self.get_channel_names():
+        if "name" not in channel_info:
+            raise ValueError("Channel info: name undefined.")
+        if not isinstance(channel_info["name"], str):
+            raise TypeError("Channel info: invalid name type.")
+        if len(channel_info["name"]) > _CHANNEL_NAME_BYTES:
+            raise ValueError("Channel info: name too long.")
+        if channel_info["name"] in self.get_channel_names():
             raise ValueError(
-                'Cannot add channel with name "{:s}", name already in use.'
-                .format(channel_info['name']))
+                'Cannot add channel with name "{:s}", name already in use.'.format(
+                    channel_info["name"]
+                )
+            )
 
         # check data
-        if len(self._header['channels']) > 0:
+        if len(self._header["channels"]) > 0:
             if channel_data.shape != self._data[0].shape:
-                raise RocketLoggerDataError('Incompatible data size. '
-                                            'Expected array of shape {}.'
-                                            .format(self._data[0].shape))
+                raise RocketLoggerDataError(
+                    "Incompatible data size. "
+                    "Expected array of shape {}.".format(self._data[0].shape)
+                )
 
         # add channel info and data
-        if _CHANNEL_IS_BINARY[channel_info['unit_index']]:
-            self._data.insert(
-                self._header['channel_binary_count'], channel_data)
-            self._header['channels'].insert(
-                self._header['channel_binary_count'], channel_info)
-            self._header['channel_binary_count'] =\
-                self._header['channel_binary_count'] + 1
+        if _CHANNEL_IS_BINARY[channel_info["unit_index"]]:
+            self._data.insert(self._header["channel_binary_count"], channel_data)
+            self._header["channels"].insert(
+                self._header["channel_binary_count"], channel_info
+            )
+            self._header["channel_binary_count"] = (
+                self._header["channel_binary_count"] + 1
+            )
         else:
             self._data.append(channel_data)
-            self._header['channels'].append(channel_info)
-            self._header['channel_analog_count'] =\
-                self._header['channel_analog_count'] + 1
+            self._header["channels"].append(channel_info)
+            self._header["channel_analog_count"] = (
+                self._header["channel_analog_count"] + 1
+            )
 
     def remove_channel(self, channel_name):
         """
@@ -649,27 +682,36 @@ class RocketLoggerData:
             raise KeyError('Channel "{:s}" not found.'.format(channel_name))
 
         # update links of channels affected by indexing change
-        for channel_info in self._header['channels']:
-            if channel_info['valid_link'] == channel_index:
-                channel_info['valid_link'] = _CHANNEL_VALID_UNLINKED
-            elif channel_info['valid_link'] > channel_index:
-                channel_info['valid_link'] = channel_info['valid_link'] - 1
+        for channel_info in self._header["channels"]:
+            if channel_info["valid_link"] == channel_index:
+                channel_info["valid_link"] = _CHANNEL_VALID_UNLINKED
+            elif channel_info["valid_link"] > channel_index:
+                channel_info["valid_link"] = channel_info["valid_link"] - 1
 
         # delete actual data and header entry
-        del(self._data[channel_index])
-        del(self._header['channels'][channel_index])
+        del self._data[channel_index]
+        del self._header["channels"][channel_index]
 
         # adjust header fields
-        if channel_index < self._header['channel_binary_count']:
-            self._header['channel_binary_count'] =\
-                self._header['channel_binary_count'] - 1
+        if channel_index < self._header["channel_binary_count"]:
+            self._header["channel_binary_count"] = (
+                self._header["channel_binary_count"] - 1
+            )
         else:
-            self._header['channel_analog_count'] =\
-                self._header['channel_analog_count'] - 1
+            self._header["channel_analog_count"] = (
+                self._header["channel_analog_count"] - 1
+            )
 
-    def load_file(self, filename, join_files=True, exclude_part=None,
-                  header_only=False, decimation_factor=1, recovery=False,
-                  memory_mapped=True):
+    def load_file(
+        self,
+        filename,
+        join_files=True,
+        exclude_part=None,
+        header_only=False,
+        decimation_factor=1,
+        recovery=False,
+        memory_mapped=True,
+    ):
         """
         Read a RocketLogger data file and return an RLD object.
 
@@ -701,11 +743,12 @@ class RocketLoggerData:
             some system configurations.
         """
         if self._filename is not None:
-            raise RocketLoggerDataError('A data file is already loaded. Use '
-                                        'separate instance for new file.')
+            raise RocketLoggerDataError(
+                "A data file is already loaded. Use separate instance for new file."
+            )
 
         if not join_files and exclude_part is not None:
-            raise ValueError('exclude_part on applicable when joining files')
+            raise ValueError("exclude_part on applicable when joining files")
 
         if exclude_part is None:
             exclude_part = []
@@ -715,8 +758,10 @@ class RocketLoggerData:
             exclude_part = list(exclude_part)
 
         if not isinstance(exclude_part, list):
-            raise ValueError('invalid exclude_part: accepting integer,'
-                             'a list of integers or an integer Numpy array.')
+            raise ValueError(
+                "invalid exclude_part: accepting integer,"
+                "a list of integers or an integer Numpy array."
+            )
 
         file_basename, file_extension = splitext(filename)
         file_number = 0
@@ -725,7 +770,7 @@ class RocketLoggerData:
         while True:
             # skip excluded files
             if file_number in exclude_part:
-                print('Skipping part {:d}'.format(file_number))
+                print("Skipping part {:d}".format(file_number))
                 file_number = file_number + 1
                 continue
 
@@ -733,30 +778,34 @@ class RocketLoggerData:
             if file_number == 0:
                 file_name = filename
             else:
-                file_name = '{:s}_p{:d}{:s}'.format(file_basename, file_number,
-                                                    file_extension)
+                file_name = "{:s}_p{:d}{:s}".format(
+                    file_basename, file_number, file_extension
+                )
 
             # for multi-part import end import if next file is not found
             if join_files and not isfile(file_name):
                 break
 
-            with open(file_name, 'rb') as file_handle:
+            with open(file_name, "rb") as file_handle:
                 # read file header
                 header = self._read_file_header(file_handle)
 
                 # consistency check: file stream position matches header size
-                if 'header_length' not in header:
-                    raise RocketLoggerFileError('Invalid file header read.')
+                if "header_length" not in header:
+                    raise RocketLoggerFileError("Invalid file header read.")
 
                 stream_position = file_handle.tell()
-                if stream_position != header['header_length']:
+                if stream_position != header["header_length"]:
                     raise RocketLoggerFileError(
-                        'File position {:d} does not match header size {:d}'
-                        .format(stream_position, header['header_length']))
+                        "File position {:d} does not match header size {:d}".format(
+                            stream_position, header["header_length"]
+                        )
+                    )
 
-                if (header['data_block_size'] % decimation_factor) > 0:
-                    raise ValueError('Decimation factor needs to be divider '
-                                     'of the buffer size.')
+                if (header["data_block_size"] % decimation_factor) > 0:
+                    raise ValueError(
+                        "Decimation factor needs to be divider of the buffer size."
+                    )
 
                 if header_only is True:
                     # set data arrays to None on header only import
@@ -766,57 +815,75 @@ class RocketLoggerData:
                 else:
                     # calculate file and data block sizes
                     file_size = file_handle.seek(0, os.SEEK_END)
-                    block_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * \
-                        ceil(header['channel_binary_count'] /
-                             (_BINARY_CHANNEL_STUFF_BYTES * 8))
+                    block_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * ceil(
+                        header["channel_binary_count"]
+                        / (_BINARY_CHANNEL_STUFF_BYTES * 8)
+                    )
                     block_analog_bytes = sum(
-                        [c['data_size'] for c in header['channels']
-                         if not _CHANNEL_IS_BINARY[c['unit_index']]])
-                    block_size_bytes = 2 * _TIMESTAMP_BYTES + \
-                        header['data_block_size'] * \
-                        (block_bin_bytes + block_analog_bytes)
+                        [
+                            c["data_size"]
+                            for c in header["channels"]
+                            if not _CHANNEL_IS_BINARY[c["unit_index"]]
+                        ]
+                    )
+                    block_size_bytes = 2 * _TIMESTAMP_BYTES + header[
+                        "data_block_size"
+                    ] * (block_bin_bytes + block_analog_bytes)
 
                     # file size and header consistency check and recovery
-                    if file_size != header['header_length'] + \
-                            header['data_block_count'] * block_size_bytes:
-                        data_blocks_recovered = \
-                            floor((file_size - header['header_length']) /
-                                  block_size_bytes)
-                        data_blocks_truncated = (header['data_block_count'] -
-                                                 data_blocks_recovered)
+                    if (
+                        file_size
+                        != header["header_length"]
+                        + header["data_block_count"] * block_size_bytes
+                    ):
+                        data_blocks_recovered = floor(
+                            (file_size - header["header_length"]) / block_size_bytes
+                        )
+                        data_blocks_truncated = (
+                            header["data_block_count"] - data_blocks_recovered
+                        )
                         if recovery:
-                            header['data_block_count'] = data_blocks_recovered
-                            header['sample_count'] = (data_blocks_recovered *
-                                                      header['data_block_size'])
+                            header["data_block_count"] = data_blocks_recovered
+                            header["sample_count"] = (
+                                data_blocks_recovered * header["data_block_size"]
+                            )
                             warnings.warn(
-                                'corrupt data: recovered {:d} data blocks, '
-                                'truncating {:d} incomplete data blocks.'
-                                .format(data_blocks_recovered,
-                                        data_blocks_truncated),
-                                RocketLoggerDataWarning)
+                                "corrupt data: recovered {:d} data blocks, "
+                                "truncating {:d} incomplete data blocks.".format(
+                                    data_blocks_recovered, data_blocks_truncated
+                                ),
+                                RocketLoggerDataWarning,
+                            )
 
                         else:
                             raise RocketLoggerDataError(
-                                'corrupt data: file size and header info '
-                                'mismatch, or {:d} truncated data blocks at '
-                                'the file end.'.format(data_blocks_truncated))
+                                "corrupt data: file size and header info "
+                                "mismatch, or {:d} truncated data blocks at "
+                                "the file end.".format(data_blocks_truncated)
+                            )
 
                     # channels: read actual sampled data
-                    timestamps_realtime, timestamps_monotonic, data =\
-                        self._read_file_data(
-                            file_handle, header,
-                            decimation_factor=decimation_factor,
-                            memory_mapped=memory_mapped)
+                    (
+                        timestamps_realtime,
+                        timestamps_monotonic,
+                        data,
+                    ) = self._read_file_data(
+                        file_handle,
+                        header,
+                        decimation_factor=decimation_factor,
+                        memory_mapped=memory_mapped,
+                    )
 
                     # store new data array on first file, append on following
                     if files_loaded > 0:
                         self._timestamps_realtime = np.concatenate(
-                            (self._timestamps_realtime, timestamps_realtime))
+                            (self._timestamps_realtime, timestamps_realtime)
+                        )
                         self._timestamps_monotonic = np.concatenate(
-                            (self._timestamps_monotonic, timestamps_monotonic))
+                            (self._timestamps_monotonic, timestamps_monotonic)
+                        )
                         for i in range(len(self._data)):
-                            self._data[i] = np.concatenate(
-                                (self._data[i], data[i]))
+                            self._data[i] = np.concatenate((self._data[i], data[i]))
                     else:
                         self._timestamps_realtime = timestamps_realtime
                         self._timestamps_monotonic = timestamps_monotonic
@@ -826,11 +893,12 @@ class RocketLoggerData:
                 if files_loaded == 0:
                     self._header = header
                 else:
-                    self._header['sample_count'] =\
-                        self._header['sample_count'] + header['sample_count']
-                    self._header['data_block_count'] =\
-                        (self._header['data_block_count'] +
-                         header['data_block_count'])
+                    self._header["sample_count"] = (
+                        self._header["sample_count"] + header["sample_count"]
+                    )
+                    self._header["data_block_count"] = (
+                        self._header["data_block_count"] + header["data_block_count"]
+                    )
 
             file_number = file_number + 1
             files_loaded = files_loaded + 1
@@ -841,20 +909,24 @@ class RocketLoggerData:
 
         # check valid data loaded
         if files_loaded == 0:
-            raise RocketLoggerDataError('Could not load valid data from {:s} '
-                                        'and current import configuration.'
-                                        .format(filename))
+            raise RocketLoggerDataError(
+                "Could not load valid data from {:s} "
+                "and current import configuration.".format(filename)
+            )
 
         # adjust header files for decimation
-        self._header['sample_count'] = \
-            round(self._header['sample_count'] / decimation_factor)
-        self._header['data_block_size'] = \
-            round(self._header['data_block_size'] / decimation_factor)
-        self._header['sample_rate'] = \
-            round(self._header['sample_rate'] / decimation_factor)
+        self._header["sample_count"] = round(
+            self._header["sample_count"] / decimation_factor
+        )
+        self._header["data_block_size"] = round(
+            self._header["data_block_size"] / decimation_factor
+        )
+        self._header["sample_rate"] = round(
+            self._header["sample_rate"] / decimation_factor
+        )
 
         self._filename = filename
-        print('Read {:d} file(s)'.format(files_loaded))
+        print("Read {:d} file(s)".format(files_loaded))
 
     def get_channel_names(self):
         """
@@ -863,8 +935,8 @@ class RocketLoggerData:
         :returns: List of channel names sorted by name
         """
         channel_names = []
-        for channel in self._header['channels']:
-            channel_names.append(channel['name'])
+        for channel in self._header["channels"]:
+            channel_names.append(channel["name"])
         return sorted(channel_names)
 
     def get_comment(self):
@@ -873,7 +945,7 @@ class RocketLoggerData:
 
         :returns: Comment stored in the file
         """
-        return self._header['comment']
+        return self._header["comment"]
 
     def get_header(self):
         """
@@ -890,12 +962,17 @@ class RocketLoggerData:
 
         header_dict = {}
         for key, value in self._header.items():
-            if key in ['data_block_count', 'data_block_size', 'file_version',
-                       'sample_count', 'sample_rate', 'start_time']:
+            if key in [
+                "data_block_count",
+                "data_block_size",
+                "file_version",
+                "sample_count",
+                "sample_rate",
+                "start_time",
+            ]:
                 header_dict[key] = value
-            elif key == 'mac_address':
-                header_dict[key] = ':'.join(['{:02x}'.format(v)
-                                             for v in value])
+            elif key == "mac_address":
+                header_dict[key] = ":".join(["{:02x}".format(v) for v in value])
 
         return header_dict
 
@@ -907,7 +984,7 @@ class RocketLoggerData:
         """
         return os.path.abspath(self._filename)
 
-    def get_data(self, channel_names=['all']):
+    def get_data(self, channel_names=["all"]):
         """
         Get the data of the specified channels, by default of all channels.
 
@@ -920,26 +997,25 @@ class RocketLoggerData:
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
-        if 'all' in channel_names:
+        if "all" in channel_names:
             channel_names = self.get_channel_names()
 
         if self._data is None:
-            raise TypeError('No data to access for header only imported file.')
+            raise TypeError("No data to access for header only imported file.")
 
-        values = np.empty((self._header['sample_count'], len(channel_names)))
+        values = np.empty((self._header["sample_count"], len(channel_names)))
 
         for channel_name in channel_names:
             index = self._get_channel_index(channel_name)
             if index is None:
-                raise KeyError('Channel "{:s}" not found.'
-                               .format(channel_name))
-            values[:, channel_names.index(channel_name)] = (
-                self._data[index] *
-                10**(self._header['channels'][index]['scale']))
+                raise KeyError('Channel "{:s}" not found.'.format(channel_name))
+            values[:, channel_names.index(channel_name)] = self._data[index] * 10 ** (
+                self._header["channels"][index]["scale"]
+            )
 
         return values
 
-    def get_time(self, time_reference='relative'):
+    def get_time(self, time_reference="relative"):
         """
         Get the timestamp of the data.
 
@@ -957,35 +1033,35 @@ class RocketLoggerData:
         :returns: A Numpy array containing the timestamps
         """
         if self._timestamps_monotonic is None:
-            raise TypeError('No data to access for header only imported file.')
+            raise TypeError("No data to access for header only imported file.")
 
         # get requested timer data as numbers
-        if time_reference == 'relative':
-            timestamps = (np.arange(0, self._header['sample_count']) /
-                          self._header['sample_rate'])
-        elif time_reference == 'local':
-            block_timestamps = self._timestamps_monotonic.astype('<i8')
-        elif time_reference == 'network':
-            block_timestamps = self._timestamps_realtime.astype('<i8')
+        if time_reference == "relative":
+            timestamps = (
+                np.arange(0, self._header["sample_count"]) / self._header["sample_rate"]
+            )
+        elif time_reference == "local":
+            block_timestamps = self._timestamps_monotonic.astype("<i8")
+        elif time_reference == "network":
+            block_timestamps = self._timestamps_realtime.astype("<i8")
         else:
-            raise ValueError('Time reference "{:s}" undefined.'
-                             .format(time_reference))
+            raise ValueError('Time reference "{:s}" undefined.'.format(time_reference))
 
         # interpolate absolute time if requested
-        if time_reference in ['local', 'network']:
-            block_points = np.arange(0, self._header['sample_count'],
-                                     self._header['data_block_size'])
-            data_points = np.arange(0, self._header['sample_count'])
+        if time_reference in ["local", "network"]:
+            block_points = np.arange(
+                0, self._header["sample_count"], self._header["data_block_size"]
+            )
+            data_points = np.arange(0, self._header["sample_count"])
 
-            data_timestamp = np.interp(data_points, block_points,
-                                       block_timestamps)
+            data_timestamp = np.interp(data_points, block_points, block_timestamps)
 
             # convert to datetime again
-            timestamps = data_timestamp.astype('datetime64[ns]')
+            timestamps = data_timestamp.astype("datetime64[ns]")
 
         return timestamps
 
-    def get_unit(self, channel_names=['all']):
+    def get_unit(self, channel_names=["all"]):
         """
         Get the unit of the specified channels, by default of all channels.
 
@@ -998,20 +1074,19 @@ class RocketLoggerData:
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
-        if 'all' in channel_names:
+        if "all" in channel_names:
             channel_names = self.get_channel_names()
 
         channel_units = []
         for channel_name in channel_names:
             index = self._get_channel_index(channel_name)
             if index is None:
-                raise KeyError('Channel "{:s}" not found.'
-                               .format(channel_name))
-            channel_units.append(self._header['channels'][index]['unit'])
+                raise KeyError('Channel "{:s}" not found.'.format(channel_name))
+            channel_units.append(self._header["channels"][index]["unit"])
 
         return channel_units
 
-    def get_validity(self, channel_names=['all']):
+    def get_validity(self, channel_names=["all"]):
         """
         Get the validity of the specified channels, by default of all channels.
 
@@ -1024,24 +1099,23 @@ class RocketLoggerData:
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
-        if 'all' in channel_names:
+        if "all" in channel_names:
             channel_names = self.get_channel_names()
 
         if self._data is None:
-            raise TypeError('No data to access for header only imported file.')
+            raise TypeError("No data to access for header only imported file.")
 
-        validity = np.ones((self._header['sample_count'], len(channel_names)),
-                           dtype=bool)
+        validity = np.ones(
+            (self._header["sample_count"], len(channel_names)), dtype=bool
+        )
 
         for channel_name in channel_names:
             data_index = self._get_channel_index(channel_name)
             if data_index is None:
-                raise KeyError('Channel "{:s}" not found.'
-                               .format(channel_name))
-            valid_link = self._header['channels'][data_index]['valid_link']
+                raise KeyError('Channel "{:s}" not found.'.format(channel_name))
+            valid_link = self._header["channels"][data_index]["valid_link"]
             if valid_link != _CHANNEL_VALID_UNLINKED:
-                validity[:, channel_names.index(channel_name)] = \
-                    self._data[valid_link]
+                validity[:, channel_names.index(channel_name)] = self._data[valid_link]
 
         return validity
 
@@ -1055,51 +1129,56 @@ class RocketLoggerData:
         """
         if self._data is None:
             raise TypeError(
-                'Data operations not permitted for header only imported file.')
+                "Data operations not permitted for header only imported file."
+            )
 
         merged_channels = False
         for candidate in _CHANNEL_MERGE_CANDIDATES:
             # check if inputs available and linked
-            low_index = self._get_channel_index(candidate['low'])
-            high_index = self._get_channel_index(candidate['high'])
+            low_index = self._get_channel_index(candidate["low"])
+            high_index = self._get_channel_index(candidate["high"])
 
             # skip if one input unavailable
             if (low_index is None) or (high_index is None):
                 continue
 
             # error if merge target exists
-            if self._get_channel_index(candidate['merged']) is not None:
-                raise RocketLoggerDataError('Name of merged output channel '
-                                            '"{:s}" already in use.'
-                                            .format(candidate['merged']))
+            if self._get_channel_index(candidate["merged"]) is not None:
+                raise RocketLoggerDataError(
+                    "Name of merged output channel "
+                    '"{:s}" already in use.'.format(candidate["merged"])
+                )
 
             # check for channel valid link
-            low_channel = self._header['channels'][low_index]
-            high_channel = self._header['channels'][high_index]
-            low_valid_index = low_channel['valid_link']
-            if low_valid_index > len(self._header['channels']):
+            low_channel = self._header["channels"][low_index]
+            high_channel = self._header["channels"][high_index]
+            low_valid_index = low_channel["valid_link"]
+            if low_valid_index > len(self._header["channels"]):
                 raise RocketLoggerDataError(
-                    'Channel "{:s}" has invalid link ({:s}).'
-                    .format(low_channel['name'], low_valid_index))
+                    'Channel "{:s}" has invalid link ({:s}).'.format(
+                        low_channel["name"], low_valid_index
+                    )
+                )
 
             # build merged channel info and data
             merged_channel_info = {}
-            merged_channel_info['unit'] = low_channel['unit']
-            merged_channel_info['unit_index'] = low_channel['unit_index']
-            merged_channel_info['scale'] = low_channel['scale']
-            merged_channel_info['data_size'] = (low_channel['data_size'] +
-                                                high_channel['data_size'])
-            merged_channel_info['valid_link'] = _CHANNEL_VALID_UNLINKED
-            merged_channel_info['name'] = candidate['merged']
+            merged_channel_info["unit"] = low_channel["unit"]
+            merged_channel_info["unit_index"] = low_channel["unit_index"]
+            merged_channel_info["scale"] = low_channel["scale"]
+            merged_channel_info["data_size"] = (
+                low_channel["data_size"] + high_channel["data_size"]
+            )
+            merged_channel_info["valid_link"] = _CHANNEL_VALID_UNLINKED
+            merged_channel_info["name"] = candidate["merged"]
 
             # merge data: force data type to prevent calculation overflow
-            merged_data = ((1 * self._data[low_valid_index]) *
-                           self._data[low_index] +
-                           (1 * np.logical_not(self._data[low_valid_index])) *
-                           self._data[high_index].astype(
-                               np.dtype('<i{:d}'.format(
-                                   merged_channel_info['data_size']))) *
-                           10**(high_channel['scale'] - low_channel['scale']))
+            merged_data = (1 * self._data[low_valid_index]) * self._data[low_index] + (
+                1 * np.logical_not(self._data[low_valid_index])
+            ) * self._data[high_index].astype(
+                np.dtype("<i{:d}".format(merged_channel_info["data_size"]))
+            ) * 10 ** (
+                high_channel["scale"] - low_channel["scale"]
+            )
 
             # add merged channel
             self.add_channel(merged_channel_info, merged_data)
@@ -1108,20 +1187,22 @@ class RocketLoggerData:
             if not keep_channels:
                 valid_channel_name = self._get_channel_name(low_valid_index)
                 self.remove_channel(valid_channel_name)
-                self.remove_channel(candidate['low'])
-                self.remove_channel(candidate['high'])
+                self.remove_channel(candidate["low"])
+                self.remove_channel(candidate["high"])
 
-            print('Merged channels "{:s}" and "{:s}" to "{:s}".'.format(
-                candidate['low'], candidate['high'], candidate['merged']))
+            print(
+                'Merged channels "{:s}" and "{:s}" to "{:s}".'.format(
+                    candidate["low"], candidate["high"], candidate["merged"]
+                )
+            )
             merged_channels = True
 
         if not merged_channels:
-            warnings.warn('No channels found to merge.',
-                          RocketLoggerDataWarning)
+            warnings.warn("No channels found to merge.", RocketLoggerDataWarning)
 
         return self
 
-    def get_dataframe(self, channel_names=['all'], time_reference='relative'):
+    def get_dataframe(self, channel_names=["all"], time_reference="relative"):
         """
         Shortcut to get a pandas dataframe of selected channels indexed with
         timestamps.
@@ -1151,16 +1232,17 @@ class RocketLoggerData:
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
-        if 'all' in channel_names:
+        if "all" in channel_names:
             channel_names = self.get_channel_names()
 
         df = pd.DataFrame(
             self.get_data(channel_names=channel_names),
             index=self.get_time(time_reference=time_reference),
-            columns=channel_names)
+            columns=channel_names,
+        )
         return df
 
-    def plot(self, channel_names=['all'], show=True):
+    def plot(self, channel_names=["all"], show=True):
         """
         Plot the loaded RocketLogger data.
 
@@ -1183,15 +1265,26 @@ class RocketLoggerData:
         if not isinstance(channel_names, list):
             channel_names = [channel_names]
 
-        channels_digital = self._header['channels'][0:self._header[
-            'channel_binary_count']]
-        channels_current = [channel for channel in self._header['channels']
-                            if channel['unit'] == 'current']
-        channels_voltage = [channel for channel in self._header['channels']
-                            if channel['unit'] == 'voltage']
-        channels_others = [channel for channel in self._header[
-            'channels'][self._header['channel_binary_count']:]
-            if channel['unit'] not in ['voltage', 'current']]
+        channels_digital = self._header["channels"][
+            0 : self._header["channel_binary_count"]
+        ]
+        channels_current = [
+            channel
+            for channel in self._header["channels"]
+            if channel["unit"] == "current"
+        ]
+        channels_voltage = [
+            channel
+            for channel in self._header["channels"]
+            if channel["unit"] == "voltage"
+        ]
+        channels_others = [
+            channel
+            for channel in self._header["channels"][
+                self._header["channel_binary_count"] :
+            ]
+            if channel["unit"] not in ["voltage", "current"]
+        ]
 
         plot_current_channels = []
         plot_digital_channels = []
@@ -1200,41 +1293,47 @@ class RocketLoggerData:
 
         # get and group channels to plot
         for channel_name in channel_names:
-            if channel_name == 'all':
+            if channel_name == "all":
                 plot_current_channels = channels_current
                 plot_digital_channels = channels_digital
                 plot_voltage_channels = channels_voltage
                 plot_other_channels = channels_others
                 break
-            elif channel_name == 'voltages':
+            elif channel_name == "voltages":
                 plot_voltage_channels = channels_voltage
-            elif channel_name == 'currents':
+            elif channel_name == "currents":
                 plot_current_channels = channels_current
-            elif channel_name == 'digital':
+            elif channel_name == "digital":
                 plot_digital_channels = channels_digital
             else:
                 channel_index = self._get_channel_index(channel_name)
                 if channel_index is None:
-                    raise KeyError(
-                        'Channel {:s} not found.'.format(channel_name))
-                if channel_name in [ch['name'] for ch in channels_voltage]:
-                    plot_voltage_channels.append(self._header['channels'][
-                        channel_index])
-                elif channel_name in [ch['name'] for ch in channels_current]:
-                    plot_current_channels.append(self._header['channels'][
-                        channel_index])
-                elif channel_name in [ch['name'] for ch in channels_digital]:
-                    plot_digital_channels.append(self._header['channels'][
-                        channel_index])
+                    raise KeyError("Channel {:s} not found.".format(channel_name))
+                if channel_name in [ch["name"] for ch in channels_voltage]:
+                    plot_voltage_channels.append(
+                        self._header["channels"][channel_index]
+                    )
+                elif channel_name in [ch["name"] for ch in channels_current]:
+                    plot_current_channels.append(
+                        self._header["channels"][channel_index]
+                    )
+                elif channel_name in [ch["name"] for ch in channels_digital]:
+                    plot_digital_channels.append(
+                        self._header["channels"][channel_index]
+                    )
 
         # prepare plot groups
-        plot_groups = [plot_voltage_channels, plot_current_channels,
-                       plot_digital_channels, plot_other_channels]
-        plot_groups_axis_label = ['voltage [V]', 'current [A]', 'digital', '']
+        plot_groups = [
+            plot_voltage_channels,
+            plot_current_channels,
+            plot_digital_channels,
+            plot_other_channels,
+        ]
+        plot_groups_axis_label = ["voltage [V]", "current [A]", "digital", ""]
         plot_time = self.get_time()
 
         subplot_count = len([group for group in plot_groups if len(group) > 0])
-        fig, ax = plt.subplots(subplot_count, 1, sharex='col')
+        fig, ax = plt.subplots(subplot_count, 1, sharex="col")
         if subplot_count == 1:
             ax = [ax]
         plt.suptitle(self._filename)
@@ -1245,14 +1344,14 @@ class RocketLoggerData:
             plot_channels = plot_groups[i]
             if len(plot_channels) == 0:
                 continue
-            plot_channel_names = [channel['name'] for channel in plot_channels]
+            plot_channel_names = [channel["name"] for channel in plot_channels]
             plot_channel_data = self.get_data(plot_channel_names)
             ax[subplot_index].plot(plot_time, plot_channel_data)
             ax[subplot_index].set_ylabel(plot_groups_axis_label[i])
             ax[subplot_index].legend(plot_channel_names)
             subplot_index = subplot_index + 1
 
-        ax[subplot_count - 1].set_xlabel('time [s]')
+        ax[subplot_count - 1].set_xlabel("time [s]")
 
         if show:
             plt.show(block=False)
