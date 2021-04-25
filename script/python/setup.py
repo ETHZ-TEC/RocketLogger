@@ -34,45 +34,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from setuptools import setup, find_packages
 
 
-def readme():
-    with open('README.rst', 'r') as file_handle:
-        return file_handle.read()
+with open('README.md', 'r', encoding='utf-8') as fh:
+    long_description = fh.read()
 
 
-setup(name='rocketlogger',
-      version='1.99a7',
-      description='RocketLogger Python Support',
-      long_description=readme(),
-      url='https://rocketlogger.ethz.ch/',
-      author='ETH Zurich, Computer Engineering Group',
-      author_email='lukas.sigrist@tik.ee.ethz.ch',
-      license='BSD 3-Clause',
-      classifiers=[
-          'Development Status :: 3 - Alpha',
-          'Intended Audience :: Science/Research',
-          'Topic :: Scientific/Engineering :: Information Analysis',
-          'License :: OSI Approved :: BSD License',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3 :: Only',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
-          'Operating System :: OS Independent',
-      ],
-      keywords='rocketlogger data analysis calibration',
-      packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-      python_requires='>=3.5, <4',
-      install_requires=[
-          'numpy',
-      ],
-      extras_require={
-          'plot': ['matplotlib'],
-          'dataframe': ['pandas'],
-      },
-      test_suite='nose.collector',
-      tests_require=[
-          'nose'
-      ],
-      include_package_data=True,
-      zip_safe=False)
+setup(
+    name='rocketlogger',
+    version='1.99a7',
+    author='ETH Zurich, Computer Engineering Group',
+    author_email='lukas.sigrist@tik.ee.ethz.ch',
+    description='RocketLogger Python Support',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    license='BSD 3-Clause',
+    url='https://rocketlogger.ethz.ch/',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3 :: Only',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+    ],
+    keywords='rocketlogger, data analysis, calibration',
+    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    python_requires='>=3.6, <4',
+    install_requires=[
+        'numpy',
+    ],
+    extras_require={
+        'dataframe': ['pandas'],
+        'plot': ['matplotlib'],
+        'dev': ['black', 'sphinx'],
+        'test': ['coverage', 'nose', 'tox'],
+    },
+    project_urls={
+        'Documentation': 'https://rocketlogger.ethz.ch/python/',
+        'Source': 'https://gitlab.ethz.ch/tec/public/rocketlogger/',
+        'Tracker': 'https://gitlab.ethz.ch/tec/public/rocketlogger/issues',
+    },
+)

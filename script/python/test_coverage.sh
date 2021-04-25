@@ -32,8 +32,8 @@
 export MATPLOTLIB_AVAILABLE="true"
 export PANDAS_AVAILABLE="true"
 
-python setup.py nosetests \
-  --with-coverage \
-  --cover-package=rocketlogger \
-  --cover-html \
+python3 -m nose                   \
+  --with-coverage                 \
+  --cover-package=rocketlogger    \
+  --cover-html                    \
   --cover-html-dir=build/coverage

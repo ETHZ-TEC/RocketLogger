@@ -1,5 +1,7 @@
-include README.rst
+include README.md
 include calibrate.py
 include example.py
+include requirements.txt
+include test_coverage.sh
 include data/*.rld
 include data/*.dat
