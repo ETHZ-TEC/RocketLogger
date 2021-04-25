@@ -43,11 +43,6 @@ from .data import RocketLoggerData, RocketLoggerFileError
 ROCKETLOGGER_CALIBRATION_FILE = '/etc/rocketlogger/calibration.dat'
 """Default RocketLogger calibration file location."""
 
-# # scales (per bit) for the values, that are stored in the binary files
-# _ROCKETLOGGER_FILE_SCALE_V = 1e-8
-# _ROCKETLOGGER_FILE_SCALE_IL = 1e-11
-# _ROCKETLOGGER_FILE_SCALE_IH = 1e-9
-
 # hardware design values of voltage/current increment per ADC LSB
 # - voltage: -1 * FS / 2^23 *10 / 3.9 * LSB
 # - current low: FS / 2^23 / R_fb / 2 * LSB
@@ -80,8 +75,9 @@ _CALIBRATION_FILE_DTYPE = np.dtype([
     ('scale', ('<f8', len(_CALIBRATION_CHANNEL_NAMES))),
 ])
 
-# channels with positive scales
-_CALIBRATION_CHANNEL_SCALES_POSITIVE = ([False] * 4 + [True] * 4)
+# RocketLogger calibration design values for channel scale
+_CALIBRATION_CHANNEL_SCALE_DEFAULT = [_ROCKETLOGGER_ADC_STEP_V] * 4 + \
+    [_ROCKETLOGGER_ADC_STEP_IL, _ROCKETLOGGER_ADC_STEP_IH] * 2
 
 # RocketLogger calibration scale scales for channels
 _CALIBRATION_CHANNEL_SCALES = ([1e-8] * 4 + [1e-11, 1e-9] * 2)
@@ -370,9 +366,7 @@ class RocketLoggerCalibration:
         """
         Initialize RocketLogger Calibration helper class.
 
-        Without parameter it can be used as shortcut for
-        :load_design_data(): to load design calibration values.
-        With 1 parameter it can be used as shortcut for
+        With 1 file name parameter it can be used as shortcut for
         :read_calibration_file(): to load an existing calibration.
         With 5 parameters it can be used as shortcut for
         :load_measurement_data(): to load calibration measurement data.
@@ -392,10 +386,6 @@ class RocketLoggerCalibration:
         self._error_scale = None
         self._error_rmse = None
 
-        # treat no argument as fallback to default design calibraiton values
-        if len(args) == 0:
-            self.load_design_data()
-
         # treat 1 arguments as an existing calibration to load
         if len(args) == 1:
             self.read_calibration_file(*args)
@@ -410,15 +400,16 @@ class RocketLoggerCalibration:
         """
 
         # store design calibration values
-        design_scale = [_ROCKETLOGGER_ADC_STEP_V] * 4 + \
+        _CALIBRATION_CHANNEL_SCALE_DEFAULT = [_ROCKETLOGGER_ADC_STEP_V] * 4 + \
             [_ROCKETLOGGER_ADC_STEP_IL, _ROCKETLOGGER_ADC_STEP_IH] * 2
-        design_offset = [0]*len(design_scale)
+        design_offset = [0]*len(_CALIBRATION_CHANNEL_SCALE_DEFAULT)
 
         self._calibration_time = np.datetime64(0, 's')
         self._calibration_offset = np.array(design_offset, dtype='<i4')
         self._calibration_scale = np.array(
             [scale / file_scale for scale, file_scale
-             in zip(design_scale, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
+             in zip(_CALIBRATION_CHANNEL_SCALE_DEFAULT,
+                    _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
 
         # append PRU timestamp constant calibration values
         self._calibration_offset = np.concatenate(
@@ -563,8 +554,9 @@ class RocketLoggerCalibration:
 
         # check and invert scales where necessary
         if fix_signs:
-            for ch, pos in enumerate(_CALIBRATION_CHANNEL_SCALES_POSITIVE):
-                if pos and self._calibration_scale[ch] < 0:
+            for ch, scale in enumerate(_CALIBRATION_CHANNEL_SCALE_DEFAULT):
+                # XOR signs of design and calculated scale values
+                if (scale < 0) != (self._calibration_scale[ch] < 0):
                     self._calibration_scale[ch] = -self._calibration_scale[ch]
 
         # append PRU timestamp constant calibration values

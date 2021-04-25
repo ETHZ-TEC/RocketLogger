@@ -71,19 +71,31 @@ class TestCalibrationFile(TestCase):
         reference_time = np.datetime64('2019-01-01T00:00:00', dtype='M8[s]')
         self.assertEqual(cal._calibration_time, reference_time)
 
-    def test_compare_empty(self):
+    def test_compare_empty_empty(self):
         cal1 = RocketLoggerCalibration()
         cal2 = RocketLoggerCalibration()
         self.assertEqual(cal1, cal2)
 
-    def test_compare_different(self):
+    def test_compare_empty_design(self):
+        cal1 = RocketLoggerCalibration()
+        cal2 = RocketLoggerCalibration()
+        cal2.load_design_data()
+        self.assertNotEqual(cal1, cal2)
+
+    def test_compare_empty_read(self):
         cal1 = RocketLoggerCalibration()
         cal2 = RocketLoggerCalibration(_CALIBRATION_FILE)
         self.assertNotEqual(cal1, cal2)
 
-    def test_compare_different_type(self):
+    def test_compare_empty_different_type(self):
         cal = RocketLoggerCalibration()
         self.assertNotEqual('cal', cal)
+
+    def test_compare_design_read(self):
+        cal1 = RocketLoggerCalibration()
+        cal1.load_design_data()
+        cal2 = RocketLoggerCalibration(_CALIBRATION_FILE)
+        self.assertNotEqual(cal1, cal2)
 
     def test_compare_read(self):
         cal1 = RocketLoggerCalibration()
@@ -109,6 +121,13 @@ class TestCalibrationFile(TestCase):
 
     def test_file_write_reread(self):
         cal = RocketLoggerCalibration(_CALIBRATION_FILE)
+        cal.write_calibration_file(_TEMP_FILE)
+        cal_reread = RocketLoggerCalibration(_TEMP_FILE)
+        self.assertEqual(cal, cal_reread)
+
+    def test_file_write_reread_design(self):
+        cal = RocketLoggerCalibration()
+        cal.load_design_data()
         cal.write_calibration_file(_TEMP_FILE)
         cal_reread = RocketLoggerCalibration(_TEMP_FILE)
         self.assertEqual(cal, cal_reread)
