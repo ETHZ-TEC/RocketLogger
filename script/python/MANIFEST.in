@@ -1,5 +1,6 @@
 include README.md
 include calibrate.py
+include convert_calibration.py
 include example.py
 include requirements.txt
 include test_coverage.sh

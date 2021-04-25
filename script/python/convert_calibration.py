@@ -9,7 +9,7 @@ from rocketlogger.calibration import _CALIBRATION_FILE_DTYPE, \
 
 # data format of the calibration file
 _LEGACY_FILE_DTYPE = np.dtype([
-    ('timestamp', '<M8[s]'),
+    ('timestamp', '<datetime64[s]'),
     ('offset', ('<i4', 8)),
     ('scale', ('<f8', 8)),
 ])

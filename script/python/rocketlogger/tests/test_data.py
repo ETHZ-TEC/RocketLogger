@@ -960,12 +960,12 @@ class TestDataHandling(TestCase):
     def test_get_absolute_local_time(self):
         temp = self.data.get_time(time_reference='local')
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
-        self.assertEqual(temp.dtype, np.dtype('<M8[ns]'))
+        self.assertEqual(temp.dtype, np.dtype('datetime64[ns]'))
 
     def test_get_absolute_network_time(self):
         temp = self.data.get_time(time_reference='network')
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
-        self.assertEqual(temp.dtype, np.dtype('<M8[ns]'))
+        self.assertEqual(temp.dtype, np.dtype('datetime64[ns]'))
 
     def test_get_filename(self):
         temp = self.data.get_filename()
@@ -1150,7 +1150,7 @@ class TestDataframe(TestCase):
         self.assertIsInstance(temp, pd.DataFrame)
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
         self.assertEqual(index.shape[0], self.data._header['sample_count'])
-        self.assertEqual(index.dtype, np.dtype('<M8[ns]'))
+        self.assertEqual(index.dtype, np.dtype('datetime64[ns]'))
 
     def test_get_absolute_network_time(self):
         temp = self.data.get_dataframe(time_reference='network')
@@ -1158,7 +1158,7 @@ class TestDataframe(TestCase):
         self.assertIsInstance(temp, pd.DataFrame)
         self.assertEqual(temp.shape[0], self.data._header['sample_count'])
         self.assertEqual(index.shape[0], self.data._header['sample_count'])
-        self.assertEqual(index.dtype, np.dtype('<M8[ns]'))
+        self.assertEqual(index.dtype, np.dtype('datetime64[ns]'))
 
 
 @unittest.skipUnless(os.environ.get("MATPLOTLIB_AVAILABLE") == "true",

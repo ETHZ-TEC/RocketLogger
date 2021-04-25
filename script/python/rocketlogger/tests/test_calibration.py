@@ -63,12 +63,12 @@ class TestCalibrationFile(TestCase):
     def test_file_read(self):
         cal = RocketLoggerCalibration()
         cal.read_calibration_file(_CALIBRATION_FILE)
-        reference_time = np.datetime64('2019-01-01T00:00:00', dtype='M8[s]')
+        reference_time = np.datetime64('2019-01-01T00:00:00', 's')
         self.assertEqual(cal._calibration_time, reference_time)
 
     def test_file_read_direct(self):
         cal = RocketLoggerCalibration(_CALIBRATION_FILE)
-        reference_time = np.datetime64('2019-01-01T00:00:00', dtype='M8[s]')
+        reference_time = np.datetime64('2019-01-01T00:00:00', 's')
         self.assertEqual(cal._calibration_time, reference_time)
 
     def test_compare_empty_empty(self):
@@ -336,7 +336,7 @@ class TestCalibrationProcedure(TestCase):
             pass
 
     def _check_reference_calibration(self, calibration):
-        reference_time = np.datetime64('2017-05-09T07:37:49', dtype='M8[s]')
+        reference_time = np.datetime64('2017-05-09T07:37:49', 's')
         reference_offset = [1075, 856, 962, 906, 1778, 7980, 1988, -3654,
                             _CALIBRATION_PRU_CYCLES_OFFSET]
         reference_scale = [
@@ -347,5 +347,5 @@ class TestCalibrationProcedure(TestCase):
         self.assertEqual(calibration._calibration_time, reference_time)
         self.assertListEqual(list(calibration._calibration_offset),
                              reference_offset)
-        self.assertListEqual(list(calibration._calibration_scale),
-                             reference_scale)
+        self.assertTrue(np.allclose(
+            calibration._calibration_scale, reference_scale))

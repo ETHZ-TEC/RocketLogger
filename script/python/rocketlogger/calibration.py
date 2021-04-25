@@ -70,21 +70,22 @@ _CALIBRATION_FILE_DTYPE = np.dtype([
     ('file_magic', '<u4'),
     ('file_version', '<u2'),
     ('header_length', '<u2'),
-    ('calibration_time', '<M8[s]'),
+    ('calibration_time', '<datetime64[s]'),
     ('offset', ('<i4', len(_CALIBRATION_CHANNEL_NAMES))),
     ('scale', ('<f8', len(_CALIBRATION_CHANNEL_NAMES))),
 ])
+
+# RocketLogger calibration file base units for channel scale
+_CALIBRATION_CHANNEL_SCALE_BASE = ([1e-8] * 4 + [1e-11, 1e-9] * 2)
 
 # RocketLogger calibration design values for channel scale
 _CALIBRATION_CHANNEL_SCALE_DEFAULT = [_ROCKETLOGGER_ADC_STEP_V] * 4 + \
     [_ROCKETLOGGER_ADC_STEP_IL, _ROCKETLOGGER_ADC_STEP_IH] * 2
 
-# RocketLogger calibration scale scales for channels
-_CALIBRATION_CHANNEL_SCALES = ([1e-8] * 4 + [1e-11, 1e-9] * 2)
-
 # Calculated PRU cycle counter offset
 # (2 MEM write + 1 MEM read + 2 ALU op readout)
-_CALIBRATION_PRU_CYCLES_OFFSET = 3 * 4  # 2 * 1 + 1 * 4 + 2 * 1
+# _CALIBRATION_PRU_CYCLES_OFFSET = 2 * 1 + 1 * 4 + 2 * 1
+_CALIBRATION_PRU_CYCLES_OFFSET = 3 * 4  # FIXME: empirical value
 
 # Calculated PRU cycle counter scale (200 MHz clock)
 _CALIBRATION_PRU_CYCLES_SCALE = 5
@@ -172,8 +173,8 @@ def _extract_setpoint_measurement(measurement_data, setpoint_step,
                       'set-point step scale?')
 
     # aggregate measurements by set-point interval
-    setpoint_mean = [np.mean(measurement_data[start:end])
-                     for start, end in setpoint_intervals]
+    setpoint_mean = np.array([np.mean(measurement_data[start:end])
+                              for start, end in setpoint_intervals])
     return setpoint_mean
 
 
@@ -407,9 +408,9 @@ class RocketLoggerCalibration:
         self._calibration_time = np.datetime64(0, 's')
         self._calibration_offset = np.array(design_offset, dtype='<i4')
         self._calibration_scale = np.array(
-            [scale / file_scale for scale, file_scale
+            [scale / scale_base for scale, scale_base
              in zip(_CALIBRATION_CHANNEL_SCALE_DEFAULT,
-                    _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
+                    _CALIBRATION_CHANNEL_SCALE_BASE)], dtype='<f8')
 
         # append PRU timestamp constant calibration values
         self._calibration_offset = np.concatenate(
@@ -512,7 +513,7 @@ class RocketLoggerCalibration:
                               for data, channel
                               in zip(measurement_data,
                                      _CALIBRATION_CHANNEL_NAMES)]
-        timestamp = np.datetime64(min([x._header['start_time']
+        timestamp = np.datetime64(min([x.get_header()['start_time']
                                        for x in measurement_data]))
 
         # filter window length: 150 ms (=250-100 ms),
@@ -543,9 +544,9 @@ class RocketLoggerCalibration:
         # store data
         self._calibration_offset = np.array(offsets, dtype='<i4')
         self._calibration_scale = np.array(
-            [scale / file_scale for scale, file_scale
-             in zip(scales, _CALIBRATION_CHANNEL_SCALES)], dtype='<f8')
-        self._calibration_time = np.array(timestamp, dtype='datetime64[s]')
+            [scale / scale_base for scale, scale_base
+             in zip(scales, _CALIBRATION_CHANNEL_SCALE_BASE)], dtype='<f8')
+        self._calibration_time = np.array(timestamp, dtype='<datetime64[s]')
         self._error_offset = np.array(offset_errors)
         self._error_scale = np.array(
             [np.max(scale_error[np.abs(ref) > 0.1 * np.abs(np.max(ref))])

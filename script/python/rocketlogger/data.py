@@ -981,7 +981,7 @@ class RocketLoggerData:
                                        block_timestamps)
 
             # convert to datetime again
-            timestamps = data_timestamp.astype('<M8[ns]')
+            timestamps = data_timestamp.astype('datetime64[ns]')
 
         return timestamps
 
@@ -1031,7 +1031,7 @@ class RocketLoggerData:
             raise TypeError('No data to access for header only imported file.')
 
         validity = np.ones((self._header['sample_count'], len(channel_names)),
-                           dtype=np.bool)
+                           dtype=bool)
 
         for channel_name in channel_names:
             data_index = self._get_channel_index(channel_name)
