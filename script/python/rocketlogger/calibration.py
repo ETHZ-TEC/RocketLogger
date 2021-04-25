@@ -131,7 +131,7 @@ def _extract_setpoint_measurement(
     """
 
     # locate calibration sweep
-    measurement_sweep_bound = np.nonzero(
+    measurement_sweep_bound = np.flatnonzero(
         np.abs(np.diff(measurement_data)) > 2 * setpoint_step
     )
     measurement_sweep_start = np.min(measurement_sweep_bound)
@@ -155,18 +155,15 @@ def _extract_setpoint_measurement(
     measurement_stable = measurement_diff_abs < 2 * measurement_diff_rms
 
     filter_window = np.ones(filter_window_length) / filter_window_length
-    measurement_filtered = np.convolve(
-        measurement_stable, filter_window, mode="same"
-    ) > np.sum(filter_window[:-1])
+    filter_threshold = (filter_window_length - 3 / 2) / filter_window_length
+    measurement_filtered = (
+        np.convolve(measurement_stable, filter_window, mode="same") > filter_threshold
+    )
 
     # extract set-point measurement intervals
     setpoint_boundary = np.diff(np.concatenate(([0], measurement_filtered)))
-    setpoint_start = np.array((setpoint_boundary > 0).nonzero()) - int(
-        filter_window_length / 2
-    )
-    setpoint_end = np.array((setpoint_boundary < 0).nonzero()) + int(
-        filter_window_length / 2
-    )
+    setpoint_start = np.flatnonzero(setpoint_boundary > 0) - filter_window_length // 2
+    setpoint_end = np.flatnonzero(setpoint_boundary < 0) + filter_window_length // 2
 
     setpoint_trim = (
         setpoint_start > measurement_sweep_start - filter_window_length // 2
