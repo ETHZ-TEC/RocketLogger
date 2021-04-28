@@ -61,9 +61,19 @@ _STEPS_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_steps.rld")
 _INCOMPATIBLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_unsupported.rld")
 _INEXISTENT_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_inexistent.rld")
 _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_v3_only.rld")
+_HEADER_UNALIGNED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_header_unaligned.rld")
 _TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_truncated.rld")
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_split.rld")
 _SPLIT_TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_split_truncated.rld")
+_TEMP_FILE = os.path.join(_TEST_FILE_DIR, "temp_data.rld")
+
+
+def _file_copy_byte_flipped(file_in, file_out, offset, mask=0xA5):
+    data = np.fromfile(file_in, np.uint8)
+    data[offset] = data[offset] ^ mask
+    data.tofile(
+        file_out,
+    )
 
 
 class TestDecimation(TestCase):
@@ -105,7 +115,7 @@ class TestFileImport(TestCase):
         self.assertEqual(data.get_data().shape, (5000, 16))
 
     def test_no_file(self):
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaisesRegex(NotImplementedError, "data file creation"):
             RocketLoggerData()
 
     def test_inexistent_file(self):
@@ -114,12 +124,50 @@ class TestFileImport(TestCase):
 
     def test_overload_existing(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "file is already loaded"):
             data.load_file(_FULL_TEST_FILE)
 
-    def test_wrong_magic(self):
-        with self.assertRaises(RocketLoggerFileError):
-            RocketLoggerData(_INCOMPATIBLE_TEST_FILE)
+    def test_invalid_header_magic(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x00)
+        with self.assertRaisesRegex(RocketLoggerFileError, "file magic"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_version(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x04)
+        with self.assertRaisesRegex(RocketLoggerFileError, "data file version"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_length(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x06)
+        with self.assertRaisesRegex(RocketLoggerFileError, "header size"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_data_block_size(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x08)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_data_block_count(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x0C)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_data_sample_count(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x10)
+        with self.assertRaisesRegex(RocketLoggerDataError, "corrupt data: file size"):
+            with self.assertWarnsRegex(
+                RocketLoggerDataWarning, "Skipping incomplete data"
+            ):
+                RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_sample_count_inconsistent(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x10, 0x04)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE)
+
+    def test_invalid_header_comment_length(self):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "comment length unaligned"):
+            RocketLoggerData(_HEADER_UNALIGNED_TEST_FILE)
 
     def test_header_dict(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
@@ -152,7 +200,7 @@ class TestFileImport(TestCase):
         self.assertEqual(data._header["data_block_size"], 100)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "Decimation factor"):
             RocketLoggerData(_FULL_TEST_FILE, decimation_factor=3)
 
     def test_direct_import(self):
@@ -186,6 +234,13 @@ class TestFileImport(TestCase):
         data = RocketLoggerData(_MIN_BLOCK_SIZE_FILE, memory_mapped=False)
         self.assertEqual(data._header["data_block_size"], 1)
         self.assertEqual(data.get_data("V1").shape, (5, 1))
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.remove(_TEMP_FILE)
+        except FileNotFoundError:
+            pass
 
 
 class TestFullFile(TestCase):
@@ -303,11 +358,11 @@ class TestJoinFile(TestCase):
 
 class TestJoinExclude(TestCase):
     def test_exclude_all(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "Could not load valid data"):
             RocketLoggerData(_SPLIT_TEST_FILE, exclude_part=np.arange(0, 3))
 
     def test_exclude_non_join(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "exclude_part"):
             RocketLoggerData(
                 _SPLIT_TEST_FILE, join_files=False, exclude_part=np.arange(0, 3)
             )
@@ -534,11 +589,11 @@ class TestNoJoinFile(TestCase):
 
 class TestRecoveryFile(TestCase):
     def test_no_recovery(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "corrupt data: file size"):
             RocketLoggerData(_TRUNCATED_TEST_FILE)
 
     def test_header_dict(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True)
         header = {
             "data_block_count": 4,
@@ -552,7 +607,7 @@ class TestRecoveryFile(TestCase):
         self.assertDictEqual(data.get_header(), header)
 
     def test_header_dict_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _TRUNCATED_TEST_FILE, recovery=True, decimation_factor=10
             )
@@ -568,25 +623,25 @@ class TestRecoveryFile(TestCase):
         self.assertDictEqual(data.get_header(), header)
 
     def test_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _TRUNCATED_TEST_FILE, recovery=True, decimation_factor=10
             )
         self.assertEqual(data._header["data_block_size"], 100)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "Decimation factor"):
             RocketLoggerData(_TRUNCATED_TEST_FILE, recovery=True, decimation_factor=3)
 
     def test_direct_import(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _TRUNCATED_TEST_FILE, recovery=True, memory_mapped=False
             )
         self.assertEqual(data.get_data("V3").shape, (4000, 1))
 
     def test_direct_import_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _TRUNCATED_TEST_FILE,
                 recovery=True,
@@ -601,11 +656,11 @@ class TestRecoveryFile(TestCase):
 
 class TestRecoverySplitFile(TestCase):
     def test_no_recovery(self):
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "corrupt data: file size"):
             RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE)
 
     def test_header_dict(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(_SPLIT_TRUNCATED_TEST_FILE, recovery=True)
         header = {
             "data_block_count": 3,
@@ -619,7 +674,7 @@ class TestRecoverySplitFile(TestCase):
         self.assertDictEqual(data.get_header(), header)
 
     def test_header_dict_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _SPLIT_TRUNCATED_TEST_FILE, recovery=True, decimation_factor=10
             )
@@ -635,27 +690,27 @@ class TestRecoverySplitFile(TestCase):
         self.assertDictEqual(data.get_header(), header)
 
     def test_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _SPLIT_TRUNCATED_TEST_FILE, recovery=True, decimation_factor=10
             )
         self.assertEqual(data._header["data_block_size"], 6400)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "Decimation factor"):
             RocketLoggerData(
                 _SPLIT_TRUNCATED_TEST_FILE, recovery=True, decimation_factor=3
             )
 
     def test_direct_import(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _SPLIT_TRUNCATED_TEST_FILE, recovery=True, memory_mapped=False
             )
         self.assertEqual(data.get_data().shape, (3 * 64000, 16))
 
     def test_direct_import_with_decimation(self):
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "corrupt data: recovered"):
             data = RocketLoggerData(
                 _SPLIT_TRUNCATED_TEST_FILE,
                 recovery=True,
@@ -709,7 +764,7 @@ class TestChannelHandling(TestCase):
 
     def test_channel_add_existing(self):
         channel_info = self.data._header["channels"][10].copy()
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "name already in use"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -717,7 +772,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_unit(self):
         channel_info = self.data._header["channels"][10].copy()
         del channel_info["unit_index"]
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "unit not defined"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -725,7 +780,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_scale(self):
         channel_info = self.data._header["channels"][10].copy()
         del channel_info["scale"]
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "scale not defined"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -733,7 +788,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_data_size(self):
         channel_info = self.data._header["channels"][10].copy()
         del channel_info["data_size"]
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "size not defined"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -741,7 +796,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_name(self):
         channel_info = self.data._header["channels"][10].copy()
         del channel_info["name"]
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "name undefined"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -749,13 +804,13 @@ class TestChannelHandling(TestCase):
     def test_channel_add_no_link(self):
         channel_info = self.data._header["channels"][10].copy()
         del channel_info["valid_link"]
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "link not defined"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
 
     def test_channel_add_invalid_info(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "Channel info structure"):
             self.data.add_channel(
                 None, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -764,7 +819,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["unit_index"] = -1
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "invalid channel unit"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -773,7 +828,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["scale"] = "micro"
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "invalid scale"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -782,7 +837,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["data_size"] = "int8"
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "invalid data size"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -791,7 +846,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["valid_link"] = None
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "invalid link"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -800,7 +855,7 @@ class TestChannelHandling(TestCase):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["valid_link"] = len(self.data._header["channels"])
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "invalid link"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -808,7 +863,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_invalid_name(self):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = 100
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "invalid name"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -816,7 +871,7 @@ class TestChannelHandling(TestCase):
     def test_channel_add_overlength_name(self):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "over_length_channel_name"
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "name too long"):
             self.data.add_channel(
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
@@ -836,7 +891,7 @@ class TestChannelHandling(TestCase):
         self.assertFalse("A1" in self.data.get_channel_names())
 
     def test_channel_remove_inexistent(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.remove_channel("A")
 
 
@@ -921,24 +976,24 @@ class TestChannelMerge(TestCase):
 
     def test_merge_header_only(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "header only"):
             data.merge_channels()
 
     def test_merge_drop_remerge(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
         data.merge_channels(keep_channels=False)
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "No channels found"):
             data.merge_channels()
 
     def test_merge_keep_remerge(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
         data.merge_channels(keep_channels=True)
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "already in use"):
             data.merge_channels()
 
     def test_merge_inexistent_channels(self):
         data = RocketLoggerData(_SINGLE_TEST_FILE)
-        with self.assertWarns(RocketLoggerDataWarning):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "No channels found"):
             data.merge_channels(keep_channels=False)
 
     def test_merge_channel_count(self):
@@ -1004,7 +1059,7 @@ class TestDataHandling(TestCase):
         self.assertEqual(temp.shape[1], 1)
 
     def test_get_invalid_channel(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.get_data("A")
 
     def test_get_all_channels(self):
@@ -1021,7 +1076,7 @@ class TestDataHandling(TestCase):
         self.assertListEqual(temp, ["voltage"])
 
     def test_get_invalid_channel_unit(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.get_unit("A")
 
     def test_get_all_channels_unit(self):
@@ -1052,7 +1107,7 @@ class TestDataHandling(TestCase):
         self.assertTrue(np.all(temp))
 
     def test_get_invalid_channel_validity(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.get_validity("A")
 
     def test_get_all_channels_validity(self):
@@ -1064,25 +1119,29 @@ class TestDataHandling(TestCase):
         temp = self.data.get_validity(channel_names)
         self.assertEqual(temp.shape[1], len(channel_names))
 
-    def test_get_default_time(self):
+    def test_get_time_default(self):
         temp = self.data.get_time()
         self.assertEqual(temp.shape[0], self.data._header["sample_count"])
         self.assertIsInstance(temp[0], float)
 
-    def test_get_relative_time(self):
+    def test_get_time_relative(self):
         temp = self.data.get_time(time_reference="relative")
         self.assertEqual(temp.shape[0], self.data._header["sample_count"])
         self.assertIsInstance(temp[0], float)
 
-    def test_get_absolute_local_time(self):
+    def test_get_time_absolute_local(self):
         temp = self.data.get_time(time_reference="local")
         self.assertEqual(temp.shape[0], self.data._header["sample_count"])
         self.assertEqual(temp.dtype, np.dtype("datetime64[ns]"))
 
-    def test_get_absolute_network_time(self):
+    def test_get_time_absolute_network(self):
         temp = self.data.get_time(time_reference="network")
         self.assertEqual(temp.shape[0], self.data._header["sample_count"])
         self.assertEqual(temp.dtype, np.dtype("datetime64[ns]"))
+
+    def test_get_time_invalid_reference(self):
+        with self.assertRaisesRegex(ValueError, "Time reference"):
+            self.data.get_time(time_reference="invalid")
 
     def test_get_filename(self):
         temp = self.data.get_filename()
@@ -1095,7 +1154,7 @@ class TestHeaderOnlyImport(TestCase):
         self.assertEqual(data._header["sample_count"], 5000)
 
     def test_no_file(self):
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaisesRegex(NotImplementedError, "data file creation"):
             RocketLoggerData(header_only=True)
 
     def test_inexistent_file(self):
@@ -1104,12 +1163,48 @@ class TestHeaderOnlyImport(TestCase):
 
     def test_overload_existing(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(RocketLoggerDataError):
+        with self.assertRaisesRegex(RocketLoggerDataError, "file is already loaded"):
             data.load_file(_FULL_TEST_FILE, header_only=True)
 
-    def test_wrong_magic(self):
-        with self.assertRaises(RocketLoggerFileError):
-            RocketLoggerData(_INCOMPATIBLE_TEST_FILE, header_only=True)
+    def test_invalid_header_magic(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x00)
+        with self.assertRaisesRegex(RocketLoggerFileError, "file magic"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_version(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x04)
+        with self.assertRaisesRegex(RocketLoggerFileError, "file version"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_length(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x06)
+        with self.assertRaisesRegex(RocketLoggerFileError, "header size"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_data_block_size(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x08)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_data_block_count(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x0C)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_data_sample_count(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x10)
+        # header only does not detect data error, but emits warning
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "Skipping incomplete data"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_sample_count_inconsistent(self):
+        _file_copy_byte_flipped(_FULL_TEST_FILE, _TEMP_FILE, 0x10, 0x04)
+        with self.assertRaisesRegex(RocketLoggerFileError, "number of samples"):
+            RocketLoggerData(_TEMP_FILE, header_only=True)
+
+    def test_invalid_header_comment_length(self):
+        with self.assertWarnsRegex(RocketLoggerDataWarning, "comment length unaligned"):
+            RocketLoggerData(_HEADER_UNALIGNED_TEST_FILE, header_only=True)
 
     def test_header_dict(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
@@ -1142,7 +1237,7 @@ class TestHeaderOnlyImport(TestCase):
         self.assertEqual(data._header["data_block_size"], 100)
 
     def test_with_invalid_decimation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "Decimation factor"):
             RocketLoggerData(_FULL_TEST_FILE, decimation_factor=3, header_only=True)
 
     def test_direct_import(self):
@@ -1168,7 +1263,7 @@ class TestHeaderOnlyImport(TestCase):
 
     def test_get_invalid_channel_unit(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             data.get_unit("A")
 
     def test_get_all_channels_unit(self):
@@ -1197,18 +1292,25 @@ class TestHeaderOnlyImport(TestCase):
 
     def test_get_data(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "header only"):
             data.get_data()
 
     def test_get_time(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "header only"):
             data.get_time()
 
     def test_get_validity(self):
         data = RocketLoggerData(_FULL_TEST_FILE, header_only=True)
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "header only"):
             data.get_validity()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.remove(_TEMP_FILE)
+        except FileNotFoundError:
+            pass
 
 
 @unittest.skipUnless(
@@ -1236,7 +1338,7 @@ class TestDataframe(TestCase):
         self.assertListEqual(list(temp.columns), (["V1"]))
 
     def test_get_invalid_channel(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.get_dataframe("A")
 
     def test_get_all_channels(self):
@@ -1314,7 +1416,7 @@ class TestDataPlot(TestCase):
         self.data.plot()
 
     def test_plot_invalid(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.plot(["A"])
 
     def test_plot_voltage(self):
@@ -1362,7 +1464,7 @@ class TestDataPlotDecimate(TestCase):
         self.data.plot()
 
     def test_plot_invalid(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "not found"):
             self.data.plot(["A"])
 
     def test_plot_voltage(self):

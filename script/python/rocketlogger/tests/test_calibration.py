@@ -47,6 +47,7 @@ from rocketlogger.calibration import (
     _CALIBRATION_PRU_CYCLES_OFFSET,
     _CALIBRATION_PRU_CYCLES_SCALE,
 )
+from rocketlogger.tests.test_data import _file_copy_byte_flipped
 
 
 _TEST_FILE_DIR = "data"
@@ -116,8 +117,25 @@ class TestCalibrationFile(TestCase):
 
     def test_file_write_empty(self):
         cal = RocketLoggerCalibration()
-        with self.assertRaises(RocketLoggerCalibrationError):
+        with self.assertRaisesRegex(
+            RocketLoggerCalibrationError, "No calibration data available"
+        ):
             cal.write_calibration_file(_TEMP_FILE)
+
+    def test_invalid_header_magic(self):
+        _file_copy_byte_flipped(_CALIBRATION_FILE, _TEMP_FILE, 0x00)
+        with self.assertRaisesRegex(RocketLoggerFileError, "file magic"):
+            RocketLoggerCalibration(_TEMP_FILE)
+
+    def test_invalid_header_version(self):
+        _file_copy_byte_flipped(_CALIBRATION_FILE, _TEMP_FILE, 0x04)
+        with self.assertRaisesRegex(RocketLoggerFileError, "calibration file version"):
+            RocketLoggerCalibration(_TEMP_FILE)
+
+    def test_invalid_header_length(self):
+        _file_copy_byte_flipped(_CALIBRATION_FILE, _TEMP_FILE, 0x06)
+        with self.assertRaisesRegex(RocketLoggerFileError, "invalid header length"):
+            RocketLoggerCalibration(_TEMP_FILE)
 
     def test_file_write_reread(self):
         cal = RocketLoggerCalibration(_CALIBRATION_FILE)
@@ -143,31 +161,31 @@ class TestCalibrationFile(TestCase):
 class TestUnsupportedCalibrationFile(TestCase):
     def test_file_read(self):
         cal = RocketLoggerCalibration()
-        with self.assertRaises(RocketLoggerFileError):
+        with self.assertRaisesRegex(RocketLoggerFileError, "unable to read data"):
             cal.read_calibration_file(_CALIBRATION_FILE_V1)
 
     def test_file_read_direct(self):
-        with self.assertRaises(RocketLoggerFileError):
+        with self.assertRaisesRegex(RocketLoggerFileError, "unable to read data"):
             RocketLoggerCalibration(_CALIBRATION_FILE_V1)
 
 
 class TestCalibrationSetup(TestCase):
     def test_calibration_setup_empty(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "required positional argument"):
             RocketLoggerCalibrationSetup()
 
     def test_calibration_setup_single(self):
         RocketLoggerCalibrationSetup(3, 1, 1, 1, 0.25, False)
 
     def test_calibration_setup_single_invalid(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "sweep expects odd number"):
             RocketLoggerCalibrationSetup(2, 1, 1, 1, 0.25, True)
 
     def test_calibration_setup_dual(self):
         RocketLoggerCalibrationSetup(5, 1, 1, 1, 0.25, True)
 
     def test_calibration_setup_dual_invalid(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "sweep expects multiple of 4"):
             RocketLoggerCalibrationSetup(3, 1, 1, 1, 0.25, True)
 
     def test_SMU2450_setup_setpoint_count(self):
@@ -225,16 +243,29 @@ class TestCalibrationSetup(TestCase):
         data_measure = (
             RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze()
         )
-        with self.assertRaises(Warning):
+        with self.assertRaisesRegex(ValueError, "No set-points found"):
             _extract_setpoint_measurement(
                 data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step()
+            )
+
+    def test_setpoint_detection_zero_length_filter(self):
+        data_measure = (
+            RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze()
+        )
+        with self.assertRaisesRegex(ValueError, "filter window length"):
+            setpoint = _extract_setpoint_measurement(
+                data_measure,
+                CALIBRATION_SETUP_SMU2450.get_voltage_step(calibration=True),
+                filter_window_length=0,
             )
 
 
 class TestCalibrationProcedure(TestCase):
     def test_calibration_empty(self):
         cal = RocketLoggerCalibration()
-        with self.assertRaises(RocketLoggerCalibrationError):
+        with self.assertRaisesRegex(
+            RocketLoggerCalibrationError, "No measurement data loaded"
+        ):
             cal.recalibrate(CALIBRATION_SETUP_SMU2450)
 
     def test_calibration_by_filename(self):
@@ -280,7 +311,7 @@ class TestCalibrationProcedure(TestCase):
         self._check_reference_calibration(cal)
 
     def test_calibration_file_missing(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "not valid measurement data"):
             RocketLoggerCalibration(
                 _TEMP_FILE, _TEMP_FILE, _TEMP_FILE, _TEMP_FILE, _TEMP_FILE
             )
@@ -293,8 +324,20 @@ class TestCalibrationProcedure(TestCase):
             _CALIBRATION_VOLTAGE_FILE,
             _CALIBRATION_VOLTAGE_FILE,
         )
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(KeyError, "Channel .* not found"):
             cal.recalibrate(CALIBRATION_SETUP_SMU2450)
+
+    def test_calibration_invalid_target_offset_error(self):
+        cal = RocketLoggerCalibration()
+        cal.load_measurement_data(
+            _CALIBRATION_VOLTAGE_FILE,
+            _CALIBRATION_CURRENT_LO1_FILE,
+            _CALIBRATION_CURRENT_HI_FILE,
+            _CALIBRATION_CURRENT_LO2_FILE,
+            _CALIBRATION_CURRENT_HI_FILE,
+        )
+        with self.assertRaisesRegex(ValueError, "target_offset_error"):
+            cal.recalibrate(CALIBRATION_SETUP_SMU2450, target_offset_error=0)
 
     def test_calibration_print_stat(self):
         cal = RocketLoggerCalibration(
