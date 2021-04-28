@@ -33,20 +33,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import cProfile
+import os
 from rocketlogger.data import RocketLoggerData
 
 
 # data files (need to first generate some using the highest sampling rate)
-file_100mb = 'performance/data.rld'
-file_10gb = 'performance/test-large.rld'
+file_100mb = os.path.join("performance", "data.rld")
+file_10gb = os.path.join("performance", "test-large.rld")
 
 
 # profiler output config
-sorting = 'cumulative'
+sorting = "cumulative"
 
 
 # profile 1
-print("=== Profile loading file: 5x100MB, memory mapped ===")
+print("=== Profile loading file: 8x100MB, memory mapped ===")
 profiler = cProfile.Profile()
 profiler.enable()
 
@@ -57,7 +58,18 @@ profiler.print_stats(sort=sorting)
 
 
 # profile 2
-print("=== Profile loading file: 5x100MB, direct ===")
+print("=== Profile loading file: 8x100MB, memory mapped, decimate 10 ===")
+profiler = cProfile.Profile()
+profiler.enable()
+
+r = RocketLoggerData(file_100mb, memory_mapped=True, decimation_factor=10)
+
+profiler.disable()
+profiler.print_stats(sort=sorting)
+
+
+# profile 3
+print("=== Profile loading file: 8x100MB, direct ===")
 profiler = cProfile.Profile()
 profiler.enable()
 
@@ -67,7 +79,18 @@ profiler.disable()
 profiler.print_stats(sort=sorting)
 
 
-# profile 3
+# profile 4
+print("=== Profile loading file: 8x100MB, direct, decimate 10 ===")
+profiler = cProfile.Profile()
+profiler.enable()
+
+r = RocketLoggerData(file_100mb, memory_mapped=False, decimation_factor=10)
+
+profiler.disable()
+profiler.print_stats(sort=sorting)
+
+
+# profile 5
 print("=== Profile loading file: 1x10GB, memory mapped ===")
 profiler = cProfile.Profile()
 profiler.enable()
@@ -78,7 +101,29 @@ profiler.disable()
 profiler.print_stats(sort=sorting)
 
 
-# profile 4
+# profile 6
+print("=== Profile loading file: 1x10GB, memory mapped, decimate 10 ===")
+profiler = cProfile.Profile()
+profiler.enable()
+
+r = RocketLoggerData(file_10gb, memory_mapped=True, decimation_factor=10)
+
+profiler.disable()
+profiler.print_stats(sort=sorting)
+
+
+# profile 7
+print("=== Profile loading file: 1x10GB, memory mapped, decimate 6400 ===")
+profiler = cProfile.Profile()
+profiler.enable()
+
+r = RocketLoggerData(file_10gb, memory_mapped=True, decimation_factor=6400)
+
+profiler.disable()
+profiler.print_stats(sort=sorting)
+
+
+# profile 8
 print("=== Profile loading file: 1x10GB, direct ===")
 profiler = cProfile.Profile()
 profiler.enable()
@@ -88,35 +133,23 @@ r = RocketLoggerData(file_10gb, memory_mapped=False)
 profiler.disable()
 profiler.print_stats(sort=sorting)
 
-
-# profile 5
-print("=== Profile loading file: 5x100MB, decimate 10 ===")
+# profile 9
+print("=== Profile loading file: 1x10GB, direct, decimate 10 ===")
 profiler = cProfile.Profile()
 profiler.enable()
 
-r = RocketLoggerData(file_100mb, decimation_factor=10)
+r = RocketLoggerData(file_10gb, memory_mapped=False, decimation_factor=10)
 
 profiler.disable()
 profiler.print_stats(sort=sorting)
 
 
-# profile 6
-print("=== Profile loading file: 1x10GB, decimate 10 ===")
+# profile 10
+print("=== Profile loading file: 1x10GB, direct, decimate 6400 ===")
 profiler = cProfile.Profile()
 profiler.enable()
 
-r = RocketLoggerData(file_10gb, decimation_factor=10)
-
-profiler.disable()
-profiler.print_stats(sort=sorting)
-
-
-# profile 7
-print("=== Profile loading file: 1x10GB, decimate 6400 ===")
-profiler = cProfile.Profile()
-profiler.enable()
-
-r = RocketLoggerData(file_10gb, decimation_factor=6400)
+r = RocketLoggerData(file_10gb, memory_mapped=False, decimation_factor=6400)
 
 profiler.disable()
 profiler.print_stats(sort=sorting)

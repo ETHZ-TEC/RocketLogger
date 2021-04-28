@@ -145,7 +145,7 @@ def _extract_setpoint_measurement(
             measurement_data, smoothing_window, mode="same"
         )
     else:
-        measurement_smooth = measurement_data
+        raise ValueError("filter window length needs to be strictly positive value")
 
     # find stable measurement intervals using rms of smoothed signal signals
     measurement_diff_abs = np.abs(np.diff(np.concatenate(([0], measurement_smooth))))
@@ -172,7 +172,7 @@ def _extract_setpoint_measurement(
 
     # if no set-point was found report error
     if not np.any(setpoint_trim):
-        raise Warning(
+        raise ValueError(
             "No set-points found. You might want to check the set-point step scale?"
         )
 
@@ -464,8 +464,7 @@ class RocketLoggerCalibration:
             elif os.path.isfile(data):
                 return RocketLoggerData(data)
             raise ValueError(
-                '"{}" is not valid measurement data nor an '
-                "existing data file.".format(data)
+                f"'{data}' is not valid measurement data nor an existing data file."
             )
 
         # store the loaded data in class
@@ -476,7 +475,7 @@ class RocketLoggerCalibration:
         self._data_i2h = _rld_copy_or_load(data_i2h)
 
         # validate consistency of data
-        self._validate_data()
+        self._assert_measurement_consistency()
 
         # reset existing error calculations, keep calibration values if loaded
         self._error_offset = None
@@ -489,7 +488,7 @@ class RocketLoggerCalibration:
         fix_signs=True,
         target_offset_error=1,
         regression_algorithm=regression_linear,
-        **kwargs
+        **kwargs,
     ):
         """
         Perform channel calibration with loaded measurement data, overwriting
@@ -514,7 +513,7 @@ class RocketLoggerCalibration:
         :param kwargs: Optional names arguments passed to the regression
                        algorithm function
         """
-        self._check_data_loaded()
+        self._assert_data_loaded()
         if target_offset_error < 1:
             raise ValueError("target_offset_error factor needs to be >= 1.")
 
@@ -625,32 +624,27 @@ class RocketLoggerCalibration:
         """
         print("RocketLogger Calibration Statistics")
         try:
-            self._check_calibration_exists()
-            print("Measurement time:   {}".format(self._calibration_time))
+            self._assert_calibration_exists()
+            print(f"Measurement time:   {self._calibration_time}")
             print()
             print("Calibration values:")
             print("  Channel  :  Offset [bit]  :  Scale [unit/bit]")
             for i, name in enumerate(_CALIBRATION_CHANNEL_NAMES):
                 print(
-                    "  {:7s}  :  {:12d}  :  {:16.6f}".format(
-                        name, self._calibration_offset[i], self._calibration_scale[i]
-                    )
+                    f"  {name:7s}  :  {self._calibration_offset[i]:12d}  :"
+                    f"  {self._calibration_scale[i]:16.6f}"
                 )
         except RocketLoggerCalibrationError:
             print("no calibration data available")
         print()
         try:
-            self._check_errors_calculation_exists()
+            self._assert_error_calculation_exists()
             print("Error calculation values:")
             print("  Channel  :  Offset [unit]  :  Scale [%]  :  RMSE [unit]")
             for i, name in enumerate(_CALIBRATION_CHANNEL_NAMES):
                 print(
-                    "  {:7s}  :  {:13.6g}  :  {:9.5f}  :  {:11.6g}".format(
-                        name,
-                        self._error_offset[i],
-                        100 * self._error_scale[i],
-                        self._error_rmse[i],
-                    )
+                    f"  {name:7s}  :  {self._error_offset[i]:13.6g}  :  "
+                    f"{100 * self._error_scale[i]:9.5f}  :  {self._error_rmse[i]:11.6g}"
                 )
         except RocketLoggerCalibrationError:
             print("no error calculation data available")
@@ -670,21 +664,18 @@ class RocketLoggerCalibration:
             )
         if data["file_magic"] != _CALIBRATION_FILE_MAGIC:
             raise RocketLoggerFileError(
-                "Invalid RocketLogger calibration "
-                "file, invalid file magic {:x}.".format(data["file_magic"])
+                f"Invalid RocketLogger calibration file magic 0x{int(data['file_magic']):08x}."
             )
 
         if data["file_version"] != _CALIBRATION_FILE_VERSION:
             raise RocketLoggerFileError(
-                "Unsupported RocketLogger data file version {}.".format(
-                    data["file_version"]
-                )
+                f"Unsupported RocketLogger calibration file version {data['file_version']}."
             )
 
         if data["header_length"] != _CALIBRATION_FILE_HEADER_LENGTH:
             raise RocketLoggerFileError(
-                "Invalid RocketLogger calibration "
-                "file, invalid header length {:x}.".format(data["header_length"])
+                "Invalid RocketLogger calibration file, invalid header length "
+                f"0x{int(data['file_magic']):08x}."
             )
 
         self._calibration_time = data["calibration_time"]
@@ -713,7 +704,7 @@ class RocketLoggerCalibration:
 
         :param filename: Name of the file to write the calibration values to
         """
-        self._check_calibration_exists()
+        self._assert_calibration_exists()
 
         # assemble file data write to file
         filedata = np.array(
@@ -744,23 +735,7 @@ class RocketLoggerCalibration:
             self.print_statistics()
         sys.stdout = stdout
 
-    def _check_data_loaded(self):
-        """Check for loaded calibration measurements, raise error if not."""
-        if any(
-            [
-                self._data_v is None,
-                self._data_i1l is None,
-                self._data_i1h is None,
-                self._data_i2l is None,
-                self._data_i2h is None,
-            ]
-        ):
-            raise RocketLoggerCalibrationError(
-                "No data measurement data loaded for recalibration. "
-                "Use load_measurement_data() first to load data."
-            )
-
-    def _check_calibration_exists(self):
+    def _assert_calibration_exists(self):
         """Check for existing calibration data, raise error if not."""
         if any(
             [
@@ -773,7 +748,23 @@ class RocketLoggerCalibration:
                 "No calibration data available. Perform recalibration first."
             )
 
-    def _check_errors_calculation_exists(self):
+    def _assert_data_loaded(self):
+        """Check for loaded calibration measurements, raise error if not."""
+        if any(
+            [
+                self._data_v is None,
+                self._data_i1l is None,
+                self._data_i1h is None,
+                self._data_i2l is None,
+                self._data_i2h is None,
+            ]
+        ):
+            raise RocketLoggerCalibrationError(
+                "No measurement data loaded for recalibration. "
+                "Use load_measurement_data() first to load data."
+            )
+
+    def _assert_error_calculation_exists(self):
         """Check for existing calibration data, raise error if not."""
         if any(
             [
@@ -786,8 +777,7 @@ class RocketLoggerCalibration:
                 "No error calculation data available. Perform calculation first."
             )
 
-    def _validate_data(self):
-        """Validate loaded measurement data for consistency."""
+    def _assert_measurement_consistency(self):
         data = [
             self._data_v,
             self._data_i1l,

@@ -39,16 +39,16 @@ from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_
 filename_prefix = "data/test_"
 
 # automatically derive individual meausrement file names
-calibration_file_v = "{}calibration_v.rld".format(filename_prefix)
-calibration_file_i1l = "{}calibration_i1l.rld".format(filename_prefix)
-calibration_file_i2l = "{}calibration_i2l.rld".format(filename_prefix)
-calibration_file_ih = "{}calibration_ih.rld".format(filename_prefix)
+calibration_file_v = f"{filename_prefix}calibration_v.rld"
+calibration_file_i1l = f"{filename_prefix}calibration_i1l.rld"
+calibration_file_i2l = f"{filename_prefix}calibration_i2l.rld"
+calibration_file_ih = f"{filename_prefix}calibration_ih.rld"
 
 # calibration output file names
 calibration_file = "calibration.dat"
 calibration_log_file = "calibration.log"
-calibration_file_copy = "{}calibration.dat".format(filename_prefix.split("/")[-1])
-calibration_log_file_copy = "{}calibration.log".format(filename_prefix.split("/")[-1])
+calibration_file_copy = f"{filename_prefix}calibration.dat"
+calibration_log_file_copy = f"{filename_prefix}calibration.log"
 
 
 # load the calibration measurement files
