@@ -60,6 +60,17 @@ const version = '1.99';
 const path_static = path.join(__dirname, 'static');
 const path_templates = path.join(__dirname, 'templates');
 
+// data chache
+const data_cache_size = 1000000;
+const data_cache_reply_size = data_cache_size / 20;
+const data_cache = {
+    metadata: {},
+    time: [],
+    data: {},
+    digital: [],
+    reset: true,
+};
+
 
 // initialize
 const app = express();
@@ -241,6 +252,9 @@ io.on('connection', (socket) => {
         switch (req.cmd) {
             case 'start':
                 res = rl.start(req.config);
+                if (res.err.length == 0) {
+                    data_cache.reset = true;
+                }
                 break;
 
             case 'stop':
@@ -311,8 +325,66 @@ io.on('connection', (socket) => {
 
     // handle cached data request
     socket.on('data', (req) => {
-        // @todo: implement local data caching
         console.log(`rl data: ${JSON.stringify(req)}`);
+
+        // poll status and emit on status channel
+        if (req.cmd === 'data') {
+            const res = {
+                t: Date.now(),
+                req: req,
+                metadata: {},
+                time: null,
+                data: {},
+                digital: null,
+            };
+
+            if (req.time) {
+
+                // reverse lookup first unavailable data data from cache
+                const cache_time_view = new Float64Array(data_cache.time);
+                let cache_hit = cache_time_view.length - 1;
+                while (cache_hit >= 0) {
+                    if (cache_time_view[cache_hit] < req.time) {
+                        break;
+                    }
+                    cache_hit--;
+                }
+
+                // data available, otherwise reply with empty data
+                if (cache_hit >= 0) {
+                    const index_start = Math.max(0, cache_hit - data_cache_reply_size + 1);
+                    const index_end = cache_hit + 1;
+                    const buffer_length = index_end - index_start;
+
+                    console.log(`cache hit: send data range [${index_start}:${index_end}], size=${data_cache.time.length}`);
+
+                    // assemble response from cache
+                    res.metadata = data_cache.metadata;
+
+                    const cache_time_view = new Float64Array(data_cache.time);
+                    res.time = cache_time_view.slice(index_start, index_end);
+
+                    const cache_digital_view = new Uint8Array(data_cache.digital);
+                    res.digital = cache_digital_view.slice(index_start, index_end);
+
+                    for (const ch in data_cache.metadata) {
+                        if (data_cache.metadata[ch].unit === 'binary') {
+                            continue;
+                        }
+
+                        const cache_data_view = new Float32Array(data_cache.data[ch]);
+                        res.data[ch] = cache_data_view.slice(index_start, index_end);
+                    }
+                } else {
+                    console.log(`cache miss: send empty reponse, cache_size=${data_cache.time.length}`);
+                }
+            } else {
+                res.err = ['missing reference timestamp of last avaliable data'];
+            }
+            socket.emit('data', res);
+        } else {
+            socket.emit('data', { err: [`invalid data command: ${req.cmd}`] });
+        }
     });
 
     // handle timesync request
@@ -335,9 +407,10 @@ async function data_proxy() {
     sock.subscribe();
 
     for await (const data of sock) {
-        const rep = {
+        const res = {
             t: Date.now(),
             metadata: {},
+            time: null,
             data: {},
             digital: null,
         };
@@ -357,28 +430,26 @@ async function data_proxy() {
 
         // generate timestamps (second data element)
         const time_in_view = new BigInt64Array(data[1].buffer);
-        const time_out = new ArrayBuffer(buffer_length * Float64Array.BYTES_PER_ELEMENT);
-        const time_out_view = new Float64Array(time_out);
-        for (let j = 0; j < time_out_view.length; j++) {
-            time_out_view[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
+        const time_out = new Float64Array(buffer_length).fill(NaN);
+        for (let j = 0; j < time_out.length; j++) {
+            time_out[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
                 + j * 1e3 / rl.web_data_rate;
         }
-        rep.time = time_out;
+        res.time = time_out;
 
         // process digital data (last data element)
         const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
-        const digital_out = new ArrayBuffer(buffer_length * Uint8Array.BYTES_PER_ELEMENT);
-        const digital_out_view = new Uint8Array(digital_out);
-        for (let j = 0; j < Math.min(digital_out_view.length, digital_in_view.length / downsample_factor); j++) {
-            digital_out_view[j] = digital_in_view[j * downsample_factor];
+        const digital_out = new Uint8Array(buffer_length).fill(0);
+        for (let j = 0; j < Math.min(digital_out.length, digital_in_view.length / downsample_factor); j++) {
+            digital_out[j] = digital_in_view[j * downsample_factor];
             /// @todo any/none down sampling
         }
-        rep.digital = digital_out;
+        res.digital = digital_out;
 
         // process channel data (starting at third data element)
         let i = 2;
         for (const ch of meta.channels) {
-            rep.metadata[ch.name] = {
+            res.metadata[ch.name] = {
                 scale: ch.scale,
                 unit: ch.unit,
                 bit: ch.bit,
@@ -388,46 +459,92 @@ async function data_proxy() {
             }
 
             const data_in_view = new Int32Array(data[i].buffer);
-            const data_out = new ArrayBuffer(buffer_length * Float32Array.BYTES_PER_ELEMENT);
-            const data_out_view = new Float32Array(data_out).fill(NaN);
-            for (let j = 0; j < Math.min(data_out_view.length, data_in_view.length / downsample_factor); j++) {
-                data_out_view[j] = data_in_view[j * downsample_factor] * ch.scale;
+            const data_out = new Float32Array(buffer_length).fill(NaN);
+            for (let j = 0; j < Math.min(data_out.length, data_in_view.length / downsample_factor); j++) {
+                data_out[j] = data_in_view[j * downsample_factor] * ch.scale;
             }
-            rep.data[ch.name] = data_out;
+            res.data[ch.name] = data_out;
             i = i + 1;
         }
 
         // merge current channel data if available
         for (const ch of [1, 2]) {
             // try getting channel merge inputs
-            const merge_lo_view = new Float32Array(rep.data[`I${ch}L`]);
-            // const merge_hi_view = new Float32Array(rep.data[`I${ch}H`]);
-            const merge_valid_view = new Uint8Array(rep.digital);
-            const merge_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
+            const merge_lo_view = new Float32Array(res.data[`I${ch}L`]);
+            // const merge_hi_view = new Float32Array(res.data[`I${ch}H`]);
+            const merge_valid_view = new Uint8Array(res.digital);
+            const merge_valid_mask = (0x01 << res.metadata[`I${ch}L_valid`].bit);
 
             // generate new channel data and info (in-place update HI channel)
-            rep.data[`I${ch}`] = rep.data[`I${ch}H`];
-            const merge_out_view = new Float32Array(rep.data[`I${ch}`]);
+            res.data[`I${ch}`] = res.data[`I${ch}H`];
+            const merge_out_view = new Float32Array(res.data[`I${ch}`]);
             for (let j = 0; j < merge_out_view.length; j++) {
                 if (merge_valid_view[j] & merge_valid_mask) {
                     merge_out_view[j] = merge_lo_view[j];
                 }
             }
-            // rep.data[`I${ch}`] = merge_out;
-            rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
+            // res.data[`I${ch}`] = merge_out;
+            res.metadata[`I${ch}`] = res.metadata[`I${ch}L`];
 
             // delete merged channels
-            delete rep.data[`I${ch}L`];
-            delete rep.metadata[`I${ch}L`];
-            delete rep.data[`I${ch}H`];
-            delete rep.metadata[`I${ch}H`];
-            delete rep.metadata[`I${ch}L_valid`];
+            delete res.data[`I${ch}L`];
+            delete res.metadata[`I${ch}L`];
+            delete res.data[`I${ch}H`];
+            delete res.metadata[`I${ch}H`];
+            delete res.metadata[`I${ch}L_valid`];
         }
 
         // send new data packet to clients
-        io.emit('data', rep);
+        io.emit('data', res);
 
-        /// @todo perform local data caching
+        // perform local data caching
+        if (data_cache.reset) {
+            console.log('reset server data cache');
+            data_cache.metadata = res.metadata;
+            data_cache.time = [];
+            data_cache.digital = [];
+            data_cache.data = {};
+            for (const ch in data_cache.metadata) {
+                data_cache.data[ch] = [];
+            }
+            data_cache.reset = false;
+        }
+        if (data_cache.metadata.length !== res.metadata.length) {
+            console.warn('metadata missmatch of server data cache and incoming data');
+            continue;
+        }
+
+        const time_view = new Float64Array(res.time);
+        for (let i = 0; i < time_view.length; i++) {
+            data_cache.time.push(time_view[i]);
+        }
+        if (data_cache.time.length > data_cache_size) {
+            data_cache.time.splice(0, data_cache.time.length - data_cache_size);
+        }
+
+        const digital_view = new Uint8Array(res.digital);
+        for (let i = 0; i < digital_view.length; i++) {
+            data_cache.digital.push(digital_view[i]);
+        }
+        if (data_cache.digital.length > data_cache_size) {
+            data_cache.digital.splice(0, data_cache.digital.length - data_cache_size);
+        }
+
+        for (const ch in data_cache.metadata) {
+            if (data_cache.metadata[ch].unit === 'binary') {
+                continue;
+            }
+
+            const tmp = new Float32Array(data_cache.data[ch].length + res.data[ch].length);
+            tmp.set(data_cache.data[ch], 0);
+            tmp.set(res.data[ch], data_cache.data[ch].length);
+            data_cache.data[ch] = tmp;
+
+            if (data_cache.data[ch].length > data_cache_size) {
+                data_cache.data[ch].splice(0, data_cache.data[ch].length - data_cache_size);
+            }
+        }
+        // console.log(`server data cache size: time=${data_cache.time.length}`);
     }
 }
 
