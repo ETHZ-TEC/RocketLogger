@@ -1,38 +1,16 @@
-rocketlogger Package Reference
-==============================
+Package Reference
+=================
 
-Subpackages
------------
+The Python support for RocketLogger is provided by the :module:rocketlogger module.
 
-.. toctree::
-
-    rocketlogger.tests
 
 Submodules
 ----------
 
-rocketlogger.data module
-------------------------
+.. toctree::
+    :maxdepth: 2
+    :titlesonly:
 
-.. automodule:: rocketlogger.data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-rocketlogger.calibration module
--------------------------------
-
-.. automodule:: rocketlogger.calibration
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: rocketlogger
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    rocketlogger.data
+    rocketlogger.calibration
+    rocketlogger.tests

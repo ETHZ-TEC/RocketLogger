@@ -1,11 +1,12 @@
-rocketlogger.tests package
-==========================
+Package Tests
+=============
 
-Submodules
+The :mod:`rocketlogger.tests` module provides the pakage tests for the
+:mod:`rocketlogger.data` and :mod:`rocketlogger.calibration` modules.
+
+
+Data Tests
 ----------
-
-rocketlogger.tests.test_data module
------------------------------------
 
 .. automodule:: rocketlogger.tests.test_data
     :members:
@@ -13,10 +14,10 @@ rocketlogger.tests.test_data module
     :show-inheritance:
 
 
-Module contents
----------------
+Calibration Tests
+-----------------
 
-.. automodule:: rocketlogger.tests
+.. automodule:: rocketlogger.tests.test_calibration
     :members:
     :undoc-members:
     :show-inheritance:

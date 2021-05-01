@@ -30,7 +30,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 
 import os
@@ -102,6 +101,10 @@ def regression_linear(measurement, reference, zero_weight=1):
 
     :param measurement: the measurement to calibrate on the reference
 
+    :param zero_weight: the relative weight of the zero set-point value
+        compared to the other set-points (default: 1, equal weight than all
+        other set-points)
+
     :returns: (offset, scale) tuple of offset and scale values
     """
 
@@ -120,12 +123,12 @@ def _extract_setpoint_measurement(
     Extract aggregated set-points from a measurement trace.
 
     :param measurement_data: vector of measurement data to extract set-points
-                             from
+        from
 
     :param setpoint_step: the set-point step (in measurement units)
 
     :param filter_window_length: width of the square filter window used for
-                                 set-point filtering
+        set-point filtering in number of samples (default: 150 samples)
 
     :returns: vector of the extracted set-point measurements
     """
@@ -192,6 +195,19 @@ class RocketLoggerCalibrationError(Exception):
 class RocketLoggerCalibrationSetup:
     """
     RocketLogger calibration measurement setup helper class.
+
+    :param setpoint_count: number of calibration set-points per channel
+
+    :param setpoint_step_voltage: voltage step between set-points
+
+    :param setpoint_step_current_low: low current step between set-points
+
+    :param setpoint_step_current_high: high current step between set-points
+
+    :param setpoint_delay: minimum delay in seconds between switching the
+        set-point
+
+    :param dual_sweep: set True if dual sweep (up/down) is used
     """
 
     def __init__(
@@ -203,22 +219,6 @@ class RocketLoggerCalibrationSetup:
         setpoint_delay,
         dual_sweep,
     ):
-        """
-        Initialize RocketLogger calibration setup class.
-
-        :param setpoint_count: number of calibration set-points per channel
-
-        :param setpoint_step_voltage: voltage step between set-points
-
-        :param setpoint_step_current_low: low current step between set-points
-
-        :param setpoint_step_current_high: high current step between set-points
-
-        :param setpoint_delay: minimum delay in seconds between switching the
-                               set-point
-
-        :param dual_sweep: set True if dual sweep (up/down) is used
-        """
 
         # check for valid sweep measurement points
         if not ((setpoint_count - 1) % 2) == 0:
@@ -237,7 +237,7 @@ class RocketLoggerCalibrationSetup:
         """
         Get the real voltage set-points used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in volt or ADC bits
         """
@@ -247,7 +247,7 @@ class RocketLoggerCalibrationSetup:
         """
         Get the real low current set-points used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in ampere or ADC bits
         """
@@ -257,16 +257,17 @@ class RocketLoggerCalibrationSetup:
         """
         Get the real low current set-points used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in ampere or ADC bits
         """
         return self._get_setpoints(self.get_current_high_step(calibration))
 
     def get_voltage_step(self, calibration=False):
-        """Get the absolute voltage step used in the measurement setup.
+        """
+        Get the absolute voltage step used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in volt or ADC bits
         """
@@ -275,9 +276,10 @@ class RocketLoggerCalibrationSetup:
         return abs(self._step_voltage)
 
     def get_current_low_step(self, calibration=False):
-        """Get the absolute low current step used in the measurement setup.
+        """
+        Get the absolute low current step used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in ampere or ADC bits
         """
@@ -286,9 +288,10 @@ class RocketLoggerCalibrationSetup:
         return abs(self._step_current_low)
 
     def get_current_high_step(self, calibration=False):
-        """Get the absolute low current step used in the measurement setup.
+        """
+        Get the absolute low current step used in the measurement setup.
 
-        :param calibration: set True to get step in estimated ADC bits
+        :param calibration: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in ampere or ADC bits
         """
@@ -300,7 +303,7 @@ class RocketLoggerCalibrationSetup:
         """
         Get the minimal delay between changing a set-point.
 
-        :returns: the minimal delay in seconds.
+        :returns: the minimal delay in seconds
         """
         return self._delay
 
@@ -365,21 +368,20 @@ CALIBRATION_SETUP_BASIC = RocketLoggerCalibrationSetup(
 
 class RocketLoggerCalibration:
     """
-    RocketLogger calibration support class.
+    RocketLogger calibration support class. Provides the calibration
+    mesurement data processing to generate calibration files.
 
-    File reading and basic data processing support for binary RocketLogger data
-    files.
+    The alternatives to initialize the calibrations class are:
+
+    - Without parameter, a calibration class instance without initialized
+        data is created
+    - With 1 parameter, a file name, it serves as shortcut for
+        :func:`read_calibration_file` to load an existing calibration file.
+    - With 5 parameters it serves as shortcut for
+        :func:`load_measurement_data` to load calibration measurement data.
     """
 
     def __init__(self, *args):
-        """
-        Initialize RocketLogger Calibration helper class.
-
-        With 1 file name parameter it can be used as shortcut for
-        :read_calibration_file(): to load an existing calibration.
-        With 5 parameters it can be used as shortcut for
-        :load_measurement_data(): to load calibration measurement data.
-        """
         self._data_v = None
         self._data_i1l = None
         self._data_i1h = None
@@ -405,7 +407,7 @@ class RocketLoggerCalibration:
 
     def load_design_data(self):
         """
-        Load calibration values derived from the design of RocketLogger.
+        Load calibration values derived from the design of the RocketLogger.
         """
 
         # store design calibration values
@@ -446,15 +448,15 @@ class RocketLoggerCalibration:
         RocketLogger data files. Loading new measurement data invalidates
         previously made calibration.
 
-        :param data_v: Voltage V1-V4 calibration measurement data or filename.
+        :param data_v: Voltage V1-V4 calibration measurement data or filename
 
-        :param data_i1l: Current I1L calibration measurement data or filename.
+        :param data_i1l: Current I1L calibration measurement data or filename
 
-        :param data_i1h: Current I1H calibration measurement data or filename.
+        :param data_i1h: Current I1H calibration measurement data or filename
 
-        :param data_i2l: Current I2L calibration measurement data or filename.
+        :param data_i2l: Current I2L calibration measurement data or filename
 
-        :param data_i2h: Current I2H calibration measurement data or filename.
+        :param data_i2h: Current I2H calibration measurement data or filename
         """
 
         # data load helper function
@@ -491,27 +493,24 @@ class RocketLoggerCalibration:
         **kwargs,
     ):
         """
-        Perform channel calibration with loaded measurement data, overwriting
-        any loaded calibration parameters.
+        Perform channel calibration using loaded measurement data.
+        Overwrites any loaded calibration file parameters.
 
         :param setup: Calibration setup used for the measurements using the
-                      RocketLoggerCalibrationSetup helper class to describe
+            RocketLoggerCalibrationSetup helper class to describe
 
         :param fix_signs: Set True to automatically fix sign error in
-                          calibration scales
+            calibration scales
 
         :param target_offset_error: Factor in [1, inf) specifying the multiple
-                                    of the zero error to use as offset error
-                                    for the error calculations
+            of the zero error to use as offset error for the error calculations
 
         :param regression_algorithm: Algorithm to use for the regression,
-                                     taking the set-point measurement and
-                                     reference values as arguments and
-                                     providing the resulting offset and scale
-                                     as output
+            taking the set-point measurement and reference values as arguments
+            and providing the resulting offset and scale as output
 
         :param kwargs: Optional names arguments passed to the regression
-                       algorithm function
+            algorithm function
         """
         self._assert_data_loaded()
         if target_offset_error < 1:
@@ -736,7 +735,9 @@ class RocketLoggerCalibration:
         sys.stdout = stdout
 
     def _assert_calibration_exists(self):
-        """Check for existing calibration data, raise error if not."""
+        """
+        Check for existing calibration data, raise error if not.
+        """
         if any(
             [
                 self._calibration_time is None,
@@ -749,7 +750,9 @@ class RocketLoggerCalibration:
             )
 
     def _assert_data_loaded(self):
-        """Check for loaded calibration measurements, raise error if not."""
+        """
+        Check for loaded calibration measurements, raise error if not.
+        """
         if any(
             [
                 self._data_v is None,
@@ -765,7 +768,9 @@ class RocketLoggerCalibration:
             )
 
     def _assert_error_calculation_exists(self):
-        """Check for existing calibration data, raise error if not."""
+        """
+        Check for existing calibration data, raise error if not.
+        """
         if any(
             [
                 self._error_offset is None,
@@ -778,6 +783,9 @@ class RocketLoggerCalibration:
             )
 
     def _assert_measurement_consistency(self):
+        """
+        Validate consistency of loaded measurement data, raise error if not.
+        """
         data = [
             self._data_v,
             self._data_i1l,
@@ -792,7 +800,11 @@ class RocketLoggerCalibration:
             )
 
     def __eq__(self, other):
-        """Return True if other is the same calibration."""
+        """
+        Compare calibration data.
+
+        :returns: `True` if other is the same calibration.
+        """
         if isinstance(other, RocketLoggerCalibration):
             return all(
                 [

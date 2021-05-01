@@ -30,7 +30,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 
 from math import ceil, floor
@@ -214,7 +213,7 @@ def _read_str(file_handle, length):
 
 def _read_timestamp(file_handle):
     """
-    Read a timestamp from the file as nano second datetime64 (Numpy)
+    Read a timestamp from the file as nano second datetime64 (Numpy).
 
     :param file_handle: The file handle to read from at current position
 
@@ -250,6 +249,34 @@ class RocketLoggerData:
 
     File reading and basic data processing support for binary RocketLogger data
     files.
+
+    The constructor takes the same parameters as :func:`load_file`.
+
+    :param filename: The filename of the file to import. If numbered
+        files following the "<filename>_p#.rld" convention are found, they
+        can be joined during import using the `join_files` parameter.
+
+    :param join_files: Enable joining of multiple files, if numbered files
+        following the "<filename>_p#.rld" convention are found
+
+    :param exclude_part: Exclude given part(s) of number files when
+        joining following the "<filename>_p#.rld" convention.
+        Expects a single index or list or Numpy array of indexes to
+        exclude. Silently ignores indexes beyond the number of found parts.
+        Only applicable when joining multiple files with `join_files=True`.
+
+    :param header_only: Enable to import only header info without data
+
+    :param decimation_factor: Decimation factor for values read
+
+    :param recovery: Attempt recovery of damaged files that have lost or
+        incomplete data blocks at the end of the file. This can be
+        caused by power supply failures during measurements.
+
+    :param memory_mapped: Set `False` to fall back to read entire file to
+        memory at once, instead of using memory mapped reading. Might
+        increase file read performance for many smaller files and/or
+        some system configurations.
     """
 
     def __init__(
@@ -262,34 +289,6 @@ class RocketLoggerData:
         recovery=False,
         memory_mapped=True,
     ):
-        """
-        Constructor to create a RockerLoggerData object form data file.
-
-        :param filename: The filename of the file to import
-
-        :param join_files: Enable joining of multiple files if numbered files
-            following the "<filename>_p#.rld" convention are found.
-
-        :param exclude_part: Exclude given part(s) of number files when
-            joining following the "<filename>_p#.rld" convention.
-            Expects a single index or list or Numpy array of indexes to
-            exclude. Silently ignores indexes beyond the number of found parts.
-            Only applicable when joining multiple files with join_files=True.
-
-        :param header_only: Enable to import only header info without data.
-
-        :param decimation_factor: Decimation factor for values read
-
-        :param recovery: Attempt recovery of damaged files that have lost or
-                         incomplete data blocks at the end of the file.
-                         This might be caused by power supply failures during
-                         measurements.
-
-        :param memory_mapped: Set False to fall back to read entire file to
-            memory at once, instead of using memory mapped reading. Might
-            increase file read performance for many smaller files and/or
-            some system configurations.
-        """
         self._data = []
         self._filename = None
         self._header = {}
@@ -320,7 +319,7 @@ class RocketLoggerData:
         :param file_handle: The file handle to read from, with pointer
             positioned at file start
 
-        :returns: Dictionary containing the read file header data.
+        :returns: Dictionary containing the read file header data
         """
         header = {}
 
@@ -431,11 +430,11 @@ class RocketLoggerData:
         :param file_handle: The file handle to read from, with pointer
             positioned at the beginning of the block
 
-        :param file_header: The file's header with the data alignment details.
+        :param file_header: The file's header with the data alignment details
 
         :param decimation_factor: Decimation factor for values read
 
-        :param memory_mapped: Set False to fall back to read entire file to
+        :param memory_mapped: Set `False` to fall back to read entire file to
             memory at once, instead of using memory mapped reading. Might
             increase file read performance for many smaller files and/or
             some system configurations.
@@ -557,7 +556,7 @@ class RocketLoggerData:
 
         :param channel_name: Name of the channel
 
-        :returns: The index of the channel, None if not found
+        :returns: The index of the channel, `None` if not found
         """
         channel_names = [channel["name"] for channel in self._header["channels"]]
         try:
@@ -589,10 +588,17 @@ class RocketLoggerData:
 
         .. note::
 
-            If a valid channel is linked to the channel being added, that
+            If a valid channel is to the channel being added, the linked
             channel has to be added first.
 
-        :param channel_info: Channel info structure of the channel to add
+        :param channel_info: Channel info structure of the channel to add,
+            a dictionary with the following fields designed:
+
+            - "unit_index" -- index of the measurement unit of the channel
+            - "scale" -- data unit scale, an integer exponent
+            - "data_size" -- size in bytes of the channel data
+            - "valid_link" -- index of the valid channel
+            - "name" -- name of the channel (max 16 bytes)
 
         :param channel_data: The actual channel data to add, Numpy array
         """
@@ -705,31 +711,30 @@ class RocketLoggerData:
         memory_mapped=True,
     ):
         """
-        Read a RocketLogger data file and return an RLD object.
+        Read data from a RocketLogger data file.
 
         :param filename: The filename of the file to import. If numbered
             files following the "<filename>_p#.rld" convention are found, they
             can be joined during import using the `join_files` flag.
 
         :param join_files: Enable joining of multiple files if numbered files
-            following the "<filename>_p#.rld" convention are found.
+            following the "<filename>_p#.rld" convention are found
 
         :param exclude_part: Exclude given part(s) of number files when
             joining following the "<filename>_p#.rld" convention.
             Expects a single index or list or Numpy array of indexes to
             exclude. Silently ignores indexes beyond the number of found parts.
-            Only applicable when joining multiple files with join_files=True.
+            Only applicable when joining multiple files with `join_files=True`.
 
-        :param header_only: Enable to import only header info without data.
+        :param header_only: Enable to import only header info without data
 
-        :param decimation_factor: Decimation factor for values read.
+        :param decimation_factor: Decimation factor for values read
 
         :param recovery: Attempt recovery of damaged files that have lost or
-                         incomplete data blocks at the end of the file.
-                         This might be caused by power supply failures during
-                         measurements.
+            incomplete data blocks at the end of the file. This could e.g. be
+            caused by power supply failures during measurements.
 
-        :param memory_mapped: Set False to fall back to read entire file to
+        :param memory_mapped: Set `False` to fall back to read entire file to
             memory at once, instead of using memory mapped reading. Might
             increase file read performance for many smaller files and/or
             some system configurations.
@@ -939,11 +944,11 @@ class RocketLoggerData:
         """
         Get a dictionary with the header information.
 
-        The relevant fields include: 'data_block_count', 'data_block_size',
-        'file_version', 'mac_address', 'sample_count','sample_rate', and
-        'start_time'.
+        The relevant fields include: "data_block_count", "data_block_size",
+        "file_version", "mac_address", "sample_count","sample_rate", and
+        "start_time".
 
-        To get the file comment use get_comment().
+        To get the file comment use :func:`get_comment`.
 
         :returns: Dictionary of relevant header information
         """
@@ -977,7 +982,7 @@ class RocketLoggerData:
         Get the data of the specified channels, by default of all channels.
 
         :param channel_names: The names of the channels for which the data
-            shall be returned. List of channel names or 'all' to select all
+            shall be returned. List of channel names or "all" to select all
             channels.
 
         :returns: A Numpy array containing the channel's data vectors
@@ -1010,13 +1015,12 @@ class RocketLoggerData:
         Using simple linear interpolation to generating the sample from the
         block timestamps.
 
-        :param time_reference: Which clock data to get (for absolute time only,
-            i.e. when `absolute_time=True`)
+        :param time_reference: The reference to use for timestamp calculation:
 
-            - 'relative' Calculate timestamp from sample rate, the sample index
-              and the measurement start time (default)
-            - 'local' Get the timestamp of the local oscillator clock
-            - 'network' Get the timestamp of the network synchronized clock
+            - "relative" -- Calculate timestamp from sample rate, and the sample
+              index relative to the measurement start time (default)
+            - "local" -- Get the timestamp of the local oscillator clock
+            - "network" -- Get the timestamp of the network synchronized clock
 
         :returns: A Numpy array containing the timestamps
         """
@@ -1054,7 +1058,7 @@ class RocketLoggerData:
         Get the unit of the specified channels, by default of all channels.
 
         :param channel_names: The names of the channels for which the unit
-            shall be returned. List of channel names or 'all' to select all
+            shall be returned. List of channel names or "all" to select all
             channels.
 
         :returns: List of channel units sorted by channel_names list
@@ -1079,7 +1083,7 @@ class RocketLoggerData:
         Get the validity of the specified channels, by default of all channels.
 
         :param channel_names: The names of the channels for which the validity
-            shall be returned. List of channel names or 'all' to select all
+            shall be returned. List of channel names or "all" to select all
             channels.
 
         :returns: A Numpy array containing the channel's validity vectors
@@ -1193,24 +1197,23 @@ class RocketLoggerData:
         timestamps.
 
         By default all channels are exported and relative timestamps are used
-        for indexing. See also get_data() and get_time() functions.
+        for indexing. See also :func:`get_data` and :func:`get_time` functions.
 
         Requires pandas package to be installed.
 
         :param channel_names: The names of the channels for which the data
-            shall be returned. List of channel names or 'all' to select all
+            shall be returned. List of channel names or "all" to select all
             channels.
 
-        :param time_reference: Which clock data to get (for absolute time only,
-            i.e. when `absolute_time=True`)
+        :param time_reference: The reference to use for timestamp calculation:
 
-            - 'relative' Calculate timestamp from sample rate, the sample index
-              and the measurement start time (default)
-            - 'local' Get the timestamp of the local oscillator clock
-            - 'network' Get the timestamp of the network synchronized clock
+            - "relative" -- Calculate timestamp from sample rate, and the sample
+              index relative to the measurement start time (default)
+            - "local" -- Get the timestamp of the local oscillator clock
+            - "network" -- Get the timestamp of the network synchronized clock
 
         :returns: A pandas dataframe the channel's data as columns, indexed
-                  by the timestamps of the selected format.
+            by the timestamps of the selected format
         """
         import pandas as pd
 
@@ -1236,10 +1239,10 @@ class RocketLoggerData:
         :param channel_names: The names of the channels for which the
             data shall be returned. List of channel names (or combination of):
 
-            - 'all' to select all channels,
-            - 'voltages' to select voltage channels,
-            - 'currents' to select current channels,
-            - 'digital' to select digital channels.
+            - "all" -- to select all channels
+            - "voltages" -- to select voltage channels
+            - "currents" -- to select current channels
+            - "digital" -- to select digital channels
 
         :param show: Whether to show the plot window or not
 

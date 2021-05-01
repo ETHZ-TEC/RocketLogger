@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RocketLogger Data File read demo script.
+RocketLogger data file processing sample script script.
 
 Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
@@ -29,7 +29,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 
 from rocketlogger.data import RocketLoggerData

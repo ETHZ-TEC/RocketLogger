@@ -1,19 +1,21 @@
 RocketLogger Calibration
-------------------------
+========================
 
-To generate a calibration file from your calibration measurements use the RocketLogger::
+The :mod:`rocketlogger.calibration` module provides the support for RocketLogger
+device calibrationg. This calibration data processing support is built around the class
+:class:`rocketlogger.calibration.RocketLoggerCalibration`.
+
+To generate a calibration file from your calibration measurements use the RocketLogger:
+
+.. code-block:: python
 
     >>> from rocketlogger.data import RocketLoggerData
     >>> from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_SMU2450
-    >>> filename_prefix = '20200101_'
-    >>> data_i1l = RocketLoggerData('{}calibration_i1l.rld'
-    ...                             .format(filename_prefix))
-    >>> data_i2l = RocketLoggerData('{}calibration_i2l.rld'
-    ...                             .format(filename_prefix))
-    >>> data_ih = RocketLoggerData('{}calibration_ih.rld'
-    ...                            .format(filename_prefix))
-    >>> data_v = RocketLoggerData('{}calibration_v.rld'
-    ...                           .format(filename_prefix))
+    >>> filename_prefix = "20200101_"
+    >>> data_i1l = RocketLoggerData(f"{filename_prefix}calibration_i1l.rld")
+    >>> data_i2l = RocketLoggerData(f"{filename_prefix}calibration_i2l.rld")
+    >>> data_ih = RocketLoggerData(f"{filename_prefix}calibration_ih.rld")
+    >>> data_v = RocketLoggerData(f"{filename_prefix}calibration_v.rld")
     >>>
     >>> cal = RocketLoggerCalibration()
     >>> cal.load_measurement_data(
@@ -21,36 +23,51 @@ To generate a calibration file from your calibration measurements use the Rocket
     ...     data_i1l,
     ...     data_ih,
     ...     data_i2l,
-    ...     data_ih)
+    ...     data_ih,
+    ... )
 
-or using the shortcut with passing the trace filenames::
 
-    >>> filename_prefix = '20200101_'
+or using the shortcut with passing the trace filenames:
+
+.. code-block:: python
+
+    >>> filename_prefix = "20200101_"
     >>> cal = RocketLoggerCalibration(
-    ...     '{}calibration_v.rld'.format(filename_prefix),
-    ...     '{}calibration_i1l.rld'.format(filename_prefix),
-    ...     '{}calibration_ih.rld'.format(filename_prefix),
-    ...     '{}calibration_i2l.rld'.format(filename_prefix),
-    ...     '{}calibration_ih.rld'.format(filename_prefix))
+    ...     f"{filename_prefix}calibration_v.rld",
+    ...     f"{filename_prefix}calibration_i1l.rld",
+    ...     f"{filename_prefix}calibration_ih.rld",
+    ...     f"{filename_prefix}calibration_i2l.rld",
+    ...     f"{filename_prefix}calibration_ih.rld",
+    ... )
 
-to calculate new calibration parameters and store the files use::
+
+to calculate new calibration parameters and store the files use:
+
+.. code-block:: python
 
     >>> cal.recalibrate(CALIBRATION_SETUP_SMU2450)
-    >>> cal.write_calibration_file('calibration.dat')
+    >>> cal.write_calibration_file("calibration.dat")
+
 
 it is recommended to print the errors within the calibration data to verify
-that the provided calibration measurements were properly recorded::
+that the provided calibration measurements were properly recorded:
+
+.. code-block:: python
 
     >>> cal.print_statistics()
 
-the statistics output can also be save as log file (it is  recommend to always
-keep a log file along with the calibration)::
 
-    >>> cal.write_log_file('calibration.log')
+the statistics output can also be save as log file (it is recommend to always
+keep a log file along with the calibration):
+
+.. code-block:: python
+
+    >>> cal.write_log_file("calibration.log")
+
 
 For a ready made script that can be used for performing the calibration
-calculations is available in `calibrate.py` distributed with the package.
+calculations is available in ``calibrate.py`` distributed with the package.
 
 For more details on the individual functions and its optional parameters,
 please we refer to the API documentation of the
-:class:`rocketlogger.calibration` module.
+:class:`rocketlogger.calibration.RocketLoggerCalibration` class.
