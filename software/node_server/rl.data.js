@@ -5,7 +5,7 @@ import debug from 'debug';
 import * as zmq from 'zeromq';
 import { filter_data_filename } from './rl.files.js';
 
-export { DataSubscriber, StatusSubscriber };
+export { DataSubscriber, StatusSubscriber, data_cache_reset, data_cache_read };
 
 
 /// ZeroMQ socket identifier for data publishing status
@@ -17,6 +17,18 @@ const data_socket = 'tcp://127.0.0.1:8277';
 /// RocketLogger maximum web downstream data rate [in 1/s]
 const web_data_rate = 1000;
 
+// data cache
+const data_cache_size = 1000000;
+const data_cache_reply_size = data_cache_size / 20;
+const data_cache = {
+    metadata: {},
+    time: [],
+    data: {},
+    digital: [],
+    reset: true,
+};
+
+const data_proxy_debug = debug('data_proxy');
 
 class Subscriber {
     constructor(socketAddress) {
@@ -71,7 +83,11 @@ class DataSubscriber extends Subscriber {
         super(socketAddress);
     }
 
-    _parse(raw) { return parse_data_to_message(raw); };
+    _parse(raw) {
+        const data_message = parse_data_to_message(raw);
+        data_cache_write(data_message);
+        return data_message;
+    }
 }
 
 
@@ -196,4 +212,142 @@ function merge_channels(metadata, channel_data, digital_data) {
         // always delete channel valid links
         delete metadata[`I${ch}L_valid`];
     }
+}
+
+
+// reset data cache with next write
+function data_cache_reset() {
+    data_cache.reset = true;
+}
+
+// write new data to cache
+async function data_cache_write(reply) {
+    // check for pending cache reset
+    if (data_cache.reset) {
+        data_proxy_debug('clear and re-initialize data cache');
+        data_cache_clear();
+        data_cache_init(reply.metadata);
+    }
+
+    // validate metadata of incoming data
+    if (data_cache.metadata.length !== reply.metadata.length) {
+        data_proxy_debug('metadata mismatch of data cache and incoming data!');
+        return;
+    }
+
+    const time_view = new Float64Array(reply.time);
+    for (let i = 0; i < time_view.length; i++) {
+        data_cache.time.push(time_view[i]);
+    }
+    if (data_cache.time.length > data_cache_size) {
+        data_cache.time.splice(0, data_cache.time.length - data_cache_size);
+    }
+
+    const digital_view = new Uint8Array(reply.digital);
+    for (let i = 0; i < digital_view.length; i++) {
+        data_cache.digital.push(digital_view[i]);
+    }
+    if (data_cache.digital.length > data_cache_size) {
+        data_cache.digital.splice(0, data_cache.digital.length - data_cache_size);
+    }
+
+    for (const ch in data_cache.metadata) {
+        if (data_cache.metadata[ch].unit === 'binary') {
+            continue;
+        }
+
+        const tmp = new Float32Array(data_cache.data[ch].length + reply.data[ch].length);
+        tmp.set(data_cache.data[ch], 0);
+        tmp.set(reply.data[ch], data_cache.data[ch].length);
+        data_cache.data[ch] = tmp;
+
+        if (data_cache.data[ch].length > data_cache_size) {
+            data_cache.data[ch].splice(0, data_cache.data[ch].length - data_cache_size);
+        }
+    }
+    // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
+}
+
+// clear data cache
+function data_cache_clear() {
+    data_proxy_debug('clear data cache');
+    data_cache.metadata = {};
+    data_cache.time = [];
+    data_cache.digital = [];
+    data_cache.data = {};
+    data_cache.reset = true;
+}
+
+// initialize data cache
+function data_cache_init(metadata) {
+    debug('init data cache');
+    data_cache.metadata = metadata;
+    data_cache.time = [];
+    data_cache.digital = [];
+    data_cache.data = {};
+    for (const ch in data_cache.metadata) {
+        data_cache.data[ch] = [];
+    }
+    data_cache.reset = false;
+}
+
+// read from data cache
+async function data_cache_read(request) {
+    if (request.cmd !== 'data') {
+        return { err: [`invalid data command: ${request.cmd}`] };
+    }
+
+    if (request.time === null) {
+        return { err: ['missing reference timestamp of last available data'] };
+    }
+
+    const reply = {
+        t: Date.now(),
+        req: request,
+        metadata: {},
+        time: null,
+        data: {},
+        digital: null,
+    };
+
+    // reverse lookup first unavailable data data from cache
+    const cache_time_view = new Float64Array(data_cache.time);
+    let cache_hit = cache_time_view.length - 1;
+    while (cache_hit >= 0) {
+        if (cache_time_view[cache_hit] < request.time) {
+            break;
+        }
+        cache_hit--;
+    }
+
+    // data available, otherwise reply with empty data
+    if (cache_hit >= 0) {
+        const index_start = Math.max(0, cache_hit - data_cache_reply_size + 1);
+        const index_end = cache_hit + 1;
+        const buffer_length = index_end - index_start;
+
+        data_proxy_debug(`cache hit: send data range [${index_start}:${index_end}], size=${data_cache.time.length}`);
+
+        // assemble response from cache
+        reply.metadata = data_cache.metadata;
+
+        const cache_time_view = new Float64Array(data_cache.time);
+        reply.time = cache_time_view.slice(index_start, index_end);
+
+        const cache_digital_view = new Uint8Array(data_cache.digital);
+        reply.digital = cache_digital_view.slice(index_start, index_end);
+
+        for (const ch in data_cache.metadata) {
+            if (data_cache.metadata[ch].unit === 'binary') {
+                continue;
+            }
+
+            const cache_data_view = new Float32Array(data_cache.data[ch]);
+            reply.data[ch] = cache_data_view.slice(index_start, index_end);
+        }
+    } else {
+        data_proxy_debug(`cache miss: send empty response, cache_size=${data_cache.time.length}`);
+    }
+
+    return reply;
 }

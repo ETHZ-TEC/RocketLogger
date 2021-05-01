@@ -269,9 +269,11 @@ const client_connected = (socket) => {
     });
 
     // handle cached data request
-    socket.on('data', (request) => {
-        // @todo: implement local data caching
+    socket.on('data', async (request) => {
         server_debug(`rl data: ${JSON.stringify(request)}`);
+
+        const reply = await rl_data.data_cache_read(request);
+        socket.emit('data', reply);
     });
 };
 
@@ -282,7 +284,9 @@ async function is_sdcard_mounted() {
 async function control_action(request) {
     switch (request.cmd) {
         case 'start':
-            return rl_control.start(request.config);
+            const result = await rl_control.start(request.config);
+            rl_data.data_cache_reset();
+            return result;
 
         case 'stop':
             return rl_control.stop();
