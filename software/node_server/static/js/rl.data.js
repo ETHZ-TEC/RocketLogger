@@ -37,6 +37,8 @@ if (typeof rl === 'undefined') {
 
 /// data buffer length to buffer locally
 const RL_DATA_BUFFER_LENGTH = 1e6;
+/// data buffer initalization interval for requesting cached data [ms]
+const RL_DATA_INIT_INTERVAL = 3000;
 /// data points to sample for plotting
 const RL_PLOT_POINTS = 10000;
 /// maximum plot update rate [frames/sec]
@@ -62,13 +64,13 @@ function rocketlogger_init_data() {
         timeout: null,
     };
 
-    // provide data() method
+    // provide data() method to poll cached data
     rl.data = () => {
-        /// @todo init buffer from data cache
         const req = {
             cmd: 'data',
-            time: Date.now(),
+            time: (rl._data.time.length > 0) ? rl._data.time[0] : null,
         };
+        console.log(`request cached data, time: ${(new Date(req.time)).toISOString()}`);
         rl._data.socket.emit('data', req);
     }
 
@@ -100,7 +102,7 @@ function rocketlogger_init_data() {
     });
 
     ts.on('change', (offset) => {
-        console.log('server timesync update: ' + offset + ' ms');
+        console.log(`server timesync update: ${offset} ms`);
         rl._data.t_offset = offset;
     });
 
@@ -132,17 +134,51 @@ function process_data(res) {
         for (const ch in rl._data.metadata) {
             rl._data.buffer[ch] = [];
         }
-        for (const p of rl.plot.plots) {
-            Plotly.purge(p.id);
+        for (const plot of rl.plot.plots) {
+            Plotly.purge(plot.id);
+            plot.data = null;
         }
+        // lazy request historical data
+        setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
         rl._data.reset = false;
     }
 
     // handle timestamp buffer, drop overflow values
     const time_view = new Float64Array(res.time);
-    for (let i = 0; i < time_view.length; i++) {
-        rl._data.time.push(time_view[i]);
+    if (time_view.length === 0) {
+        console.log('cache miss, skip data processing');
+        return;
     }
+
+    // check cached or updated data, reject processing if partially overlapping
+    let cached_data = false;
+    if (rl._data.time.length == 0) {
+        /* initial data update */
+    } else if (time_view[0] > rl._data.time[rl._data.time.length - 1]) {
+        /* data update */
+    } else if (time_view[time_view.length - 1] < rl._data.time[0]) {
+        cached_data = true;
+        // lazy request historical data
+        setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
+        console.log(`cache hit:   [${(new Date(time_view[0])).toISOString()}, ${(new Date(time_view[time_view.length - 1])).toISOString()}], size=${time_view.length}`);
+    } else {
+        console.warn('overlapping data, reject data processing');
+        // console.log(`data buffer: [ ${(new Date(rl._data.time[0])).toISOString()}, ${(new Date(rl._data.time[rl._data.time.length - 1])).toISOString()} ]`);
+        // console.log(`data sent:   [ ${(new Date(time_view[0])).toISOString()}, ${(new Date(time_view[time_view.length - 1])).toISOString()} ]`);
+        return;
+    }
+
+    // process data
+    let tmp = new Float64Array(rl._data.time.length + time_view.length);
+    if (cached_data) {
+        tmp.set(time_view, 0);
+        tmp.set(rl._data.time, time_view.length);
+    } else {
+        tmp.set(rl._data.time, 0);
+        tmp.set(time_view, rl._data.time.length);
+    }
+    rl._data.time = tmp;
+
     if (rl._data.time.length > RL_DATA_BUFFER_LENGTH) {
         rl._data.time.splice(0,
             rl._data.time.length - RL_DATA_BUFFER_LENGTH);
@@ -150,19 +186,29 @@ function process_data(res) {
 
     // decode channel data
     for (const ch in rl._data.metadata) {
+        const tmp = new Float32Array(rl._data.buffer[ch].length + time_view.length);
+        let buffer_view;
         if (rl._data.metadata[ch].unit === 'binary') {
             const digital_view = new Uint8Array(res.digital);
+            buffer_view = new Float32Array(digital_view.length);
             for (let i = 0; i < digital_view.length; i++) {
-                rl._data.buffer[ch].push(
+                buffer_view[i] = 
                     ((digital_view[i] & (0x01 << rl._data.metadata[ch].bit)) ? 0.7 : 0)
-                    + rl._data.metadata[ch].bit);
-            }
-        } else {
-            const analog_view = new Float32Array(res.data[ch]);
-            for (let i = 0; i < analog_view.length; i++) {
-                rl._data.buffer[ch].push(analog_view[i]);
+                    + rl._data.metadata[ch].bit;
             }
         }
+        else {
+            buffer_view = new Float32Array(res.data[ch]);
+        }
+
+        if (cached_data) {
+            tmp.set(buffer_view, 0);
+            tmp.set(rl._data.buffer[ch], buffer_view.length);
+        } else {
+            tmp.set(rl._data.buffer[ch], 0);
+            tmp.set(buffer_view, rl._data.buffer[ch].length);
+        }
+        rl._data.buffer[ch] = tmp;
 
         // drop overflow values
         if (rl._data.buffer[ch].length > RL_DATA_BUFFER_LENGTH) {
@@ -289,19 +335,17 @@ async function init_plots() {
     });
 
     const xaxis = plot_get_xlayout(rl.plot.time_scale);
-    for (let i = 0; i < rl.plot.plots.length; i++) {
-        const p = rl.plot.plots[i];
-
+    for (const plot of rl.plot.plots) {
         // init new plot with default layout
-        const layout = plot_get_base_layout(p);
+        const layout = plot_get_base_layout(plot);
         layout.xaxis = xaxis;
-        layout.yaxis = plot_get_ylayout(p);
-        Plotly.newPlot(p.id, [], layout, { responsive: true, displayModeBar: false });
+        layout.yaxis = plot_get_ylayout(plot);
+        Plotly.newPlot(plot.id, [], layout, { responsive: true, displayModeBar: false });
 
         // init range control callback handlers
-        if (p.range_control) {
-            p.range_control.on('change', () => {
-                p.range = p.range_control.val();
+        if (plot.range_control) {
+            plot.range_control.on('change', () => {
+                plot.range = plot.range_control.val();
             }).trigger('change');
         }
     }
@@ -409,7 +453,7 @@ async function update_plots() {
         }
     };
     if (rl.plot.plots) {
-        rl.plot.plotting = Promise.all(rl.plot.plots.map((p) => update_plot(p)));
+        rl.plot.plotting = Promise.all(rl.plot.plots.map((plot) => update_plot(plot)));
     }
 }
 
