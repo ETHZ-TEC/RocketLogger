@@ -86,7 +86,7 @@ pru_linker_script = 'pru/AM335x_PRU.cmd'
 version_data = configuration_data({
     'version' : meson.project_version(),
     'git_description' : run_command(['git', 'describe', '--tags', '--dirty']).stdout().strip(),
-    'git_date' : run_command(['git', 'show', '--no-patch', '--format="%ci"', 'HEAD']).stdout().strip(),
+    'git_date' : run_command(['git', 'show', '--no-patch', '--format=%ci', 'HEAD']).stdout().strip(),
     'compile_date' : run_command(['date', '--rfc-3339=seconds']).stdout().strip(),
 })
 version_c = configure_file(input : 'version.c.in',
@@ -173,7 +173,7 @@ pru_firmware_bin = custom_target('rocketlogger.bin',
     install : true,
     install_dir : '/lib/firmware')
 install_data(pru_module_config_src,
-    install_dir : get_option('sysconfdir') / 'modeprobe.d',
+    install_dir : get_option('sysconfdir') / 'modprobe.d',
     install_mode : ['rw-r--r--', 0, 0])
 
 # custom device tree overlay target
