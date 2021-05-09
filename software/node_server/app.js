@@ -397,18 +397,15 @@ async function data_proxy() {
 
         // merge current channel data if available
         for (const ch of [1, 2]) {
-            // try getting channel merge inputs
-            const merge_lo_view = new Float32Array(rep.data[`I${ch}L`]);
-            // const merge_hi_view = new Float32Array(rep.data[`I${ch}H`]);
-            const merge_valid_view = new Uint8Array(rep.digital);
-            const merge_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
-
-            // generate new channel data and info (in-place update HI channel)
+            // generate new channel data and info (reuse HI channel in-place)
             rep.data[`I${ch}`] = rep.data[`I${ch}H`];
-            const merge_out_view = new Float32Array(rep.data[`I${ch}`]);
-            for (let j = 0; j < merge_out_view.length; j++) {
-                if (merge_valid_view[j] & merge_valid_mask) {
-                    merge_out_view[j] = merge_lo_view[j];
+            const merge_out = rep.data[`I${ch}`];
+
+            const channel_lo = rep.data[`I${ch}L`];
+            const channel_lo_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
+            for (let j = 0; j < merge_out.length; j++) {
+                if (rep.digital & channel_lo_valid_mask) {
+                    merge_out[j] = channel_lo[j];
                 }
             }
             // rep.data[`I${ch}`] = merge_out;
