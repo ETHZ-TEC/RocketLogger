@@ -37,11 +37,11 @@ IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.9-console-armhf-2021-03-29-1gb.i
 IMAGE_FLASHER_SHA256="839f703c51be1d377c178a1dc5e17d4ed38307a5d7db013b6af852924b9d7725"
 
 # download image
-wget --continue --progress=bar "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"
+curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"
 
 # check downloaded file hash
-SHA=`sha256sum "${IMAGE_FLASHER_FILE}" | awk '{print $1}'`
-if [[ "$SHA" != "${IMAGE_FLASHER_SHA256}" ]]; then
+SHA256=`sha256sum "${IMAGE_FLASHER_FILE}" | awk '{print $1}'`
+if [[ "$SHA256" != "${IMAGE_FLASHER_SHA256}" ]]; then
   echo "SHA256 hash verification failed!"
   exit 1
 else

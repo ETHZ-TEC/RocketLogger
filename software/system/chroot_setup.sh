@@ -2,39 +2,13 @@
 # Patch operating system of a local BeagleBone system image
 # Usage: ./chroot_setup.sh <image.img> [<hostname>]
 # Note: needs to be executed in an (virtualized) arm-v7 environment
-#
-# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
-# All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-# 
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-# 
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
 
 ROOTFS=/media
 IMAGE=/dev/null
 HOSTNAME="rocketlogger"
+
+REPO_PATH=`git rev-parse --show-toplevel`
+REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 # check arguments
 if [ $# -lt 1 ]; then
@@ -105,16 +79,15 @@ touch ${ROOTFS}/run/connman/resolv.conf
 mount --bind /etc/resolv.conf ${ROOTFS}/run/connman/resolv.conf
 
 
-# copy setup scripts, software and web interface sources
-echo "> Copy RocketLogger setup scripts and software sources"
-cp --recursive /home/system/setup/ ${ROOTFS}/root/
-cp --recursive /home/rocketlogger/ ${ROOTFS}/root/
-cp --recursive /home/node_server/ ${ROOTFS}/root/
+# clone RocketLogger repository
+echo "> Clone RocketLogger repository"
+git clone --branch ${REPO_BRANCH} ${REPO_PATH} ${ROOTFS}/root/rocketlogger
+rm --force --recursive ${ROOTFS}/root/rocketlogger/.git ${ROOTFS}/root/rocketlogger/hardware ${ROOTFS}/root/rocketlogger/script
 
 
 ## setup operating system
 echo "> Chroot to configure operating system"
-chroot ${ROOTFS} /bin/bash -c "cd /root/setup && ./setup.sh ${HOSTNAME}"
+chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/system/setup && ./setup.sh ${HOSTNAME}"
 
 # verify system configuration was successful
 CONFIG=$?
@@ -128,7 +101,7 @@ fi
 
 ## install RocketLogger software
 echo "> Chroot to build and install rocketlogger"
-chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger && meson builddir && cd builddir && meson setup --wipe && ninja && sudo meson install --no-rebuild --only-changed"
+chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/rocketlogger && meson builddir && cd builddir && meson setup --wipe && ninja && sudo meson install --no-rebuild --only-changed"
 
 # verify software installation configuration was successful
 INSTALL=$?
@@ -142,7 +115,7 @@ fi
 
 ## install RocketLogger web interface
 echo "> Chroot to build and install web interface"
-chroot ${ROOTFS} /bin/bash -c "cd /root/node_server && ./install.sh"
+chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/node_server && ./install.sh"
 
 # verify web interface installation configuration was successful
 WEB=$?
@@ -155,6 +128,8 @@ fi
 
 
 ## post installation cleanups
+echo "> Clean up installation files"
+
 # fix user home permissions
 chroot ${ROOTFS} /bin/bash -c "chown --recursive rocketlogger:rocketlogger /home/rocketlogger/"
 
@@ -163,7 +138,7 @@ rm --force --recursive ${ROOTFS}/root/*/ ${ROOTFS}/root/.*/
 
 
 ## unmount filesystem
-echo "> Sync, cleanup and unmount filesystems"
+echo "> Sync and unmount filesystem"
 sync
 
 # unmount and cleanup mapped resolve.conf
@@ -177,12 +152,5 @@ umount ${ROOTFS}/sys
 umount ${ROOTFS}/dev
 umount ${ROOTFS}
 
-# rename successfully patched image
-IMAGE_PATCHED="rocketlogger-${IMAGE}"
-echo "> Rename successfully patched image file to '${IMAGE_PATCHED}'"
-mv "${IMAGE}" "${IMAGE_PATCHED}"
-
-
-## hint on the next setup step
-echo ">> Flash the image to an SD card and insert it into any RocketLogger to install the system."
+# patching completed successfully
 exit 0

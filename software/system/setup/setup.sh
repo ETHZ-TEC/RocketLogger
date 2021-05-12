@@ -76,7 +76,6 @@ apt-get install --assume-yes        \
     ntp                             \
     pkg-config                      \
     ti-pru-cgt-installer            \
-    wget                            \
     libgpiod-dev                    \
     libi2c-dev                      \
     libncurses5-dev                 \
@@ -161,7 +160,7 @@ mkdir --parents /etc/rocketlogger
 # user configuration and data folder for rocketlogger, bind sdcard folders if available
 mkdir --parents /home/rocketlogger/.config/rocketlogger/
 mkdir --parents /home/rocketlogger/data/
-echo -e "# bind sdcard folders if available" >> /etc/fstab
+echo -e "# bind RocketLogger sdcard folders if available" >> /etc/fstab
 
 echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
