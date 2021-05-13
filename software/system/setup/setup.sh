@@ -168,6 +168,9 @@ echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,no
 # make user owner of its own files
 chown --recursive rocketlogger:rocketlogger /home/rocketlogger/
 
+# patch flasher tools to include SD card mounts
+patch --forward --backup --input=tools/functions.sh.patch /opt/scripts/tools/eMMC/functions.sh
+
 
 ## network configuration
 echo "> Update hostname and network configuration"
