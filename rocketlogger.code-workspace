@@ -21,6 +21,10 @@
 		{
 			"name": "rocketlogger_repo",
 			"path": "."
+		},
+		{
+			"name": "wiki",
+			"path": "../rocketlogger.wiki"
 		}
 	],
 	"settings": {
@@ -28,7 +32,6 @@
 		"C_Cpp.intelliSenseEngine": "Disabled",
 		"C_Cpp.errorSquiggles": "Disabled",
 		"clangd.arguments": [
-			"--log=verbose",
 			"--pretty",
 			"--background-index",
 			"--suggest-missing-includes",
@@ -40,11 +43,17 @@
 	"extensions": {
 		"recommendations": [
 			"asabil.meson",
+			"coolbear.systemd-unit-file",
+			"cschlosser.doxdocgen",
 			"donjayamanne.githistory",
 			"eamodio.gitlens",
+			"lextudio.restructuredtext",
 			"llvm-vs-code-extensions.vscode-clangd",
+			"mhutchie.git-graph",
+			"ms-azuretools.vscode-docker",
 			"ms-python.python",
+			"streetsidesoftware.code-spell-checker",
 			"yzhang.markdown-all-in-one"
 		]
-	},
+	}
 }
