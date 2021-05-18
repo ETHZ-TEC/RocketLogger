@@ -20,7 +20,7 @@
   
   {% block css_head %}
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
   <script>
     "use strict";
     // replace document root no-js class with js to confirm javascript is enabled
@@ -58,7 +58,7 @@
       {% for msg in err %}
       <div class="alert alert-danger alert-dismissible" role="alert">
         <strong>Error:</strong> {{ msg }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -68,7 +68,7 @@
       {% for msg in warn %}
       <div class="alert alert-warning alert-dismissible" role="alert">
         <strong>Warning:</strong> {{ msg }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
           <span aria-hidden="true">&times;</span></button>
       </div>
       {% endfor %}
@@ -77,7 +77,7 @@
       {% for notification_message in notification_messages %}
       <div class="alert alert-info alert-dismissible" role="alert">
         {{ notification_message }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
           <span aria-hidden="true">&times;</span></button>
       </div>
       {% endfor %}
@@ -105,8 +105,8 @@
         </div>
       </div>
 
-      <p><span {% if version_string %}data-toggle="tooltip" title="{{ version_string }}"{% endif %}>
-        RocketLogger version {% if version %}{{ version }}{% else %}<span class="badge badge-danger" id="warn_calibration">unknown</span>{% endif %}
+      <p><span {% if version_string %}data-bs-toggle="tooltip" title="{{ version_string }}"{% endif %}>
+        RocketLogger version {% if version %}{{ version }}{% else %}<span class="badge bg-danger" id="warn_calibration">unknown</span>{% endif %}
         </span> - <a href="https://rocketlogger.ethz.ch/">https://rocketlogger.ethz.ch/</a><br />
         &copy; {{ today.year }}, ETH Zurich, Computer Engineering Group.
       </p>
@@ -114,13 +114,11 @@
     </footer>
 
     {% block js_footer %}
-    <!-- jQuery first, then Popper.js, then Bootstrap Javascript -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="/assets/jquery.min.js"><\/script>')</script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-    <script>if (typeof (Popper) === 'undefined') { document.write('<script src="/assets/popper.min.js"><\/script>') }</script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF" crossorigin="anonymous"></script>
-    <script>if (typeof ($.fn.modal) === 'undefined') { document.write('<script src="/assets/bootstrap.min.js"><\/script>') }</script>
+    <!-- Bootstrap and jQuery javascript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <script>window.bootstrap || document.write('<script src="/assets/bootstrap.bundle.min.js"><\/script>')</script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha384-Qg00WFl9r0Xr6rUqNLv1ffTSSKEFFCDCKVyHZ+sVt8KuvG99nWw5RNvbhuKgif9z" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="/assets/jquery.slim.min.js"><\/script>')</script>
     <script src="/static/js/base.js"></script>
     {% endblock %}
   </div>

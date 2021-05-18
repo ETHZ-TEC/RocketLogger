@@ -32,12 +32,12 @@
           <td>{{ file.size }}</td>
           <td class="dropdown">
             <a href="{{ file.href_download }}" class="btn btn-primary btn-sm" role="button">Download</a>
-            <button class="btn btn-outline-danger btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-outline-danger btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Delete
             </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="{{ file.href_delete }}">Delete file: {{ file.name }}</a>
-            </div>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ file.href_delete }}">Delete file: {{ file.name }}</a></li>
+            </ul>
           </td>
         </tr>
         {% endfor %}

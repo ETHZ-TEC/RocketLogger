@@ -2,13 +2,13 @@
 <!-- Configuration Panel Container -->
 <div class="card mb-3">
   <div class="card-header">
-    <h2 class="accordion-toggle" data-toggle="collapse" href="#collapseConfiguration">
+    <h2 class="accordion-toggle" data-bs-toggle="collapse" href="#collapseConfiguration">
       Measurement Configuration
     </h2>
   </div>
   <div class="card-body collapse show" id="collapseConfiguration">
     <fieldset id="configuration_group">
-      <div class="form-group">
+      <div class="mb-3">
         <button id="button_config_save" type="button" class="btn btn-outline-dark">Store as default</button>
         <button id="button_config_load" type="button" class="btn btn-outline-dark">Restore default</button>
       </div>
@@ -23,10 +23,10 @@
       <h3>Base Configuration</h3>
       <div class="row">
         <div class="col">
-          <div class="form-group row justify-content-start">
+          <div class="mb-3 row justify-content-start">
             <label class="col-sm-3 col-form-label" for="sample_rate">Sample rate</label>
             <div class="col-sm-6">
-              <select class="custom-select" id="sample_rate">
+              <select class="form-select" id="sample_rate">
                 <option value="1"> 1 Sps</option>
                 <option value="10">10 Sps</option>
                 <option value="100">100 Sps</option>
@@ -45,7 +45,7 @@
       <hr />
 
       <h3>Input Channels</h3>
-      <div class="form-group">
+      <div class="mb-3">
         <button type="button" class="btn btn-outline-dark" id="button_config_all">Enable all channels</button>
         <button type="button" class="btn btn-outline-dark" id="button_config_none">Disable all channels</button>
       </div>
@@ -53,27 +53,27 @@
       <h5>Voltage</h5>
       <div class="row justify-content-start">
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_v1_enable" checked>
-            <label class="custom-control-label" for="channel_v1_enable">V1</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_v1_enable" checked>
+            <label class="form-check-label" for="channel_v1_enable">V1</label>
           </div>
         </div>
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_v2_enable" checked>
-            <label class="custom-control-label" for="channel_v2_enable">V2</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_v2_enable" checked>
+            <label class="form-check-label" for="channel_v2_enable">V2</label>
           </div>
         </div>
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_v3_enable" checked>
-            <label class="custom-control-label" for="channel_v3_enable">V3</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_v3_enable" checked>
+            <label class="form-check-label" for="channel_v3_enable">V3</label>
           </div>
         </div>
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_v4_enable" checked>
-            <label class="custom-control-label" for="channel_v4_enable">V4</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_v4_enable" checked>
+            <label class="form-check-label" for="channel_v4_enable">V4</label>
           </div>
         </div>
       </div>
@@ -81,42 +81,42 @@
       <h5>Current</h5>
       <div class="row justify-content-start">
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i1h_enable" checked>
-            <label class="custom-control-label" for="channel_i1h_enable">I1 high</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i1h_enable" checked>
+            <label class="form-check-label" for="channel_i1h_enable">I1 high</label>
           </div>
         </div>
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i1l_enable" checked>
-            <label class="custom-control-label" for="channel_i1l_enable">I1 low</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i1l_enable" checked>
+            <label class="form-check-label" for="channel_i1l_enable">I1 low</label>
           </div>
         </div>
         <div class="col-6">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i1h_force">
-            <label class="custom-control-label" for="channel_i1h_force">I1 force high range</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i1h_force">
+            <label class="form-check-label" for="channel_i1h_force">I1 force high range</label>
           </div>
         </div>
       </div>
 
       <div class="row justify-content-start">
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i2h_enable" checked>
-            <label class="custom-control-label" for="channel_i2h_enable">I2 high</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i2h_enable" checked>
+            <label class="form-check-label" for="channel_i2h_enable">I2 high</label>
           </div>
         </div>
         <div class="col-auto">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i2l_enable" checked>
-            <label class="custom-control-label" for="channel_i2l_enable">I2 low</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i2l_enable" checked>
+            <label class="form-check-label" for="channel_i2l_enable">I2 low</label>
           </div>
         </div>
         <div class="col-6">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="channel_i2h_force">
-            <label class="custom-control-label" for="channel_i2h_force">I2 force high range</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="channel_i2h_force">
+            <label class="form-check-label" for="channel_i2h_force">I2 force high range</label>
           </div>
         </div>
       </div>
@@ -124,9 +124,9 @@
       <h5>Digital Inputs</h5>
       <div class="row">
         <div class="col">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="digital_enable" checked>
-            <label class="custom-control-label" for="digital_enable">Enable digital inputs</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="digital_enable" checked>
+            <label class="form-check-label" for="digital_enable">Enable digital inputs</label>
           </div>
         </div>
       </div>
@@ -134,9 +134,9 @@
       <h5>Ambient Sensors</h5>
       <div class="row">
         <div class="col">
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="ambient_enable">
-            <label class="custom-control-label" for="ambient_enable">Enable ambient sensors</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="ambient_enable">
+            <label class="form-check-label" for="ambient_enable">Enable ambient sensors</label>
           </div>
         </div>
       </div>
@@ -146,48 +146,46 @@
       <div class="row">
         <div class="col">
           
-          <div class="custom-control custom-checkbox mb-3">
-            <input type="checkbox" class="custom-control-input" id="file_enable" checked>
-            <label class="custom-control-label" for="file_enable">Store data to file</label>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="file_enable" checked>
+            <label class="form-check-label" for="file_enable">Store data to file</label>
           </div>
 
           <fieldset id="file_group">
-            <div class="form-group row justify-content-start">
+            <div class="mb-3 row justify-content-start">
               <label class="col-sm-3 col-form-label" for="file_filename">Filename</label>
               <div class="col-sm-9">
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <button class="btn btn-outline-secondary" type="button" id="button_file_prefix">Add date prefix</button>
-                  </div>
+                <div class="input-group mb-3">
+                  <button class="btn btn-outline-secondary" type="button" id="button_file_prefix">Add date prefix</button>
                   <input type="text" class="form-control" id="file_filename" placeholder="filename" value="data.rld">
-                  <!-- <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" id="button_download">Download</button>
-                  </div> -->
+                  <!--
+                  <button class="btn btn-outline-secondary" type="button" id="button_download">Download</button>
+                  -->
                 </div>
               </div>
             </div>
 
-            <div class="form-group row justify-content-start">
+            <div class="mb-3 row justify-content-start">
               <label class="col-sm-3 col-form-label" for="file_format">File format</label>
               <div class="col-sm-3">
-                <select class="custom-select" id="file_format">
+                <select class="form-select" id="file_format">
                   <option value="rld" selected>RLD</option>
                   <option value="csv">CSV</option>
                 </select>
               </div>
             </div>
 
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="file_split" checked>
-              <label class="custom-control-label" for="file_split">Split large files</label>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="file_split" checked>
+              <label class="form-check-label" for="file_split">Split large files</label>
             </div>
 
             <fieldset id="file_split_group">
-              <div class="form-group row justify-content-start">
+              <div class="mb-3 row justify-content-start">
                 <label class="col-sm-3 col-form-label" for="file_size">File size</label>
                 <div class="input-group col-sm-6">
-                  <input type="text" class="form-control input-group-prepend" id="file_size" placeholder="file size">
-                  <select class="custom-select form-control input-group-append" id="file_size_scale">
+                  <input type="text" class="form-control" id="file_size" placeholder="file size">
+                  <select class="form-select" id="file_size_scale">
                     <option value="1000000">MB</option>
                     <option value="1000000000" selected>GB</option>
                   </select>
@@ -195,7 +193,7 @@
               </div>
             </fieldset>
 
-            <div class="form-group">
+            <div class="mb-3">
               <label for="file_comment">File comment</label>
               <textarea class="form-control" id="file_comment" rows="3"></textarea>
             </div>
@@ -207,9 +205,9 @@
       <h3>Web Interface</h3>
       <div class="row">
           <div class="col">
-            <div class="custom-control custom-checkbox mb-3">
-              <input type="checkbox" class="custom-control-input" id="web_enable" checked>
-              <label class="custom-control-label" for="web_enable">Enable live preview</label>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="web_enable" checked>
+              <label class="form-check-label" for="web_enable">Enable live preview</label>
             </div>
         </div>
       </div>

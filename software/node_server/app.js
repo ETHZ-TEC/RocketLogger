@@ -48,7 +48,6 @@ const util = require('./util.js');
 const asset_version = {
     bootstrap: require('bootstrap/package.json').version,
     jquery: require('jquery/package.json').version,
-    popperjs: require('popper.js/package.json').version,
     plotly: require('plotly.js/package.json').version,
     socketio: require('socket.io-client/package.json').version,
     timesync: require('timesync/package.json').version,
@@ -117,7 +116,6 @@ app.use('/assets', [
     express.static(__dirname + '/node_modules/bootstrap/dist/css'),
     express.static(__dirname + '/node_modules/bootstrap/dist/js'),
     express.static(__dirname + '/node_modules/jquery/dist'),
-    express.static(__dirname + '/node_modules/popper.js/dist/umd'),
     express.static(__dirname + '/node_modules/plotly.js/dist'),
     express.static(__dirname + '/node_modules/socket.io-client/dist'),
     express.static(__dirname + '/node_modules/timesync/dist')

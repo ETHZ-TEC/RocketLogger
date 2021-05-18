@@ -24,13 +24,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bootstrap": "4.6.x",
+    "bootstrap": "^5.0.1",
     "express": "4.17.x",
     "gulp": "4.0.x",
-    "jquery": "3.5.x",
+    "jquery": "^3.6.0",
     "nunjucks": "3.2.x",
     "plotly.js": "1.58.x",
-    "popper.js": "1.16.x",
     "socket.io": "4.0.x",
     "socket.io-client": "4.0.x",
     "timesync": "1.0.x",
