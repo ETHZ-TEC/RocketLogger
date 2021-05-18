@@ -37,6 +37,10 @@
     /* border: 1px solid #000; */
 }
 
+.rl-help {
+    height: fit-content;
+}
+
 .color-1 {
     color: #0072BD;
 }
