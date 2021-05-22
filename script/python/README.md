@@ -53,7 +53,7 @@ indexed dataframe (requires pandas):
 >>> df = rld.get_dataframe()
 ```
 
-For more details about the individual functions and thier parameters, refer to
+For more details about the individual functions and their parameters, refer to
 the documentation available at <https://rocketlogger.ethz.ch/python/>.
 
 

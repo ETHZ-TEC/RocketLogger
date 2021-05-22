@@ -369,7 +369,7 @@ CALIBRATION_SETUP_BASIC = RocketLoggerCalibrationSetup(
 class RocketLoggerCalibration:
     """
     RocketLogger calibration support class. Provides the calibration
-    mesurement data processing to generate calibration files.
+    measurement data processing to generate calibration files.
 
     The alternatives to initialize the calibrations class are:
 

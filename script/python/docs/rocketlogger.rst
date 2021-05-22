@@ -1,7 +1,7 @@
 Package Reference
 =================
 
-The Python support for RocketLogger is provided by the :module:rocketlogger module.
+The Python support for RocketLogger is provided by the :mod:`rocketlogger` module.
 
 
 Submodules

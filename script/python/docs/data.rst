@@ -55,4 +55,4 @@ with the package.
 
 For more details on the individual functions and its optional parameters,
 please we refer to the API documentation of the
-:class:`rocketlogger.calibration` module.
+:mod:`rocketlogger.calibration` module.

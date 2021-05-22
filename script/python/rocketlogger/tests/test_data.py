@@ -850,7 +850,7 @@ class TestChannelHandling(TestCase):
                 channel_info, np.ones_like(self.data.get_data("V1").squeeze())
             )
 
-    def test_channel_add_inexisting_link(self):
+    def test_channel_add_inexistent_link(self):
         channel_info = self.data._header["channels"][10].copy()
         channel_info["name"] = "A1"
         channel_info["valid_link"] = len(self.data._header["channels"])
@@ -978,13 +978,13 @@ class TestChannelMerge(TestCase):
         with self.assertRaisesRegex(TypeError, "header only"):
             data.merge_channels()
 
-    def test_merge_drop_remerge(self):
+    def test_merge_drop_merge_again(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
         data.merge_channels(keep_channels=False)
         with self.assertWarnsRegex(RocketLoggerDataWarning, "No channels found"):
             data.merge_channels()
 
-    def test_merge_keep_remerge(self):
+    def test_merge_keep_merge_again(self):
         data = RocketLoggerData(_FULL_TEST_FILE)
         data.merge_channels(keep_channels=True)
         with self.assertRaisesRegex(RocketLoggerDataError, "already in use"):
@@ -1009,7 +1009,7 @@ class TestChannelMerge(TestCase):
 
     def test_merge_calculation_overflow(self):
         data = RocketLoggerData(_HIGH_CURRENT_TEST_FILE)
-        # manual merge with large dtype
+        # manual merge with large data type
         ch_data = data.get_data(["I2L", "I2H"])
         ch_valid = data.get_data("I2L_valid").flatten()
         ch_merged = ch_valid * ch_data[:, 0] + (1 - ch_valid) * ch_data[:, 1]
@@ -1018,7 +1018,7 @@ class TestChannelMerge(TestCase):
 
     def test_merge_keep_calculation_overflow(self):
         data = RocketLoggerData(_HIGH_CURRENT_TEST_FILE)
-        # manual merge with large dtype
+        # manual merge with large data type
         ch_data = data.get_data(["I2L", "I2H"])
         ch_valid = data.get_data("I2L_valid").flatten()
         ch_merged = ch_valid * ch_data[:, 0] + (1 - ch_valid) * ch_data[:, 1]

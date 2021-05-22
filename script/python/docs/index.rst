@@ -38,23 +38,30 @@ Support for RocketLogger Device Calibration by the
 Installation
 ------------
 
-Install the RocketLogger Python Support from the PyPI using:
+Install the RocketLogger Python Support from the `Python Packet Index <https://pypi.org/>`_ using:
 
     ``pip install rocketlogger``
+
+
+Testing
+-------
+
+The source installation comes with automated test cases and the relevant sample data.
+For more details see the test documentation of :doc:`rocketlogger.tests`.
 
 
 Contribute
 ----------
 
-- Source Code:   https://gitlab.ethz.ch/tec/public/rocketlogger/
-- Issue Tracker: https://gitlab.ethz.ch/tec/public/rocketlogger/issues/
-- documentation: https://rocketlogger.ethz.ch/python/
+- Source code:   https://gitlab.ethz.ch/tec/public/rocketlogger/
+- Issue tracker: https://gitlab.ethz.ch/tec/public/rocketlogger/issues/
+- Documentation: https://rocketlogger.ethz.ch/python/
 
 
 License
 -------
 
-The project is licensed under the BSD license. See the packages' ``LICESNSE`` file for more details.
+The project is licensed under the 3-Clause BSD License. See the package's ``LICENSE`` file for more details.
 
 
 Indices and Tables
