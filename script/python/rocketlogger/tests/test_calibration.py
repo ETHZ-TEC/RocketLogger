@@ -234,7 +234,7 @@ class TestCalibrationSetup(TestCase):
             RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze()
         )
         setpoint = _extract_setpoint_measurement(
-            data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step(calibration=True)
+            data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step(adc_units=True)
         )
         self.assertEqual(len(setpoint), CALIBRATION_SETUP_SMU2450.get_setpoint_count())
 
@@ -254,7 +254,7 @@ class TestCalibrationSetup(TestCase):
         with self.assertRaisesRegex(ValueError, "filter window length"):
             setpoint = _extract_setpoint_measurement(
                 data_measure,
-                CALIBRATION_SETUP_SMU2450.get_voltage_step(calibration=True),
+                CALIBRATION_SETUP_SMU2450.get_voltage_step(adc_units=True),
                 filter_window_length=0,
             )
 

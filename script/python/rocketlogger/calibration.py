@@ -198,11 +198,11 @@ class RocketLoggerCalibrationSetup:
 
     :param setpoint_count: number of calibration set-points per channel
 
-    :param setpoint_step_voltage: voltage step between set-points
+    :param setpoint_step_voltage: voltage step in volt between set-points
 
-    :param setpoint_step_current_low: low current step between set-points
+    :param setpoint_step_current_low: low current step in ampere between set-points
 
-    :param setpoint_step_current_high: high current step between set-points
+    :param setpoint_step_current_high: high current step in ampere between set-points
 
     :param setpoint_delay: minimum delay in seconds between switching the
         set-point
@@ -233,69 +233,69 @@ class RocketLoggerCalibrationSetup:
         self._delay = setpoint_delay
         self._dual_sweep = dual_sweep
 
-    def get_voltage_setpoints(self, calibration=False):
+    def get_voltage_setpoints(self, adc_units=False):
         """
         Get the real voltage set-points used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in volt or ADC bits
         """
-        return self._get_setpoints(self.get_voltage_step(calibration))
+        return self._get_setpoints(self.get_voltage_step(adc_units))
 
-    def get_current_low_setpoints(self, calibration=False):
+    def get_current_low_setpoints(self, adc_units=False):
         """
         Get the real low current set-points used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in ampere or ADC bits
         """
-        return self._get_setpoints(self.get_current_low_step(calibration))
+        return self._get_setpoints(self.get_current_low_step(adc_units))
 
-    def get_current_high_setpoints(self, calibration=False):
+    def get_current_high_setpoints(self, adc_units=False):
         """
         Get the real low current set-points used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: vector of the calibration set-points in ampere or ADC bits
         """
-        return self._get_setpoints(self.get_current_high_step(calibration))
+        return self._get_setpoints(self.get_current_high_step(adc_units))
 
-    def get_voltage_step(self, calibration=False):
+    def get_voltage_step(self, adc_units=False):
         """
         Get the absolute voltage step used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in volt or ADC bits
         """
-        if calibration:
+        if adc_units:
             return abs(self._step_voltage / _ROCKETLOGGER_ADC_STEP_V)
         return abs(self._step_voltage)
 
-    def get_current_low_step(self, calibration=False):
+    def get_current_low_step(self, adc_units=False):
         """
         Get the absolute low current step used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in ampere or ADC bits
         """
-        if calibration:
+        if adc_units:
             return abs(self._step_current_low / _ROCKETLOGGER_ADC_STEP_IL)
         return abs(self._step_current_low)
 
-    def get_current_high_step(self, calibration=False):
+    def get_current_high_step(self, adc_units=False):
         """
         Get the absolute low current step used in the measurement setup.
 
-        :param calibration: set `True` to get step in estimated ADC bits
+        :param adc_units: set `True` to get step in estimated ADC bits
 
         :returns: the absolute set-point step value in ampere or ADC bits
         """
-        if calibration:
+        if adc_units:
             return abs(self._step_current_high / _ROCKETLOGGER_ADC_STEP_IH)
         return abs(self._step_current_high)
 
@@ -522,9 +522,9 @@ class RocketLoggerCalibration:
         il_ref = setup.get_current_low_setpoints()
         reference = [v_ref] * 4 + [il_ref, ih_ref] * 2
 
-        v_step = setup.get_voltage_step(calibration=True)
-        ih_step = setup.get_current_high_step(calibration=True)
-        il_step = setup.get_current_low_step(calibration=True)
+        v_step = setup.get_voltage_step(adc_units=True)
+        ih_step = setup.get_current_high_step(adc_units=True)
+        il_step = setup.get_current_low_step(adc_units=True)
         reference_steps = [v_step] * 4 + [il_step, ih_step] * 2
 
         # extract measurement information
