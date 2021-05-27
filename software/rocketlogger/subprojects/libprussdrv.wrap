@@ -1,5 +1,5 @@
 [wrap-git]
-url =https://github.com/beagleboard/am335x_pru_package.git
+url = https://github.com/beagleboard/am335x_pru_package.git
 revision = 1e9ff57815b84af028451d23e37482ced711c098
 
 patch_url = /dev/null
@@ -7,4 +7,4 @@ patch_filename = libprussdrv.patch.tar.bz2
 patch_hash = 675b0fc153f52c63be290da014c8b4a9fcc53f01646c9dddb3937c9b1993a8cf
 
 [provide]
-libprussdrv=libprussdrv_dep
+libprussdrv = libprussdrv_dep

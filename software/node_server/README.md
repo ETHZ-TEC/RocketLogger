@@ -1,48 +1,47 @@
 # RocketLogger Node.js Web Interface
 
-
 ## Features
 
-This web interface features:
+The RocketLogger web interface features are summarized as follows:
 
-- static source file serving
-- dynamic site redering using nunjucks
-- RocketLogger CLI interface from web
-- websockets for server side data streaming using socket.io and zeromq
+* static source file serving
+* dynamic site rendering using nunjucks
+* RocketLogger CLI interface from web
+* websockets for server side data streaming using socket.io and zeromq
 
 
 ## Requirements
 
-- Server: Node.js v10 or later
-- Client: reasonably recent web browser supporting ECMAScript 6
+* Server: Node.js v10 or later
+* Client: reasonably recent web browser supporting ECMAScript 6
 
 
-### Node.js server side dependencies
+### Node.js server dependencies
 
-- `express` - minimalistic web framework
-- `nunjucks` - Jinja2 inspired web template engine
-- `socket.io` - websockets server side library
-- `zeromq` - message queueing library
-- `gulp` - file system listing
-
-Install dependencies using `npm`:
-
-`npm install express nunjucks gulp socket.io zeromq`
+* `express` - minimalist web framework
+* `nunjucks` - Jinja2 inspired web template engine
+* `socket.io` - websockets server side library
+* `zeromq` - ZeroMQ message queueing library
+* `gulp` - file system listing
 
 
-### Browser client side dependencies
+### Browser client dependencies
 
-- `bootstrap` - responsive, mobile-first front-end component library
-- `popper.js` - tooltip and popover positioning engine (used by bootstrap)
-- `jquery` - general purpose JavaScript library
-- `socket.io-client` - websockets client side JavaScript library
-- `plotly.js` - JavaScript plotting library
-
-Install dependencies using `npm`:
-
-`npm install bootstrap@4.4.1 popper.js@1.16.0 jquery@3.4.1 socket.io-client@2.3.0 plotly.js@1.53.0`
+* `bootstrap` - responsive, mobile-first front-end component library
+* `jquery` - general purpose JavaScript library
+* `plotly.js` - JavaScript plotting library
+* `timesync` - client-server time synchronization library
+* `socket.io-client` - websockets client side JavaScript library
 
 
 ## Installation
 
-TBD, provide install script
+To install the webserver, its dependencies, and deploy it as system service, use the provided installer script:
+```bash
+sudo ./install.sh
+```
+
+To install the node.js server standalone in the source directory use:
+```
+npm install .
+```

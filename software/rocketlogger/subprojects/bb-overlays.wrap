@@ -7,4 +7,4 @@ patch_filename = bb-overlays.patch.tar.bz2
 patch_hash = 072ed08c6524e4ae54e2a9893bfeccd8d856dc19a7cebaa33bc1d1b6c2b46320
 
 [provide]
-bboverlays=bboverlays_dep
+bboverlays = bboverlays_dep

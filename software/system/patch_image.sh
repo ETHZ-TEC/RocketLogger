@@ -34,11 +34,11 @@ if [ $PATCH -ne 0 ]; then
 fi
 
 # rename and compress successfully patched image
-IMAGE_NAME="rocketlogger-flasher-${GIT_REVISION}.img"
-echo "> Rename successfully patched image file to '${IMAGE_NAME}'"
-mv --force "${LOG_FILE}" "${IMAGE_NAME}.log"
-mv --force "${IMAGE}" "${IMAGE_NAME}"
-xz --compress --threads=0 --force --verbose "${IMAGE_NAME}"
+RL_IMAGE_NAME="rocketlogger-flasher-${GIT_REVISION}.img"
+echo "> Rename successfully patched image file to '${RL_IMAGE_NAME}'"
+mv --force "${LOG_FILE}" "${RL_IMAGE_NAME}.log"
+mv --force "${IMAGE}" "${RL_IMAGE_NAME}"
+xz --compress --threads=0 --force --verbose "${RL_IMAGE_NAME}"
 
 # hint on the next setup step
 echo ">> Flash the image to an SD card and insert it into a RocketLogger to install the system."

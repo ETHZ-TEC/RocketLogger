@@ -1,51 +1,70 @@
 # RocketLogger Software Documentation
 
-The RocketLogger software includes the three following binaries, which make use of the RocketLogger library.
 
+## Component Overview
+
+The RocketLogger software consists of multiple components that are summarized below.
 
 ### RocketLogger Binary
 
-Main RocketLogger binary defined in [rocketlogger.c](@ref rocketlogger.c). Provides an extensive command line interface to control an monitor the sampling.
+The RocketLogger tool is implemented in [`rocketlogger.c`](@ref rocketlogger.c). This tool provides
+an extensive command line interface to control and monitor the sampling.
 
 
 ### RocketLogger Daemon
 
-RocketLogger daemon program defined in [rocketloggerd.c](@ref rocketloggerd.c). Initializes the user space GPIOs, controls the power supply of the cape, and handles the user button interrupt to start and stop RocketLogger measurements.
+The RocketLogger service daemon is implemented in [`rocketloggerd.c`](@ref rocketloggerd.c).
+This service is responsible to configure the user space GPIOs, control the power supply of the
+cape, handles the user button actions and observes the RocketLogger sampling status.
 
 
-### RocketLogger Server
+### PRU Firmware
 
-RocketLogger server program defined in [rl_server.c](@ref rl_server.c). Returns status and current sampling data (if available) when running and default configuration otherwise, for use in a webserver.
+The firmware sources for the Programmable Real-time Unit (PRU) is located in the [`pru`](pru/)
+subfolder. The firmware is build and installed along with the rest of the software.
+
+### Device Tree Overlay
+
+The necessary device tree overlay sources for the RocketLogger Cape hardware is contained in the
+[`overlay`](overlay/) subfolder and installed together with the above software components.
+
+
+### System Configuration
+
+The system configuration files provided in the [`config`](config/) subfolder provide the necessary
+`uio_pruss` module configuration, uEnv boot configuration, and RocketLogger service specification,
+as well as as default calibration parameters. These configuration files are deployed together with
+the other software components.
 
 
 ## Dependencies
 
 ### Build Tools
 
-For building the software the following build tools are required:
+For building the software the following build tools are required (provided by the listed Debian
+packages):
 
-- GNU Make - `make`
-- GNU C compiler - `gcc`
-- GNU C++ compiler - `g++`
-- TI PRU Assembler - install from source <https://github.com/beagleboard/am335x_pru_package.git>
+* Linux device tree compiler- `device-tree-compiler` package
+* GNU C compiler - `gcc` package
+* Meson build system (version >= 0.55) - `meson/buster-backports` package
+* ninja build system (version >= 0.10) - `ninja-build/buster-backports` package
+* TI PRU code generation tools - `ti-pru-cgt-installer` package
 
 
 ### Software Libraries
 
-The following libraries are required to build the software (and the corresponding Debian package):
+The following libraries (provided by the corresponding Debian packages) are required to build
+the software:
 
-- `libi2c` - `libi2c-dev` 
-- `libncurses` - `libncurses5-dev`
-- `librt` - part of libc
-- `prussdrv` - install from source <https://github.com/beagleboard/am335x_pru_package.git>
-- Linux headers - `linux-headers-$(uname -r)`
-
-
-## Debian 9 Backport
-
-The code targets compilation on a Debian 10 (buster) image. If you want to compile on the official Debian 9 image, a few minor library header and compiler compatibility updates are required. To apply these changes we provide a patch file that is applied using `git apply -- debian9_backport.patch`.
-
-To undo the patch for pulling new updates, revert the patch using `git apply -R debian9_backport.patch`.
+* `libgpiod` - `libgpiod-dev` package
+* `libi2c` - `libi2c-dev` package
+* `libncurses` - `libncurses5-dev` package
+* `libzeromq` - `libzmq3-dev` package
+* Linux headers - `linux-headers-$(uname -r)` package
+* Linux PRU user space driver `prussdrv` - included as Meson subproject from source repository
+  <https://github.com/beagleboard/am335x_pru_package.git>
+* BeagleBone device tree overlay headers - included as Meson subproject from source repository
+  <https://github.com/beagleboard/bb.org-overlays.git>
 
 
 ## License
