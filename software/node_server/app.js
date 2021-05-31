@@ -126,13 +126,7 @@ app.get('/sitemap.xml', express.static(path_static));
 
 
 // routing of rendered pages
-app.get('/', (req, res) => { render_page(req, res, 'index.html') });
-
-app.get('/debug', (req, res) => { render_page(req, res, 'debug.html') });
-
-app.get('/control', (req, res) => { render_page(req, res, 'control.html') });
-
-app.get('/calibration', (req, res) => { render_page(req, res, 'calibration.html') });
+app.get('/', (req, res) => { render_page(req, res, 'control.html') });
 
 app.get('/data', (req, res) => {
     let files = [];
