@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RocketLogger sample calibration script.
+Sample script for generating a RocketLogger calibration file from measurements.
 
 Copyright (c) 2019-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
@@ -37,7 +37,7 @@ from rocketlogger.calibration import RocketLoggerCalibration, CALIBRATION_SETUP_
 # file input configuration
 filename_prefix = "data/test_"
 
-# automatically derive individual meausrement file names
+# automatically derive individual measurement file names
 calibration_file_v = f"{filename_prefix}calibration_v.rld"
 calibration_file_i1l = f"{filename_prefix}calibration_i1l.rld"
 calibration_file_i2l = f"{filename_prefix}calibration_i2l.rld"
@@ -72,4 +72,4 @@ cal.write_log_file(calibration_log_file)
 cal.write_calibration_file(calibration_file_copy)
 cal.write_log_file(calibration_log_file_copy)
 
-print("calibration done.")
+print("created calibration file.")
