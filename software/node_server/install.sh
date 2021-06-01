@@ -34,9 +34,11 @@
 ## install directories
 INSTALL_WEB_DIR=/home/rocketlogger/web/
 INSTALL_DATA_DIR=/home/rocketlogger/data
-INSTALL_SERVICE_DIR=/etc/systemd/system/
+SERVICE_CONFIG_DIR=/etc/systemd/system/
+PROXY_CONFIG_DIR=/etc/nginx/conf.d/
 
 SERVICE_CONFIG=rocketlogger-web.service
+PROXY_CONFIG=rocketlogger-proxy.conf
 
 
 ## package install
@@ -46,6 +48,7 @@ echo "> Install required system packages"
 sudo apt-get install --assume-yes \
   g++                             \
   make                            \
+  nginx                           \
   nodejs
 
 # verify webserver dependencies installation was successful
@@ -86,9 +89,16 @@ fi
 
 ## install web interface service and restart
 echo "> Install and start RocketLogger web interface as service"
-sudo install --mode=644 ${SERVICE_CONFIG} ${INSTALL_SERVICE_DIR}
+sudo install --mode=644 ${SERVICE_CONFIG} ${SERVICE_CONFIG_DIR}
 sudo systemctl enable rocketlogger-web
 sudo systemctl restart rocketlogger-web
+
+## install, configure and restart web interface reverse proxy
+echo "> Install and configure web interface reverse proxy"
+sudo install --mode=644 ${PROXY_CONFIG} ${PROXY_CONFIG_DIR}
+sudo rm --force ${PROXY_CONFIG_DIR}/../sites-enabled/default
+sudo systemctl restart nginx
+
 
 echo "> Done installing RocketLogger web interface."
 exit 0
