@@ -70,6 +70,7 @@ setup(
     extras_require={
         "dataframe": ["pandas"],
         "plot": ["matplotlib"],
+        "calibration": ["pyvisa", "pyvisa-py"],
         "dev": ["black", "sphinx"],
         "test": ["coverage", "nose", "tox"],
     },

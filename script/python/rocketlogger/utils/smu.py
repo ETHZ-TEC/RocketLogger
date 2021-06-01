@@ -32,10 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 # pyvisa packet (wrapper for visa backend: pyvisa-py or NI's NI-VISA binary needs to be installed)
-import visa
+import pyvisa
 
 
-_COMMAND_SETUP_VOLTAGE_SWEEP = '''
+_COMMAND_SETUP_VOLTAGE_SWEEP = """
 reset()
 smu.source.func=smu.FUNC_DC_VOLTAGE
 smu.measure.func=smu.FUNC_DC_VOLTAGE
@@ -48,9 +48,9 @@ smu.source.ilimit.level = 1e-3
 smu.source.sweeplinear("cal_v", -5, 5, 101, 250e-3, 1, smu.RANGE_AUTO, smu.ON, smu.ON, defbuffer1)
 
 defbuffer1.clear()
-'''
+"""
 
-_COMMAND_SETUP_CURRENT_HIGH_SWEEP = '''
+_COMMAND_SETUP_CURRENT_HIGH_SWEEP = """
 reset()
 smu.source.func=smu.FUNC_DC_CURRENT
 smu.source.autorange = smu.ON
@@ -64,9 +64,9 @@ smu.measure.sense = smu.SENSE_2WIRE
 smu.measure.terminals = smu.TERMINALS_FRONT
 
 defbuffer1.clear()
-'''
+"""
 
-_COMMAND_SETUP_CURRENT_LOW_SWEEP = '''
+_COMMAND_SETUP_CURRENT_LOW_SWEEP = """
 reset()
 smu.source.func=smu.FUNC_DC_CURRENT
 smu.source.autorange = smu.ON
@@ -80,59 +80,71 @@ smu.measure.sense = smu.SENSE_2WIRE
 smu.measure.terminals = smu.TERMINALS_FRONT
 
 defbuffer1.clear()
-'''
+"""
 
-_COMMAND_TRIGGER = '''
+_COMMAND_TRIGGER = """
 trigger.model.initiate()
-'''
+"""
 
-_COMMAND_WAIT_COMPLETE = '''
+_COMMAND_WAIT_COMPLETE = """
 waitcomplete()
-'''
+"""
 
-_COMMAND_ABORT = '''
+_COMMAND_ABORT = """
 trigger.model.abort()
-'''
+"""
 
-_COMMAND_BEEP_START = '''
+_COMMAND_BEEP_START = """
 beeper.beep(0.2, 600)
 delay(0.3)
 beeper.beep(0.2, 600)
-'''
+"""
 
-_COMMAND_BEEP_END = '''
+_COMMAND_BEEP_END = """
 beeper.beep(0.8, 600)
-'''
+"""
 
-_COMMAND_READ_BUFFER = '''
-printbuffer(1, defbuffer1.n, defbuffer1.sourcevalues, defbuffer1.readings)
-'''
+# _COMMAND_READ_BUFFER = """
+# printbuffer(1, defbuffer1.n, defbuffer1.sourcevalues, defbuffer1.readings)
+# """
 
 
-class SMU2450():
+class SMU2450:
     """
-    Control the SMU2450 for the calibration source sweeps.
+    SMU2450 remote control utility class for RocketLogger calibration source sweeps.
+
+    :param hostname: the hostname or IP address of the SMU2450 to remote control
+
+    :param port: port number of the SMU's remote control interface
     """
 
     def __init__(self, hostname, port=5025):
         self.hostname = hostname
         self.port = port
-        self.socket_address = 'TCPIP::{}::{}::SOCKET'.format(self.hostname,
-                                                             self.port)
-        self.rm = visa.ResourceManager('@py')
+        self.socket_address = f"TCPIP::{self.hostname}::{self.port}::SOCKET"
+        self.rm = pyvisa.ResourceManager("@py")
 
     def connect(self):
-        print('Connecting SMU2450 at: {}'.format(self.socket_address))
+        """
+        Connect to the SMU remote control interface.
+        """
+        print(f"Connecting to SMU2450 at: {self.socket_address}")
         self.device = self.rm.open_resource(self.socket_address)
         self.device.clear()
         self.device.timeout = 3000
 
     def disconnect(self):
+        """
+        Disconnect from the SMU remote control interface.
+        """
         if self.device:
             self.device.clear()
             self.device.close()
 
     def calibrate_voltage(self):
+        """
+        Perform a voltage sweep for RocketLogger voltage channel calibration measurement.
+        """
         self.setup_voltage_sweep()
 
         self.beep_start()
@@ -141,6 +153,9 @@ class SMU2450():
         self.beep_end()
 
     def calibrate_current_low(self):
+        """
+        Perform a current sweep for RocketLogger low current channel calibration measurement.
+        """
         self.setup_current_low_sweep()
 
         self.beep_start()
@@ -150,6 +165,9 @@ class SMU2450():
         self.beep_end()
 
     def calibrate_current_high(self):
+        """
+        Perform a current sweep for RocketLogger high current channel calibration measurement.
+        """
         self.setup_current_high_sweep()
 
         self.beep_start()
@@ -158,28 +176,55 @@ class SMU2450():
         self.beep_end()
 
     def setup_voltage_sweep(self):
+        """
+        Set up voltage sweep configuration for RocketLogger voltage channel calibration measurement.
+        """
         self.device.write(_COMMAND_SETUP_VOLTAGE_SWEEP)
 
     def setup_current_low_sweep(self):
+        """
+        Set up current sweep configuration for RocketLogger low current channel calibration measurement.
+        """
         self.device.write(_COMMAND_SETUP_CURRENT_LOW_SWEEP)
 
     def setup_current_high_sweep(self):
+        """
+        Set up current sweep configuration for RocketLogger high current channel calibration measurement.
+        """
         self.device.write(_COMMAND_SETUP_CURRENT_HIGH_SWEEP)
 
     def start(self):
+        """
+        Trigger start of the preconfigured sweep.
+        """
         self.device.write(_COMMAND_TRIGGER)
 
     def stop(self):
+        """
+        Stop or abbort a running sweep.
+        """
         self.device.write(_COMMAND_ABORT)
 
     # def read_buffer(self):
+    #     """
+    #     Read back the source and measurement buffers of the last sweep.
+    #     """
     #     return self.device.query(_COMMAND_READ_BUFFER)
 
     def wait_complete(self):
+        """
+        Blocking wait for completion of a running sweep.
+        """
         self.device.write(_COMMAND_WAIT_COMPLETE)
 
     def beep_start(self):
+        """
+        Signal start of the sweep consisting of two short beeps.
+        """
         self.device.write(_COMMAND_BEEP_START)
 
     def beep_end(self):
+        """
+        Signal completion of the sweep consisting of one long beep.
+        """
         self.device.write(_COMMAND_BEEP_END)

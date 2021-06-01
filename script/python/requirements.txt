@@ -4,5 +4,7 @@ matplotlib
 nose
 numpy
 pandas
+pyvisa
+pyvisa-py
 sphinx
 tox
