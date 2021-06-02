@@ -12,7 +12,7 @@ The RocketLogger web interface features are summarized as follows:
 
 ## Requirements
 
-* Server: Node.js v10 or later
+* Server: Node.js v10 or later, NGINX for reverse proxy
 * Client: reasonably recent web browser supporting ECMAScript 6
 
 

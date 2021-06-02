@@ -51,6 +51,16 @@ packages):
 * TI PRU code generation tools - `ti-pru-cgt-installer` package
 
 
+#### Cross Compilation
+If not developing directly on the BeagleBone, there is the option to cross compile using 
+`Docker Buildx`. For this purpose there exists the `build_cross.sh` helper script and the
+required `Dockerfile`.
+For using this cross-compilation option, `Docker Buildx` and a system configured to run
+privileged Docker containers is required. More information on the docker configuration is
+found at [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/) and in the
+[docker run reference](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities).
+
+
 ### Software Libraries
 
 The following libraries (provided by the corresponding Debian packages) are required to build
