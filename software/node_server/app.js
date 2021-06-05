@@ -40,6 +40,7 @@ const express = require('express');
 const nunjucks = require('nunjucks');
 const socketio = require('socket.io');
 const zmq = require('zeromq');
+const debug = require('debug')('rocketlogger');
 
 const rl = require('./rl.js');
 const util = require('./util.js');
@@ -143,7 +144,7 @@ app.get('/data', (req, res) => {
             };
             files.push(file_info);
         } catch (err) {
-            console.log(`Error listing file ${file}: ${err}`);
+            debug(`Error listing file ${file}: ${err}`);
         }
     });
 
@@ -212,22 +213,22 @@ app.get('/data/delete/:filename', (req, res) => {
 
 // socket.io configure new connection
 io.on('connection', (socket) => {
-    console.log(`socket.io connect: ${socket.id}`);
+    debug(`socket.io connect: ${socket.id}`);
 
     // logging disconnect
     socket.on('disconnect', () => {
-        console.log(`socket.io disconnect: ${socket.id}`);
+        debug(`socket.io disconnect: ${socket.id}`);
     });
 
     // default message: echo back
     socket.on('message', (data) => {
-        console.log(`socket.io echo: ${data}`);
+        debug(`socket.io echo: ${data}`);
         socket.send({ echo: data });
     });
 
     // handle control command
     socket.on('control', (req) => {
-        console.log(`rl control: ${JSON.stringify(req)}`);
+        debug(`rl control: ${JSON.stringify(req)}`);
         // handle control command and emit on status channel
         let res = null;
         switch (req.cmd) {
@@ -289,7 +290,7 @@ io.on('connection', (socket) => {
 
     // handle status request
     socket.on('status', (req) => {
-        console.log(`rl status: ${JSON.stringify(req)}`);
+        debug(`rl status: ${JSON.stringify(req)}`);
 
         // poll status and emit on status channel
         if (req.cmd === 'status') {
@@ -304,12 +305,12 @@ io.on('connection', (socket) => {
     // handle cached data request
     socket.on('data', (req) => {
         // @todo: implement local data caching
-        console.log(`rl data: ${JSON.stringify(req)}`);
+        debug(`rl data: ${JSON.stringify(req)}`);
     });
 
     // handle timesync request
     socket.on('timesync', function (data) {
-        console.log(`timeync: ${JSON.stringify(data)}`);
+        debug(`timeync: ${JSON.stringify(data)}`);
         socket.emit('timesync', {
             id: data && 'id' in data ? data.id : null,
             result: Date.now()
@@ -323,7 +324,7 @@ async function data_proxy() {
     const sock = new zmq.Subscriber
 
     sock.connect(rl.zmq_data_socket);
-    console.log(`zmq data subscribe to ${rl.zmq_data_socket}`);
+    debug(`zmq data subscribe to ${rl.zmq_data_socket}`);
     sock.subscribe();
 
     for await (const data of sock) {
@@ -339,7 +340,7 @@ async function data_proxy() {
         try {
             meta = JSON.parse(data[0]);
         } catch (err) {
-            console.log(`zmq data: metadata processing error: ${err}`);
+            debug(`zmq data: metadata processing error: ${err}`);
             continue;
         }
 
@@ -424,15 +425,15 @@ async function status_proxy() {
     const sock = new zmq.Subscriber
 
     sock.connect(rl.zmq_status_socket);
-    console.log(`zmq status subscribe to ${rl.zmq_status_socket}`);
+    debug(`zmq status subscribe to ${rl.zmq_status_socket}`);
     sock.subscribe();
 
     for await (const status of sock) {
-        // console.log(`zmq new status: ${status}`);
+        // debug(`zmq new status: ${status}`);
         try {
             io.emit('status', { status: JSON.parse(status) });
         } catch (err) {
-            console.log(`zmq status processing error: ${err}`);
+            debug(`zmq status processing error: ${err}`);
         }
     }
 }
@@ -440,7 +441,7 @@ async function status_proxy() {
 
 // run webserver and data buffer proxies
 server.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+    debug(`Example app listening at http://localhost:${port}`);
 });
 
 status_proxy();

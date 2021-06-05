@@ -23,6 +23,7 @@ The RocketLogger web interface features are summarized as follows:
 * `socket.io` - websockets server side library
 * `zeromq` - ZeroMQ message queueing library
 * `gulp` - file system listing
+* `debug` - debugging output utility
 
 
 ### Browser client dependencies
