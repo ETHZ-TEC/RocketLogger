@@ -28,6 +28,7 @@ sfdisk ${SDCARD_DEV} <<-__EOF__
 ,,L,
 __EOF__
 PARTITION=$?
+sync ${SDCARD_DEV}
 
 # verify SD card partitioning was successful
 if [ $PARTITION -ne 0 ]; then
@@ -39,7 +40,7 @@ fi
 echo "> Format new SD card partition"
 if [ -b ${SDCARD_DEV}1 ]; then
   SDCARD_PART=${SDCARD_DEV}1
-elif [ -b ${SDCARD_DEV}p1]; then
+elif [ -b ${SDCARD_DEV}p1 ]; then
   SDCARD_PART=${SDCARD_DEV}p1
 else
   echo "> Unable to determine SD card partition block device! MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
@@ -48,6 +49,7 @@ fi
 dd if=/dev/zero of=${SDCARD_PART} bs=1M count=1 conv=fsync  # erase potentially existing partion data
 mkfs.ext4 -L rocketlogger ${SDCARD_PART}
 FORMAT=$?
+sync ${SDCARD_PART}
 
 # verify SD card formatting was successful
 if [ $FORMAT -ne 0 ]; then
@@ -76,14 +78,14 @@ chmod --recursive 775 ${MOUNT_POINT}/rocketlogger
 
 # generate folder structures and set permissions
 echo "> Sync file system and unmount"
-sync
+sync ${SDCARD_PART}
 umount ${MOUNT_POINT}
 rmdir ${MOUNT_POINT}
 
 
 # hint on the next setup step
 echo ">> Preparation of SD card for RocketLogger data storage completed. To continue:"
-echo "   - copy existing calibration file to `rocketlogger/config` on the SD card,"
-echo "   - power down the RocketLogger device and insert SD card,"
-echo "   - restart the RocketLogger and start your measurements."
+echo "   * copy existing calibration file to \`rocketlogger/config\` on the SD card,"
+echo "   * power down the RocketLogger device and insert the SD card,"
+echo "   * start the RocketLogger and start your measurements."
 exit 0

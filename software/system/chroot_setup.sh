@@ -32,6 +32,7 @@ dd if=/dev/zero of=${IMAGE} bs=1M count=900 oflag=append conv=notrunc status=pro
 sfdisk ${IMAGE} <<-__EOF__
 4M,,L,*
 __EOF__
+sync ${IMAGE}
 
 # mount partition and grow filesystem to partition size
 DISK=`losetup --verbose --offset=$((512*8192)) --find --show ${IMAGE}`
@@ -47,6 +48,7 @@ fi
 
 e2fsck -f ${DISK}
 resize2fs ${DISK}
+sync ${DISK}
 losetup --detach ${DISK}
 
 
@@ -139,7 +141,7 @@ rm --force --recursive ${ROOTFS}/root/*/ ${ROOTFS}/root/.*/
 
 ## unmount filesystem
 echo "> Sync and unmount filesystem"
-sync
+sync ${ROOTFS}
 
 # unmount and cleanup mapped resolve.conf
 umount ${ROOTFS}/run/connman/resolv.conf

@@ -57,6 +57,7 @@ if [[ ${IMAGE_FILE} =~ ^.*.xz$ ]]; then
 else
   dd if=${IMAGE_FILE} of=${SDCARD_DEV} bs=4M conv=fsync status=progress
 fi
+sync ${SDCARD_DEV}
 echo "> Flashing SD card complete."
 
 # hint on the next setup step
