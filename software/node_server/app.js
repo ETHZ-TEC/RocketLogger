@@ -55,6 +55,7 @@ const asset_version = {
 }
 
 // configuration
+const hostname = 'localhost';
 const port = 5000;
 const version = '1.99';
 const path_static = path.join(__dirname, 'static');
@@ -295,6 +296,11 @@ io.on('connection', (socket) => {
         // poll status and emit on status channel
         if (req.cmd === 'status') {
             const res = rl.status();
+            try {
+                res.status.sdcard_available = !util.is_same_filesystem(rl.path_data, __dirname);
+            } catch(err) {
+                res.err.push(`Error checking for mounted SD card: ${err}`);
+            }
             res.req = req;
             socket.emit('status', res);
         } else {
@@ -440,8 +446,8 @@ async function status_proxy() {
 
 
 // run webserver and data buffer proxies
-server.listen(port, () => {
-    debug(`Example app listening at http://localhost:${port}`);
+server.listen(port, hostname, () => {
+    debug(`Example app listening at http://${hostname}:${port}`);
 });
 
 status_proxy();

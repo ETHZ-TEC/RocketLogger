@@ -30,6 +30,7 @@
 
 "use strict";
 
+const fs = require('fs');
 const { spawnSync } = require('child_process');
 
 module.exports = {
@@ -55,6 +56,13 @@ module.exports = {
             default:
                 return bytes.toPrecision(5) + " B";
         }
+    },
+
+    /// check if two files or paths are located on the same filesystem
+    is_same_filesystem(first, second) {
+        const stat_first = fs.statSync(first);
+        const stat_second = fs.statSync(second);
+        return stat_first.dev === stat_second.dev;
     },
 
     /// helper function to reboot the system

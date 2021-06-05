@@ -188,6 +188,9 @@ function update_status() {
             $('#warn_storage_low').show();
         }
     }
+    if (status.hasOwnProperty('sdcard_available') && !status.sdcard_available) {
+        $('#warn_sdcard_unavailable').show();
+    }
 
     // remaining sampling time
     if (status.sampling && status.disk_use_rate > 0) {

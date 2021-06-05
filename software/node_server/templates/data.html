@@ -41,6 +41,9 @@
         {% endfor %}
       </tbody>
     </table>
+    {% if files|length == 0 %}
+    <p><em>No measurement files found.</em></p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
