@@ -1,101 +1,128 @@
-RocketLogger
-============
-<https://rocketlogger.ethz.ch>
+# RocketLogger
+
+The RocketLogger is a mixed-signal data logger designed for measuring and validating energy
+harvesting based devices. It features the portability required for measurements in the field,
+accurate voltage and current measurements with a very high dynamic range, and simultaneously
+sampled digital inputs to track the state of the measured device.
 
 
-The RocketLogger is a mixed-signal data logger designed for measuring and validating energy harvesting based devices.
-It features the portability required for measurements in the field,
-accurate voltage and current measurements with a very high dynamic range,
-and simultaneously sampled digital inputs to track the state of the measured device.
+## Getting Started
+
+To install a new RocketLogger system or the Python Support Library for measurement post processing
+refer to the [Installation](#installation) section. The latest RocketLogger releases are available
+from <https://github.com/ETHZ-TEC/RocketLogger/releases>.
+
+If you want to learn more about the details of the RocketLogger head to the documentation linked
+in the [Documentation](#documentation) section.
 
 
-Project Organization
---------------------
+## Project Structure
 
-The official RocketLogger website can be found at <https://rocketlogger.ethz.ch>
-
-The mailing list for the RocketLogger project is *rocketlogger* (at) *list.ee.ethz.ch*. Subscribe for project updates at <https://lists.ee.ethz.ch/wws/info/rocketlogger>.
-
-The documentation of all project components is found in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/home).
-
-
-Project Structure
------------------
-
-The project consists of three parts:
-* The [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as extension board ("Cape") for the [BeagleBone Green](https://beagleboard.org/green/),
-* The [RocketLogger Software Stack](software) that provides all management functionality for data logging, including low level C API, an command line utility, and an easy-to-use web interface.
-* The [RocketLogger Scripts](script) that provides scripts to import and process RocketLogger Data (RLD) files and to generate the calibration data files.
-
-The detailed documentation of the project and its individual parts can be found in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).
+The RocketLogger project consists of three parts:
+* [RocketLogger Cape](hardware), an analog current and voltage measurement front-end designed as
+  extension board, a so-called *Cape*, for the [BeagleBone Green](https://beagleboard.org/green/),
+* [RocketLogger Software Stack](software) that provides all management functionality for data
+  logging, including low level C API, an command line utility, and an easy-to-use web interface,
+* [RocketLogger Scripts](script) that provides scripts to import and process RocketLogger Data
+  (RLD) files and to generate the calibration data files.
 
 
-Prerequisites
--------------
+## Installation
 
-#### Hardware Design
- * Altium Designer installation (version 16.1 was used for the PCB design)
+The [RocketLogger releases](https://github.com/ETHZ-TEC/RocketLogger/releases) are accompanies by
+a pre-built RocketLogger flasher image that allows installation of ready to use software on a
+RocketLogger device:
 
-More details regarding the hardware design can be found on the [RocketLogger Hardware Design Data](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/design-data) wiki page.
+1. flash the RocketLogger flasher image `rocketlogger-flasher-vX.X.X.img.xz` onto an SD card
+   using the `software/system/flash_image.sh` script
+2. insert the SD card into the RocketLogger and wait for the installation to complete and the
+   RocketLogger to power off
+3. Remove the SD card, power on the RocketLogger again, and start your first measurements
 
+For more details on the installation process and alterative deployment options, refer to the
+wiki page [RocketLogger Installation](https://github.com/ETHZ-TEC/RocketLogger/wiki/software)
 
-#### Software Installation
-
- * To compile the RocketLogger software the following system components are required (install using `apt-get`):
-```
-git make gcc g++ ti-pru-cgt-installer device-tree-compiler am335x-pru-package ntp libncurses5-dev libi2c-dev
-```
- * Additionally the linux header for the Linux kernel verison used on the BeagleBone should be installed.
-   they can be installed using the follwing command on the target system:
-```
-apt-get install linux-headers-$(uname -r)
-```
- * The low level functions to communicate with the Cape make use of the Programmable Real-Time Unit (PRU).
-   A PRU compiler and application loader library are required to compile and deploy this functionality.
-   The BeagleBone package repositories have installer script to install these tools using the package manager.
-   Otherwise the compiler can be downloaded at [PRU Code Generation Tools](http://software-dl.ti.com/codegen/non-esd/downloads/download.htm#PRU)
-   or installed as add-on for the [Code Composer Studio](http://processors.wiki.ti.com/index.php/Download_CCS).
-   The instructions how to install the PRUSSDRV User Space Library are found at [PRU Linux Application Loader](http://processors.wiki.ti.com/index.php/PRU_Linux_Application_Loader).
- * For using the remote web interface these additional system components will be needed:
-```
-apache2 lighttpd php5-cgi unzip
+The Python support library is available from the [Python Package Index](https://pypi.org) and 
+is installed using pip:
+```bash
+python -m pip install rocketlogger
 ```
 
-If you follow the installation guide on the [RocketLogger Software Installation](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/software) wiki page, all necessary dependencies are installed during that process.
+For the manual installation of individual software components, see the respective README files:
+* [RocketLogger software](software/rocketlogger/README.md#installation)
+* [Node.js web interface](software/node_server/README.md#installation)
+* [Base operating system](software/system/README.md#installation)
+* [Python support library](script/python/README.md#installation)
 
 
-License
--------
+## Documentation
 
-The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause). For more details please refer the the [LICENSE](LICENSE) file.
-
-
-Contributors
-------------
-
-The RocketLogger was developed at the [Computer Engineering Group](http://www.tec.ethz.ch/) at [ETH Zurich](https://www.ethz.ch/en.html).
-The following people contributed to the design and implementation of this project:
-
-#### Core Team (alphabetical order)
-
-* [Andres Gomez](mailto:andres.gomez@tik.ee.ethz.ch)
-* Matthias Leubin
-* [Roman Lim](http://www.tik.ee.ethz.ch/~rlim/)
-* Stefan Lippuner
-* [Lukas Sigrist](mailto:lukas.sigrist@tik.ee.ethz.ch)
-* [Lothar Thiele](http://www.tik.ee.ethz.ch/~thiele/)
+The documentation for the RocketLogger is found in the wiki pages at
+<https://github.com/ETHZ-TEC/RocketLogger/wiki/>.
 
 
-#### Case Design
+## Versioning
 
-* Dominic Bernath
-
-
-#### RocketLogger Logo
-
-* Ivanna Gomez
+The RocketLogger project uses semantic versioning for its releases, see also <https://semver.org>.
 
 
-#### Contact
+## Dependencies
 
-Lukas Sigrist *lukas.sigrist* (at) *tik.ee.ethz.ch*
+### Hardware Design
+
+The hardware was designed using Altium Designer (version 16.1 was used for the PCB design).
+
+More details regarding the hardware design can be found in the wiki at
+[RocketLogger Hardware Design Data](https://github.com/ETHZ-TEC/RocketLogger/wiki/design-data).
+
+
+### Software Stack
+
+The RocketLogger software is based on the [Debian](https://www.debian.org) operating system for
+the BeagleBone platform provided by [BeagleBoard.org](https://beagleboard.org).
+
+To compile the RocketLogger software the following system components are required (to be installed
+using `apt-get`):
+
+```bash
+curl device-tree-compiler gcc g++ git make meson/buster-backports ninja-build/buster-backports ntp pkg-config ti-pru-cgt-installer libgpiod-dev libi2c-dev libncurses5-dev libzmq3-dev
+```
+with recent meson and ninja release from the Debian *buster-backports* repository.
+In addition the software relies on the following two software repositories for Linux device tree
+headers and PRU user space driver:
+* <https://github.com/beagleboard/bb.org-overlays.git>
+* <https://github.com/beagleboard/am335x_pru_package.git>
+
+To deploy the optional Node.js web interface for remote control, additionally relies on the
+following system packages:
+
+```bash
+g++ make nginx nodejs
+```
+with the Node.js LTS version 14 from the [NodeSource Node.js](https://github.com/nodesource/distributions#readme)
+repository.
+
+The cross compilation and operating system patching scripts in addition required a Docker
+installation, more specifically [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/)
+and privileged permissions for system patching.
+
+
+## Project Contributors
+
+The following list of people contributed in the development of the RocketLogger project:
+Andres Gomez,
+Dominic Bernath,
+Lothar Thiele,
+Lukas Sigrist,
+Matthias Leubin,
+Roman Lim,
+Stefan Lippuner.
+
+RocketLogger logo design by: Ivanna Gomez.
+
+The RocketLogger project is currently maintained by: Lukas Sigrist.
+
+## License
+
+The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause).
+For more details refer to the [LICENSE](LICENSE) file.
