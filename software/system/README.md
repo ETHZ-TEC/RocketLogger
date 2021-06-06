@@ -1,5 +1,11 @@
 # RocketLogger Base System Setup
 
+The RocketLogger system relies on Debian as base operating system, with dedicated system
+configuration and package installation. This software component provides the necessary
+scripts to setup and configure the operating system.
+
+
+## Installation
 There are two alternative ways to setup the RocketLogger system:
 1. remotely configuring the booted live system and install the software after a reboot (legacy
    installation to deploy system, requiring individual deployment)
@@ -11,7 +17,7 @@ storage. This provides more storage for data and prevents the system from gettin
 due to running out of system disk space.
 
 
-## Remote Setup
+### Remote Setup
 
 1. download the image using the `get_image.sh` script
 2. insert the SD card into your computer and flash the downloaded image to it using
@@ -29,7 +35,7 @@ due to running out of system disk space.
 8. power up the RocketLogger and start your measurements.
 
 
-## Patch BeagleBone System Image
+### Patch BeagleBone System Image
 
 1. (skip this step when using a prebuilt RocketLogger image) use the `patch_image.sh` script from 
    the parent directory to download and patch the BeagleBone flasher image (requires Docker Buildx)
@@ -45,7 +51,7 @@ due to running out of system disk space.
 8. power up the RocketLogger and start your measurements.
 
 
-## Set up External SD Card for Data and Configuration Storage
+### Set up External SD Card for Data and Configuration Storage
 
 1. (re-)insert the SD card into your computer and prepare the RocketLogger SD card using
    `prepare_sdcard.sh <disk-device>`, where `<disk-device>` is the SD card device, typically
@@ -57,7 +63,11 @@ due to running out of system disk space.
 
 ## Dependencies
 
-The system installation scripts rely on Linux system utility binaries and partitioning and
+The operation system is based on the minimal console images for the BeagleBone platform, provided
+by [BeagleBoard.org](https://beagleboard.org). The latest official BeagleBone images are available
+at <https://beagleboard.org/latest-images>.
+
+The system installation scripts itself rely on Linux system utility binaries and partitioning and
 filesystem tools that are typically included with any basic Linux based operating system.
 Tools that might not come preinstalled with your favorite Linux operating system installation are:
 `curl`, `dd`, `git`, `xz`

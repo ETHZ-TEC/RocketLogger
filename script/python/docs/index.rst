@@ -38,7 +38,7 @@ Support for RocketLogger Device Calibration by the
 Installation
 ------------
 
-Install the RocketLogger Python Support from the `Python Packet Index <https://pypi.org/>`_ using:
+Install the RocketLogger Python Support from the `Python Package Index <https://pypi.org/>`_ using:
 
     ``pip install rocketlogger``
 

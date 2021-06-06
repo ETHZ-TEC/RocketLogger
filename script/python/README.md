@@ -13,7 +13,18 @@ support to generate calibration data from measurements.
 * pandas: for pandas DataFrame export
 
 
-## Data Import
+## Installation
+
+The package is available from the [Python Package Index](https://pypi.org)
+Install the package using pip:
+```bash
+python -m pip install rocketlogger
+```
+
+
+## Getting Started
+
+### RocketLogger Data Processing
 
 To import a RocketLogger data (.rld) file, use the `RocketLoggerData` class:
 ```py
@@ -32,35 +43,27 @@ To get the loaded channel data (by name) and corresponding timestamps:
 >>> t = rld.get_time()
 ```
 
-A list of the channels existing in the loaded file is provided by:
-```py
->>> ch = rld.get_channel_names()
-```
-
-To plot a preview of the data (requires Matplotlib):
-```py
->>> p = rld.plot()
-```
-
-You can also plot the (merged) file data a single command, e.g. for preview:
-```py
->>> p = RocketLoggerData('data.rld').merge_channels().plot()
-```
-
-For analysis using pandas, the use the following shortcut to get a time-
-indexed dataframe (requires pandas):
-```py
->>> df = rld.get_dataframe()
-```
-
 For more details about the individual functions and their parameters, refer to
 the documentation available at <https://rocketlogger.ethz.ch/python/>.
 
 
-## RocketLogger Device Calibration
+### RocketLogger Device Calibration
 
-The `RocketLoggerCalibration` class from the `calibration` module provides the support
-necessary for generating RocketLogger device calibration. See the calibration section
-in the package documentation <https://rocketlogger.ethz.ch/python/> and the
-RocketLogger wiki at <https://rocketlogger.ethz.ch/wiki/> for more details on the
-calibration procedure.
+The `RocketLoggerCalibration` class from the `rocketlogger.calibration` module
+provides the support necessary for generating RocketLogger device calibration.
+See the calibration section in the package documentation
+<https://rocketlogger.ethz.ch/python/> and the RocketLogger wiki at
+<https://rocketlogger.ethz.ch/wiki/> for more details on the calibration
+procedure.
+
+
+## Documentation
+
+The documentation for the RocketLogger is found in the wiki pages at
+<https://rocketlogger.ethz.ch/wiki/>.
+
+
+## License
+
+The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause).
+For more details refer the the [LICENSE](LICENSE) file.

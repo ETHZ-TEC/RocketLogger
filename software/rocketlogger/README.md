@@ -37,6 +37,24 @@ as well as as default calibration parameters. These configuration files are depl
 the other software components.
 
 
+## Installation
+
+To build and install the RocketLogger software components and its configuration use:
+
+```bash
+meson builddir 
+cd builddir 
+ninja 
+sudo meson install --no-rebuild
+```
+
+
+## Documentation
+
+The documentation for the RocketLogger is found in the wiki pages at
+<https://rocketlogger.ethz.ch/wiki/>.
+
+
 ## Dependencies
 
 ### Build Tools
@@ -44,7 +62,7 @@ the other software components.
 For building the software the following build tools are required (provided by the listed Debian
 packages):
 
-* Linux device tree compiler- `device-tree-compiler` package
+* Linux device tree compiler - `device-tree-compiler` package
 * GNU C compiler - `gcc` package
 * Meson build system (version >= 0.55) - `meson/buster-backports` package
 * ninja build system (version >= 0.10) - `ninja-build/buster-backports` package
@@ -66,12 +84,11 @@ found at [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/) an
 The following libraries (provided by the corresponding Debian packages) are required to build
 the software:
 
-* `libgpiod` - `libgpiod-dev` package
-* `libi2c` - `libi2c-dev` package
-* `libncurses` - `libncurses5-dev` package
-* `libzeromq` - `libzmq3-dev` package
-* Linux headers - `linux-headers-$(uname -r)` package
-* Linux PRU user space driver `prussdrv` - included as Meson subproject from source repository
+* *libgpiod* - `libgpiod-dev` package
+* *libi2c* - `libi2c-dev` package
+* *libncurses* - `libncurses5-dev` package
+* *libzeromq* - `libzmq3-dev` package
+* Linux PRU user space driver *prussdrv* - included as Meson subproject from source repository
   <https://github.com/beagleboard/am335x_pru_package.git>
 * BeagleBone device tree overlay headers - included as Meson subproject from source repository
   <https://github.com/beagleboard/bb.org-overlays.git>
