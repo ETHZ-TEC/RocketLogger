@@ -43,9 +43,6 @@
 /// File to read MAC address
 #define MAC_ADDRESS_FILE "/sys/class/net/eth0/address"
 
-/// File system root path
-#define FS_ROOT_PATH "/"
-
 /**
  * Timestamp data structure definition (UNIX time, UTC)
  */

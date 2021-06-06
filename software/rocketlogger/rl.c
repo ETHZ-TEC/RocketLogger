@@ -677,8 +677,8 @@ int rl_status_write(rl_status_t *const status) {
             disk_free = fs_space_free(status->config->file_name);
             disk_total = fs_space_total(status->config->file_name);
         } else {
-            disk_free = fs_space_free(FS_ROOT_PATH);
-            disk_total = fs_space_total(FS_ROOT_PATH);
+            disk_free = fs_space_free(RL_CONFIG_FILE_DIR_DEFAULT);
+            disk_total = fs_space_total(RL_CONFIG_FILE_DIR_DEFAULT);
         }
 
         status->disk_free = disk_free;

@@ -85,8 +85,8 @@ int rl_get_status(rl_status_t *const status) {
     }
 
     // get file system state
-    int64_t disk_free = fs_space_free(FS_ROOT_PATH);
-    int64_t disk_total = fs_space_total(FS_ROOT_PATH);
+    int64_t disk_free = fs_space_free(RL_CONFIG_FILE_DIR_DEFAULT);
+    int64_t disk_total = fs_space_total(RL_CONFIG_FILE_DIR_DEFAULT);
 
     status->disk_free = disk_free;
     if (disk_total > 0) {

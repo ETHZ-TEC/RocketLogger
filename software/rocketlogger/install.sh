@@ -4,6 +4,10 @@
 # source dir
 SRC=..
 
+# user folder paths
+USER_DATA_DIR="/home/rocketlogger/data/"
+USER_CONFIG_DIR="/home/rocketlogger/.config/rocketlogger/"
+
 # systemd service
 SERVICE_NAME="rocketlogger.service"
 
@@ -11,6 +15,10 @@ SERVICE_NAME="rocketlogger.service"
 UENV_PATCH="${SRC}/config/uEnv.txt.patch"
 UENV_TARGET="/boot/uEnv.txt"
 
+
+## create user folders
+mkdir --parents USER_DATA_DIR
+mkdir --parents USER_CONFIG_DIR
 
 ## enable and start systemd service
 systemctl enable "${SERVICE_NAME}"
