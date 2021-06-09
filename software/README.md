@@ -5,4 +5,4 @@ The RocketLogger software is grouped into the following components:
 * [Node.js server](node_server) - Node.js base web interface server (optional component)
 * [Debian base system](system): operating system configuration with setup and image patching scripts
 
-See also the documentation in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).
+See also the documentation in the [RocketLogger Wiki](https://github.com/ETHZ-TEC/RocketLogger/wiki).

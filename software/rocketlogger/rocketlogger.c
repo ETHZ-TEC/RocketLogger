@@ -67,12 +67,12 @@
 /**
  * Program version output for GNU standard command line format compliance.
  */
-const char *argp_program_version = "RocketLogger Characterization CLI";
+const char *argp_program_version = "RocketLogger Command Line Interface";
 
 /**
  * Bug report address output for GNU standard command line format compliance.
  */
-const char *argp_program_bug_address = "<https://rocketlogger.ethz.ch/>";
+const char *argp_program_bug_address = "<https://github.com/ETHZ-TEC/RocketLogger/issues>";
 
 /**
  * The generic program description, printed as head for the help command

@@ -41,12 +41,11 @@ setup(
     name="rocketlogger",
     version="1.99a7",
     author="ETH Zurich, Computer Engineering Group",
-    author_email="lukas.sigrist@tik.ee.ethz.ch",
     description="RocketLogger Python Support",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="BSD 3-Clause",
-    url="https://rocketlogger.ethz.ch/",
+    url="https://github.com/ETHZ-TEC/RocketLogger#readme",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Information Technology",
@@ -74,8 +73,8 @@ setup(
         "test": ["coverage", "nose", "tox"],
     },
     project_urls={
-        "Documentation": "https://rocketlogger.ethz.ch/python/",
-        "Source": "https://gitlab.ethz.ch/tec/public/rocketlogger/",
-        "Tracker": "https://gitlab.ethz.ch/tec/public/rocketlogger/issues",
+        "Documentation": "https://github.com/ETHZ-TEC/RocketLogger/wiki",
+        "Source": "https://github.com/ETHZ-TEC/RocketLogger",
+        "Tracker": "https://github.com/ETHZ-TEC/RocketLogger/issues",
     },
 )

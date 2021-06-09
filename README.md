@@ -58,7 +58,7 @@ For the manual installation of individual software components, see the respectiv
 ## Documentation
 
 The documentation for the RocketLogger is found in the wiki pages at
-<https://github.com/ETHZ-TEC/RocketLogger/wiki/>.
+<https://github.com/ETHZ-TEC/RocketLogger/wiki>.
 
 
 ## Versioning

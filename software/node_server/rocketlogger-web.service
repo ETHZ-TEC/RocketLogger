@@ -1,7 +1,7 @@
 # RocketLogger web interface service
 [Unit]
 Description=RocketLogger web interface
-Documentation=https://rocketlogger.ethz.ch/
+Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
 
 After=rocketlogger.service
 Requires=rocketlogger.service

@@ -53,9 +53,9 @@ For more details see the test documentation of :doc:`rocketlogger.tests`.
 Contribute
 ----------
 
-- Source code:   https://gitlab.ethz.ch/tec/public/rocketlogger/
-- Issue tracker: https://gitlab.ethz.ch/tec/public/rocketlogger/issues/
-- Documentation: https://rocketlogger.ethz.ch/python/
+- Source code:   https://github.com/ETHZ-TEC/RocketLogger
+- Issue tracker: https://github.com/ETHZ-TEC/RocketLogger/issues
+- Documentation: https://github.com/ETHZ-TEC/RocketLogger/wiki
 
 
 License

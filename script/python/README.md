@@ -44,23 +44,22 @@ To get the loaded channel data (by name) and corresponding timestamps:
 ```
 
 For more details about the individual functions and their parameters, refer to
-the documentation available at <https://rocketlogger.ethz.ch/python/>.
+the documentation available at <https://github.com/ETHZ-TEC/RocketLogger/wiki>.
 
 
 ### RocketLogger Device Calibration
 
 The `RocketLoggerCalibration` class from the `rocketlogger.calibration` module
 provides the support necessary for generating RocketLogger device calibration.
-See the calibration section in the package documentation
-<https://rocketlogger.ethz.ch/python/> and the RocketLogger wiki at
-<https://rocketlogger.ethz.ch/wiki/> for more details on the calibration
+See the calibration section in the RocketLogger wiki at
+<https://github.com/ETHZ-TEC/RocketLogger/wiki> for more details on the calibration
 procedure.
 
 
 ## Documentation
 
 The documentation for the RocketLogger is found in the wiki pages at
-<https://rocketlogger.ethz.ch/wiki/>.
+<https://github.com/ETHZ-TEC/RocketLogger/wiki>.
 
 
 ## License

@@ -52,7 +52,7 @@ sudo meson install --no-rebuild
 ## Documentation
 
 The documentation for the RocketLogger is found in the wiki pages at
-<https://rocketlogger.ethz.ch/wiki/>.
+<https://github.com/ETHZ-TEC/RocketLogger/wiki>.
 
 
 ## Dependencies
