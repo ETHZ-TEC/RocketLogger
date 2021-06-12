@@ -1,5 +1,5 @@
 project('rocketlogger', 'c',
-    version : '1.99',
+    version : '2.0.0-beta1',
     default_options : ['buildtype=debugoptimized',
         'c_std=c11', 'cpp_std=c++11', 'warning_level=3',
         'prefix=/usr', 'install_umask=0022'],
