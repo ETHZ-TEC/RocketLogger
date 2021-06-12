@@ -58,9 +58,7 @@
       {% for msg in err %}
       <div class="alert alert-danger alert-dismissible" role="alert">
         <strong>Error:</strong> {{ msg }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     {% endif %}
@@ -68,8 +66,7 @@
       {% for msg in warn %}
       <div class="alert alert-warning alert-dismissible" role="alert">
         <strong>Warning:</strong> {{ msg }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     {% endif %}
@@ -77,8 +74,7 @@
       {% for notification_message in notification_messages %}
       <div class="alert alert-info alert-dismissible" role="alert">
         {{ notification_message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     {% endif %}

@@ -45,7 +45,8 @@ const debug = require('debug')('rocketlogger');
 const rl = require('./rl.js');
 const util = require('./util.js');
 
-// get version if installed client-side assets
+// get version of package and client-side assets
+const version = require(path.join(__dirname, 'package.json')).version;
 const asset_version = {
     bootstrap: require('bootstrap/package.json').version,
     jquery: require('jquery/package.json').version,
@@ -57,7 +58,6 @@ const asset_version = {
 // configuration
 const hostname = 'localhost';
 const port = 5000;
-const version = '1.99';
 const path_static = path.join(__dirname, 'static');
 const path_templates = path.join(__dirname, 'templates');
 
@@ -103,7 +103,7 @@ function render_page(req, res, template_name, context = null) {
     if (rl_version.version) {
         if (rl_version.version != version) {
             context.warn.push(`Potentially incompatible binary and web interface ` +
-                `versions (interface: ${version}, binary: ${context.version})`);
+                `versions (interface: ${version}, binary: ${rl_version.version})`);
         }
         context.version_string = rl_version.version_string;
         context.version = rl_version.version;
@@ -447,7 +447,7 @@ async function status_proxy() {
 
 // run webserver and data buffer proxies
 server.listen(port, hostname, () => {
-    debug(`Example app listening at http://${hostname}:${port}`);
+    debug(`RocketLogger web interface version ${version} listening at http://${hostname}:${port}`);
 });
 
 status_proxy();

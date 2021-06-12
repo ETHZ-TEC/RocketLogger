@@ -24,16 +24,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bootstrap": "5.0.x",
-    "debug": "4.3.x",
-    "express": "4.17.x",
-    "gulp": "4.0.x",
-    "jquery": "^3.6.0",
-    "nunjucks": "3.2.x",
-    "plotly.js": "1.58.x",
-    "socket.io": "4.0.x",
-    "socket.io-client": "4.0.x",
-    "timesync": "1.0.x",
+    "bootstrap": "^5.0.1",
+    "debug": "^4.3.1",
+    "express": "^4.17.1",
+    "glob": "^7.1.7",
+    "jquery": "~3.6.x",
+    "nunjucks": "^3.2.3",
+    "plotly.js": "^2.0.0",
+    "socket.io": "^4.1.2",
+    "socket.io-client": "^4.1.2",
+    "timesync": "^1.0.8",
     "zeromq": "6.0.0-beta.6"
   },
   "repository": {

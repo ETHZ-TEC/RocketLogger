@@ -235,6 +235,7 @@ function plot_get_base_layout() {
     /// default plotly layout configuration
     const layout = {
         font: { size: 16, },
+        hovermode: 'x',
         showlegend: true,
         legend: {
             x: 0.0,
