@@ -84,7 +84,7 @@ mount --bind /etc/resolv.conf ${ROOTFS}/run/connman/resolv.conf
 # clone RocketLogger repository
 echo "> Clone RocketLogger repository"
 git clone --branch ${REPO_BRANCH} ${REPO_PATH} ${ROOTFS}/root/rocketlogger
-rm --force --recursive ${ROOTFS}/root/rocketlogger/.git ${ROOTFS}/root/rocketlogger/hardware ${ROOTFS}/root/rocketlogger/script
+rm --force --recursive ${ROOTFS}/root/rocketlogger/hardware ${ROOTFS}/root/rocketlogger/script
 
 
 ## setup operating system
