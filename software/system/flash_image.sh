@@ -2,7 +2,6 @@
 # Flash a BeagleBone image to an SD card
 # Usage: ./flash_image.sh <image.img[.xz]> <sdcard-dev>
 #
-# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 

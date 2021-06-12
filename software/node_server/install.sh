@@ -1,7 +1,6 @@
 #!/bin/bash
 # RocketLogger Node.js web interface install script
 #
-# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 

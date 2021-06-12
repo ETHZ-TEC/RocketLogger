@@ -2,7 +2,6 @@
 # Basic operating system initalization of a new BeagleBone Black/Green/Green Wireless
 # Usage: setup.sh [<hostname>]
 #
-# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 # 

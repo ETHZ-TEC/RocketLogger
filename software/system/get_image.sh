@@ -1,7 +1,6 @@
 #!/bin/bash
 # Download the beagle bone image from the beaglebone archive
 #
-# Copyright (c) 2021, Lukas Sigrist <lsigrist@mailbox.org>
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
 #
