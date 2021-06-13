@@ -99,8 +99,19 @@ function rocketlogger_init_base() {
     rl._data.socket.on('status', (res) => {
         // console.log(`rl status: ${JSON.stringify(res)}`);
         if (res.status) {
-            if (!rl._data.status.sampling && res.status.sampling) {
+            // reset plots on sampling start
+            if (rl._data.status.sampling === false && res.status.sampling === true) {
                 rl._data.reset = true;
+            }
+            // override default config if not set
+            if (rl._data.default_config === null && res.status.config) {
+                rl._data.default_config = res.status.config;
+                try {
+                    config_reset_default();
+                }
+                catch (err) {
+                    /* silently ignore if `rl.control.js` not loaded */
+                }
             }
             rl._data.status = res.status;
             update_status();

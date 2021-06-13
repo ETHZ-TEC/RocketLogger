@@ -109,6 +109,11 @@ function rocketlogger_init_control() {
         } else if (cmd === 'stop') {
             // no actions
         } else if (cmd === 'config') {
+            if (rl._data.status.sampling === true) {
+                console.log('skip processing default config, measurement is currently active');
+                return;
+            }
+
             const init = (rl._data.default_config === null);
             rl._data.default_config = res.config;
             config_reset_default();
@@ -207,6 +212,9 @@ function config_change() {
     $('#web_group').prop('disabled', !config.web_enable);
     $('#collapsePreview').collapse(config.web_enable ? 'show' : 'hide');
     config.ambient_enable ? $('#plot_group_ambient').show() : $('#plot_group_ambient').hide();
+    config.digital_enable ? $('#plot_group_digital').show() : $('#plot_group_digital').hide();
+    config.channel_enable.some(v => v[0] === 'V') ? $('#plot_group_voltage').show() : $('#plot_group_voltage').hide();
+    config.channel_enable.some(v => v[0] === 'I') ? $('#plot_group_current').show() : $('#plot_group_current').hide();
 
     // estimate remaining time from configuration
     let use_rate_estimated = (config.channel_enable.length +
