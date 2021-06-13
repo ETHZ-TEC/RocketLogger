@@ -18,7 +18,7 @@
             "localRoot": "${workspaceFolder}",
             "name": "RocketLogger",
             "port": 9229,
-            "remoteRoot": "/home/rocketlogger/node_server",
+            "remoteRoot": "/home/rocketlogger/web",
             "request": "attach",
             "skipFiles": [
                 "<node_internals>/**"
