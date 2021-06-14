@@ -5,6 +5,11 @@ WORKDIR /opt
 # set up stretch-backports for meson and ninja
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list.d/stretch-backports.list
 
+# Add BeagleBone stretch repo for updated device-tree-compiler
+RUN apt-get update && apt-get install --assume-yes gnupg
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key D284E608A4C46402
+RUN echo "deb [arch=armhf] http://repos.rcn-ee.com/debian/ stretch main" >> /etc/apt/sources.list
+
 # Debian package dependencies
 RUN apt-get update && apt-get install --assume-yes  \
     curl                            \

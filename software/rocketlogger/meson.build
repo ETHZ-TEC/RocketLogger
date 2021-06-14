@@ -23,19 +23,9 @@ objcopy_pru = find_program('hexpru')
 
 
 ## library dependencies
-libi2c_dep = dependency('libi2c', required : false)
-if not libi2c_dep.found()
-    libi2c_dep = compiler_cc.find_library('libi2c', required : false)
-    if not libi2c_dep.found()
-        warning('manually adding libi2c linker flag')
-        add_project_link_arguments('-li2c', language : 'c')
-    endif
-endif
-
 common_deps = [
     dependency('ncurses'),
     dependency('libzmq'),
-    libi2c_dep,
     libprussdrv_dep
 ]
 binary_deps = []
