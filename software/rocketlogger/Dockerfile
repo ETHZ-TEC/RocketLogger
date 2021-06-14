@@ -1,9 +1,9 @@
 # RocketLogger image build environment
-FROM arm32v7/debian:buster-slim
+FROM arm32v7/debian:stretch-slim
 WORKDIR /opt
 
-# set up buster-backports for meson and ninja
-RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+# set up stretch-backports for meson and ninja
+RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list.d/stretch-backports.list
 
 # Debian package dependencies
 RUN apt-get update && apt-get install --assume-yes  \
@@ -11,10 +11,9 @@ RUN apt-get update && apt-get install --assume-yes  \
     device-tree-compiler            \
     gcc                             \
     git                             \
-    meson/buster-backports          \
-    ninja-build/buster-backports    \
+    meson/stretch-backports         \
+    ninja-build                     \
     pkg-config                      \
-    libgpiod-dev                    \
     libi2c-dev                      \
     libncurses5-dev                 \
     libzmq3-dev

@@ -30,10 +30,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Debian buster console image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-03-29/buster-console/"
-IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.9-console-armhf-2021-03-29-1gb.img.xz"
-IMAGE_FLASHER_SHA256="839f703c51be1d377c178a1dc5e17d4ed38307a5d7db013b6af852924b9d7725"
+# Debian stretch console image
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-05-28/stretch-console/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-9.13-console-armhf-2021-05-28-1gb.img.xz"
+IMAGE_FLASHER_SHA256="656dc664c12c8bf6793a5f45c59b63cba435b98af8e08c2d7ca71a6891fde25a"
 
 # download image
 curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"

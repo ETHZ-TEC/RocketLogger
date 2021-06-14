@@ -56,8 +56,8 @@ fi
 ## updates and software dependencies
 echo "> Update system and install software dependencies"
 
-# install buster-backports repository for meson and ninja
-echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+# install stretch-backports repository for meson and ninja
+echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list.d/stretch-backports.list
 
 # update package lists
 apt-get update
@@ -70,12 +70,11 @@ apt-get install --assume-yes        \
     g++                             \
     git                             \
     make                            \
-    meson/buster-backports          \
-    ninja-build/buster-backports    \
+    meson/stretch-backports         \
+    ninja-build                     \
     ntp                             \
     pkg-config                      \
     ti-pru-cgt-installer            \
-    libgpiod-dev                    \
     libi2c-dev                      \
     libncurses5-dev                 \
     libzmq3-dev

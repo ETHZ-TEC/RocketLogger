@@ -85,11 +85,12 @@ To compile the RocketLogger software the following system components are require
 using `apt-get`):
 
 ```bash
-curl device-tree-compiler gcc g++ git make meson/buster-backports ninja-build/buster-backports ntp pkg-config ti-pru-cgt-installer libgpiod-dev libi2c-dev libncurses5-dev libzmq3-dev
+curl device-tree-compiler gcc g++ git make meson/stretch-backports ninja-build ntp pkg-config ti-pru-cgt-installer libi2c-dev libncurses5-dev libzmq3-dev
 ```
-with recent meson and ninja release from the Debian *buster-backports* repository.
-In addition the software relies on the following two software repositories for Linux device tree
-headers and PRU user space driver:
+with recent meson release from the Debian *stretch-backports* repository.
+In addition the software relies on the following software repositories for libgpiod, Linux device tree
+headers, and PRU user space driver:
+* <https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git>
 * <https://github.com/beagleboard/bb.org-overlays.git>
 * <https://github.com/beagleboard/am335x_pru_package.git>
 

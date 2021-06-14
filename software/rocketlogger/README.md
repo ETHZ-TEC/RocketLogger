@@ -64,8 +64,8 @@ packages):
 
 * Linux device tree compiler - `device-tree-compiler` package
 * GNU C compiler - `gcc` package
-* Meson build system (version >= 0.55) - `meson/buster-backports` package
-* ninja build system (version >= 0.10) - `ninja-build/buster-backports` package
+* Meson build system (version >= 0.55) - `meson/stretch-backports` package
+* ninja build system (version >= 0.10) - `ninja-build/stretch-backports` package
 * TI PRU code generation tools - `ti-pru-cgt-installer` package
 
 

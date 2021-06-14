@@ -103,7 +103,7 @@ fi
 
 ## install RocketLogger software
 echo "> Chroot to build and install rocketlogger"
-chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/rocketlogger && meson builddir && cd builddir && meson setup --wipe && ninja && sudo meson install --no-rebuild --only-changed"
+chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/rocketlogger && meson builddir && cd builddir && ninja && sudo meson install --no-rebuild --only-changed"
 
 # verify software installation configuration was successful
 INSTALL=$?

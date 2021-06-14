@@ -9,7 +9,7 @@ GIT_REVISION=`git describe --tags --dirty`
 docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
 
 # build minimal armv7 debian image with compiler tools
-docker buildx build --platform linux/arm/v7 --tag rocketlogger_patch .
+docker buildx build --platform linux/arm/v7 --tag rocketlogger_stretch_patch .
 
 # change to system folder to download and decompress base system image
 source ./get_image.sh
@@ -20,7 +20,7 @@ IMAGE=`basename "${IMAGE_FLASHER_FILE}" ".xz"`
 set -o pipefail # report last non-zero exit code of piped commands
 docker run --privileged --platform linux/arm/v7  \
     --mount type=bind,source="$(git rev-parse --show-toplevel)/",target=/home/rocketlogger  \
-    --tty rocketlogger_patch /bin/bash -c "cd /home/rocketlogger/software/system && ./chroot_setup.sh ${IMAGE}"  \
+    --tty rocketlogger_stretch_patch /bin/bash -c "cd /home/rocketlogger/software/system && ./chroot_setup.sh ${IMAGE}"  \
   | tee "$(pwd)/${LOG_FILE}"
 PATCH=$?
 set +o pipefail # revert to default pipe exit code behavior
