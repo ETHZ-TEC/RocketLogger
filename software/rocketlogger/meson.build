@@ -150,7 +150,7 @@ dt_overlay_tmp = custom_target('ROCKETLOGGER.dts.tmp',
     output : 'ROCKETLOGGER.dts.tmp',
     input : dt_overlay_src,
     command : compiler_cc.cmd_array() + ['-E', '-nostdinc', '-undef', '-x', 'assembler-with-cpp', '-D__DTS__',
-        '-I../subprojects/bb-overlays/include',  # @todo: derive include path from subproject
+        '-I../subprojects/bb.org-overlays-28cb22447cefc9824e2c8288e59b36d46e4f5422/include',  # @todo: derive include path from subproject
         '-o', '@OUTPUT@', '@INPUT@'])
 dt_overlay_bin = custom_target('ROCKETLOGGER.dtbo',
     output : 'ROCKETLOGGER.dtbo',

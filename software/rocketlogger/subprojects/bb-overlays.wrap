@@ -1,10 +1,16 @@
-[wrap-git]
-url = https://github.com/beagleboard/bb.org-overlays.git
-revision = 28cb22447cefc9824e2c8288e59b36d46e4f5422
+[wrap-file]
+directory = bb.org-overlays-28cb22447cefc9824e2c8288e59b36d46e4f5422
+source_url = https://github.com/beagleboard/bb.org-overlays/archive/28cb22447cefc9824e2c8288e59b36d46e4f5422.zip
+source_filename = bb.org-overlays-28cb22447cefc9824e2c8288e59b36d46e4f5422.zip
+source_hash = e36dd24235f3db88d0f3eb45ffd1b4312e8f8a6da70fe71caf988c0d5da97d12
+
+#[wrap-git]
+#url = https://github.com/beagleboard/bb.org-overlays.git
+#revision = head
 
 patch_url = /dev/null
-patch_filename = bb-overlays.patch.tar.bz2
-patch_hash = 072ed08c6524e4ae54e2a9893bfeccd8d856dc19a7cebaa33bc1d1b6c2b46320
+patch_filename = bb.org-overlays-28cb22447cefc9824e2c8288e59b36d46e4f5422.patch.tar.bz2
+patch_hash = 6f32b28eb91a6cf575cad1d86ca69e816f27feb0265464201e0d963e2b18be13
 
 [provide]
 bboverlays = bboverlays_dep
