@@ -29,194 +29,194 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
 #include <stdint.h>
-#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <gpiod.h>
-#include <time.h>
+#include <fcntl.h>
+#include <linux/limits.h>
+#include <poll.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "log.h"
 #include "rl.h"
+#include "sysfs.h"
 
 #include "gpio.h"
 
-/// Number of GPIO chips
-#define GPIO_CHIP_COUNT 4
+int gpio_init(int gpio_number, gpio_mode_t mode) {
+    int ret = 0;
+    char sysfs_file[PATH_MAX];
 
-/// Number of GPIO lines per GPIO chip
-#define GPIO_LINES_PER_CHIP 32
-
-/// Minimal time a button needs to be pressed (in microseconds)
-#define GPIO_DEBOUNCE_DELAY_US 50
-
-struct gpiod_chip *gpio_chip[GPIO_CHIP_COUNT] = {NULL};
-
-/**
- * Get GPIO line for GPIO resource number.
- *
- * @param gpio_number GPIO resource number
- * @return GPIO resource on success, NULL on failure with errno set accordingly
- */
-static gpio_t *gpio_get_line(int gpio_number) {
-    int gpio_chip_number = gpio_number / GPIO_LINES_PER_CHIP;
-    int gpio_line_index = gpio_number % GPIO_LINES_PER_CHIP;
-
-    // check gpio chip initialized
-    if (gpio_chip[gpio_chip_number] == NULL) {
-        rl_log(RL_LOG_ERROR, "GPIO chip for GPIO%d uninitialized.\n",
-               gpio_number);
-        return NULL;
+    // export unexported GPIO
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
+    ret = sysfs_export_unexported(sysfs_file, (GPIO_SYSFS_PATH "export"),
+                                  gpio_number);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "could not export GPIO pin #%d", gpio_number);
+        return ret;
     }
 
-    // get and return gpio line
-    return gpiod_chip_get_line(gpio_chip[gpio_chip_number], gpio_line_index);
-}
-
-int gpio_init() {
-    // open gpio chips
-    for (int i = 0; i < GPIO_CHIP_COUNT; i++) {
-        gpio_chip[i] = gpiod_chip_open_by_number(i);
-        if (gpio_chip[i] == NULL) {
-            rl_log(RL_LOG_ERROR,
-                   "Failed opening GPIO chip %d. %d message: %s\n", i, errno,
-                   strerror(errno));
-            return ERROR;
-        }
+    // configure GPIO direction
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/direction"), gpio_number);
+    if (mode == GPIO_MODE_IN) {
+        ret = sysfs_write_string(sysfs_file, "in");
+    } else if (mode == GPIO_MODE_OUT) {
+        ret = sysfs_write_string(sysfs_file, "out");
+    }
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "could not configure mode of GPIO pin #%d",
+               gpio_number);
+        return ret;
     }
 
     return SUCCESS;
 }
 
-void gpio_deinit() {
-    // open gpio chips
-    for (int i = 0; i < GPIO_CHIP_COUNT; i++) {
-        if (gpio_chip[i] == NULL) {
-            continue;
-        }
-        gpiod_chip_close(gpio_chip[i]);
-        gpio_chip[i] = NULL;
+int gpio_deinit(int gpio_number) {
+    // unexport sysfs GPIO module
+    int ret = sysfs_unexport((GPIO_SYSFS_PATH "unexport"), gpio_number);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "could not unexport GPIO pin #%d", gpio_number);
+        return ret;
     }
+
+    return SUCCESS;
 }
 
-gpio_t *gpio_setup(int gpio_number, gpio_mode_t mode, const char *name) {
-    // get gpio line
-    gpio_t *gpio_line = gpio_get_line(gpio_number);
-    if (gpio_line == NULL) {
-        rl_log(RL_LOG_ERROR,
-               "Failed to get GPIO line for GPIO %s. %d message: %s\n", name,
-               errno, strerror(errno));
-        return NULL;
+int gpio_reset(int gpio_number) {
+    char sysfs_file[PATH_MAX];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d"), gpio_number);
+    int ret = sysfs_unexport_exported(sysfs_file, (GPIO_SYSFS_PATH "unexport"),
+                                      gpio_number);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "could not reset GPIO pin #%d", gpio_number);
+        return ret;
     }
 
-    // configure GPIO direction
-    int ret = -1;
-    if (mode == GPIO_MODE_OUT) {
-        ret = gpiod_line_request_output(gpio_line, name, 0);
-    } else if (mode == GPIO_MODE_IN) {
-        ret = gpiod_line_request_input(gpio_line, name);
+    return SUCCESS;
+}
+
+int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode) {
+    // construct sysfs path
+    char sysfs_file[PATH_MAX];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/edge"), gpio_number);
+
+    // set mode
+    int ret;
+    switch (interrupt_mode) {
+    case GPIO_INT_NONE:
+        ret = sysfs_write_string(sysfs_file, "none");
+        break;
+    case GPIO_INT_RISING:
+        ret = sysfs_write_string(sysfs_file, "rising");
+        break;
+    case GPIO_INT_FALLING:
+        ret = sysfs_write_string(sysfs_file, "falling");
+        break;
+    case GPIO_INT_BOTH:
+        ret = sysfs_write_string(sysfs_file, "both");
+        break;
+    default:
+        rl_log(RL_LOG_ERROR, "invalid GPIO interrupt mode");
+        return ERROR;
     }
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR,
-               "Failed to configure for GPIO %s. %d message: %s\n", name, errno,
-               strerror(errno));
-        return NULL;
+        rl_log(RL_LOG_ERROR, "could not configure interrupt of GPIO pin #%d",
+               gpio_number);
+        return ret;
     }
 
-    return gpio_line;
+    return SUCCESS;
 }
 
-void gpio_release(gpio_t *gpio) {
-    gpiod_line_release(gpio);
-    gpio = NULL;
-}
-
-int gpio_set_value(gpio_t *gpio, int value) {
-    // validate output value to set
+int gpio_set_value(int gpio_number, int value) {
+    // check value
     if (value < 0 || value > 1) {
-        errno = EINVAL;
         return ERROR;
     }
 
-    // set gpio value and return result
-    return gpiod_line_set_value(gpio, value);
-}
+    // construct sysfs path
+    char sysfs_file[PATH_MAX];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
 
-int gpio_get_value(gpio_t *gpio) { return gpiod_line_get_value(gpio); }
-
-gpio_t *gpio_setup_interrupt(int gpio_number, gpio_interrupt_t edge,
-                             const char *name) {
-    // get gpio line
-    gpio_t *gpio_line = gpio_get_line(gpio_number);
-    if (gpio_line == NULL) {
-        rl_log(RL_LOG_ERROR,
-               "Failed to get GPIO line for GPIO %s. %d message: %s\n", name,
-               errno, strerror(errno));
-        return NULL;
-    }
-
-    // request interrupt events from gpio line
-    int ret = 0;
-    switch (edge) {
-    case GPIO_INTERRUPT_NONE:
-        break;
-    case GPIO_INTERRUPT_RISING:
-        ret = gpiod_line_request_rising_edge_events(gpio_line, name);
-        break;
-    case GPIO_INTERRUPT_FALLING:
-        ret = gpiod_line_request_falling_edge_events(gpio_line, name);
-        break;
-    case GPIO_INTERRUPT_BOTH:
-        ret = gpiod_line_request_both_edges_events(gpio_line, name);
-        break;
-    default:
-        rl_log(RL_LOG_ERROR, "Invalid GPIO interrupt edge configuration");
-        return NULL;
-    }
+    // set the output value
+    int ret = sysfs_write_int(sysfs_file, value);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR,
-               "Failed to configure interrupt for GPIO %s. %d message: %s\n",
-               name, errno, strerror(errno));
-        return NULL;
-    }
-
-    return gpio_line;
-}
-
-int gpio_wait_interrupt(gpio_t *gpio, const struct timespec *timeout) {
-    int ret = -1;
-    struct gpiod_line_event event;
-
-    // wait for registerd events
-    ret = gpiod_line_event_wait(gpio, timeout);
-    if (ret < 0) {
-        rl_log(RL_LOG_ERROR,
-               "Failed waiting for interrupt of GPIO %s. %d message: %s\n",
-               gpiod_line_consumer(gpio), errno, strerror(errno));
+        rl_log(RL_LOG_ERROR, "could not set value of GPIO pin #%d",
+               gpio_number);
         return ret;
     }
 
-    // small debounce delay
-    usleep(GPIO_DEBOUNCE_DELAY_US);
+    return SUCCESS;
+}
 
-    // get event data
-    ret = gpiod_line_event_read(gpio, &event);
+int gpio_get_value(int gpio_number) {
+    // construct sysfs path
+    char sysfs_file[PATH_MAX];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
+
+    // set the output value
+    int value = -1;
+    int ret = sysfs_read_int(sysfs_file, &value);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR,
-               "Failed reading event for GPIO %s. %d message: %s\n",
-               gpiod_line_consumer(gpio), errno, strerror(errno));
+        rl_log(RL_LOG_ERROR, "could not get value of GPIO pin #%d",
+               gpio_number);
         return ret;
     }
 
-    // decode and return resulting gpio input value
-    if (event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
-        return 1;
-    }
-    if (event.event_type == GPIOD_LINE_EVENT_FALLING_EDGE) {
-        return 0;
+    return value;
+}
+
+int gpio_wait_interrupt(int gpio_number, int timeout) {
+    // construct sysfs path
+    char sysfs_file[PATH_MAX];
+    sprintf(sysfs_file, (GPIO_SYSFS_PATH "gpio%d/value"), gpio_number);
+
+    int fd = open(sysfs_file, O_RDONLY);
+    if (fd < 0) {
+        rl_log(RL_LOG_ERROR, "could not open value file for GPIO pin #%d",
+               gpio_number);
+        return fd;
     }
 
-    // treat neither falling nor rising edge as error
-    return ERROR;
+    // initialize polling structure
+    struct pollfd fds = {
+        .fd = fd, .events = POLLPRI, .revents = 0,
+    };
+    int nfds = 1;
+
+    // dummy read to enable blocking polling
+    char value_buffer[2] = "";
+    int ret;
+    ret = read(fds.fd, &value_buffer, 1);
+    if (ret <= 0) {
+        rl_log(RL_LOG_ERROR, "GPIO poll read failed for GPIO pin #%d",
+               gpio_number);
+        close(fd);
+        return ERROR;
+    }
+
+    // wait on gpio change
+    ret = poll(&fds, nfds, timeout);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "GPIO poll failed for GPIO pin #%d", gpio_number);
+        close(fd);
+        return ret;
+    }
+
+    // debounce GPIO input and read back GPIO pin value
+    usleep(GPIO_DEBOUNCE_DELAY);
+    lseek(fds.fd, 0, SEEK_SET);
+    ret = read(fds.fd, &value_buffer, 1);
+    close(fd);
+    if (ret <= 0) {
+        rl_log(RL_LOG_ERROR,
+               "GPIO read back after poll event failed for GPIO pin #%d",
+               gpio_number);
+        return ERROR;
+    }
+    return atoi(value_buffer);
 }

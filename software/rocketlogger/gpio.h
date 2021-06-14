@@ -32,20 +32,24 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
-#include <gpiod.h>
-#include <time.h>
+/// Path to the Linux sysfs GPIO device files
+#define GPIO_SYSFS_PATH "/sys/class/gpio/"
+/// Minimal time a button needs to be pressed (in microseconds)
+#define GPIO_DEBOUNCE_DELAY 100000
+/// Infinite GPIO interrupt wait timeout
+#define GPIO_INT_TIMEOUT_INF -1
 
-/// GPIO number for forcing I1 high
+/// Linux sysfs GPIO number for forcing I1 high
 #define GPIO_FHR1 30
-/// GPIO number for forcing I2 high
+/// Linux sysfs GPIO number for forcing I2 high
 #define GPIO_FHR2 60
-/// GPIO number of status LED
+/// Linux sysfs GPIO number of status LED
 #define GPIO_LED_STATUS 45
-/// GPIO number of error LED
+/// Linux sysfs GPIO number of error LED
 #define GPIO_LED_ERROR 44
-/// GPIO number of start/stop button
+/// Linux sysfs GPIO number of start/stop button
 #define GPIO_BUTTON 26
-/// GPIO number of RocketLogger cape power enable
+/// Linux sysfs GPIO number of RocketLogger cape power enable
 #define GPIO_POWER 31
 
 /**
@@ -60,88 +64,77 @@ typedef enum gpio_mode {
  * GPIO interrupt edge definition
  */
 typedef enum gpio_interrupt {
-    GPIO_INTERRUPT_NONE,    //!< No interrupt
-    GPIO_INTERRUPT_RISING,  //!< Interrupt on rising edge
-    GPIO_INTERRUPT_FALLING, //!< Interrupt on falling edge
-    GPIO_INTERRUPT_BOTH,    //!< Interrupt on both edges
+    GPIO_INT_NONE,    //!< No interrupt
+    GPIO_INT_RISING,  //!< Interrupt on rising edge
+    GPIO_INT_FALLING, //!< Interrupt on falling edge
+    GPIO_INT_BOTH,    //!< Interrupt on both edges
 } gpio_interrupt_t;
 
 /**
- * GPIO type wrapper
- */
-typedef struct gpiod_line gpio_t;
-
-/**
- * Initialize GPIO module.
+ * Initialize a GPIO.
  *
+ * Export sysfs GPIO resource and configure GPIO mode.
+ *
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param mode GPIO mode (input or output) to configure
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int gpio_init();
+int gpio_init(int gpio_number, gpio_mode_t mode);
 
 /**
- * Denitialize GPIO module.
+ * Deinitialize a GPIO.
  *
- * @note release any used GPIO pin first.
+ * Unexport an exported sysfs GPIO resource.
+ *
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-void gpio_deinit();
+int gpio_deinit(int gpio_number);
 
 /**
- * Set up a specific GPIO pin for input/output.
+ * Reset a GPIO.
  *
- * @note need to initialize GPIO module first.
+ * Unexport sysfs GPIO resource if not exported.
  *
- * @param gpio_number Resource number of the GPIO to set up
- * @param mode GPIO mode (input or output) to configure
- * @param name Name to label the set up GPIO
- * @return Returns GPIO resource on success, NULL on failure with errno set
- * accordingly
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-gpio_t *gpio_setup(int gpio_number, gpio_mode_t mode, const char *name);
-
-/**
- * Set up a specific GPIO pin for interrupt event.
- *
- * @param gpio_number Resource number of the GPIO to set up
- * @param edge GPIO interrupt edge to configure
- * @param name Name to label the set up GPIO
- * @return Returns GPIO resource on success, NULL on failure with errno set
- * accordingly
- */
-gpio_t *gpio_setup_interrupt(int gpio_number, gpio_interrupt_t edge,
-                             const char *name);
-
-/**
- * Release an aquired GPIO resource.
- *
- * @param gpio The GPIO resource to release
- */
-void gpio_release(gpio_t *gpio);
+int gpio_reset(int gpio_number);
 
 /**
  * Set the GPIO value.
  *
- * @param gpio GPIO resource to set the output value
+ * @param gpio_number Linux sysfs GPIO resource number
  * @param value GPIO state to set (0 or 1)
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
-int gpio_set_value(gpio_t *gpio, int value);
+int gpio_set_value(int gpio_number, int value);
 
 /**
  * Get the GPIO value.
  *
- * @param gpio GPIO resource to get the value
- * @return The read GPIO value, negative on failure with errno set accordingly
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @return The read GPIO value, {@link FAILURE} on failure
  */
-int gpio_get_value(gpio_t *gpio);
+int gpio_get_value(int gpio_number);
+
+/**
+ * Configure the GPIO interrupt mode.
+ *
+ * @param gpio_number Linux sysfs GPIO resource number
+ * @param interrupt_mode GPIO interrupt mode to configure
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int gpio_interrupt(int gpio_number, gpio_interrupt_t interrupt_mode);
 
 /**
  * Wait for interrupt on GPIO pin.
  *
  * @param gpio_number Linux sysfs GPIO resource number
- * @param timeout Pointer to timeout timespec, NULL for infinite timeout
+ * @param timeout Maximum waiting time (in milliseconds), negative for infinite
  * @return Returns the GPIO pin value (0 or 1) on success, negative on failure
  * with errno set accordingly
  */
-int gpio_wait_interrupt(gpio_t *gpio, const struct timespec *timeout);
+int gpio_wait_interrupt(int gpio_number, int timeout);
 
 #endif /* GPIO_H_ */

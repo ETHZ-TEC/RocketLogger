@@ -26,6 +26,3 @@ systemctl restart "${SERVICE_NAME}"
 
 ## patch device tree overlay configuration, with backup
 patch --forward --backup --input="${UENV_PATCH}" "${UENV_TARGET}"
-
-# succeed even if uEnv config patched already
-exit 0
