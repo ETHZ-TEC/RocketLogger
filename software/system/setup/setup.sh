@@ -97,18 +97,18 @@ apt-get install --assume-yes        \
 
 
 ## default login
-echo "> Create new user 'rocketlogger'"
+echo "> Create new user 'flocklab'"
 
-# add new rocketlogger user with home directory and bash shell
-useradd --create-home --shell /bin/bash rocketlogger
+# add new flocklab user with home directory and bash shell
+useradd --create-home --shell /bin/bash flocklab
 # set default password
 cat user/password | chpasswd
 
-# add rocketlogger user to sudo group
-usermod --append --groups sudo rocketlogger
+# add flocklab user to sudo group
+usermod --append --groups sudo flocklab
 
 # display updated user configuration
-id rocketlogger
+id flocklab
 
 
 ## deactivate default login
@@ -123,7 +123,6 @@ echo "> Set user permissions"
 
 # configure sudoers
 cp --force sudo/privacy /etc/sudoers.d/
-cp --force sudo/rocketlogger /etc/sudoers.d/
 chmod 440 /etc/sudoers.d/*
 
 
@@ -134,10 +133,10 @@ echo "> Update some security and permission settings"
 cp --force ssh/sshd_config /etc/ssh/
 
 # copy public keys for log in
-mkdir --parents /home/rocketlogger/.ssh/
-chmod 700 /home/rocketlogger/.ssh/
-cp --force user/rocketlogger.default_rsa.pub /home/rocketlogger/.ssh/
-cat /home/rocketlogger/.ssh/rocketlogger.default_rsa.pub > /home/rocketlogger/.ssh/authorized_keys
+mkdir --parents /home/flocklab/.ssh/
+chmod 700 /home/flocklab/.ssh/
+cp --force user/rocketlogger.default_rsa.pub /home/flocklab/.ssh/
+cat /home/flocklab/.ssh/rocketlogger.default_rsa.pub > /home/flocklab/.ssh/authorized_keys
 
 # change ssh welcome message
 cp --force system/issue.net /etc/issue.net
@@ -156,15 +155,15 @@ echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\
 mkdir --parents /etc/rocketlogger
 
 # user configuration and data folder for rocketlogger, bind sdcard folders if available
-mkdir --parents /home/rocketlogger/.config/rocketlogger/
-mkdir --parents /home/rocketlogger/data/
-echo -e "# bind RocketLogger sdcard folders if available" >> /etc/fstab
+mkdir --parents /home/flocklab/.config/rocketlogger/
+mkdir --parents /home/flocklab/data/
+echo -e "# bind FlockLab sdcard folders if available" >> /etc/fstab
 
-echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
-echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
+echo -e "/media/sdcard/flocklab/config\t/home/flocklab/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
+echo -e "/media/sdcard/flocklab/data\t/home/flocklab/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 
 # make user owner of its own files
-chown --recursive rocketlogger:rocketlogger /home/rocketlogger/
+chown --recursive flocklab:flocklab /home/flocklab/
 
 # patch flasher tools to include SD card mounts
 patch --forward --backup --input=tools/functions.sh.patch /opt/scripts/tools/eMMC/functions.sh
