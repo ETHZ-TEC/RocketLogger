@@ -5,17 +5,17 @@ This folder include the device tree overlay source for the RocketLogger software
 
 ## Documentation
 
-### Linux Kernel v4.19 Documentation
+### Linux Kernel v4.14 Documentation
 
 #### Device Tree Documentation
-* <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/usage-model.txt>
-* <https://github.com/torvalds/linux/tree/v4.19/Documentation/devicetree/bindings>
-* <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/bindings/pwm/pwm.txt>
-* <https://github.com/torvalds/linux/blob/v4.19/Documentation/devicetree/bindings/pwm/pwm-tiehrpwm.txt>
+* <https://github.com/torvalds/linux/blob/v4.14/Documentation/devicetree/usage-model.txt>
+* <https://github.com/torvalds/linux/tree/v4.14/Documentation/devicetree/bindings>
+* <https://github.com/torvalds/linux/blob/v4.14/Documentation/devicetree/bindings/pwm/pwm.txt>
+* <https://github.com/torvalds/linux/blob/v4.14/Documentation/devicetree/bindings/pwm/pwm-tiehrpwm.txt>
 
 
 #### PWM Documentation
-* <https://github.com/torvalds/linux/blob/v4.19/Documentation/pwm.txt>
+* <https://github.com/torvalds/linux/blob/v4.14/Documentation/pwm.txt>
 
 
 ### PRU Resources

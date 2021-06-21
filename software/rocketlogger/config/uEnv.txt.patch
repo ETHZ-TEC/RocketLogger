@@ -5,7 +5,7 @@
  ###
  ###Custom Cape
 -#dtb_overlay=<file8>.dtbo
-+dtb_overlay=ROCKETLOGGER.dtbo
++dtb_overlay=BB-FLOCKLAB2.dtbo
  ###
  ###Disable auto loading of virtual capes (emmc/video/wireless/adc)
  #disable_uboot_overlay_emmc=1
@@ -29,8 +29,7 @@
 +uboot_overlay_pru=AM335X-PRU-UIO-00A0.dtbo
  ###
  ###Cape Universal Enable
--enable_uboot_cape_universal=1
-+#enable_uboot_cape_universal=1
+ enable_uboot_cape_universal=1
  ###
  ###Debug: disable uboot autoload of Cape
  #disable_uboot_overlay_addr0=1

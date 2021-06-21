@@ -5,8 +5,8 @@
 SRC=..
 
 # user folder paths
-USER_DATA_DIR="/home/rocketlogger/data/"
-USER_CONFIG_DIR="/home/rocketlogger/.config/rocketlogger/"
+USER_DATA_DIR="/home/flocklab/data/"
+USER_CONFIG_DIR="/home/flocklab/.config/rocketlogger/"
 
 # systemd service
 SERVICE_NAME="rocketlogger.service"

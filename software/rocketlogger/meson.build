@@ -84,18 +84,18 @@ pru_src = [
     'pru/rocketlogger.asm',
 ]
 dt_overlay_src = [
-    'overlay/ROCKETLOGGER.dts',
+    'overlay/BB-FLOCKLAB2.dts',
 ]
 
 ## configuration files
 default_calibration_file = [
-    'config/calibration.dat',
+    'config/rl_calibration.dat',
 ]
 systemd_service_src = [
     'config/rocketlogger.service',
 ]
 pru_module_config_src = [
-    'config/rocketlogger.conf',
+    'config/flocklab2.conf',
 ]
 
 
@@ -113,7 +113,7 @@ install_data(systemd_service_src,
     install_dir : get_option('sysconfdir') / 'systemd' / 'system',
     install_mode : ['rw-r--r--', 0, 0])
 install_data(default_calibration_file,
-    install_dir : get_option('sysconfdir') / 'rocketlogger',
+    install_dir : get_option('sysconfdir') / 'flocklab',
     install_mode : ['rw-r--r--', 0, 0])
 
 # custom PRU targets
@@ -136,14 +136,14 @@ install_data(pru_module_config_src,
     install_mode : ['rw-r--r--', 0, 0])
 
 # custom device tree overlay target
-dt_overlay_tmp = custom_target('ROCKETLOGGER.dts.tmp',
-    output : 'ROCKETLOGGER.dts.tmp',
+dt_overlay_tmp = custom_target('BB-FLOCKLAB2.dts.tmp',
+    output : 'BB-FLOCKLAB2.dts.tmp',
     input : dt_overlay_src,
     command : compiler_cc.cmd_array() + ['-E', '-nostdinc', '-undef', '-x', 'assembler-with-cpp', '-D__DTS__',
         '-I../subprojects/bb.org-overlays-28cb22447cefc9824e2c8288e59b36d46e4f5422/include',  # @todo: derive include path from subproject
         '-o', '@OUTPUT@', '@INPUT@'])
-dt_overlay_bin = custom_target('ROCKETLOGGER.dtbo',
-    output : 'ROCKETLOGGER.dtbo',
+dt_overlay_bin = custom_target('BB-FLOCKLAB2.dtbo',
+    output : 'BB-FLOCKLAB2.dtbo',
     input : dt_overlay_tmp,
     command : [compiler_dt, '--out-format=dtb', '-@', '--out=@OUTPUT@', '@INPUT@'],
     install : true,
