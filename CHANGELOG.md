@@ -35,17 +35,17 @@ MATLAB support:
 
 _Notes:_
 
-This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. Most noticeable change for the user is the new web control interface that was implemented from scratch.
-Calibration feature was added to the Python support library and the data functionality extended. he updated web interface now allows on-device calibration.
+This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch.
+Calibration feature was added to the Python support library and the data functionality extended. The updated web interface now allows on-device calibration.
 
 Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal EMMC memory, the RocketLogger system needs to be reinstalled.
 
 
 _Known Issues:_
 
-* Unresponsive web interface when system partition running out of space (#23)
+* Unresponsive web interface when system partition is running out of space (#23)
 * Startup artifacts after RocketLogger system startup or hardware reset (#19)
-* Python library uses uses target instead of theoretical configured sample rate for relative timestamp calculation (#13)
+* Python library uses target instead of theoretical configured sample rate for relative timestamp calculation (#13)
 
 
 
