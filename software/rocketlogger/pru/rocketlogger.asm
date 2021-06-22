@@ -85,7 +85,7 @@ CS_BIT                      .set    3
 START_BIT                   .set    7
 ADC_IN_REG                  .set    r31
 MISO_BIT                    .set    2
-DR_BIT                      .set    15
+DR_BIT                      .set    16
 
 ; PRU register definitions: channel data from ADC to transfer to DDR
 DI_REG                      .set    r0
