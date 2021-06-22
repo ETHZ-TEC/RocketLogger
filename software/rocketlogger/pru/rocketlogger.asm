@@ -81,14 +81,11 @@ LED_STATUS_BIT              .set    15      ; user space, busy wait indicator
 ADC_OUT_REG                 .set    r30
 SCLK_BIT                    .set    0
 MOSI_BIT                    .set    1
-CS1_BIT                     .set    3
-CS2_BIT                     .set    5
+CS_BIT                      .set    3
 START_BIT                   .set    7
 ADC_IN_REG                  .set    r31
-MISO1_BIT                   .set    2
-MISO2_BIT                   .set    16
-DR1_BIT                     .set    15
-DR2_BIT                     .set    14
+MISO_BIT                    .set    2
+DR_BIT                      .set    15
 
 ; PRU register definitions: channel data from ADC to transfer to DDR
 DI_REG                      .set    r0
@@ -299,8 +296,8 @@ timestamp_restart .macro reg
 ; SPI RESET
 ; (reset SPI output signal to idle levels)
 spi_reset .macro
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT   ; both CS high
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS_BIT   ; both CS high
+    NOP ; timing insensitive removal of 2nd ADC SPI
     CLR     ADC_OUT_REG, ADC_OUT_REG, MOSI_BIT  ; MOSI low
     CLR     ADC_OUT_REG, ADC_OUT_REG, SCLK_BIT  ; SCLK low
     .endm
@@ -346,7 +343,7 @@ END_SPI_BIT_WRITE?:
 ; SPI READ DATA
 ; (read SPI data block of `size` bits, optimized for timing, no CS handling)
 spi_read_data .macro data0_reg, data1_reg, size
-    ; dummy read of MISO2 in first iteration
+    ; dummy read in first iteration
     ZERO    &MTMP_REG, 4
 
     ; setup SPI bit read loop
@@ -355,8 +352,8 @@ spi_read_data .macro data0_reg, data1_reg, size
     ; clock high phase (5 cycles total)
     SET     ADC_OUT_REG, ADC_OUT_REG, SCLK_BIT
 
-    ; decode SPI2 input bit from previous loop iteration (2 cycles)
-    QBBS    IN1HIGH?, MTMP_REG, MISO2_BIT
+    ; decode SPI2 input bit from previous loop iteration (2 cycles) -> force read zero
+    NOP ; timing insensitive removal of 2nd ADC SPI
     JMP     IN1LOW?
 IN1HIGH?:
     OR      data1_reg, data1_reg, 0x01
@@ -375,15 +372,15 @@ IN1LOW?:
     AND     MTMP_REG, ADC_IN_REG, ADC_IN_REG
 
     ; decode and store SPI1 input bit (2 cycles)
-    QBBS    IN0HIGH?, MTMP_REG, MISO1_BIT
+    QBBS    IN0HIGH?, MTMP_REG, MISO_BIT
     JMP     IN0LOW?
 IN0HIGH?:
     OR      data0_reg, data0_reg, 0x01
 IN0LOW?:
 
 END_SPI_BIT_READ?:
-    ; decode final SPI2 input bit from the last loop iteration (2 cycles)
-    QBBS    IN2HIGH?, MTMP_REG, MISO2_BIT
+    ; decode final SPI2 input bit from the last loop iteration (2 cycles) -> force read zero
+    NOP ; timing insensitive removal of 2nd ADC SPI
     JMP     IN2LOW?
 IN2HIGH?:
     OR      data1_reg, data1_reg, 0x01
@@ -397,8 +394,8 @@ IN2LOW?:
 adc_send_command .macro command
 
     ; start ADC command frame with (negative) chip select
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    CLR     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     wait_cycles SPI_SELECT_GUARD_CYCLES
 
     ; load and send ADC command byte to SPI
@@ -407,8 +404,8 @@ adc_send_command .macro command
 
     ; end ADC command frame with (positive) chip de-select
     wait_cycles SPI_DESELECT_GUARD_CYCLES
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     .endm
 
 
@@ -423,8 +420,8 @@ adc_write_register .macro register, data_reg
     AND     TMP_REG.b2, data_reg, data_reg
 
     ; start ADC command frame with (negative) chip select
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    CLR     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     wait_cycles SPI_SELECT_GUARD_CYCLES
 
     ; write ADC command to SPI (byte 1)
@@ -440,8 +437,8 @@ adc_write_register .macro register, data_reg
 
     ; end ADC command frame with (positive) chip de-select
     wait_cycles SPI_DESELECT_GUARD_CYCLES
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     .endm
 
 
@@ -537,8 +534,8 @@ adc_stop .macro
 ; (read ADC data frame to pre-assigned registers)
 adc_read_continuous .macro
     ; start ADC data transfer frame with (negative) chip select
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    CLR     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    CLR     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     wait_cycles SPI_SELECT_GUARD_CYCLES
 
     ; read status data
@@ -555,8 +552,8 @@ adc_read_continuous .macro
 
     ; end ADC data transfer frame with (positive) chip de-select
     ; wait_cycles SPI_DESELECT_GUARD_CYCLES ; skip guard for data burst read
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS1_BIT
-    SET     ADC_OUT_REG, ADC_OUT_REG, CS2_BIT
+    SET     ADC_OUT_REG, ADC_OUT_REG, CS_BIT
+    NOP ; timing insensitive removal of 2nd ADC SPI
     .endm
 
 
@@ -794,7 +791,7 @@ READ:
     SET     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
     ; wait for data ready
-    WBC     ADC_IN_REG, DR1_BIT
+    WBC     ADC_IN_REG, DR_BIT
 
     ; immediately timestamp data
     timestamp_restart DT_REG
