@@ -33,8 +33,6 @@
 
 HOSTNAME="rocketlogger"
 REBOOT_TIMEOUT=120
-PORT=22
-USER="debian"
 
 # check arguments
 if [ $# -lt 1 ]; then
@@ -54,7 +52,7 @@ echo "> Deploy system on host '${HOST}'"
 # write the password into a file (note: do not use read -s, it is important to visually double check the entered password)
 echo "Enter new password for user flocklab on host ${HOST}:"
 read PASSWORD
-echo "flocklab:${PASSWORD}" > config/user/password
+echo "flocklab:${PASSWORD}" > setup/user/password
 
 # copy system configuration scripts
 echo "> Copy system configuration scripts. You will be asked for the default user password, which is 'temppwd'."
@@ -70,7 +68,7 @@ else
 fi
 
 # remove password file
-rm config/user/password
+rm setup/user/password
 
 # perform system configuration
 echo "> Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
