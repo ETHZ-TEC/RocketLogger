@@ -32,7 +32,9 @@
 # 
 
 HOSTNAME="rocketlogger"
-REBOOT_TIMEOUT=60
+REBOOT_TIMEOUT=120
+PORT=22
+USER="debian"
 
 # check arguments
 if [ $# -lt 1 ]; then
@@ -42,11 +44,17 @@ fi
 if [ $# -ge 2 ]; then
   HOSTNAME=$2
 fi
-
-
 HOST=$1
+
+# remove IP address / host name from known_hosts file
+#ssh-keygen -R $HOST > /dev/null 2>&1
+
 echo "> Deploy system on host '${HOST}'"
 
+# write the password into a file (note: do not use read -s, it is important to visually double check the entered password)
+echo "Enter new password for user flocklab on host ${HOST}:"
+read PASSWORD
+echo "flocklab:${PASSWORD}" > config/user/password
 
 # copy system configuration scripts
 echo "> Copy system configuration scripts. You will be asked for the default user password, which is 'temppwd'."
@@ -61,6 +69,9 @@ else
   echo "[ OK ] Copy setup files successful."
 fi
 
+# remove password file
+rm config/user/password
+
 # perform system configuration
 echo "> Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
 ssh -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./install.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
@@ -74,19 +85,25 @@ else
   echo "[ OK ] System configuration was successful."
 fi
 
-# perform RocketLogger software installation
-#TODO: a) await reboot, b) copy sources, c) remotely build and install
+# wait for system to reboot
+echo -n "       Waiting for the system to reboot..."
+sleep 5
+while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
+  REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
+  echo -n "."
+  ping -c1 -W2 ${HOST} > /dev/null
+  # break timeout loop on success
+  if [ $? -eq 0 ]; then
+    sleep 2
+    echo ""
+    echo "[ OK ] Done."
+    break
+  fi
+done
+# check for connectivity loss
+if [ $REBOOT_TIMEOUT -eq 0 ]; then
+  echo ""
+  echo "[ !! ] System reboot timed out."
+  exit 1
+fi
 
-# verify software installation configuration was successful
-INSTALL=$?
-echo "[ !! ] Software skipped as not (yet) supported. Installation software manually."
-# if [ $INSTALL -ne 0 ]; then
-#   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
-#   exit $INSTALL
-# else
-#   echo "[ OK ] Software installation was successful."
-# fi
-
-
-# hint on the next setup step
-echo ">> Wait for the system to reboot and you are ready to go."

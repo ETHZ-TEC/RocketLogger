@@ -40,7 +40,7 @@ if [[ $(id -u) -ne 0 ]]; then
   exit 1
 fi
 
-# check that we run on a clean BeagelBone image
+# check that we run on a clean BeagleBone image
 echo "> Check beaglebone platform"
 if [[ "$(cat /etc/hostname)" != "beaglebone" ]]; then
   echo "Need to run this script on a clean BeagleBone image. Aborting."
@@ -52,6 +52,13 @@ if [ $# -ge 1 ]; then
   HOSTNAME=$1
 fi
 
+# check network connectivity
+echo "> Check network connectivity"
+ping -q -c 1 -W 2 "8.8.8.8" > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "No network connectivity! Aborting."
+  exit 1
+fi
 
 ## updates and software dependencies
 echo "> Update system and install software dependencies"
@@ -60,10 +67,22 @@ echo "> Update system and install software dependencies"
 echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list.d/stretch-backports.list
 
 # update package lists
-apt-get update
+apt-get update > /dev/null
+if [ $? -ne 0 ]; then
+  echo "Failed to refresh package list."
+  return 1
+fi
+
+# update packages
+#apt-get -qq --assume-yes upgrade    # can't redirect to /dev/null, apt-get may ask questions during the process...
+#if [ $? -ne 0 ]; then
+#  echo "Failed to upgrade system packages."
+#  return 1
+#fi
 
 # install system packages
 apt-get install --assume-yes        \
+    build-essential                 \
     curl                            \
     device-tree-compiler            \
     gcc                             \
@@ -71,13 +90,21 @@ apt-get install --assume-yes        \
     git                             \
     make                            \
     meson/stretch-backports         \
+    minicom                         \
     ninja-build                     \
     ntp                             \
     pkg-config                      \
+    python3                         \
+    python3-dev                     \
+    python3-pip                     \
     ti-pru-cgt-installer            \
     libi2c-dev                      \
     libncurses5-dev                 \
-    libzmq3-dev
+    libzmq3-dev                     \
+    linux-headers-$(uname -r)       \
+    snmpd                           \
+    unzip                           \
+    > /dev/null
 
 # verify system dependencies installation was successful
 INSTALL=$?
@@ -88,34 +115,44 @@ else
   echo "[ OK ] System dependencies installation was successful."
 fi
 
-# install nodesource repository for nodejs 14.x LTS
-curl --silent --location https://deb.nodesource.com/setup_14.x | bash -
+# stop preinstalled web services
+echo "> Stop web services"
+systemctl stop bonescript-autorun.service cloud9.service cloud9.socket nginx.service > /dev/null
+systemctl disable bonescript-autorun.service cloud9.service cloud9.socket nginx.service > /dev/null
 
-# install nodejs
-apt-get install --assume-yes        \
-    nodejs
-
+echo "> Remove unused packages"
+apt-get remove --assume-yes --allow-change-held-packages \
+    nginx                           \
+    nodejs?                         \
+    c9-core-installer bonescript?   \
+    > /dev/null
+apt-get --assume-yes autoremove > /dev/null
 
 ## default login
 echo "> Create new user 'flocklab'"
 
 # add new flocklab user with home directory and bash shell
-useradd --create-home --shell /bin/bash flocklab
+useradd --create-home --shell /bin/bash flocklab > /dev/null
 # set default password
 cat user/password | chpasswd
 
-# add flocklab user to sudo group
+# add flocklab user to certain groups
 usermod --append --groups sudo flocklab
+usermod --append --groups admin flocklab
+usermod --append --groups dialout flocklab
+usermod --append --groups i2c flocklab
+usermod --append --groups gpio flocklab
+usermod --append --groups pwm flocklab
+usermod --append --groups spi flocklab
+usermod --append --groups adm flocklab
+usermod --append --groups users flocklab
+usermod --append --groups disk flocklab
 
 # display updated user configuration
 id flocklab
 
-
-## deactivate default login
-echo "> Disable default user 'debian'"
-
-# set expiration date in the past to disable logins
-chage --expiredate 1970-01-01 debian
+# add user Debian-snmp to group i2c
+usermod --append --groups i2c Debian-snmp
 
 
 ## user permission
@@ -135,7 +172,6 @@ cp --force ssh/sshd_config /etc/ssh/
 # copy public keys for log in
 mkdir --parents /home/flocklab/.ssh/
 chmod 700 /home/flocklab/.ssh/
-cp --force user/rocketlogger.default_rsa.pub /home/flocklab/.ssh/
 cat /home/flocklab/.ssh/rocketlogger.default_rsa.pub > /home/flocklab/.ssh/authorized_keys
 
 # change ssh welcome message
@@ -147,12 +183,15 @@ echo "> Configure SD card mount and prepare configuration folders"
 
 # external SD card mount
 mkdir --parents /media/sdcard/
+#chown flocklab:flocklab /media/card
+#chmod 755 /media/card
 echo -e "# mount external sdcard on boot if available" >> /etc/fstab
 echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\t0\t2" >> /etc/fstab
 
 
-# create RocketLogger system config folder
+# create RocketLogger and FlockLab system config folders
 mkdir --parents /etc/rocketlogger
+mkdir --parents /etc/flocklab
 
 # user configuration and data folder for rocketlogger, bind sdcard folders if available
 mkdir --parents /home/flocklab/.config/rocketlogger/
@@ -178,7 +217,22 @@ sed s/beaglebone/${HOSTNAME}/g --in-place /etc/hostname /etc/hosts
 # copy network interface configuration
 cp --force network/interfaces /etc/network/
 
+# copy SNMP config
+cp --force snmp/snmpd.conf /etc/snmp/
+
+## deactivate default login
+echo "> Disable default user 'debian'"
+
+# set expiration date in the past to disable logins
+chage --expiredate 1970-01-01 debian
+
+# cleanup
+(cd .. && rm -rf setup)
 
 ## sync filesystem
-echo "> Rocketlogger platform initialized. Syncing file system and exit."
+echo "> Rocketlogger platform initialized. Syncing file system and reboot."
 sync
+
+# reboot
+reboot && exit 0
+
