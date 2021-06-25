@@ -115,18 +115,6 @@ else
   echo "[ OK ] System dependencies installation was successful."
 fi
 
-# stop preinstalled web services
-echo "> Stop web services"
-systemctl stop bonescript-autorun.service cloud9.service cloud9.socket nginx.service > /dev/null
-systemctl disable bonescript-autorun.service cloud9.service cloud9.socket nginx.service > /dev/null
-
-echo "> Remove unused packages"
-apt-get remove --assume-yes --allow-change-held-packages \
-    nginx                           \
-    nodejs?                         \
-    c9-core-installer bonescript?   \
-    > /dev/null
-apt-get --assume-yes autoremove > /dev/null
 
 ## default login
 echo "> Create new user 'flocklab'"
@@ -166,13 +154,14 @@ chmod 440 /etc/sudoers.d/*
 ## security
 echo "> Update some security and permission settings"
 
-# copy more secure ssh configuration
-cp --force ssh/sshd_config /etc/ssh/
-
 # copy public keys for log in
 mkdir --parents /home/flocklab/.ssh/
 chmod 700 /home/flocklab/.ssh/
+cp --force user/rocketlogger.default_rsa.pub /home/flocklab/.ssh/
 cat /home/flocklab/.ssh/rocketlogger.default_rsa.pub > /home/flocklab/.ssh/authorized_keys
+
+# copy more secure ssh configuration
+cp --force ssh/sshd_config /etc/ssh/
 
 # change ssh welcome message
 cp --force system/issue.net /etc/issue.net
@@ -226,13 +215,6 @@ echo "> Disable default user 'debian'"
 # set expiration date in the past to disable logins
 chage --expiredate 1970-01-01 debian
 
-# cleanup
-(cd .. && rm -rf setup)
-
 ## sync filesystem
-echo "> Rocketlogger platform initialized. Syncing file system and reboot."
+echo "> Rocketlogger platform initialized. Syncing file system and exit"
 sync
-
-# reboot
-reboot && exit 0
-

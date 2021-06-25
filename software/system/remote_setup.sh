@@ -31,7 +31,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-HOSTNAME="rocketlogger"
 REBOOT_TIMEOUT=120
 
 # check arguments
@@ -39,10 +38,12 @@ if [ $# -lt 1 ]; then
   echo "Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]"
   exit -1
 fi
+HOST=$1
 if [ $# -ge 2 ]; then
   HOSTNAME=$2
+else
+  HOSTNAME=$HOST
 fi
-HOST=$1
 
 # remove IP address / host name from known_hosts file
 #ssh-keygen -R $HOST > /dev/null 2>&1
@@ -56,7 +57,7 @@ echo "flocklab:${PASSWORD}" > setup/user/password
 
 # copy system configuration scripts
 echo "> Copy system configuration scripts. You will be asked for the default user password, which is 'temppwd'."
-scp -F /dev/null -P 22 -r setup debian@${HOST}:
+scp -F /dev/null -P 22 -r setup debian@${HOST}: > /dev/null
 
 # verify copy setup files was successful
 COPY=$?
@@ -72,11 +73,11 @@ rm setup/user/password
 
 # perform system configuration
 echo "> Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./install.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
+ssh -q -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./setup.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
 
 # verify system configuration was successful
 CONFIG=$?
-if [ $CONFIG -ne 0 ]; then
+if [ $CONFIG -ne 0 ] && [ $CONFIG -ne 255 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
   exit $CONFIG
 else
@@ -84,7 +85,7 @@ else
 fi
 
 # wait for system to reboot
-echo -n "       Waiting for the system to reboot..."
+echo -n "> Waiting for the system to reboot..."
 sleep 5
 while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
   REBOOT_TIMEOUT=`expr $REBOOT_TIMEOUT - 1`
@@ -94,7 +95,7 @@ while [[ $REBOOT_TIMEOUT -gt 0 ]]; do
   if [ $? -eq 0 ]; then
     sleep 2
     echo ""
-    echo "[ OK ] Done."
+    echo "Done"
     break
   fi
 done
