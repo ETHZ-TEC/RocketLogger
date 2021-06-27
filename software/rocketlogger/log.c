@@ -54,7 +54,7 @@ int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
     // open log file (create inexistent) to check for max file size
     FILE *log_fp = fopen(log_filename, "a");
     if (log_fp == NULL) {
-        printf("Error: failed to open log file\n");
+        printf("Error: failed to open log file %s\n", log_filename);
         return -1;
     }
 
