@@ -2,7 +2,7 @@
 # Patch a BeagleBone system image with RocketLogger installation and configuration
 
 LOG_FILE="patch_image.log"
-GIT_REVISION=`git describe --tags --dirty`
+GIT_REVISION=`git describe --tags`
 
 
 # register ARM executables
