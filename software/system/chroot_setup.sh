@@ -3,10 +3,10 @@
 # Usage: ./chroot_setup.sh <image.img> [<hostname>]
 # Note: needs to be executed in an (virtualized) arm-v7 environment
 
-ROOTFS=/media
 IMAGE=/dev/null
 HOSTNAME="rocketlogger"
 
+ROOTFS=`mktemp --directory`
 REPO_PATH=`git rev-parse --show-toplevel`
 REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
@@ -28,13 +28,14 @@ echo "> Deploy RocketLogger system to image '${IMAGE}'"
 echo "> Grow system partition size to fit RocketLogger installation"
 
 # grow image size and partition by 900 MB
-dd if=/dev/zero of=${IMAGE} bs=1M count=900 oflag=append conv=notrunc status=progress
+dd if=/dev/zero of=${IMAGE} bs=1M count=900 conv=fsync,notrunc oflag=append,sync status=progress
 sfdisk ${IMAGE} <<-__EOF__
 4M,,L,*
 __EOF__
-sync ${IMAGE}
+sync ${IMAGE} && sleep 3
 
 # mount partition and grow filesystem to partition size
+echo "> Setup loop device for ${IMAGE}"
 DISK=`losetup --verbose --offset=$((512*8192)) --find --show ${IMAGE}`
 
 # verify system image mount was successful
@@ -49,15 +50,14 @@ fi
 e2fsck -f ${DISK}
 resize2fs ${DISK}
 sync ${DISK}
-losetup --detach ${DISK}
 
 
 ## mount filesystem
 echo "> Setup and configure filesystems"
 
 # mount the beaglebone base image to patch
-echo "> Mount image file '${IMAGE}' to ${ROOTFS}"
-mount -o loop,offset=$((512*8192)) "${IMAGE}" ${ROOTFS}
+echo "> Mount system partition to ${ROOTFS}"
+mount ${DISK} ${ROOTFS}
 
 # verify system image mount was successful
 MOUNT=$?
@@ -153,6 +153,13 @@ umount ${ROOTFS}/proc
 umount ${ROOTFS}/sys
 umount ${ROOTFS}/dev
 umount ${ROOTFS}
+
+# detatch loop device
+losetup --detach ${DISK}
+sync ${DISK}
+
+# clean up
+rmdir ${ROOTFS}
 
 # patching completed successfully
 exit 0
