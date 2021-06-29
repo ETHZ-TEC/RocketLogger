@@ -63,7 +63,7 @@ fi
 
 # perform system configuration
 echo "> Run system configuration. You will be aked for the default user password two times, which is 'temppwd'."
-ssh -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./install.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
+ssh -F /dev/null -p 22 -t debian@${HOST} "(cd setup && sudo ./setup.sh ${HOSTNAME} && cd .. && rm -rf setup && sudo reboot)"
 
 # verify system configuration was successful
 CONFIG=$?
@@ -79,7 +79,7 @@ fi
 
 # verify software installation configuration was successful
 INSTALL=$?
-echo "[ !! ] Software skipped as not (yet) supported. Installation software manually."
+echo "[ !! ] Software installation skipped as not (yet) supported. Please install software manually."
 # if [ $INSTALL -ne 0 ]; then
 #   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
 #   exit $INSTALL

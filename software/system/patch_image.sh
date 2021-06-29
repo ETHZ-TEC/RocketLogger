@@ -2,7 +2,7 @@
 # Patch a BeagleBone system image with RocketLogger installation and configuration
 
 LOG_FILE="patch_image.log"
-GIT_REVISION=`git describe --tags --dirty`
+GIT_REVISION=`git describe --tags`
 
 
 # register ARM executables
@@ -13,8 +13,9 @@ docker buildx build --platform linux/arm/v7 --tag rocketlogger_stretch_patch .
 
 # change to system folder to download and decompress base system image
 source ./get_image.sh
-xz --decompress --keep --force "${IMAGE_FLASHER_FILE}"
+xz --decompress --threads=0 --keep --force --verbose "${IMAGE_FLASHER_FILE}"
 IMAGE=`basename "${IMAGE_FLASHER_FILE}" ".xz"`
+sync ${IMAGE} && sleep 3
 
 # install RocketLogger system to system image
 set -o pipefail # report last non-zero exit code of piped commands
