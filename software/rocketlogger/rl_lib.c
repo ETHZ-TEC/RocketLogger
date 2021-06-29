@@ -106,18 +106,20 @@ int rl_run(rl_config_t *const config) {
     }
 
     // register signal handler for SIGTERM and SIGINT (for stopping)
+    struct sigaction sigterm_action_backup;
+    struct sigaction sigint_action_backup;
     struct sigaction signal_action;
     signal_action.sa_handler = rl_signal_handler;
     sigemptyset(&signal_action.sa_mask);
     signal_action.sa_flags = 0;
 
     int ret;
-    ret = sigaction(SIGTERM, &signal_action, NULL);
+    ret = sigaction(SIGTERM, &signal_action, &sigterm_action_backup);
     if (ret < 0) {
         rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
         return ERROR;
     }
-    ret = sigaction(SIGINT, &signal_action, NULL);
+    ret = sigaction(SIGINT, &signal_action, &sigint_action_backup);
     if (ret < 0) {
         rl_log(RL_LOG_ERROR, "can't register signal handler for SIGINT.");
         return ERROR;
@@ -159,6 +161,16 @@ int rl_run(rl_config_t *const config) {
     }
     rl_status_pub_deinit();
     hw_deinit(config);
+
+    // restore signal handlers for SIGTERM and SIGINT
+    ret = sigaction(SIGTERM, &sigterm_action_backup, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING, "can't restore signal handler for SIGTERM.");
+    }
+    ret = sigaction(SIGINT, &sigint_action_backup, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING, "can't restore signal handler for SIGINT.");
+    }
 
     return SUCCESS;
 }

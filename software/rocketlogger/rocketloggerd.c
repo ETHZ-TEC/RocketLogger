@@ -30,6 +30,7 @@
  */
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -40,9 +41,13 @@
 #include "log.h"
 #include "pwm.h"
 #include "rl.h"
+#include "rl_lib.h"
 
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
+
+/// Duration of calibration run (in seconds)
+#define RL_CALIBRATION_DURATION_SEC 1
 
 /// RocketLogger daemon log file.
 static char const *const log_filename = RL_DAEMON_LOG_FILE;
@@ -70,6 +75,43 @@ int power_init(void) {
     // wait for converter soft start (> 1 ms)
     usleep(5000);
     return ret;
+}
+
+/**
+ * Perform RocketLogger ADC reference voltage calibration.
+ *
+ * Run a measurement without data output to file or web for the given duration.
+ * Resets the sampling status to default after completion.
+ *
+ * @param duration The duration of the calibration run in seconds
+ * @return Measurement run return value, 0 on success, negative on failure with
+ * errno set accordingly
+ */
+int adc_calibrate(uint64_t duration) {
+    if (duration == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // configure run with minimal data output
+    static rl_config_t rl_config_calibration;
+    rl_config_reset(&rl_config_calibration);
+    rl_config_calibration.background_enable = false;
+    rl_config_calibration.interactive_enable = false;
+    rl_config_calibration.web_enable = false;
+    rl_config_calibration.file_enable = false;
+    rl_config_calibration.sample_rate = RL_SAMPLE_RATE_MIN;
+    rl_config_calibration.sample_limit = RL_SAMPLE_RATE_MIN * duration;
+
+    // perform calibration run
+    int res = rl_run(&rl_config_calibration);
+
+    // reset sampling status to default
+    rl_status_t rl_status;
+    rl_status_reset(&rl_status);
+    rl_status_write(&rl_status);
+
+    return res;
 }
 
 /**
@@ -382,7 +424,12 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    rl_log(RL_LOG_INFO, "RocketLogger daemon started.");
+    // calibrate ADC reference voltage
+    rl_log(RL_LOG_INFO, "Performing ADC reference calibration.");
+    adc_calibrate(RL_CALIBRATION_DURATION_SEC);
+
+    // daemon main loop
+    rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
 
     daemon_shutdown = false;
     while (!daemon_shutdown) {
