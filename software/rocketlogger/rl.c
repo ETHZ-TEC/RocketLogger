@@ -578,7 +578,7 @@ int rl_status_shm_deinit(void) {
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
-               "failed getting shared memory id for removal; message: %s",
+               "failed getting shared memory id for removal; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -602,7 +602,7 @@ int rl_status_read(rl_status_t *const status) {
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed getting shared memory id for reading the "
-               "status; message: %s",
+               "status; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
