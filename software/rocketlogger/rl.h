@@ -98,7 +98,7 @@
     { false, false }
 
 /// Configuration data file directory default
-#define RL_CONFIG_FILE_DIR_DEFAULT "/home/rocketlogger/data"
+#define RL_CONFIG_FILE_DIR_DEFAULT "/home/flocklab/data"
 /// Configuration file name default
 #define RL_CONFIG_FILE_DEFAULT "/home/flocklab/data/rocketlogger_data.rld"
 /// Minimum measurement split file size (5 MB to fit largest block at max rate)

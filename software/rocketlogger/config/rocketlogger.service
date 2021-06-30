@@ -8,8 +8,8 @@ Type=simple
 ExecStart=/usr/bin/rocketloggerd
 PIDFile=/run/rocketloggerd.pid
 
-User=rocketlogger
-Group=rocketlogger
+User=flocklab
+Group=flocklab
 
 TimeoutStopSec=2s
 KillMode=mixed
