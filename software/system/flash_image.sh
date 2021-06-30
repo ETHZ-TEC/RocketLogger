@@ -52,9 +52,9 @@ fi
 # decompress (if necessary) and write SD card image, sync file system at the end
 echo "> Flashing SD card..."
 if [[ ${IMAGE_FILE} =~ ^.*.xz$ ]]; then
-  xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=4M conv=fsync status=progress
+  xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=16M conv=fsync oflag=sync status=progress
 else
-  dd if=${IMAGE_FILE} of=${SDCARD_DEV} bs=4M conv=fsync status=progress
+  dd if=${IMAGE_FILE} of=${SDCARD_DEV} bs=4M conv=fsync oflag=sync status=progress
 fi
 sync ${SDCARD_DEV}
 echo "> Flashing SD card complete."
