@@ -140,7 +140,8 @@ void button_interrupt_handler(int value) {
         rl_status_t status;
         int ret = rl_status_read(&status);
         if (ret < 0) {
-            rl_log(RL_LOG_ERROR, "Failed reading status.");
+            rl_log(RL_LOG_ERROR, "Failed reading status; %d message: %s", errno,
+                   strerror(errno));
         }
 
         if (duration >= RL_BUTTON_VERY_LONG_PRESS) {
@@ -170,14 +171,14 @@ void button_interrupt_handler(int value) {
         // create child process to start RocketLogger
         pid_t pid = fork();
         if (pid < 0) {
-            rl_log(RL_LOG_ERROR, "Failed forking process. %d message: %s",
+            rl_log(RL_LOG_ERROR, "Failed forking process; %d message: %s",
                    errno, strerror(errno));
         }
         if (pid == 0) {
             // in child process, execute RocketLogger
             execvp(cmd[0], cmd);
             rl_log(RL_LOG_ERROR,
-                   "Failed executing `rocketlogger %s`. %d message: %s", cmd,
+                   "Failed executing `rocketlogger %s`; %d message: %s", cmd,
                    errno, strerror(errno));
         } else {
             // in parent process log pid
@@ -218,7 +219,7 @@ int main(void) {
     // set effective user ID of the process
     ret = setuid(0);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed setting effective user ID. %d message: %s",
+        rl_log(RL_LOG_ERROR, "Failed setting effective user ID; %d message: %s",
                errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -234,12 +235,14 @@ int main(void) {
     // hardware initialization
     gpio_t *gpio_power = gpio_setup(GPIO_POWER, GPIO_MODE_OUT, "rocketloggerd");
     if (gpio_power == NULL) {
-        rl_log(RL_LOG_ERROR, "Failed configuring power switch.");
+        rl_log(RL_LOG_ERROR, "Failed configuring power switch; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
     ret = gpio_set_value(gpio_power, 1);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed powering up cape.");
+        rl_log(RL_LOG_ERROR, "Failed powering up cape; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -249,13 +252,15 @@ int main(void) {
     gpio_t *gpio_button =
         gpio_setup_interrupt(GPIO_BUTTON, GPIO_INTERRUPT_BOTH, "rocketloggerd");
     if (gpio_button == NULL) {
-        rl_log(RL_LOG_ERROR, "Failed configuring button.");
+        rl_log(RL_LOG_ERROR, "Failed configuring button; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = pwm_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules.");
+        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -274,7 +279,9 @@ int main(void) {
 
     ret = sigaction(SIGTERM, &signal_action, NULL);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 

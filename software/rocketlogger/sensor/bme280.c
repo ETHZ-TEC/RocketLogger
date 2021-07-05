@@ -29,7 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <i2c/smbus.h>
 
@@ -143,7 +145,9 @@ bme280_calibration_t bme280_calibration[sizeof(bme280_sensors)];
 int bme280_init(int sensor_identifier) {
     int sensor_bus = sensors_get_bus();
     if (sensor_bus < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 I2C bus not initialized properly");
+        rl_log(RL_LOG_ERROR,
+               "BME280 I2C bus not initialized properly; %d message: %s", errno,
+               strerror(errno));
         return sensor_bus;
     }
 
@@ -152,25 +156,31 @@ int bme280_init(int sensor_identifier) {
     uint8_t device_address = (uint8_t)sensor_identifier;
     result = sensors_init_comm(device_address);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 I2C initialization failed");
+        rl_log(RL_LOG_ERROR, "BME280 I2C initialization failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 
     int sensor_id = bme280_get_id();
     if (sensor_id != BME280_ID) {
-        rl_log(RL_LOG_ERROR, "BME280 with wrong sensor ID: %d", sensor_id);
+        rl_log(RL_LOG_ERROR, "BME280 with wrong sensor ID: %d; %d message: %s",
+               sensor_id, errno, strerror(errno));
         return sensor_id;
     }
 
     result = bme280_read_calibration(sensor_identifier);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 reading calibration failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 reading calibration failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
     result = bme280_set_parameters(sensor_identifier);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 setting configuration failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 setting configuration failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
@@ -190,7 +200,8 @@ int bme280_read(int sensor_identifier) {
     uint8_t device_address = (uint8_t)sensor_identifier;
     int result = sensors_init_comm(device_address);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 I2C communication failed");
+        rl_log(RL_LOG_ERROR, "BME280 I2C communication failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 
@@ -200,7 +211,8 @@ int bme280_read(int sensor_identifier) {
     int data_size = i2c_smbus_read_i2c_block_data(
         sensor_bus, BME280_REG_PRESSURE_MSB, BME280_DATA_BLOCK_SIZE, data);
     if (data_size != BME280_DATA_BLOCK_SIZE) {
-        rl_log(RL_LOG_ERROR, "BME280 reading data block failed");
+        rl_log(RL_LOG_ERROR, "BME280 reading data block failed; %d message: %s",
+               errno, strerror(errno));
         return data_size;
     }
 
@@ -247,7 +259,9 @@ int bme280_get_id(void) {
     int read_result = i2c_smbus_read_byte_data(sensor_bus, BME280_REG_ID);
 
     if (read_result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 I2C error reading ID of sensor");
+        rl_log(RL_LOG_ERROR,
+               "BME280 I2C error reading ID of sensor; %d message: %s", errno,
+               strerror(errno));
     }
     return read_result;
 }
@@ -262,7 +276,9 @@ int bme280_read_calibration(int sensor_identifier) {
         i2c_smbus_read_i2c_block_data(sensor_bus, BME280_REG_CALIBRATION_BLOCK1,
                                       BME280_CALIBRATION_BLOCK1_SIZE, data);
     if (data_size1 != BME280_CALIBRATION_BLOCK1_SIZE) {
-        rl_log(RL_LOG_ERROR, "BME280 reading calibration block 1 failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 reading calibration block 1 failed; %d message: %s",
+               errno, strerror(errno));
         return data_size1;
     }
 
@@ -299,7 +315,9 @@ int bme280_read_calibration(int sensor_identifier) {
         i2c_smbus_read_i2c_block_data(sensor_bus, BME280_REG_CALIBRATION_BLOCK2,
                                       BME280_CALIBRATION_BLOCK2_SIZE, data);
     if (data_size2 != BME280_CALIBRATION_BLOCK2_SIZE) {
-        rl_log(RL_LOG_ERROR, "BME280 reading calibration block 2 failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 reading calibration block 2 failed; %d message: %s",
+               errno, strerror(errno));
         return data_size2;
     }
 
@@ -326,7 +344,9 @@ int bme280_set_parameters(int sensor_identifier) {
                                        BME280_STANDBY_DURATION_250 |
                                            BME280_FILTER_OFF);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 setting config register failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 setting config register failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
@@ -334,7 +354,10 @@ int bme280_set_parameters(int sensor_identifier) {
     result = i2c_smbus_write_byte_data(sensor_bus, BME280_REG_CONTROL_HUMIDITY,
                                        BME280_OVERSAMPLE_HUMIDITY_1);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 setting humidity control register failed");
+        rl_log(
+            RL_LOG_ERROR,
+            "BME280 setting humidity control register failed; %d message: %s",
+            errno, strerror(errno));
         return result;
     }
 
@@ -344,7 +367,9 @@ int bme280_set_parameters(int sensor_identifier) {
                                            BME280_OVERSAMPLE_TEMPERATURE_1 |
                                            BME280_MODE_NORMAL);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "BME280 setting measure control register failed");
+        rl_log(RL_LOG_ERROR,
+               "BME280 setting measure control register failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 

@@ -91,8 +91,8 @@ int sem_wait(int id, int index, int timeout) {
                    errno, strerror(errno));
         } else if (errno == EINVAL) {
             rl_log(RL_LOG_ERROR,
-                   "Failed waiting on semaphore, semaphore inexistent; "
-                   "%d message: %s",
+                   "Failed waiting on semaphore, semaphore inexistent; %d "
+                   "message %s",
                    errno, strerror(errno));
         } else {
             rl_log(RL_LOG_ERROR, "Failed waiting on semaphore; %d message: %s",
