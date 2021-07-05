@@ -35,6 +35,7 @@ from rocketlogger.data import (
     RocketLoggerDataError,
     RocketLoggerDataWarning,
     RocketLoggerFileError,
+    _ROCKETLOGGER_ADC_CLOCK_SCALE,
 )
 import os.path
 from unittest import TestCase
@@ -1141,6 +1142,33 @@ class TestDataHandling(TestCase):
     def test_get_time_invalid_reference(self):
         with self.assertRaisesRegex(ValueError, "Time reference"):
             self.data.get_time(time_reference="invalid")
+
+    def test_get_time_relative_scaling(self):
+        temp = self.data.get_time(time_reference="relative")
+        dtemp = np.diff(temp).mean()
+        dt = 1 / _ROCKETLOGGER_ADC_CLOCK_SCALE / self.data.get_header()["sample_rate"]
+        self.assertAlmostEqual(dtemp / dt, 1)
+
+    def test_get_time_absolute_local_scaling(self):
+        temp = self.data.get_time(time_reference="local")
+        dtemp = np.diff(temp).mean()
+        print(dtemp.dtype)
+        dt = (
+            np.timedelta64(10 ** 9, "ns")
+            / _ROCKETLOGGER_ADC_CLOCK_SCALE
+            / self.data.get_header()["sample_rate"]
+        )
+        self.assertAlmostEqual(dtemp / dt, 1)
+
+    def test_get_time_absolute_network_scaling(self):
+        temp = self.data.get_time(time_reference="network")
+        dtemp = np.diff(temp).mean()
+        dt = (
+            np.timedelta64(10 ** 9, "ns")
+            / _ROCKETLOGGER_ADC_CLOCK_SCALE
+            / self.data.get_header()["sample_rate"]
+        )
+        self.assertAlmostEqual(dtemp / dt, 1)
 
     def test_get_filename(self):
         temp = self.data.get_filename()

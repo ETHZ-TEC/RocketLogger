@@ -40,6 +40,8 @@ import warnings
 import numpy as np
 
 
+_ROCKETLOGGER_ADC_CLOCK_SCALE = (100e6 / 49) / 2.048e6
+
 _ROCKETLOGGER_FILE_MAGIC = 0x444C5225
 
 _SUPPORTED_FILE_VERSIONS = [1, 2, 3, 4]
@@ -1029,8 +1031,8 @@ class RocketLoggerData:
 
         # get requested timer data as numbers
         if time_reference == "relative":
-            timestamps = (
-                np.arange(0, self._header["sample_count"]) / self._header["sample_rate"]
+            timestamps = np.arange(0, self._header["sample_count"]) / (
+                self._header["sample_rate"] * _ROCKETLOGGER_ADC_CLOCK_SCALE
             )
         elif time_reference == "local":
             block_timestamps = self._timestamps_monotonic.astype("<i8")
