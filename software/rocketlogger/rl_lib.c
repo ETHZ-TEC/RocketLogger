@@ -132,7 +132,9 @@ int rl_run(rl_config_t *const config) {
     rl_status.config = config;
 
     // init status publishing and publish (to not be received, see zeromq docs)
-    rl_status_pub_init();
+    if (config->web_enable) {
+        rl_status_pub_init();
+    }
     rl_status_write(&rl_status);
 
     // init hardware
@@ -158,8 +160,8 @@ int rl_run(rl_config_t *const config) {
     // FINISH
     if (config->web_enable) {
         rl_socket_deinit();
+        rl_status_pub_deinit();
     }
-    rl_status_pub_deinit();
     hw_deinit(config);
 
     // restore signal handlers for SIGTERM and SIGINT
