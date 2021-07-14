@@ -1015,7 +1015,9 @@ class RocketLoggerData:
         Get the timestamp of the data.
 
         Using simple linear interpolation to generating the sample from the
-        block timestamps.
+        block timestamps. For local or network timestamps the values for the
+        last data block are extrapolated using the average time delta of all
+        data blocks.
 
         :param time_reference: The reference to use for timestamp calculation:
 
@@ -1035,16 +1037,19 @@ class RocketLoggerData:
                 self._header["sample_rate"] * _ROCKETLOGGER_ADC_CLOCK_SCALE
             )
         elif time_reference == "local":
-            block_timestamps = self._timestamps_monotonic.astype("<i8")
+            timestamps = self._timestamps_monotonic.astype("<i8")
         elif time_reference == "network":
-            block_timestamps = self._timestamps_realtime.astype("<i8")
+            timestamps = self._timestamps_realtime.astype("<i8")
         else:
             raise ValueError(f"Time reference '{time_reference}' undefined.")
 
-        # interpolate absolute time if requested
+        # interpolate absolute time references (and extrapolate for last data block)
         if time_reference in ["local", "network"]:
             block_points = np.arange(
-                0, self._header["sample_count"], self._header["data_block_size"]
+                0, self._header["sample_count"] + 1, self._header["data_block_size"]
+            )
+            block_timestamps = np.concatenate(
+                (timestamps, [timestamps[-1] + np.diff(timestamps).mean()])
             )
             data_points = np.arange(0, self._header["sample_count"])
 

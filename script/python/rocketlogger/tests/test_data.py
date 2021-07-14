@@ -1158,7 +1158,7 @@ class TestDataHandling(TestCase):
             / _ROCKETLOGGER_ADC_CLOCK_SCALE
             / self.data.get_header()["sample_rate"]
         )
-        self.assertAlmostEqual(dtemp / dt, 1)
+        self.assertAlmostEqual(dtemp / dt, 1, places=4)
 
     def test_get_time_absolute_network_scaling(self):
         temp = self.data.get_time(time_reference="network")
@@ -1168,7 +1168,7 @@ class TestDataHandling(TestCase):
             / _ROCKETLOGGER_ADC_CLOCK_SCALE
             / self.data.get_header()["sample_rate"]
         )
-        self.assertAlmostEqual(dtemp / dt, 1)
+        self.assertAlmostEqual(dtemp / dt, 1, places=4)
 
     def test_get_filename(self):
         temp = self.data.get_filename()
