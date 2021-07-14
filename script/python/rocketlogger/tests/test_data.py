@@ -89,8 +89,6 @@ class TestDecimation(TestCase):
         data_in[0:100:10] = 0
         data_ref = np.zeros((10))
         data_out = rld._decimate_min(data_in, 10)
-        print(data_in)
-        print(data_out)
         self.assertEqual(sum(abs(data_out - data_ref)), 0)
 
     def test_max_decimation(self):
@@ -98,8 +96,6 @@ class TestDecimation(TestCase):
         data_in[0:100:10] = 1
         data_ref = np.ones((10))
         data_out = rld._decimate_max(data_in, 10)
-        print(data_in)
-        print(data_out)
         self.assertAlmostEqual(sum(abs(data_out - data_ref)), 0)
 
     def test_mean_decimation(self):
@@ -1152,7 +1148,6 @@ class TestDataHandling(TestCase):
     def test_get_time_absolute_local_scaling(self):
         temp = self.data.get_time(time_reference="local")
         dtemp = np.diff(temp).mean()
-        print(dtemp.dtype)
         dt = (
             np.timedelta64(10 ** 9, "ns")
             / _ROCKETLOGGER_ADC_CLOCK_SCALE
