@@ -39,10 +39,9 @@ IMAGE_FLASHER_SHA256="656dc664c12c8bf6793a5f45c59b63cba435b98af8e08c2d7ca71a6891
 curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"
 
 # check downloaded file hash
-SHA256=`sha256sum "${IMAGE_FLASHER_FILE}" | awk '{print $1}'`
-if [[ "$SHA256" != "${IMAGE_FLASHER_SHA256}" ]]; then
+if [[ `echo "${IMAGE_FLASHER_SHA256}  ${IMAGE_FLASHER_FILE}" | sha256sum --check --strict` ]]; then
+  echo "SHA256 hash checked successfully."
+else
   echo "SHA256 hash verification failed!"
   exit 1
-else
-  echo "SHA256 hash checked successfully."
 fi

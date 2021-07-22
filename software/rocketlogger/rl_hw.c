@@ -29,7 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "calibration.h"
 #include "gpio.h"
@@ -130,8 +132,9 @@ int hw_sample(rl_config_t const *const config) {
     if (config->file_enable) {
         data_file = fopen64(config->file_name, "w+");
         if (data_file == NULL) {
-            rl_log(RL_LOG_ERROR, "failed to open data file '%s'",
-                   config->file_name);
+            rl_log(RL_LOG_ERROR,
+                   "failed to open data file '%s'; %d message: %s",
+                   config->file_name, errno, strerror(errno));
             return ERROR;
         }
     }
@@ -141,8 +144,9 @@ int hw_sample(rl_config_t const *const config) {
             rl_file_get_ambient_file_name(config->file_name);
         ambient_file = fopen64(ambient_file_name, "w+");
         if (data_file == NULL) {
-            rl_log(RL_LOG_ERROR, "failed to open ambient file '%s'",
-                   ambient_file);
+            rl_log(RL_LOG_ERROR,
+                   "failed to open ambient file '%s'; %d message: %s",
+                   ambient_file, errno, strerror(errno));
             return ERROR;
         }
     }

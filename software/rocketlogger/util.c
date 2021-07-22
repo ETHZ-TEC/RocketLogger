@@ -98,7 +98,8 @@ void create_time_stamp(rl_timestamp_t *const timestamp_realtime,
     int ret2 = clock_gettime(CLOCK_MONOTONIC_RAW, &spec_monotonic);
 
     if (ret1 < 0 || ret2 < 0) {
-        rl_log(RL_LOG_ERROR, "failed to get time");
+        rl_log(RL_LOG_ERROR, "failed to get time; %d message: %s", errno,
+               strerror(errno));
     }
 
     // convert to own time stamp
@@ -126,7 +127,7 @@ int64_t fs_space_free(char const *const path) {
     int ret = statvfs(path, &stat);
     if (ret < 0) {
         rl_log(RL_LOG_WARNING,
-               "failed getting free file system size;%d message: %s", errno,
+               "failed getting free file system size; %d message: %s", errno,
                strerror(errno));
     }
 
@@ -138,7 +139,7 @@ int64_t fs_space_total(char const *const path) {
     int ret = statvfs(path, &stat);
     if (ret < 0) {
         rl_log(RL_LOG_WARNING,
-               "failed getting total file system size;%d message: %s", errno,
+               "failed getting total file system size; %d message: %s", errno,
                strerror(errno));
     }
 

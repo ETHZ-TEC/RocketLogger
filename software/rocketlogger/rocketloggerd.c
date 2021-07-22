@@ -306,10 +306,11 @@ void button_interrupt_handler(int value) {
         rl_status_t status;
         int ret = rl_status_read(&status);
         if (ret < 0) {
-            rl_log(RL_LOG_ERROR, "Failed reading status.");
+            rl_log(RL_LOG_ERROR, "Failed reading status; %d message: %s", errno,
+                   strerror(errno));
         }
 
-        char *cmd[3] = { "rocketlogger", NULL, NULL};
+        char *cmd[3] = {"rocketlogger", NULL, NULL};
         if (status.sampling) {
             cmd[1] = "stop";
         } else {
@@ -319,14 +320,14 @@ void button_interrupt_handler(int value) {
         // create child process to start RocketLogger
         pid_t pid = fork();
         if (pid < 0) {
-            rl_log(RL_LOG_ERROR, "Failed forking process. %d message: %s",
+            rl_log(RL_LOG_ERROR, "Failed forking process; %d message: %s",
                    errno, strerror(errno));
         }
         if (pid == 0) {
             // in child process, execute RocketLogger
             execvp(cmd[0], cmd);
             rl_log(RL_LOG_ERROR,
-                   "Failed executing `rocketlogger %s`. %d message: %s", cmd,
+                   "Failed executing `rocketlogger %s`; %d message: %s", cmd,
                    errno, strerror(errno));
         } else {
             // in parent process log pid
@@ -364,6 +365,14 @@ int main(void) {
     // init log module
     rl_log_init(log_filename, RL_LOG_INFO);
 
+    // set effective user ID of the process
+    ret = setuid(0);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR, "Failed setting effective user ID; %d message: %s",
+               errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
     // reset all GPIOs to known reset state
     gpio_reset(GPIO_POWER);
     gpio_reset(GPIO_BUTTON);
@@ -377,38 +386,45 @@ int main(void) {
     // hardware initialization
     ret = power_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed powering up cape.");
+        rl_log(RL_LOG_ERROR, "Failed powering up cape; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = button_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring button.");
+        rl_log(RL_LOG_ERROR, "Failed configuring button; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = leds_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring LEDs.");
+        rl_log(RL_LOG_ERROR, "Failed configuring LEDs; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = fhr_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed configuring range forcing.");
+        rl_log(RL_LOG_ERROR, "Failed configuring range forcing; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = pwm_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules.");
+        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     // create shared memory for state
     ret = rl_status_shm_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed initializing status shared memory.");
+        rl_log(RL_LOG_ERROR,
+               "Failed initializing status shared memory; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -420,7 +436,9 @@ int main(void) {
 
     ret = sigaction(SIGTERM, &signal_action, NULL);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 

@@ -38,17 +38,18 @@ due to running out of system disk space.
 ### Patch BeagleBone System Image
 
 1. (skip this step when using a prebuilt RocketLogger image) use the `patch_image.sh` script from 
-   the parent directory to download and patch the BeagleBone flasher image (requires Docker Buildx)
-3. flash the resulting `rocketlogger-*.img` file: insert the SD card into your computer and flash
+   the parent directory to download and patch the BeagleBone flasher image. This script requires a
+   Docker Buildx setup as described under [dependencies](#dependencies).
+2. flash the resulting `rocketlogger-*.img` file: insert the SD card into your computer and flash
    the `rocketlogger-*.img` image to it using `flash_image.sh rocketlogger-*.img <disk-device>`,
    where `<disk-device>` the SD card device, typically `/dev/sdX` or `/dev/mmcblkX` (without any
    partition suffix!)
-4. insert the SD card into the RocketLogger device and power it up
-5. wait for the image to be copied to internal memory, i.e. until all LED are turned off again
-6. remove the SD card and reboot the system
-7. optionally, but highly recommended, set up the external SD card as configuration and
+3. insert the SD card into the RocketLogger device and power it up
+4. wait for the image to be copied to internal memory, i.e. until all LED are turned off again
+5. remove the SD card and reboot the system
+6. optionally, but highly recommended, set up the external SD card as configuration and
    measurement data storage as described below
-8. power up the RocketLogger and start your measurements.
+7. power up the RocketLogger and start your measurements.
 
 
 ### Set up External SD Card for Data and Configuration Storage
@@ -72,7 +73,34 @@ filesystem tools that are typically included with any basic Linux based operatin
 Tools that might not come preinstalled with your favorite Linux operating system installation are:
 `curl`, `dd`, `git`, `xz`
 
+
+### Docker Buildx for ARM System Image Patching
+
 The local patching of a BeagleBone system image requires `Docker Buildx` and a system configured
 to run privileged Docker containers. More information on the docker configuration is found at
 [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/) and in the
 [docker run reference](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities).
+
+In a nutshell, Docker with Buildx and privileged support is installed as follows on a fresh
+Ubuntu LTS 20.04 system (see the corresponding links for in-depth details):
+
+1. install Docker, see also: https://docs.docker.com/engine/install/ubuntu/
+   ```bash
+   sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt-get update
+   sudo apt-get install docker-ce docker-ce-cli containerd.io
+   ```
+
+2. add the user to the `docker` group to start Docker containers without root permissions,
+   see also: https://docs.docker.com/engine/install/linux-postinstall/
+   ```bash
+   sudo groupadd docker
+   sudo usermod --append --groups docker ${USER}
+   ```
+
+Finally, reboot to apply the new user configurations.
+
+Now the Docker Buildx setup should ready for cross-compilation and patching of an arm-v7 Debian
+system image using the `patch_image.sh` script.
