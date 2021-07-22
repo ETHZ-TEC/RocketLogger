@@ -57,8 +57,8 @@ _LEGACY_FILE_DTYPE = np.dtype(
 )
 
 
-# old to new channel enumeration mapping (actually none, 1.99a6 used remapped sequence already)
-_CHANNEL_REMAPPING = range(8)
+# old to new channel enumeration mapping (fixing swapped V1/V2 and V3/V4 due to incomplete remapping for v1.99a6)
+_CHANNEL_REMAPPING = [1, 0, 2, 3, 5, 4, 6, 7]
 
 if __name__ == "__main__":
 
