@@ -67,8 +67,7 @@ bool rl_is_sampling(void) {
             return false;
         }
         rl_log(RL_LOG_ERROR,
-               "failed getting status to check sampling state."
-               "%d message: %s",
+               "failed getting status to check sampling state; %d message: %s",
                errno, strerror(errno));
     }
 
@@ -116,12 +115,16 @@ int rl_run(rl_config_t *const config) {
     int ret;
     ret = sigaction(SIGTERM, &signal_action, &sigterm_action_backup);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
         return ERROR;
     }
     ret = sigaction(SIGINT, &signal_action, &sigint_action_backup);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGINT.");
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGINT; %d message: %s",
+               errno, strerror(errno));
         return ERROR;
     }
 
@@ -167,11 +170,15 @@ int rl_run(rl_config_t *const config) {
     // restore signal handlers for SIGTERM and SIGINT
     ret = sigaction(SIGTERM, &sigterm_action_backup, NULL);
     if (ret < 0) {
-        rl_log(RL_LOG_WARNING, "can't restore signal handler for SIGTERM.");
+        rl_log(RL_LOG_WARNING,
+               "can't restore signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
     }
     ret = sigaction(SIGINT, &sigint_action_backup, NULL);
     if (ret < 0) {
-        rl_log(RL_LOG_WARNING, "can't restore signal handler for SIGINT.");
+        rl_log(RL_LOG_WARNING,
+               "can't restore signal handler for SIGINT; %d message: %s", errno,
+               strerror(errno));
     }
 
     return SUCCESS;
@@ -186,7 +193,8 @@ int rl_stop(void) {
     // get pid and send termination signal
     pid_t pid = rl_pid_get();
     if (pid < 0) {
-        rl_log(RL_LOG_ERROR, "RocketLogger PID file not found.");
+        rl_log(RL_LOG_ERROR, "RocketLogger PID file not found; %d message: %s",
+               errno, strerror(errno));
         return ERROR;
     }
     kill(pid, SIGTERM);

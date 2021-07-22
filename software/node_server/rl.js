@@ -70,7 +70,9 @@ const rl = {
         try {
             res.status = JSON.parse(cmd.stdout.toString());
         } catch (err) {
-            res.err.push(`RocketLogger configuration processing error: ${err}`);
+            res.err.push(`RocketLogger status processing error: ${err}`);
+            res.err.push(`stdout: ${cmd.stdout}`);
+            res.err.push(`stderr: ${cmd.stderr}`);
         }
 
         res.cli = `rocketlogger ${args.join(' ')}`;
@@ -177,6 +179,8 @@ const rl = {
             }
         } catch (err) {
             res.err.push(`RocketLogger configuration processing error: ${err}`);
+            res.err.push(`stdout: ${cmd.stdout}`);
+            res.err.push(`stderr: ${cmd.stderr}`);
         }
 
         res.default = (config != null);
@@ -222,6 +226,9 @@ function config_to_args(mode, config) {
     // force some defaults
     config.samples = 0; // continuous sampling
     config.update_rate = rl_update_rate;
+    if (config.sample_rate < config.update_rate) {
+        config.update_rate = config.sample_rate;
+    }
 
     args.push(`--samples=${config.samples}`);
     args.push(`--update=${config.update_rate}`);

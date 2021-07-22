@@ -29,7 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <linux/i2c-dev.h>
 
@@ -128,19 +130,24 @@ int tsl4531_init(int sensor_identifier) {
     uint8_t device_address = (uint8_t)sensor_identifier;
     result = sensors_init_comm(device_address);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 I2C initialization failed");
+        rl_log(RL_LOG_ERROR,
+               "TSL4531 I2C initialization failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
     int sensor_id = tsl4531_get_id();
     if (sensor_id != TSL4531_ID) {
-        rl_log(RL_LOG_ERROR, "TSL4531 with wrong sensor ID: %d", sensor_id);
+        rl_log(RL_LOG_ERROR, "TSL4531 with wrong sensor ID: %d; %d message: %s",
+               sensor_id, errno, strerror(errno));
         return sensor_id;
     }
 
     result = tsl4531_set_parameters(sensor_identifier);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 setting configuration failed");
+        rl_log(RL_LOG_ERROR,
+               "TSL4531 setting configuration failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
@@ -160,7 +167,8 @@ int tsl4531_read(int sensor_identifier) {
     uint8_t device_address = (uint8_t)sensor_identifier;
     result = sensors_init_comm(device_address);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 I2C communication failed");
+        rl_log(RL_LOG_ERROR, "TSL4531 I2C communication failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 
@@ -168,7 +176,8 @@ int tsl4531_read(int sensor_identifier) {
     int32_t data = i2c_smbus_read_word_data(
         sensor_bus, TSL4531_COMMAND | TSL4531_REG_DATALOW);
     if (data < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 reading data word failed");
+        rl_log(RL_LOG_ERROR, "TSL4531 reading data word failed; %d message: %s",
+               errno, strerror(errno));
         return data;
     }
 
@@ -230,7 +239,8 @@ int tsl4531_set_range(int sensor_identifier, int range) {
 
     int result = tsl4531_send_range(sensor_identifier, range);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 auto range update failed");
+        rl_log(RL_LOG_ERROR, "TSL4531 auto range update failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 
@@ -270,13 +280,16 @@ int tsl4531_set_parameters(int sensor_identifier) {
                                        TSL4531_COMMAND | TSL4531_REG_CONTROL,
                                        TSL4531_SAMPLE_CONTINUOUS);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 writing control register failed");
+        rl_log(RL_LOG_ERROR,
+               "TSL4531 writing control register failed; %d message: %s", errno,
+               strerror(errno));
         return result;
     }
 
     result = tsl4531_set_range(sensor_identifier, TSL4531_RANGE_AUTO);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "TSL4531 setting range failed");
+        rl_log(RL_LOG_ERROR, "TSL4531 setting range failed; %d message: %s",
+               errno, strerror(errno));
         return result;
     }
 
@@ -296,7 +309,9 @@ int tsl4531_send_range(int sensor_identifier, int range) {
             TSL4531_INT_TIME_400 | TSL4531_LOW_POWER);
         if (result < 0) {
             rl_log(RL_LOG_ERROR,
-                   "TSL4531 writing new range configuration failed");
+                   "TSL4531 writing new range configuration failed; %d "
+                   "message: %s",
+                   errno, strerror(errno));
             return result;
         }
         tsl4531_multiplier[sensor_index] = TSL4531_MULT_400;
@@ -307,7 +322,9 @@ int tsl4531_send_range(int sensor_identifier, int range) {
             TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
         if (result < 0) {
             rl_log(RL_LOG_ERROR,
-                   "TSL4531 writing new range configuration failed");
+                   "TSL4531 writing new range configuration failed; %d "
+                   "message: %s",
+                   errno, strerror(errno));
             return result;
         }
         tsl4531_multiplier[sensor_index] = TSL4531_MULT_200;
@@ -318,7 +335,9 @@ int tsl4531_send_range(int sensor_identifier, int range) {
             TSL4531_INT_TIME_100 | TSL4531_LOW_POWER);
         if (result < 0) {
             rl_log(RL_LOG_ERROR,
-                   "TSL4531 writing new range configuration failed");
+                   "TSL4531 writing new range configuration failed; %d "
+                   "message: %s",
+                   errno, strerror(errno));
             return result;
         }
         tsl4531_multiplier[sensor_index] = TSL4531_MULT_100;
@@ -329,7 +348,9 @@ int tsl4531_send_range(int sensor_identifier, int range) {
             TSL4531_INT_TIME_200 | TSL4531_LOW_POWER);
         if (result < 0) {
             rl_log(RL_LOG_ERROR,
-                   "TSL4531 writing new range configuration failed");
+                   "TSL4531 writing new range configuration failed; %d "
+                   "message: %s",
+                   errno, strerror(errno));
             return result;
         }
         tsl4531_multiplier[sensor_index] = TSL4531_MULT_200;
@@ -337,6 +358,7 @@ int tsl4531_send_range(int sensor_identifier, int range) {
         break;
     default:
         rl_log(RL_LOG_ERROR, "TSL4531 invalid range");
+        errno = EINVAL;
         return result;
     }
 

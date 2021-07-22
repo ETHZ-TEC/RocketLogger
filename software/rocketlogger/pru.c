@@ -275,7 +275,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
     if (res < 0) {
         // error checking interrupt occurred
-        rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt");
+        rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt; %d message: %s",
+               errno, strerror(errno));
         return ERROR;
     } else if (res == 0) {
         // low level ADC timeout occurred
@@ -316,7 +317,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     rl_status.sampling = true;
     res = rl_status_write(&rl_status);
     if (res < 0) {
-        rl_log(RL_LOG_WARNING, "Failed writing status");
+        rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s", errno,
+               strerror(errno));
     }
 
     // continuous sampling loop
@@ -452,7 +454,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         } while (res < 0 && errno == EINTR);
         if (res < 0) {
             // error checking interrupt occurred
-            rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt", errno);
+            rl_log(RL_LOG_ERROR,
+                   "Failed waiting for PRU interrupt; %d message: %s", errno,
+                   strerror(errno));
             rl_status.error = true;
             break;
         } else if (res == 0) {
@@ -513,9 +517,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
             // copy and calibrate analog channel data
             for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-                analog_data[j] = (int32_t)(
-                    (pru_data->channel_analog[j] + rl_calibration.offsets[j]) *
-                    rl_calibration.scales[j]);
+                analog_data[j] = (int32_t)((pru_data->channel_analog[j] +
+                                            rl_calibration.offsets[j]) *
+                                           rl_calibration.scales[j]);
             }
         }
 
@@ -524,7 +528,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         rl_status.buffer_count = i + 1 - buffers_lost;
         res = rl_status_write(&rl_status);
         if (res < 0) {
-            rl_log(RL_LOG_WARNING, "Failed writing status");
+            rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s",
+                   errno, strerror(errno));
         }
 
         // process data for web when enabled
@@ -536,8 +541,11 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
             if (res < 0) {
                 // disable web interface on failure, but continue sampling
                 web_failure_disable = true;
-                rl_log(RL_LOG_WARNING, "Web server connection failed. "
-                                       "Disabling web interface.");
+                rl_log(RL_LOG_WARNING,
+                       "Web server connection failed; %d message: %s", errno,
+                       strerror(errno));
+                rl_log(RL_LOG_INFO,
+                       "Disabling web interface and continue sampling.");
             }
         }
 
@@ -550,7 +558,9 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
             // stop sampling on file error
             if (block_count < 0) {
-                rl_log(RL_LOG_ERROR, "Adding data block to data file failed.");
+                rl_log(RL_LOG_ERROR,
+                       "Adding data block to data file failed; %d message: %s",
+                       errno, strerror(errno));
                 rl_status.error = true;
                 break;
             }
@@ -576,8 +586,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
 
             // stop sampling on file error
             if (block_count < 0) {
-                rl_log(RL_LOG_ERROR,
-                       "Adding data block to ambient file failed.");
+                rl_log(
+                    RL_LOG_ERROR,
+                    "Adding data block to ambient file failed; %d message: %s",
+                    errno, strerror(errno));
                 rl_status.error = true;
                 break;
             }
@@ -604,7 +616,8 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     rl_status.sampling = false;
     res = rl_status_write(&rl_status);
     if (res < 0) {
-        rl_log(RL_LOG_WARNING, "Failed writing status");
+        rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s", errno,
+               strerror(errno));
     }
 
     // CLEANUP CHANNEL DATA MEMORY ALLOCATION
