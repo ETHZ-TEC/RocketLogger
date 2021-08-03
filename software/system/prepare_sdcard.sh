@@ -1,5 +1,8 @@
 #!/bin/bash
-# Format an SD card and initialize folders and permission for RocketLogger data storage.
+# Format an ext4 RocketLogger Data SD Card, initialize folders and set file system permissions.
+# Usage: ./prepare_sdcard.sh <sdcard>
+# * <sdcard> speficies the SD card device to initialize, has to refer to a raw block device,
+#   e.g. specify /dev/sdX instead of /dev/sdX1
 
 # configuration
 ROCKETLOGGER_UID=1001
@@ -18,7 +21,7 @@ fi
 
 # check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./prepare_sdcard.sh <sdcard-dev>"
+  echo "Usage: ./prepare_sdcard.sh <sdcard>"
   exit 1
 fi
 
@@ -74,7 +77,7 @@ echo "> Generate SD card folder structure and set permissions"
 mkdir --parents ${MOUNT_POINT}/rocketlogger/config
 mkdir --parents ${MOUNT_POINT}/rocketlogger/data
 chown --recursive ${ROCKETLOGGER_UID}:${ROCKETLOGGER_GID} ${MOUNT_POINT}/rocketlogger
-chmod --recursive 775 ${MOUNT_POINT}/rocketlogger
+chmod --recursive 777 ${MOUNT_POINT}/rocketlogger
 
 # generate folder structures and set permissions
 echo "> Sync file system and unmount"
@@ -84,7 +87,7 @@ rmdir ${MOUNT_POINT}
 
 
 # hint on the next setup step
-echo ">> Preparation of SD card for RocketLogger data storage completed. To continue:"
+echo ">> Preparation of the RocketLogger Data SD Card completed. To continue:"
 echo "   * copy existing calibration file to \`rocketlogger/config\` on the SD card,"
 echo "   * power down the RocketLogger device and insert the SD card,"
 echo "   * start the RocketLogger and start your measurements."

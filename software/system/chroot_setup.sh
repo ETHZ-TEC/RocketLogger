@@ -1,7 +1,10 @@
 #!/bin/bash
-# Patch operating system of a local BeagleBone system image
-# Usage: ./chroot_setup.sh <image.img> [<hostname>]
-# Note: needs to be executed in an (virtualized) arm-v7 environment
+# Patch a BeagleBone file system image with the RocketLogger installation
+# Usage: ./chroot_setup.sh <image> [<hostname>]
+# * <image> specifys the (uncompressed) BeagleBone file system image to patch
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
+# Note: needs to be executed in a (virtualized) arm-v7 environment
 
 IMAGE=/dev/null
 HOSTNAME="rocketlogger"
@@ -12,7 +15,7 @@ REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 # check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./chroot_setup.sh <image.img> [<hostname>]"
+  echo "Usage: ./chroot_setup.sh <image> [<hostname>]"
   exit -1
 else
   IMAGE=$1

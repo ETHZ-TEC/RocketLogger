@@ -1,6 +1,9 @@
 #!/bin/bash
-# Remotely configure operating system of a new BeagleBone Black/Green/Green Wireless
-# Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]
+# Remotely configure operating system of a new BeagleBone Green or Black
+# Usage: ./remote_setup.sh <host> [<hostname>]
+# * <host> specifys the hostname or IP address of the BeagleBone device to set up
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -36,7 +39,7 @@ REBOOT_TIMEOUT=60
 
 # check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]"
+  echo "Usage: ./remote_setup.sh <host> [<hostname>]"
   exit -1
 fi
 if [ $# -ge 2 ]; then

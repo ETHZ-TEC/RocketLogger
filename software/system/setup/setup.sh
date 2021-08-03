@@ -1,6 +1,8 @@
 #!/bin/bash
 # Basic operating system initalization of a new BeagleBone Black/Green/Green Wireless
 # Usage: setup.sh [<hostname>]
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
