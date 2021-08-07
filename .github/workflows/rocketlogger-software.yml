@@ -1,0 +1,52 @@
+# This workflow will prepare Docker and cross compile the RocketLogger software binaries
+
+name: RocketLogger software CI
+
+on:
+  push:
+    branches: [ $protected-branches ]
+  pull_request:
+    branches: [ $protected-branches ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: software/rocketlogger
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Prepare git revision info
+        id: git_info
+        run: |
+          echo ::set-output name=NAME::${GITHUB_REF#refs/*/}
+          echo ::set-output name=BRANCH::${GITHUB_REF#refs/heads/}
+          echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+          echo ::set-output name=REPO_ROOT_PATH::$(git rev-parse --show-toplevel)
+          echo ::set-output name=REPO_REL_PATH::$(git rev-parse --show-prefix)
+
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build the Docker image
+        run: |
+          docker buildx build --platform linux/arm/v7 --tag rocketlogger_build .
+
+      - name: Cross compile using Docker image
+        run: |
+          docker run --platform linux/arm/v7 --user "$(id -u):$(id -g)" --mount type=bind,source="${{ steps.git_info.outputs.REPO_ROOT_PATH }}",target=/home/rocketlogger \
+            --tty rocketlogger_build /bin/bash -c "cd /home/rocketlogger/${{ steps.git_info.outputs.REPO_REL_PATH }} && meson builddir && cd builddir && ninja"
