@@ -1,0 +1,9 @@
+<map id="sensor/sensor.c" name="sensor/sensor.c">
+<area shape="rect" id="node4" href="$log_8h.html" title="../log.h" alt="" coords="1756,229,1819,256"/>
+<area shape="rect" id="node25" href="$bme280_8h.html" title="bme280.h" alt="" coords="1036,155,1115,181"/>
+<area shape="rect" id="node29" href="$tsl4531_8h.html" title="tsl4531.h" alt="" coords="1579,155,1654,181"/>
+<area shape="rect" id="node30" href="$sensor_8h.html" title="sensor.h" alt="" coords="406,80,478,107"/>
+<area shape="rect" id="node6" href="$types_8h.html" title="types.h" alt="" coords="769,304,835,331"/>
+<area shape="rect" id="node31" href="$rl__file_8h.html" title="../rl_file.h" alt="" coords="404,155,480,181"/>
+<area shape="rect" id="node32" href="$util_8h.html" title="util.h" alt="" coords="417,229,467,256"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="TSL4531_init" name="TSL4531_init">
+<area shape="rect" id="node2" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="807,78,861,105"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a715ca0748af00d78ea31b4fbe7cd423a" title="Sensors_getSharedBus" alt="" coords="755,269,913,296"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#abbdf060bae5e80ceaffe7a56e3aaa1d5" title="Sensors_initSharedComm" alt="" coords="152,382,327,409"/>
+<area shape="rect" id="node5" href="$tsl4531_8c.html#ad5629d7bb7a0bdae1d9b6c4096b03635" title="TSL4531_getID" alt="" coords="577,28,690,54"/>
+<area shape="rect" id="node6" href="$tsl4531_8c.html#a404084dedbd2ad4d310e606092178d05" title="TSL4531_setParameters" alt="" coords="156,180,323,206"/>
+<area shape="rect" id="node7" href="$tsl4531_8c.html#a899b417f055870b23b35fb7e314454fc" title="TSL4531_setRange" alt="" coords="375,180,512,206"/>
+<area shape="rect" id="node8" href="$tsl4531_8c.html#a1f8fb6356fc01ff25758a060b46a3c8f" title="TSL4531_getIndex" alt="" coords="769,205,899,232"/>
+<area shape="rect" id="node9" href="$tsl4531_8c.html#a07a1b181d3cfa734c3791e5e32b2e58f" title="TSL4531_sendRange" alt="" coords="560,180,707,206"/>
+</map>

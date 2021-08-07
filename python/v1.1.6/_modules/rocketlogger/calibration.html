@@ -1,0 +1,819 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rocketlogger.calibration &mdash; &#39;RocketLogger Python Support&#39; 1.1a1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> 'RocketLogger Python Support'
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">rocketlogger</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">'RocketLogger Python Support'</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>rocketlogger.calibration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rocketlogger.calibration</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">RocketLogger Calibration Support.</span>
+
+<span class="sd">Calibration file generation and accuracy verification.</span>
+
+<span class="sd">Copyright (c) 2019, Swiss Federal Institute of Technology (ETH Zurich)</span>
+<span class="sd">All rights reserved.</span>
+
+<span class="sd">Redistribution and use in source and binary forms, with or without</span>
+<span class="sd">modification, are permitted provided that the following conditions are met:</span>
+
+<span class="sd">* Redistributions of source code must retain the above copyright notice, this</span>
+<span class="sd">  list of conditions and the following disclaimer.</span>
+
+<span class="sd">* Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="sd">  this list of conditions and the following disclaimer in the documentation</span>
+<span class="sd">  and/or other materials provided with the distribution.</span>
+
+<span class="sd">* Neither the name of the copyright holder nor the names of its</span>
+<span class="sd">  contributors may be used to endorse or promote products derived from</span>
+<span class="sd">  this software without specific prior written permission.</span>
+
+<span class="sd">THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="sd">AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="sd">IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="sd">DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="sd">FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="sd">DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="sd">SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="sd">CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="sd">OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="sd">OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.data</span> <span class="k">import</span> <span class="n">RocketLoggerData</span><span class="p">,</span> <span class="n">RocketLoggerFileError</span>
+
+<span class="n">ROCKETLOGGER_CALIBRATION_FILE</span> <span class="o">=</span> <span class="s1">&#39;/etc/rocketlogger/calibration.dat&#39;</span>
+<span class="sd">&quot;&quot;&quot;Default RocketLogger calibration file location.&quot;&quot;&quot;</span>
+
+<span class="c1"># # scales (per bit) for the values, that are stored in the binary files</span>
+<span class="c1"># _ROCKETLOGGER_FILE_SCALE_V = 1e-8</span>
+<span class="c1"># _ROCKETLOGGER_FILE_SCALE_IL = 1e-11</span>
+<span class="c1"># _ROCKETLOGGER_FILE_SCALE_IH = 1e-9</span>
+
+<span class="c1"># hardware design values of voltage/current increment per ADC LSB</span>
+<span class="n">_ROCKETLOGGER_ADC_STEP_V</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.22e-6</span>
+<span class="n">_ROCKETLOGGER_ADC_STEP_IL</span> <span class="o">=</span> <span class="mf">1.755e-10</span>
+<span class="n">_ROCKETLOGGER_ADC_STEP_IH</span> <span class="o">=</span> <span class="mf">3.18e-08</span>
+
+<span class="c1"># data format of the calibration file</span>
+<span class="n">_CALIBRATION_FILE_DTYPE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">&#39;file_magic&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u4&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;file_version&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;header_length&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;calibration_time&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;M8[s]&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;&lt;i4&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;scale&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;&lt;f8&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)),</span>
+<span class="p">])</span>
+
+<span class="c1"># calibration file format magic</span>
+<span class="n">_CALIBRATION_FILE_MAGIC</span> <span class="o">=</span> <span class="mh">0x434C5225</span>
+
+<span class="c1"># calibration file format version</span>
+<span class="n">_CALIBRATION_FILE_VERSION</span> <span class="o">=</span> <span class="mh">0x02</span>
+
+<span class="c1"># calibration file header length</span>
+<span class="n">_CALIBRATION_FILE_HEADER_LENGTH</span> <span class="o">=</span> <span class="mh">0x10</span>
+
+<span class="c1"># data format channel name sequence</span>
+<span class="n">_CALIBRATION_CHANNEL_NAMES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">]</span>
+
+<span class="c1"># channels with positive scales</span>
+<span class="n">_CALIBRATION_CHANNEL_SCALES_POSITIVE</span> <span class="o">=</span> <span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="c1"># RocketLogger calibration scale scales for channels</span>
+<span class="n">_CALIBRATION_CHANNEL_SCALES</span> <span class="o">=</span> <span class="p">([</span><span class="mf">1e-8</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="p">[</span><span class="mf">1e-11</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="regression_linear"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.regression_linear">[docs]</a><span class="k">def</span> <span class="nf">regression_linear</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">zero_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform linear regression with extra weight on zero values.</span>
+
+<span class="sd">    :param reference: the reference value to calibrate for</span>
+
+<span class="sd">    :param measurement: the measurement to calibrate on the reference</span>
+
+<span class="sd">    :returns: (offset, scale) tuple of offset and scale values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">reference</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">zero_weight</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">poly_coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">poly_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">poly_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">poly_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_extract_setpoint_measurement</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">,</span> <span class="n">setpoint_step</span><span class="p">,</span>
+                                  <span class="n">filter_window_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+                                  <span class="n">filter_threshold_relative</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract aggregated set-points from a measurement trace.</span>
+
+<span class="sd">    :param measurement_data: vector of measurement data to extract set-points</span>
+<span class="sd">                             from</span>
+
+<span class="sd">    :param setpoint_step: the set-point step (in measurement units)</span>
+
+<span class="sd">    :param filter_window_length: width of the square filter window used for</span>
+<span class="sd">                                 set-point filtering</span>
+
+<span class="sd">    :param filter_threshold_relative: set-point step relative threshold for</span>
+<span class="sd">                                      stable measurement detection</span>
+
+<span class="sd">    :returns: vector of the extracted set-point measurements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># find stable measurement intervals</span>
+    <span class="n">measurement_diff_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">measurement_data</span><span class="p">])))</span>
+    <span class="n">measurement_stable</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">measurement_diff_abs</span><span class="p">)</span> <span class="o">&lt;</span>
+                          <span class="n">filter_threshold_relative</span> <span class="o">*</span> <span class="n">setpoint_step</span><span class="p">)</span>
+    <span class="n">filter_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">filter_window_length</span><span class="p">)</span> <span class="o">/</span> <span class="n">filter_window_length</span>
+    <span class="n">measurement_filtered</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">measurement_stable</span><span class="p">,</span> <span class="n">filter_window</span><span class="p">,</span>
+                                        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">filter_window</span><span class="p">))</span>
+
+    <span class="c1"># if no set-point is found report error</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">measurement_filtered</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s1">&#39;No set-points found. You might want to check the &#39;</span>
+                      <span class="s1">&#39;set-point step scale?&#39;</span><span class="p">)</span>
+
+    <span class="c1"># extract set-point measurement intervals</span>
+    <span class="n">setpoint_boundary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">measurement_filtered</span><span class="p">]))</span>
+    <span class="n">setpoint_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">setpoint_boundary</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">())</span> <span class="o">-</span> \
+        <span class="nb">int</span><span class="p">(</span><span class="n">filter_window_length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">setpoint_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">setpoint_boundary</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">())</span> <span class="o">+</span> \
+        <span class="nb">int</span><span class="p">(</span><span class="n">filter_window_length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">setpoint_trim</span> <span class="o">=</span> <span class="p">(</span><span class="n">setpoint_start</span> <span class="o">&gt;</span> <span class="n">filter_window_length</span><span class="p">)</span> <span class="o">&amp;</span> \
+        <span class="p">(</span><span class="n">setpoint_end</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">)</span> <span class="o">-</span> <span class="n">filter_window_length</span><span class="p">)</span>
+    <span class="n">setpoint_intervals</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">setpoint_start</span><span class="p">[</span><span class="n">setpoint_trim</span><span class="p">],</span>
+                             <span class="n">setpoint_end</span><span class="p">[</span><span class="n">setpoint_trim</span><span class="p">])</span>
+
+    <span class="c1"># aggregate measurements by set-point interval</span>
+    <span class="n">setpoint_mean</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+                     <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">setpoint_intervals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">setpoint_mean</span>
+
+
+<div class="viewcode-block" id="RocketLoggerCalibrationError"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationError">[docs]</a><span class="k">class</span> <span class="nc">RocketLoggerCalibrationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;RocketLogger calibration related errors.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup">[docs]</a><span class="k">class</span> <span class="nc">RocketLoggerCalibrationSetup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RocketLogger calibration measurement setup helper class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setpoint_count</span><span class="p">,</span> <span class="n">setpoint_step_voltage</span><span class="p">,</span>
+                 <span class="n">setpoint_step_current_low</span><span class="p">,</span> <span class="n">setpoint_step_current_high</span><span class="p">,</span>
+                 <span class="n">dual_sweep</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize RocketLogger calibration setup class.</span>
+
+<span class="sd">        :param setpoint_count: number of calibration set-points per channel</span>
+
+<span class="sd">        :param setpoint_step_voltage: voltage step between set-points</span>
+
+<span class="sd">        :param setpoint_step_current_low: low current step between set-points</span>
+
+<span class="sd">        :param setpoint_step_current_high: high current step between set-points</span>
+
+<span class="sd">        :param min_stable_samples: min number of stable samples required</span>
+
+<span class="sd">        :param dual_sweep: set True if dual sweep (up/down) is used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check for valid sweep measurement points</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">setpoint_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Linear sweep expects odd number of measurement points&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dual_sweep</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">((</span><span class="n">setpoint_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Dual sweep expects multiple of 4 + 1 measurement points&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setpoint_count</span> <span class="o">=</span> <span class="n">setpoint_count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_voltage</span> <span class="o">=</span> <span class="n">setpoint_step_voltage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_current_low</span> <span class="o">=</span> <span class="n">setpoint_step_current_low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_current_high</span> <span class="o">=</span> <span class="n">setpoint_step_current_high</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dual_sweep</span> <span class="o">=</span> <span class="n">dual_sweep</span>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_voltage_setpoints"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_voltage_setpoints">[docs]</a>    <span class="k">def</span> <span class="nf">get_voltage_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the real voltage set-points used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: vector of the calibration set-points in volt or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_voltage_step</span><span class="p">(</span><span class="n">calibration</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_current_low_setpoints"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_current_low_setpoints">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_low_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the real low current set-points used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: vector of the calibration set-points in ampere or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_current_low_step</span><span class="p">(</span><span class="n">calibration</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_current_high_setpoints"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_current_high_setpoints">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_high_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the real low current set-points used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: vector of the calibration set-points in ampere or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_current_high_step</span><span class="p">(</span><span class="n">calibration</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_voltage_step"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_voltage_step">[docs]</a>    <span class="k">def</span> <span class="nf">get_voltage_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the absolute voltage step used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: the absolute set-point step value in volt or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_voltage</span> <span class="o">/</span> <span class="n">_ROCKETLOGGER_ADC_STEP_V</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_voltage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_current_low_step"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_current_low_step">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_low_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the absolute low current step used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: the absolute set-point step value in ampere or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_current_low</span> <span class="o">/</span> <span class="n">_ROCKETLOGGER_ADC_STEP_IL</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_current_low</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_current_high_step"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_current_high_step">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_high_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibration</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the absolute low current step used in the measurement setup.</span>
+
+<span class="sd">        :param calibration: set True to get step in estimated ADC bits</span>
+
+<span class="sd">        :returns: the absolute set-point step value in ampere or ADC bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">calibration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_current_high</span> <span class="o">/</span> <span class="n">_ROCKETLOGGER_ADC_STEP_IH</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_current_high</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibrationSetup.get_setpoint_count"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibrationSetup.get_setpoint_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_setpoint_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of set-points used in the setup set-point.</span>
+
+<span class="sd">        :returns: the number of set-points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setpoint_count</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_max_setpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setpoint_step</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the maximum absolute value of the extreme set-point.</span>
+
+<span class="sd">        :param setpoint_step: the step size between set-points</span>
+
+<span class="sd">        :returns: maximum absolute set-point value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dual_sweep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">setpoint_step</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setpoint_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">setpoint_step</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setpoint_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">_get_setpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setpoint_step</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the set-points using a given step size.</span>
+
+<span class="sd">        :param setpoint_step: the step size to use for the set-point generation</span>
+
+<span class="sd">        :returns: vector of the set-point values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_max_setpoint</span><span class="p">(</span><span class="n">setpoint_step</span><span class="p">)</span>
+        <span class="n">setpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">max_value</span><span class="p">,</span> <span class="n">max_value</span> <span class="o">+</span> <span class="n">setpoint_step</span><span class="p">,</span>
+                              <span class="n">setpoint_step</span><span class="p">)</span>
+
+        <span class="c1"># add down sweep for dual sweep setups</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dual_sweep</span><span class="p">:</span>
+            <span class="n">setpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">setpoints</span><span class="p">,</span> <span class="n">setpoints</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">setpoints</span></div>
+
+
+<span class="n">CALIBRATION_SETUP_SMU2450</span> <span class="o">=</span> <span class="n">RocketLoggerCalibrationSetup</span><span class="p">(</span>
+    <span class="n">setpoint_count</span><span class="o">=</span><span class="mi">201</span><span class="p">,</span>
+    <span class="n">setpoint_step_voltage</span><span class="o">=</span><span class="mf">100e-3</span><span class="p">,</span>
+    <span class="n">setpoint_step_current_low</span><span class="o">=</span><span class="mf">20e-6</span><span class="p">,</span>
+    <span class="n">setpoint_step_current_high</span><span class="o">=</span><span class="mf">2e-3</span><span class="p">,</span>
+    <span class="n">dual_sweep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Reference calibration setup using the Keithley 2450 SMU setup.&quot;&quot;&quot;</span>
+
+<span class="n">CALIBRATION_SETUP_BASIC</span> <span class="o">=</span> <span class="n">RocketLoggerCalibrationSetup</span><span class="p">(</span>
+    <span class="n">setpoint_count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">setpoint_step_voltage</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">setpoint_step_current_low</span><span class="o">=</span><span class="mf">2e-3</span><span class="p">,</span>
+    <span class="n">setpoint_step_current_high</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">dual_sweep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Basic calibration setup with 3 point measurements (min, zero, max).&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="RocketLoggerCalibration"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration">[docs]</a><span class="k">class</span> <span class="nc">RocketLoggerCalibration</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RocketLogger calibration support class.</span>
+
+<span class="sd">    File reading and basic data processing support for binary RocketLogger data</span>
+<span class="sd">    files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize RocketLogger Calibration helper class.</span>
+
+<span class="sd">        With 5 parameters it can be used as shortcut for</span>
+<span class="sd">        :read_calibration_file(): to load an existing calibration.</span>
+<span class="sd">        With 5 parameters it can be used as shortcut for</span>
+<span class="sd">        :load_measurement_data(): to load calibration measurement data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1l</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1h</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2l</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2h</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_residuals</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># treat 1 arguments as an existing calibration to load</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_calibration_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c1"># treat 5 arguments as measurement data for a new calibration</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_measurement_data</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.load_measurement_data"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.load_measurement_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_measurement_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_v</span><span class="p">,</span> <span class="n">data_i1l</span><span class="p">,</span> <span class="n">data_i1h</span><span class="p">,</span>
+                              <span class="n">data_i2l</span><span class="p">,</span> <span class="n">data_i2h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load calibration measurement data from RocketLoggerData structures or</span>
+<span class="sd">        RocketLogger data files. Loading new measurement data invalidates</span>
+<span class="sd">        previously made calibration.</span>
+
+<span class="sd">        :param data_v: Voltage V1-V4 calibration measurement data or filename.</span>
+
+<span class="sd">        :param data_i1l: Current I1L calibration measurement data or filename.</span>
+
+<span class="sd">        :param data_i1h: Current I1H calibration measurement data or filename.</span>
+
+<span class="sd">        :param data_i2l: Current I2L calibration measurement data or filename.</span>
+
+<span class="sd">        :param data_i2h: Current I2H calibration measurement data or filename.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># data load helper function</span>
+        <span class="k">def</span> <span class="nf">_rld_copy_or_load</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="n">RocketLoggerData</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; is not valid measurement data nor an &#39;</span>
+                             <span class="s1">&#39;existing data file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+
+        <span class="c1"># store the loaded data in class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span> <span class="o">=</span> <span class="n">_rld_copy_or_load</span><span class="p">(</span><span class="n">data_v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1l</span> <span class="o">=</span> <span class="n">_rld_copy_or_load</span><span class="p">(</span><span class="n">data_i1l</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1h</span> <span class="o">=</span> <span class="n">_rld_copy_or_load</span><span class="p">(</span><span class="n">data_i1h</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2l</span> <span class="o">=</span> <span class="n">_rld_copy_or_load</span><span class="p">(</span><span class="n">data_i2l</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2h</span> <span class="o">=</span> <span class="n">_rld_copy_or_load</span><span class="p">(</span><span class="n">data_i2h</span><span class="p">)</span>
+
+        <span class="c1"># reset existing error calculations, keep calibration values if loaded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.recalibrate"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.recalibrate">[docs]</a>    <span class="k">def</span> <span class="nf">recalibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setup</span><span class="p">,</span> <span class="n">fix_signs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">target_offset_error</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">regression_algorithm</span><span class="o">=</span><span class="n">regression_linear</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform channel calibration with loaded measurement data, overwriting</span>
+<span class="sd">        any loaded calibration parameters.</span>
+
+<span class="sd">        :param setup: Calibration setup used for the measurements using the</span>
+<span class="sd">                      RocketLoggerCalibrationSetup helper class to describe</span>
+
+<span class="sd">        :param fix_signs: Set True to automatically fix sign error in</span>
+<span class="sd">                          calibration scales</span>
+
+<span class="sd">        :param target_offset_error: Factor in [1, inf) specifying the multiple</span>
+<span class="sd">                                    of the zero error to use as offset error</span>
+<span class="sd">                                    for the error calculations</span>
+
+<span class="sd">        :param regression_algorithm: Algorithm to use for the regression,</span>
+<span class="sd">                                     taking the set-point measurement and</span>
+<span class="sd">                                     reference values as arguments and</span>
+<span class="sd">                                     providing the resulting offset and scale</span>
+<span class="sd">                                     as output</span>
+
+<span class="sd">        :param kwargs: Optional names arguments passed to the regression</span>
+<span class="sd">                       algorithm function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_data_loaded</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">target_offset_error</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;target_offset_error factor needs to be &gt;= 1.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># forced reference information</span>
+        <span class="n">v_ref</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_voltage_setpoints</span><span class="p">()</span>
+        <span class="n">ih_ref</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_current_high_setpoints</span><span class="p">()</span>
+        <span class="n">il_ref</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_current_low_setpoints</span><span class="p">()</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="p">[</span><span class="n">v_ref</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="p">[</span><span class="n">il_ref</span><span class="p">,</span> <span class="n">ih_ref</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="n">v_step</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_voltage_step</span><span class="p">(</span><span class="n">calibration</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ih_step</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_current_high_step</span><span class="p">(</span><span class="n">calibration</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">il_step</span> <span class="o">=</span> <span class="n">setup</span><span class="o">.</span><span class="n">get_current_low_step</span><span class="p">(</span><span class="n">calibration</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">reference_steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">v_step</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="p">[</span><span class="n">il_step</span><span class="p">,</span> <span class="n">ih_step</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="c1"># extract measurement information</span>
+        <span class="n">measurement_data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2h</span><span class="p">]</span>
+        <span class="n">measurement_traces</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+                              <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">channel</span>
+                              <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">measurement_data</span><span class="p">,</span>
+                                     <span class="n">_CALIBRATION_CHANNEL_NAMES</span><span class="p">)]</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span>
+                                       <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">measurement_data</span><span class="p">]))</span>
+        <span class="n">measurement</span> <span class="o">=</span> <span class="p">[</span><span class="n">_extract_setpoint_measurement</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">measurement_traces</span><span class="p">,</span> <span class="n">reference_steps</span><span class="p">)]</span>
+
+        <span class="c1"># perform regression</span>
+        <span class="n">regression_result</span> <span class="o">=</span> <span class="p">[</span><span class="n">regression_algorithm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="n">reference</span><span class="p">)]</span>
+        <span class="n">offsets</span><span class="p">,</span> <span class="n">scales</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">regression_result</span><span class="p">)</span>
+
+        <span class="c1"># calculate residuals and errors</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">-</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">scale</span>
+                    <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">measurement</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">offsets</span><span class="p">,</span> <span class="n">scales</span><span class="p">)]</span>
+        <span class="n">rmse_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">res</span><span class="p">))</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">residual</span><span class="p">]</span>
+        <span class="n">offset_errors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]))</span> <span class="o">*</span> <span class="n">target_offset_error</span>
+            <span class="k">for</span> <span class="n">res</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">reference</span><span class="p">)]</span>
+        <span class="n">scale_errors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span> <span class="o">-</span> <span class="n">offset_error</span><span class="p">),</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span> <span class="o">+</span> <span class="n">offset_error</span><span class="p">))</span> <span class="o">/</span> <span class="n">ref</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">res</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">offset_error</span>
+            <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">offset_errors</span><span class="p">)]</span>
+
+        <span class="c1"># store data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">offsets</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;i4&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">scale</span> <span class="o">/</span> <span class="n">file_scale</span> <span class="k">for</span> <span class="n">scale</span><span class="p">,</span> <span class="n">file_scale</span>
+             <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scales</span><span class="p">,</span> <span class="n">_CALIBRATION_CHANNEL_SCALES</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;&lt;f8&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;datetime64[s]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">offset_errors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">scale_error</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ref</span><span class="p">))])</span>
+             <span class="k">for</span> <span class="n">scale_error</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scale_errors</span><span class="p">,</span> <span class="n">reference</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rmse_errors</span><span class="p">)</span>
+
+        <span class="c1"># check and invert scales where necessary</span>
+        <span class="k">if</span> <span class="n">fix_signs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ch</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_CALIBRATION_CHANNEL_SCALES_POSITIVE</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pos</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.print_statistics"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.print_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">print_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print statistics of the calibration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;RocketLogger Calibration Statistics&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_calibration_exists</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Measurement time:   </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calibration values:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  Channel  :  Offset [bit]  :  Scale [unit/bit]&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_CALIBRATION_CHANNEL_NAMES</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">{:7s}</span><span class="s1">  :  </span><span class="si">{:12d}</span><span class="s1">  :  </span><span class="si">{:16.6f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">except</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no calibration data available&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_errors_calculation_exists</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error calculation values:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  Channel  :  Offset [unit]  :  Scale [%]  :  RMSE [unit]&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_CALIBRATION_CHANNEL_NAMES</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">{:7s}</span><span class="s1">  :  </span><span class="si">{:13.6g}</span><span class="s1">  :  </span><span class="si">{:9.5f}</span><span class="s1">  :  </span><span class="si">{:11.6g}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">except</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no error calculation data available&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.read_calibration_file"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.read_calibration_file">[docs]</a>    <span class="k">def</span> <span class="nf">read_calibration_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">ROCKETLOGGER_CALIBRATION_FILE</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load an existing calibration file.</span>
+
+<span class="sd">        :param filename: Name of the file to read the calibration values from</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_CALIBRATION_FILE_DTYPE</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="c1"># file consistency check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerFileError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid RocketLogger calibration file, unable to read data.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;file_magic&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_CALIBRATION_FILE_MAGIC</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerFileError</span><span class="p">(</span><span class="s1">&#39;Invalid RocketLogger calibration &#39;</span>
+                                        <span class="s1">&#39;file, invalid file magic </span><span class="si">{:x}</span><span class="s1">.&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;file_magic&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;file_version&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_CALIBRATION_FILE_VERSION</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerFileError</span><span class="p">(</span>
+                <span class="s1">&#39;Unsupported RocketLogger data file version </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;file_version&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;header_length&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_CALIBRATION_FILE_HEADER_LENGTH</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerFileError</span><span class="p">(</span><span class="s1">&#39;Invalid RocketLogger calibration &#39;</span>
+                                        <span class="s1">&#39;file, invalid header length </span><span class="si">{:x}</span><span class="s1">.&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;header_length&#39;</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;calibration_time&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="s1">&#39;now&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid calibration time in calibration file&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid offset data in calibration file&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid scale data in calibration file&#39;</span><span class="p">)</span>
+
+        <span class="c1"># reset existing error calculations, keep measurement data if loaded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.write_calibration_file"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.write_calibration_file">[docs]</a>    <span class="k">def</span> <span class="nf">write_calibration_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;calibration.dat&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the calibration to file.</span>
+
+<span class="sd">        :param filename: Name of the file to write the calibration values to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_calibration_exists</span><span class="p">()</span>
+
+        <span class="c1"># assemble file data write to file</span>
+        <span class="n">filedata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">_CALIBRATION_FILE_MAGIC</span><span class="p">,</span>
+                              <span class="n">_CALIBRATION_FILE_VERSION</span><span class="p">,</span>
+                              <span class="n">_CALIBRATION_FILE_HEADER_LENGTH</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">)],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">_CALIBRATION_FILE_DTYPE</span><span class="p">)</span>
+        <span class="n">filedata</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RocketLoggerCalibration.write_log_file"><a class="viewcode-back" href="../../rocketlogger.html#rocketlogger.calibration.RocketLoggerCalibration.write_log_file">[docs]</a>    <span class="k">def</span> <span class="nf">write_log_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;calibration.log&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write log of performed recalibration to file. Raises a calibration</span>
+<span class="sd">        error if no recalibration has been performed beforehand.</span>
+
+<span class="sd">        :param filename: Name of the file to write the calibration log to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># redirect statistics output to log file</span>
+        <span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">print_statistics</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_data_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check for loaded calibration measurements, raise error if not.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1l</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_i1h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2l</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_i2h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;No data measurement data loaded for recalibration. &#39;</span>
+                <span class="s1">&#39;Use load_measurement_data() first to load data.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_calibration_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check for existing calibration data, raise error if not.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;No calibration data available. Perform recalibration first.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_errors_calculation_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check for existing calibration data, raise error if not.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_error_offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_error_rmse</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">RocketLoggerCalibrationError</span><span class="p">(</span>
+                <span class="s1">&#39;No error calculation data available. &#39;</span>
+                <span class="s1">&#39;Perform calculation first.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if other is the same calibration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RocketLoggerCalibration</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_time</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_calibration_time</span><span class="p">,</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">,</span>
+                                <span class="n">other</span><span class="o">.</span><span class="n">_calibration_scale</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calibration_offset</span><span class="p">,</span>
+                                <span class="n">other</span><span class="o">.</span><span class="n">_calibration_offset</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2018-2019, Computer Engineering Group, ETH Zurich
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

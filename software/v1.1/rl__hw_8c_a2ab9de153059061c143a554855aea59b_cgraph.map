@@ -1,0 +1,15 @@
+<map id="hw_close" name="hw_close">
+<area shape="rect" id="node2" href="$gpio_8c.html#ac75f2c69c6498694ee96a1ce2656cc3c" title="gpio_set_value" alt="" coords="376,151,485,177"/>
+<area shape="rect" id="node4" href="$gpio_8c.html#a0833fbb3239ed98e209e6922aa351db1" title="gpio_unexport" alt="" coords="379,227,482,253"/>
+<area shape="rect" id="node5" href="$pru_8c.html#a307dd06bc7b81f70ae57e66aa9a6d2ca" title="pru_close" alt="" coords="177,107,256,133"/>
+<area shape="rect" id="node6" href="$pru_8c.html#ab2cde663e8bad29a264a7670f0e08511" title="pru_stop" alt="" coords="181,360,253,387"/>
+<area shape="rect" id="node10" href="$pwm_8c.html#a84c01892b173514bb9feecfa91b0f77a" title="pwm_close" alt="" coords="173,208,261,235"/>
+<area shape="rect" id="node11" href="$sensor_8c.html#aa467f5e9bfff4eefdfe5a9c732014894" title="Sensors_close" alt="" coords="163,259,271,285"/>
+<area shape="rect" id="node12" href="$sensor_8c.html#a2924ecc739fb811eb51128d45ba902e2" title="Sensors_closeSharedBus" alt="" coords="131,5,303,32"/>
+<area shape="rect" id="node14" href="$util_8c.html#a3195667ecf2a5a6383a1ea38345ad8ef" title="write_status" alt="" coords="384,75,477,101"/>
+<area shape="rect" id="node3" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="587,113,641,140"/>
+<area shape="rect" id="node7" href="$pru_8c.html#aca3acbd32d5951672e7b2b1523f3c2fa" title="pru_set_state" alt="" coords="380,335,481,361"/>
+<area shape="rect" id="node8" href="$pru_8c.html#a4d0ce3530455f19eaab044e35a461c4f" title="pru_wait_event_timeout" alt="" coords="351,385,511,412"/>
+<area shape="rect" id="node9" href="$pru_8c.html#a8003e1ac7da2ee5ce28b70417f12ecd5" title="pru_wait_event" alt="" coords="559,385,669,412"/>
+<area shape="rect" id="node13" href="$sensor_8c.html#ab8710e243f3c09994d3e3692521b38aa" title="Sensors_closeBus" alt="" coords="365,12,496,39"/>
+</map>

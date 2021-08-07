@@ -1,0 +1,20 @@
+<map id="util.h" name="util.h">
+<area shape="rect" id="node2" href="$file__handling_8h.html" title="file_handling.h" alt="" coords="36,155,142,181"/>
+<area shape="rect" id="node4" href="$pru_8h.html" title="pru.h" alt="" coords="228,229,278,256"/>
+<area shape="rect" id="node5" href="$rl__hw_8h.html" title="rl_hw.h" alt="" coords="180,304,244,331"/>
+<area shape="rect" id="node6" href="$rl__lib_8h.html" title="rl_lib.h" alt="" coords="371,379,431,405"/>
+<area shape="rect" id="node15" href="$web_8h.html" title="web.h" alt="" coords="184,80,242,107"/>
+<area shape="rect" id="node17" href="$meter_8h.html" title="meter.h" alt="" coords="350,80,417,107"/>
+<area shape="rect" id="node19" href="$util_8c.html" title="util.c" alt="" coords="542,80,593,107"/>
+<area shape="rect" id="node3" href="$file__handling_8c.html" title="file_handling.c" alt="" coords="36,229,142,256"/>
+<area shape="rect" id="node14" href="$pru_8c.html" title="pru.c" alt="" coords="268,304,318,331"/>
+<area shape="rect" id="node13" href="$rl__hw_8c.html" title="rl_hw.c" alt="" coords="180,379,244,405"/>
+<area shape="rect" id="node7" href="$rl__util_8h.html" title="rl_util.h" alt="" coords="334,453,398,480"/>
+<area shape="rect" id="node9" href="$rl__server_8c.html" title="rl_server.c" alt="" coords="178,528,261,555"/>
+<area shape="rect" id="node11" href="$rocketlogger_8c.html" title="rocketlogger.c" alt="" coords="469,528,573,555"/>
+<area shape="rect" id="node12" href="$rl__lib_8c.html" title="rl_lib.c" alt="" coords="474,453,534,480"/>
+<area shape="rect" id="node8" href="$lib__util_8c.html" title="lib_util.c" alt="" coords="286,528,356,555"/>
+<area shape="rect" id="node10" href="$rl__util_8c.html" title="rl_util.c" alt="" coords="381,528,445,555"/>
+<area shape="rect" id="node16" href="$web_8c.html" title="web.c" alt="" coords="218,155,275,181"/>
+<area shape="rect" id="node18" href="$meter_8c.html" title="meter.c" alt="" coords="401,155,468,181"/>
+</map>

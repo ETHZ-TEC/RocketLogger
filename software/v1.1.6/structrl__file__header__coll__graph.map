@@ -1,0 +1,5 @@
+<map id="rl_file_header" name="rl_file_header">
+<area shape="rect" id="node2" href="$structrl__file__lead__in.html" title="rl_file_lead_in" alt="" coords="5,95,107,121"/>
+<area shape="rect" id="node3" href="$structtime__stamp.html" title="time_stamp" alt="" coords="11,5,101,32"/>
+<area shape="rect" id="node4" href="$structrl__file__channel.html" title="rl_file_channel" alt="" coords="131,95,237,121"/>
+</map>

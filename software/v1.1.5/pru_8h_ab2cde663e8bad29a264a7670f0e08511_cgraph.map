@@ -1,0 +1,5 @@
+<map id="pru_stop" name="pru_stop">
+<area shape="rect" id="node2" href="$pru_8c.html#aca3acbd32d5951672e7b2b1523f3c2fa" title="pru_set_state" alt="" coords="155,5,256,32"/>
+<area shape="rect" id="node3" href="$pru_8c.html#a4d0ce3530455f19eaab044e35a461c4f" title="pru_wait_event_timeout" alt="" coords="125,56,285,83"/>
+<area shape="rect" id="node4" href="$pru_8c.html#a8003e1ac7da2ee5ce28b70417f12ecd5" title="pru_wait_event" alt="" coords="333,56,444,83"/>
+</map>

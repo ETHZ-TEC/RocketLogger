@@ -1,0 +1,14 @@
+<map id="hw_init" name="hw_init">
+<area shape="rect" id="node2" href="$gpio_8c.html#af41cc750e7306af17e198daaae1967aa" title="gpio_dir" alt="" coords="361,5,428,32"/>
+<area shape="rect" id="node4" href="$gpio_8c.html#adb179e9f7d1d4b370bb7bac68d52cdd8" title="gpio_export" alt="" coords="350,56,439,83"/>
+<area shape="rect" id="node5" href="$gpio_8c.html#ac75f2c69c6498694ee96a1ce2656cc3c" title="gpio_set_value" alt="" coords="340,107,449,133"/>
+<area shape="rect" id="node6" href="$pru_8c.html#ab784943bfd599f19fddb98647d2f253c" title="pru_init" alt="" coords="363,157,427,184"/>
+<area shape="rect" id="node7" href="$pwm_8c.html#ab3e9ec444bb0993ad76410d52dadb5e2" title="pwm_setup" alt="" coords="350,208,439,235"/>
+<area shape="rect" id="node8" href="$pwm_8c.html#a80d1397613a39018de4e3b7013c4fa43" title="pwm_setup_adc_clock" alt="" coords="122,259,277,285"/>
+<area shape="rect" id="node9" href="$pwm_8c.html#ac29eb441615de83b0a03ccb4a9bbd6a0" title="pwm_setup_range_clock" alt="" coords="116,309,283,336"/>
+<area shape="rect" id="node10" href="$sensor_8c.html#a9f8b888d4c965a656aa28c4fbdcc25ab" title="Sensors_initSharedBus" alt="" coords="120,360,279,387"/>
+<area shape="rect" id="node12" href="$sensor_8c.html#a0521e2a0448f6470f1f426734488f2c1" title="Sensors_scan" alt="" coords="147,411,252,437"/>
+<area shape="rect" id="node13" href="$util_8c.html#a3195667ecf2a5a6383a1ea38345ad8ef" title="write_status" alt="" coords="153,461,246,488"/>
+<area shape="rect" id="node3" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="507,183,560,209"/>
+<area shape="rect" id="node11" href="$sensor_8c.html#a1e234e1b49bb78e214ac76b1994a68b7" title="Sensors_openBus" alt="" coords="331,309,459,336"/>
+</map>

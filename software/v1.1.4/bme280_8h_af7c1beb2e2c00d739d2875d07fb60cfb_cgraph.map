@@ -1,0 +1,4 @@
+<map id="BME280_compensate_temperature" name="BME280_compensate_temperature">
+<area shape="rect" id="node2" href="$bme280_8c.html#ae65131a0b5e0162b6919a741a4202297" title="BME280_compensate_temperature_fine" alt="" coords="280,5,535,32"/>
+<area shape="rect" id="node3" href="$bme280_8c.html#a4dcd6fff15cf2903fe076db59b919e52" title="BME280_getIndex" alt="" coords="583,5,712,32"/>
+</map>

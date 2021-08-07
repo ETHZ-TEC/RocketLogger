@@ -1,0 +1,27 @@
+<map id="util.h" name="util.h">
+<area shape="rect" id="node2" href="$rl__file_8h.html" title="rl_file.h" alt="" coords="527,80,591,107"/>
+<area shape="rect" id="node9" href="$ambient_8h.html" title="ambient.h" alt="" coords="511,155,590,181"/>
+<area shape="rect" id="node10" href="$pru_8h.html" title="pru.h" alt="" coords="847,229,897,256"/>
+<area shape="rect" id="node11" href="$file__handling_8c.html" title="file_handling.c" alt="" coords="706,304,811,331"/>
+<area shape="rect" id="node12" href="$rl__hw_8h.html" title="rl_hw.h" alt="" coords="596,304,660,331"/>
+<area shape="rect" id="node13" href="$rl__lib_8h.html" title="rl_lib.h" alt="" coords="1031,379,1091,405"/>
+<area shape="rect" id="node20" href="$pru_8c.html" title="pru.c" alt="" coords="888,304,939,331"/>
+<area shape="rect" id="node22" href="$file__handling_8h.html" title="file_handling.h" alt="" coords="717,155,822,181"/>
+<area shape="rect" id="node23" href="$meter_8h.html" title="meter.h" alt="" coords="861,80,928,107"/>
+<area shape="rect" id="node25" href="$web_8h.html" title="web.h" alt="" coords="1090,155,1147,181"/>
+<area shape="rect" id="node26" href="$util_8c.html" title="util.c" alt="" coords="1223,80,1273,107"/>
+<area shape="rect" id="node3" href="$sensor_8h.html" title="sensor/sensor.h" alt="" coords="249,155,364,181"/>
+<area shape="rect" id="node4" href="$ambient_8c.html" title="ambient.c" alt="" coords="461,229,539,256"/>
+<area shape="rect" id="node5" href="$rl__hw_8c.html" title="rl_hw.c" alt="" coords="280,379,344,405"/>
+<area shape="rect" id="node6" href="$bme280_8c.html" title="sensor/bme280.c" alt="" coords="32,229,155,256"/>
+<area shape="rect" id="node7" href="$sensor_8c.html" title="sensor/sensor.c" alt="" coords="179,229,293,256"/>
+<area shape="rect" id="node8" href="$tsl4531_8c.html" title="sensor/tsl4531.c" alt="" coords="318,229,437,256"/>
+<area shape="rect" id="node21" href="$web_8c.html" title="web.c" alt="" coords="1006,304,1063,331"/>
+<area shape="rect" id="node14" href="$rl__util_8h.html" title="rl_util.h" alt="" coords="1073,453,1137,480"/>
+<area shape="rect" id="node16" href="$rl__server_8c.html" title="rl_server.c" alt="" coords="1195,528,1277,555"/>
+<area shape="rect" id="node18" href="$rocketlogger_8c.html" title="rocketlogger.c" alt="" coords="883,528,987,555"/>
+<area shape="rect" id="node19" href="$rl__lib_8c.html" title="rl_lib.c" alt="" coords="989,453,1049,480"/>
+<area shape="rect" id="node15" href="$lib__util_8c.html" title="lib_util.c" alt="" coords="1011,528,1082,555"/>
+<area shape="rect" id="node17" href="$rl__util_8c.html" title="rl_util.c" alt="" coords="1107,528,1171,555"/>
+<area shape="rect" id="node24" href="$meter_8c.html" title="meter.c" alt="" coords="897,155,964,181"/>
+</map>

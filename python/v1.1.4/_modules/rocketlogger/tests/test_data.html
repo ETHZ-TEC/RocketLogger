@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rocketlogger.tests.test_data &mdash; &#39;RocketLogger Python Support&#39; 1.1a1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="&#39;RocketLogger Python Support&#39; 1.1a1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> 'RocketLogger Python Support'
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">rocketlogger</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">'RocketLogger Python Support'</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>rocketlogger.tests.test_data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rocketlogger.tests.test_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">RocketLogger data file import tests.</span>
+
+<span class="sd">Copyright (c) 2016-2018, Swiss Federal Institute of Technology (ETH Zurich)</span>
+<span class="sd">All rights reserved.</span>
+
+<span class="sd">Redistribution and use in source and binary forms, with or without</span>
+<span class="sd">modification, are permitted provided that the following conditions are met:</span>
+
+<span class="sd">* Redistributions of source code must retain the above copyright notice, this</span>
+<span class="sd">  list of conditions and the following disclaimer.</span>
+
+<span class="sd">* Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="sd">  this list of conditions and the following disclaimer in the documentation</span>
+<span class="sd">  and/or other materials provided with the distribution.</span>
+
+<span class="sd">* Neither the name of the copyright holder nor the names of its</span>
+<span class="sd">  contributors may be used to endorse or promote products derived from</span>
+<span class="sd">  this software without specific prior written permission.</span>
+
+<span class="sd">THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="sd">AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="sd">IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="sd">DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="sd">FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="sd">DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="sd">SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="sd">CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="sd">OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="sd">OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="c1"># select matplotlib backend not requiring dispaly _before_ importing pyplot</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">rocketlogger.data</span> <span class="kn">as</span> <span class="nn">rld</span>
+
+<span class="kn">from</span> <span class="nn">rocketlogger.data</span> <span class="kn">import</span> <span class="n">RocketLoggerData</span><span class="p">,</span> <span class="n">RocketLoggerDataError</span><span class="p">,</span> \
+    <span class="n">RocketLoggerDataWarning</span><span class="p">,</span> <span class="n">RocketLoggerFileError</span>
+
+
+<span class="n">_TEST_FILE_DIR</span> <span class="o">=</span> <span class="s1">&#39;data&#39;</span>
+<span class="n">_FULL_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-full.rld&#39;</span><span class="p">)</span>
+<span class="n">_SINGLE_BLOCK_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-single-block.rld&#39;</span><span class="p">)</span>
+<span class="n">_ANALOG_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-analog-only.rld&#39;</span><span class="p">)</span>
+<span class="n">_HIGH_CURRENT_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-high-current.rld&#39;</span><span class="p">)</span>
+<span class="n">_STEPS_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-steps.rld&#39;</span><span class="p">)</span>
+<span class="n">_INCOMPATIBLE_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-unsupported.rld&#39;</span><span class="p">)</span>
+<span class="n">_SINGLE_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-v3-only.rld&#39;</span><span class="p">)</span>
+<span class="n">_SPLIT_TEST_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_TEST_FILE_DIR</span><span class="p">,</span> <span class="s1">&#39;test-split.rld&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestDecimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDecimation">[docs]</a><span class="k">class</span> <span class="nc">TestDecimation</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestDecimation.test_binary_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDecimation.test_binary_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_binary_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">100</span><span class="p">))</span>
+        <span class="n">data_in</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">100</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">data_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">data_out</span> <span class="o">=</span> <span class="n">rld</span><span class="o">.</span><span class="n">_decimate_binary</span><span class="p">(</span><span class="n">data_in</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_out</span> <span class="o">-</span> <span class="n">data_ref</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDecimation.test_min_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDecimation.test_min_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_min_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">100</span><span class="p">))</span>
+        <span class="n">data_in</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">data_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">data_out</span> <span class="o">=</span> <span class="n">rld</span><span class="o">.</span><span class="n">_decimate_min</span><span class="p">(</span><span class="n">data_in</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">data_in</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">data_out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_out</span> <span class="o">-</span> <span class="n">data_ref</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDecimation.test_max_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDecimation.test_max_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_max_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">100</span><span class="p">))</span>
+        <span class="n">data_in</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">100</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">data_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">data_out</span> <span class="o">=</span> <span class="n">rld</span><span class="o">.</span><span class="n">_decimate_max</span><span class="p">(</span><span class="n">data_in</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">data_in</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">data_out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_out</span> <span class="o">-</span> <span class="n">data_ref</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDecimation.test_mean_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDecimation.test_mean_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_mean_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">data_ref</span> <span class="o">=</span> <span class="mf">4.5</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">data_out</span> <span class="o">=</span> <span class="n">rld</span><span class="o">.</span><span class="n">_decimate_mean</span><span class="p">(</span><span class="n">data_in</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_out</span> <span class="o">-</span> <span class="n">data_ref</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestFileImport"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport">[docs]</a><span class="k">class</span> <span class="nc">TestFileImport</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestFileImport.test_normal"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_normal">[docs]</a>    <span class="k">def</span> <span class="nf">test_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_no_file"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_no_file">[docs]</a>    <span class="k">def</span> <span class="nf">test_no_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_inexistend_file"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_inexistend_file">[docs]</a>    <span class="k">def</span> <span class="nf">test_inexistend_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">FileNotFoundError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="s1">&#39;nonexistent-data.rld&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_wrong_magic"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_wrong_magic">[docs]</a>    <span class="k">def</span> <span class="nf">test_wrong_magic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">RocketLoggerFileError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_INCOMPATIBLE_TEST_FILE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_with_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_with_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_with_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">decimation_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;data_block_size&#39;</span><span class="p">],</span> <span class="mi">100</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_with_invalid_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_with_invalid_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_with_invalid_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">RocketLoggerDataError</span><span class="p">):</span>
+            <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">decimation_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_direct_import"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_direct_import">[docs]</a>    <span class="k">def</span> <span class="nf">test_direct_import</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">memory_mapped</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_direct_import_with_decimation"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_direct_import_with_decimation">[docs]</a>    <span class="k">def</span> <span class="nf">test_direct_import_with_decimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">memory_mapped</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">decimation_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;data_block_size&#39;</span><span class="p">],</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sample_count&#39;</span><span class="p">],</span> <span class="mi">500</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sample_rate&#39;</span><span class="p">],</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_direct_vs_memory_mapped"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_direct_vs_memory_mapped">[docs]</a>    <span class="k">def</span> <span class="nf">test_direct_vs_memory_mapped</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data_mm</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">memory_mapped</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">data_ff</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">,</span> <span class="n">memory_mapped</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data_mm</span><span class="o">.</span><span class="n">_header</span><span class="p">,</span> <span class="n">data_ff</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_mm</span><span class="o">.</span><span class="n">_data</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_ff</span><span class="o">.</span><span class="n">_data</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_mm</span><span class="o">.</span><span class="n">_data</span><span class="p">)):</span>
+            <span class="n">arrays_equal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">data_mm</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">data_ff</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">arrays_equal</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFileImport.test_single_block_import"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFileImport.test_single_block_import">[docs]</a>    <span class="k">def</span> <span class="nf">test_single_block_import</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_SINGLE_BLOCK_FILE</span><span class="p">,</span> <span class="n">memory_mapped</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;data_block_count&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TestChannelMerge"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge">[docs]</a><span class="k">class</span> <span class="nc">TestChannelMerge</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestChannelMerge.test_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L_valid&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_drop_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_drop_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_drop_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span> <span class="s1">&#39;I1&#39;</span><span class="p">,</span> <span class="s1">&#39;I2&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_keep_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_keep_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_keep_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L_valid&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I1&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_inexistent_channels"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_inexistent_channels">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_inexistent_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_SINGLE_TEST_FILE</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertWarns</span><span class="p">(</span><span class="n">RocketLoggerDataWarning</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">12</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_keep_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_keep_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_keep_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">18</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_calculation_overflow"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_calculation_overflow">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_calculation_overflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_HIGH_CURRENT_TEST_FILE</span><span class="p">)</span>
+        <span class="c1"># manual merge with large dtype</span>
+        <span class="n">ch_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">])</span>
+        <span class="n">ch_valid</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;I2L_valid&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">ch_merged</span> <span class="o">=</span> <span class="n">ch_valid</span> <span class="o">*</span> <span class="n">ch_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ch_valid</span><span class="p">)</span> <span class="o">*</span> <span class="n">ch_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;I2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">-</span> <span class="n">ch_merged</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestChannelMerge.test_merge_keep_calculation_overflow"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestChannelMerge.test_merge_keep_calculation_overflow">[docs]</a>    <span class="k">def</span> <span class="nf">test_merge_keep_calculation_overflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_HIGH_CURRENT_TEST_FILE</span><span class="p">)</span>
+        <span class="c1"># manual merge with large dtype</span>
+        <span class="n">ch_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">])</span>
+        <span class="n">ch_valid</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;I2L_valid&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">ch_merged</span> <span class="o">=</span> <span class="n">ch_valid</span> <span class="o">*</span> <span class="n">ch_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ch_valid</span><span class="p">)</span> <span class="o">*</span> <span class="n">ch_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">(</span><span class="n">keep_channels</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;I2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">-</span> <span class="n">ch_merged</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestDataHandling"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling">[docs]</a><span class="k">class</span> <span class="nc">TestDataHandling</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestDataHandling.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_single_channel"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_single_channel">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_single_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_invalid_channel"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_invalid_channel">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_invalid_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_all_channels"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_all_channels">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_all_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_set_of_channels"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_set_of_channels">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_set_of_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">channel_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;I1L&#39;</span><span class="p">]</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel_names</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_relative_time"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_relative_time">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_relative_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_time</span><span class="p">(</span><span class="n">absolute_time</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sample_count&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_absolute_local_time"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_absolute_local_time">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_absolute_local_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_time</span><span class="p">(</span><span class="n">absolute_time</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">time_reference</span><span class="o">=</span><span class="s1">&#39;local&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sample_count&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;&lt;M8[ns]&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestDataHandling.test_get_absolute_network_time"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataHandling.test_get_absolute_network_time">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_absolute_network_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_time</span><span class="p">(</span><span class="n">absolute_time</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">time_reference</span><span class="o">=</span><span class="s1">&#39;network&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sample_count&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;&lt;M8[ns]&#39;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TestDataPlot"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot">[docs]</a><span class="k">class</span> <span class="nc">TestDataPlot</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestDataPlot.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_STEPS_TEST_FILE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_header_field_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_header_field_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_field_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_header_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_header_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_all"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_all">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_merged"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_merged">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_merged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_invalid"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_invalid">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_invalid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">RocketLoggerDataError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_voltage"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_voltage">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;voltages&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_current"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_current">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;currents&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_digital"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_digital">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_digital</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;digital&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_single"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_single">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_single</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlot.test_plot_multi_single"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlot.test_plot_multi_single">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_multi_single</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;DI1&#39;</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="TestDataPlotDecimate"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate">[docs]</a><span class="k">class</span> <span class="nc">TestDataPlotDecimate</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_STEPS_TEST_FILE</span><span class="p">,</span> <span class="n">decimation_factor</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_header_field_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_header_field_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_field_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_header_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_header_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_all"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_all">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_merged"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_merged">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_merged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">merge_channels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_invalid"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_invalid">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_invalid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">RocketLoggerDataError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_voltage"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_voltage">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;voltages&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_current"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_current">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;currents&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_digital"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_digital">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_digital</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;digital&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_single"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_single">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_single</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;V1&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDataPlotDecimate.test_plot_multi_single"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestDataPlotDecimate.test_plot_multi_single">[docs]</a>    <span class="k">def</span> <span class="nf">test_plot_multi_single</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;DI1&#39;</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="TestFullFile"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile">[docs]</a><span class="k">class</span> <span class="nc">TestFullFile</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestFullFile.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_FULL_TEST_FILE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFullFile.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFullFile.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFullFile.test_header_field_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.test_header_field_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_field_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFullFile.test_header_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.test_header_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestFullFile.test_data_size"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.test_data_size">[docs]</a>    <span class="k">def</span> <span class="nf">test_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestFullFile.test_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestFullFile.test_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L_valid&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="TestJoinFile"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile">[docs]</a><span class="k">class</span> <span class="nc">TestJoinFile</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestJoinFile.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_SPLIT_TEST_FILE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.test_header_field_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.test_header_field_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_field_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.test_header_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.test_header_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.test_data_size"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.test_data_size">[docs]</a>    <span class="k">def</span> <span class="nf">test_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="mi">128000</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestJoinFile.test_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestJoinFile.test_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L_valid&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="TestNoJoinFile"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile">[docs]</a><span class="k">class</span> <span class="nc">TestNoJoinFile</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestNoJoinFile.setUp"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">RocketLoggerData</span><span class="p">(</span><span class="n">_SPLIT_TEST_FILE</span><span class="p">,</span> <span class="n">join_files</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.tearDown"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.test_load"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.test_load">[docs]</a>    <span class="k">def</span> <span class="nf">test_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">RocketLoggerData</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.test_header_field_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.test_header_field_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_field_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.test_header_channel_count"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.test_header_channel_count">[docs]</a>    <span class="k">def</span> <span class="nf">test_header_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]),</span> <span class="mi">16</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.test_data_size"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.test_data_size">[docs]</a>    <span class="k">def</span> <span class="nf">test_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">128000</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestNoJoinFile.test_channel_names"><a class="viewcode-back" href="../../../rocketlogger.tests.html#rocketlogger.tests.test_data.TestNoJoinFile.test_channel_names">[docs]</a>    <span class="k">def</span> <span class="nf">test_channel_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_channel_names</span><span class="p">(),</span>
+                         <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;DI1&#39;</span><span class="p">,</span> <span class="s1">&#39;DI2&#39;</span><span class="p">,</span> <span class="s1">&#39;DI3&#39;</span><span class="p">,</span> <span class="s1">&#39;DI4&#39;</span><span class="p">,</span> <span class="s1">&#39;DI5&#39;</span><span class="p">,</span> <span class="s1">&#39;DI6&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L_valid&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L_valid&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;V1&#39;</span><span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">,</span> <span class="s1">&#39;V4&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;I1L&#39;</span><span class="p">,</span> <span class="s1">&#39;I1H&#39;</span><span class="p">,</span> <span class="s1">&#39;I2L&#39;</span><span class="p">,</span> <span class="s1">&#39;I2H&#39;</span><span class="p">]))</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Computer Engineering Group, ETH Zurich.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

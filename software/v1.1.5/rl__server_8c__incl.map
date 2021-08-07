@@ -1,0 +1,19 @@
+<map id="rl_server.c" name="rl_server.c">
+<area shape="rect" id="node6" href="$rl__lib_8h.html" title="rl_lib.h" alt="" coords="1585,155,1645,181"/>
+<area shape="rect" id="node41" href="$sem_8h.html" title="sem.h" alt="" coords="1621,453,1680,480"/>
+<area shape="rect" id="node43" href="$web_8h.html" title="web.h" alt="" coords="742,453,799,480"/>
+<area shape="rect" id="node45" href="$rl__util_8h.html" title="rl_util.h" alt="" coords="3264,80,3328,107"/>
+<area shape="rect" id="node7" href="$lib__util_8h.html" title="lib_util.h" alt="" coords="3739,528,3810,555"/>
+<area shape="rect" id="node10" href="$types_8h.html" title="types.h" alt="" coords="1481,603,1546,629"/>
+<area shape="rect" id="node27" href="$rl__hw_8h.html" title="rl_hw.h" alt="" coords="1396,229,1460,256"/>
+<area shape="rect" id="node31" href="$util_8h.html" title="util.h" alt="" coords="529,528,580,555"/>
+<area shape="rect" id="node28" href="$ambient_8h.html" title="ambient.h" alt="" coords="659,379,738,405"/>
+<area shape="rect" id="node32" href="$gpio_8h.html" title="gpio.h" alt="" coords="3099,453,3157,480"/>
+<area shape="rect" id="node33" href="$pru_8h.html" title="pru.h" alt="" coords="1403,304,1453,331"/>
+<area shape="rect" id="node44" href="$pwm_8h.html" title="pwm.h" alt="" coords="2657,453,2719,480"/>
+<area shape="rect" id="node29" href="$log_8h.html" title="log.h" alt="" coords="1739,528,1789,555"/>
+<area shape="rect" id="node30" href="$rl__file_8h.html" title="rl_file.h" alt="" coords="603,453,667,480"/>
+<area shape="rect" id="node39" href="$calibration_8h.html" title="calibration.h" alt="" coords="2338,453,2430,480"/>
+<area shape="rect" id="node40" href="$file__handling_8h.html" title="file_handling.h" alt="" coords="1169,379,1274,405"/>
+<area shape="rect" id="node42" href="$meter_8h.html" title="meter.h" alt="" coords="824,453,891,480"/>
+</map>

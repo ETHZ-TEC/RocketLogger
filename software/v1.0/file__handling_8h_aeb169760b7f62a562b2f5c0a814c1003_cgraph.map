@@ -1,0 +1,6 @@
+<map id="setup_lead_in" name="setup_lead_in">
+<area shape="rect" id="node2" href="$util_8c.html#aae37b3d3b6a01f95a54b30585d022b64" title="count_channels" alt="" coords="166,5,279,32"/>
+<area shape="rect" id="node3" href="$file__handling_8c.html#a2855db8374fab2f19683e3641ce225e6" title="create_time_stamp" alt="" coords="156,56,289,83"/>
+<area shape="rect" id="node5" href="$file__handling_8c.html#a7c0caa589e40223b471638ab18e6252c" title="get_mac_addr" alt="" coords="171,107,275,133"/>
+<area shape="rect" id="node4" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="337,56,391,83"/>
+</map>

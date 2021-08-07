@@ -1,0 +1,16 @@
+<map id="print_data" name="print_data">
+<area shape="rect" id="node2" href="$web_8c.html#a0936733cf527d7548fd93642e0de4b76" title="buffer_get" alt="" coords="141,81,221,108"/>
+<area shape="rect" id="node3" href="$rl__server_8c.html#a5ff8a1ee2bf9c144f33f293c47f561ca" title="print_json_64" alt="" coords="132,132,231,159"/>
+<area shape="rect" id="node4" href="$rl__server_8c.html#ad3db951e15b69f9730a5f691cdaf6c8a" title="print_status" alt="" coords="136,183,227,209"/>
+<area shape="rect" id="node7" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="491,259,545,285"/>
+<area shape="rect" id="node14" href="$sem_8c.html#ac67b4de40d56892078c0e6156691f578" title="set_sem" alt="" coords="310,284,382,311"/>
+<area shape="rect" id="node15" href="$sem_8c.html#ab7b00e8a9f17a36ebd99f2589056a6e0" title="wait_sem" alt="" coords="142,335,221,361"/>
+<area shape="rect" id="node5" href="$rl__util_8c.html#a8147b0185e49bb73d06e478246c148f1" title="read_default_config" alt="" coords="279,183,413,209"/>
+<area shape="rect" id="node8" href="$rl__lib_8c.html#abe2e469406422439bb05bd3a5f95119e" title="rl_read_calibration" alt="" coords="283,31,409,57"/>
+<area shape="rect" id="node12" href="$rl__server_8c.html#ae46c792fd0e297c791e6ca644f0d1b29" title="get_free_space" alt="" coords="291,81,401,108"/>
+<area shape="rect" id="node13" href="$rl__server_8c.html#a7779fff3334011a196095485ff5a7c3e" title="print_json_32" alt="" coords="297,132,395,159"/>
+<area shape="rect" id="node6" href="$rl__util_8c.html#aa50e386e41c80f62c01cd74d42ece348" title="reset_config" alt="" coords="471,183,565,209"/>
+<area shape="rect" id="node9" href="$calibration_8c.html#a7f54452f0f93ef704c3da240834ce9e7" title="read_calibration" alt="" coords="461,31,575,57"/>
+<area shape="rect" id="node10" href="$calibration_8c.html#a51a283e3fa3d1a24f85f8e48fd5c8854" title="reset_offsets" alt="" coords="623,5,721,32"/>
+<area shape="rect" id="node11" href="$calibration_8c.html#a54d3973844da28a686e28ed2670ff582" title="reset_scales" alt="" coords="624,56,720,83"/>
+</map>

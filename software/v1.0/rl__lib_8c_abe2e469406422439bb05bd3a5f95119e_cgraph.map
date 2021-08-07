@@ -1,0 +1,5 @@
+<map id="rl_read_calibration" name="rl_read_calibration">
+<area shape="rect" id="node2" href="$calibration_8c.html#a7f54452f0f93ef704c3da240834ce9e7" title="read_calibration" alt="" coords="180,31,293,57"/>
+<area shape="rect" id="node3" href="$calibration_8c.html#a51a283e3fa3d1a24f85f8e48fd5c8854" title="reset_offsets" alt="" coords="341,5,440,32"/>
+<area shape="rect" id="node4" href="$calibration_8c.html#a54d3973844da28a686e28ed2670ff582" title="reset_scales" alt="" coords="343,56,439,83"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="handle_data_buffer" name="handle_data_buffer">
+<area shape="rect" id="node2" href="$web_8c.html#a8d886ce854b74be4a2b63ed94fba3669" title="buffer_add" alt="" coords="211,5,293,32"/>
+<area shape="rect" id="node3" href="$util_8c.html#aae37b3d3b6a01f95a54b30585d022b64" title="count_channels" alt="" coords="195,56,309,83"/>
+<area shape="rect" id="node4" href="$file__handling_8c.html#a2855db8374fab2f19683e3641ce225e6" title="create_time_stamp" alt="" coords="185,107,319,133"/>
+<area shape="rect" id="node5" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="367,208,420,235"/>
+<area shape="rect" id="node6" href="$file__handling_8c.html#a54729b19db97b8371f553310a460dfd5" title="merge_currents" alt="" coords="196,208,308,235"/>
+<area shape="rect" id="node7" href="$sem_8c.html#ac67b4de40d56892078c0e6156691f578" title="set_sem" alt="" coords="216,259,288,285"/>
+<area shape="rect" id="node8" href="$sem_8c.html#ab7b00e8a9f17a36ebd99f2589056a6e0" title="wait_sem" alt="" coords="213,309,291,336"/>
+</map>

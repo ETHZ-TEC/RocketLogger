@@ -1,0 +1,8 @@
+<map id="web_handle_data" name="web_handle_data">
+<area shape="rect" id="node2" href="$util_8c.html#aae37b3d3b6a01f95a54b30585d022b64" title="count_channels" alt="" coords="191,5,304,32"/>
+<area shape="rect" id="node3" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="367,107,420,133"/>
+<area shape="rect" id="node4" href="$sem_8c.html#ac67b4de40d56892078c0e6156691f578" title="set_sem" alt="" coords="211,107,283,133"/>
+<area shape="rect" id="node5" href="$sem_8c.html#ab7b00e8a9f17a36ebd99f2589056a6e0" title="wait_sem" alt="" coords="208,157,287,184"/>
+<area shape="rect" id="node6" href="$web_8c.html#ab0b1d0b1766a018d0901a9e77921dfd2" title="web_buffer_add" alt="" coords="191,208,304,235"/>
+<area shape="rect" id="node7" href="$web_8c.html#ac54924216f911f1f936ffc67c95629e0" title="web_merge_currents" alt="" coords="176,259,319,285"/>
+</map>

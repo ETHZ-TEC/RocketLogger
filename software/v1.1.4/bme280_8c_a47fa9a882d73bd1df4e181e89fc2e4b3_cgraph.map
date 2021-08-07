@@ -1,0 +1,9 @@
+<map id="BME280_init" name="BME280_init">
+<area shape="rect" id="node2" href="$bme280_8c.html#a7b11034646d96537dac14e1878326a68" title="BME280_getID" alt="" coords="181,37,292,63"/>
+<area shape="rect" id="node3" href="$log_8c.html#a03a4554bb48a96130b86f2c14b23f515" title="rl_log" alt="" coords="425,37,478,63"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#a715ca0748af00d78ea31b4fbe7cd423a" title="Sensors_getSharedBus" alt="" coords="372,87,531,114"/>
+<area shape="rect" id="node5" href="$bme280_8c.html#a7821b0a1ca45d9b614426f58480ae395" title="BME280_readCalibration" alt="" coords="153,138,320,165"/>
+<area shape="rect" id="node7" href="$bme280_8c.html#ab99aa6fc6076ebb4766a9a505b0a9a33" title="BME280_setParameters" alt="" coords="155,87,319,114"/>
+<area shape="rect" id="node8" href="$sensor_8c.html#abbdf060bae5e80ceaffe7a56e3aaa1d5" title="Sensors_initSharedComm" alt="" coords="149,239,324,266"/>
+<area shape="rect" id="node6" href="$bme280_8c.html#a4dcd6fff15cf2903fe076db59b919e52" title="BME280_getIndex" alt="" coords="387,138,516,165"/>
+</map>
