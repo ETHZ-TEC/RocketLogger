@@ -22,7 +22,7 @@ copyright = '2021, ETH Zurich, Computer Engineering Group'
 author = 'ETH Zurich, Computer Engineering Group'
 
 # The full version, including alpha/beta/rc tags
-release = '1.99a7'
+release = '2.1.0-dev'
 
 
 # -- General configuration ---------------------------------------------------
