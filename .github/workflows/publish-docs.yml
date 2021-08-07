@@ -4,55 +4,24 @@ name: Publish documentation
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow when creating a release
+  # Triggers the workflow when publishing a release
   release:
     types:
-      - created
+      - published
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a two jobs called "build"
-  build-doxygen:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      - name: Prepare git revision info
-        id: git_info
-        run: |
-          echo ::set-output name=NAME::${GITHUB_REF#refs/*/}
-          echo ::set-output name=BRANCH::${GITHUB_REF#refs/heads/}
-          echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
-
-      - name: Build docs
-        uses: mattnotmitt/doxygen-action@v1
-        with:
-          working-directory: software/rocketlogger
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: software/rocketlogger/docs/html
-          destination_dir: software/${{ steps.git_info.outputs.NAME }}
-          enable_jekyll: true
-
-  # This workflow contains a two jobs called "build"
-  build-sphinx:
+  # This workflow contains a one jobs called "build-docs"
+  build-docs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     defaults:
       run:
         shell: bash
-        working-directory: script/python
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -71,20 +40,33 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Install dependencies
+      - name: Install Python dependencies
+        working-directory: script/python
         run: |
           python -m pip install --upgrade pip
           python -m pip install sphinx
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Build docs
+      - name: Build RocketLogger Python support docs
+        working-directory: script/python
         run: |
           python setup.py build_sphinx -a
+
+      - name: Build RocketLogger software docs
+        uses: mattnotmitt/doxygen-action@v1
+        with:
+          working-directory: software/rocketlogger
+
+      - name: Collect built documentation artifacts
+        run: |
+          mkdir --verbose --parents public/software public/python
+          cp --verbose --recursive software/rocketlogger/docs/html public/software/${{ steps.git_info.outputs.NAME }}
+          cp --verbose --recursive script/python/build/sphinx/html public/python/${{ steps.git_info.outputs.NAME }}
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: script/python/build/sphinx/html
-          destination_dir: python/${{ steps.git_info.outputs.NAME }}
+          publish_dir: ./public
+          keep_files: true
           enable_jekyll: true
