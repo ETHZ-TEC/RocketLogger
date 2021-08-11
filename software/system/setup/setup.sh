@@ -135,6 +135,7 @@ echo "> Update some security and permission settings"
 
 # copy more secure ssh configuration
 cp --force ssh/sshd_config /etc/ssh/
+systemctl reload sshd
 
 # copy public keys for log in
 mkdir --parents /home/rocketlogger/.ssh/
