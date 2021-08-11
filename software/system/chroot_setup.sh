@@ -10,6 +10,7 @@ IMAGE=/dev/null
 HOSTNAME="rocketlogger"
 
 ROOTFS=`mktemp --directory`
+ROOT_HOME=`mktemp --directory`
 REPO_PATH=`git rev-parse --show-toplevel`
 REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
@@ -30,8 +31,8 @@ echo "> Deploy RocketLogger system to image '${IMAGE}'"
 ## grow image filesystem
 echo "> Grow system partition size to fit RocketLogger installation"
 
-# grow image size and partition by 900 MB
-dd if=/dev/zero of=${IMAGE} bs=1M count=900 conv=fsync,notrunc oflag=append,sync status=progress
+# grow image size and partition by 700 MB (500 MB system packages, 200 MB web interface)
+dd if=/dev/zero of=${IMAGE} bs=1M count=700 conv=fsync,notrunc oflag=append,sync status=progress
 sfdisk ${IMAGE} <<-__EOF__
 4M,,L,*
 __EOF__
@@ -83,11 +84,12 @@ mkdir --parents ${ROOTFS}/run/connman
 touch ${ROOTFS}/run/connman/resolv.conf
 mount --bind /etc/resolv.conf ${ROOTFS}/run/connman/resolv.conf
 
+# bind temporary root home
+mount --bind ${ROOT_HOME} ${ROOTFS}/root
 
 # clone RocketLogger repository
 echo "> Clone RocketLogger repository"
 git clone --branch ${REPO_BRANCH} ${REPO_PATH} ${ROOTFS}/root/rocketlogger
-rm --force --recursive ${ROOTFS}/root/rocketlogger/hardware ${ROOTFS}/root/rocketlogger/script
 
 
 ## setup operating system
@@ -138,8 +140,9 @@ echo "> Clean up installation files"
 # fix user home permissions
 chroot ${ROOTFS} /bin/bash -c "chown --recursive rocketlogger:rocketlogger /home/rocketlogger/"
 
-# cleanup root home
-rm --force --recursive ${ROOTFS}/root/*/ ${ROOTFS}/root/.*/
+# unmount and clean up temporary root home
+umount ${ROOTFS}/root
+rm --force --recursive ${ROOT_HOME}
 
 
 ## unmount filesystem
