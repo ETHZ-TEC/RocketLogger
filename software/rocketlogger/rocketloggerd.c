@@ -343,7 +343,7 @@ int main(void) {
         rl_log(RL_LOG_INFO, "Rebooting system.");
         sync();
         reboot(RB_AUTOBOOT);
-    } else if(system_action == SYSTEM_ACTION_REBOOT) {
+    } else if(system_action == SYSTEM_ACTION_POWEROFF) {
         rl_log(RL_LOG_INFO, "Powering off system.");
         sync();
         reboot(RB_POWER_OFF);

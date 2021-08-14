@@ -188,12 +188,15 @@ int gpio_wait_interrupt(gpio_t *gpio, const struct timespec *timeout) {
     int ret = -1;
     struct gpiod_line_event event;
 
-    // wait for registerd events
+    // wait for registered events
     ret = gpiod_line_event_wait(gpio, timeout);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR,
-               "Failed waiting for interrupt of GPIO %s. %d message: %s\n",
-               gpiod_line_consumer(gpio), errno, strerror(errno));
+        // log error except if interrupted
+        if (errno != EINTR) {
+            rl_log(RL_LOG_ERROR,
+                   "Failed waiting for interrupt of GPIO %s. %d message: %s\n",
+                   gpiod_line_consumer(gpio), errno, strerror(errno));
+        }
         return ret;
     }
 
