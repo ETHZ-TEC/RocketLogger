@@ -11,6 +11,7 @@ HOSTNAME="rocketlogger"
 
 ROOTFS=`mktemp --directory`
 ROOT_HOME=`mktemp --directory`
+APT_CACHE=`mktemp --directory`
 REPO_PATH=`git rev-parse --show-toplevel`
 REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
@@ -31,7 +32,7 @@ echo "> Deploy RocketLogger system to image '${IMAGE}'"
 ## grow image filesystem
 echo "> Grow system partition size to fit RocketLogger installation"
 
-# grow image size and partition by 700 MB (500 MB system packages, 200 MB web interface)
+# grow image size and partition by 700 MB (500 MB additional system packages, 200 MB binary and web interface)
 dd if=/dev/zero of=${IMAGE} bs=1M count=700 conv=fsync,notrunc oflag=append,sync status=progress
 sfdisk ${IMAGE} <<-__EOF__
 4M,,L,*
@@ -65,6 +66,7 @@ mount ${DISK} ${ROOTFS}
 
 # verify system image mount was successful
 MOUNT=$?
+df --sync ${ROOTFS}
 if [ $MOUNT -ne 0 ]; then
   echo "[ !! ] System image mount failed (code $MOUNT). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
   exit $MOUNT
@@ -84,8 +86,9 @@ mkdir --parents ${ROOTFS}/run/connman
 touch ${ROOTFS}/run/connman/resolv.conf
 mount --bind /etc/resolv.conf ${ROOTFS}/run/connman/resolv.conf
 
-# bind temporary root home
+# bind temporary root home and apt cache
 mount --bind ${ROOT_HOME} ${ROOTFS}/root
+mount --bind ${APT_CACHE} ${ROOTFS}/var/cache/apt
 
 # clone RocketLogger repository
 echo "> Clone RocketLogger repository"
@@ -98,6 +101,7 @@ chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/system/setup && ./
 
 # verify system configuration was successful
 CONFIG=$?
+df --sync ${ROOTFS}
 if [ $CONFIG -ne 0 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
   exit $CONFIG
@@ -112,6 +116,7 @@ chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/rocketlogger && me
 
 # verify software installation configuration was successful
 INSTALL=$?
+df --sync ${ROOTFS}
 if [ $INSTALL -ne 0 ]; then
   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
   exit $INSTALL
@@ -126,6 +131,7 @@ chroot ${ROOTFS} /bin/bash -c "cd /root/rocketlogger/software/node_server && ./i
 
 # verify web interface installation configuration was successful
 WEB=$?
+df --sync ${ROOTFS}
 if [ $WEB -ne 0 ]; then
   echo "[ !! ] Web interface installation failed (code $WEB). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY WEB INTERFACE INSTALLATION."
   exit $WEB
@@ -140,9 +146,11 @@ echo "> Clean up installation files"
 # fix user home permissions
 chroot ${ROOTFS} /bin/bash -c "chown --recursive rocketlogger:rocketlogger /home/rocketlogger/"
 
-# unmount and clean up temporary root home
+# unmount and clean up temporary root home and apt cache
 umount ${ROOTFS}/root
 rm --force --recursive ${ROOT_HOME}
+umount ${ROOTFS}/var/cache/apt
+rm --force --recursive ${APT_CACHE}
 
 
 ## unmount filesystem
