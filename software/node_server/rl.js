@@ -42,7 +42,7 @@ const rl = {
     /// RocketLogger measurement data path
     path_data: '/home/rocketlogger/data',
     /// RocketLogger measurement log file
-    path_system_logfile: '/var/log/rocketlogger.log',
+    path_system_logfile: '/var/log/rocketlogger/rocketlogger.log',
     /// ZeroMQ socket identifier for data publishing status
     zmq_status_socket: 'tcp://127.0.0.1:8276',
     /// ZeroMQ socket identifier for status publishing

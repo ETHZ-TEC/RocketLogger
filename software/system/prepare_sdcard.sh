@@ -76,6 +76,7 @@ fi
 echo "> Generate SD card folder structure and set permissions"
 mkdir --parents ${MOUNT_POINT}/rocketlogger/config
 mkdir --parents ${MOUNT_POINT}/rocketlogger/data
+mkdir --parents ${MOUNT_POINT}/rocketlogger/log
 chown --recursive ${ROCKETLOGGER_UID}:${ROCKETLOGGER_GID} ${MOUNT_POINT}/rocketlogger
 chmod --recursive 777 ${MOUNT_POINT}/rocketlogger
 
