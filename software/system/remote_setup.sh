@@ -121,4 +121,6 @@ fi
 
 
 # hint on the next setup step
-echo ">> Wait for the system to reboot and you are ready to go."
+echo ">> Wait for the system to shut down. To complete the setup:"
+echo "   * prepare a RocketLogger Data SD card an insert it into the logger,"
+echo "   * power up the RocketLogger and start your measurements."
