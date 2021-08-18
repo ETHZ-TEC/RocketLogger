@@ -1,7 +1,7 @@
 # RocketLogger Python Support Library
 
 This package provides RocketLogger data file handling support, as well as
-basic processing and plotting of the data. Further is provides the necessary
+basic processing and plotting of the data. Further, it provides the necessary
 support to generate calibration data from measurements.
 
 **Dependencies**
@@ -15,7 +15,7 @@ support to generate calibration data from measurements.
 
 ## Installation
 
-The package is available from the [Python Package Index](https://pypi.org)
+The package is available from the [Python Package Index](https://pypi.org/project/rocketlogger/)
 Install the package using pip:
 ```bash
 python -m pip install rocketlogger
@@ -26,7 +26,7 @@ python -m pip install rocketlogger
 
 ### RocketLogger Data Processing
 
-To import a RocketLogger data (.rld) file, use the `RocketLoggerData` class:
+To import a RocketLogger data (`*.rld`) file, use the `RocketLoggerData` class:
 ```py
 >>> from rocketlogger.data import RocketLoggerData
 >>> rld = RocketLoggerData('data.rld')
@@ -44,15 +44,14 @@ To get the loaded channel data (by name) and corresponding timestamps:
 ```
 
 For more details about the individual functions and their parameters, refer to
-the documentation available at <https://github.com/ETHZ-TEC/RocketLogger/wiki>.
+the documentation available at <https://github.com/ETHZ-TEC/RocketLogger/wiki/python>.
 
 
 ### RocketLogger Device Calibration
 
 The `RocketLoggerCalibration` class from the `rocketlogger.calibration` module
-provides the support necessary for generating RocketLogger device calibration.
-See the calibration section in the RocketLogger wiki at
-<https://github.com/ETHZ-TEC/RocketLogger/wiki> for more details on the calibration
+provides the necessary support for generating RocketLogger device calibration.
+See the [Calibration](https://github.com/ETHZ-TEC/RocketLogger/wiki/calibration) wiki section for more details on the calibration
 procedure.
 
 
@@ -65,4 +64,4 @@ The documentation for the RocketLogger is found in the wiki pages at
 ## License
 
 The RocketLogger Project is released under [3-clause BSD license](https://opensource.org/licenses/BSD-3-Clause).
-For more details refer the the [LICENSE](LICENSE) file.
+For more details, refer the the [LICENSE](LICENSE) file.
