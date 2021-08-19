@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,177 +19,197 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <errno.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include <signal.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "log.h"
+#include "rl.h"
+#include "rl_hw.h"
+#include "rl_socket.h"
+#include "util.h"
 
 #include "rl_lib.h"
 
 /**
- * Get status of RocketLogger
- * @return current status {@link rl_state}
+ * Signal handler to catch stop signals.
+ *
+ * @todo allow for forced user interrupt (ctrl+C)
+ *
+ * @param signal_number The number of the signal to handle
  */
-rl_state rl_get_status(void) {
+static void rl_signal_handler(int signal_number);
 
-    struct rl_status status;
+bool rl_is_sampling(void) {
+    rl_status_t status;
+    rl_status_reset(&status);
 
-    // get pid
-    pid_t pid = get_pid();
-    if (pid == FAILURE || kill(pid, 0) < 0) {
-        // process not running
-        status.state = RL_OFF;
-    } else {
-        // read status
-        read_status(&status);
-    }
-
-    return status.state;
-}
-
-/**
- * Read status of RocketLogger
- * @param status Pointer to {@link rl_status} struct to write to
- * @return current status {@link rl_state}
- */
-int rl_read_status(struct rl_status* status) {
-
-    // get pid
-    pid_t pid = get_pid();
-    if (pid == FAILURE || kill(pid, 0) < 0) {
-        // process not running
-        status->state = RL_OFF;
-    } else {
-        // read status
-        read_status(status);
-    }
-
-    return status->state;
-}
-/**
- * Read calibration file
- * @param calibration_ptr Pointer to {@link rl_calibration} to write to
- * @param conf Current {@link rl_conf} configuration
- */
-void rl_read_calibration(struct rl_calibration* calibration_ptr,
-                         struct rl_conf* conf) {
-    read_calibration(conf);
-    memcpy(calibration_ptr, &calibration, sizeof(struct rl_calibration));
-}
-
-/**
- * RocketLogger start function: start sampling
- * @param conf Pointer to desired {@link rl_conf} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
- */
-int rl_start(struct rl_conf* conf, char* file_comment) {
-
-    // check mode
-    switch (conf->mode) {
-    case LIMIT:
-        break;
-    case CONTINUOUS:
-        // create deamon to run in background
-        if (daemon(1, 1) < 0) {
-            rl_log(ERROR, "failed to create background process");
-            return SUCCESS;
+    int res = rl_get_status(&status);
+    if (res < 0) {
+        // if shared memory does not exists, RocketLogger is not sampling
+        if (errno == ENOENT) {
+            return false;
         }
-        break;
-    case METER:
-        // set meter config
-        conf->update_rate = METER_UPDATE_RATE;
-        conf->sample_limit = 0;
-        conf->enable_web_server = 0;
-        conf->file_format = NO_FILE;
-        if (conf->sample_rate < MIN_ADC_RATE) {
-            rl_log(WARNING, "too low sample rate. Setting rate to 1kSps");
-            conf->sample_rate = MIN_ADC_RATE;
-        }
-        break;
-    default:
-        rl_log(ERROR, "wrong mode");
-        return FAILURE;
+        rl_log(RL_LOG_ERROR,
+               "failed getting status to check sampling state; %d message: %s",
+               errno, strerror(errno));
     }
 
-    // check input
-    if (check_sample_rate(conf->sample_rate) == FAILURE) {
-        rl_log(ERROR, "wrong sampling rate");
-        return FAILURE;
-    }
-    if (check_update_rate(conf->update_rate) == FAILURE) {
-        rl_log(ERROR, "wrong update rate");
-        return FAILURE;
-    }
-    if (conf->update_rate != 1 && conf->enable_web_server == 1) {
-        rl_log(WARNING, "webserver plot does not work with update rates >1. "
-                        "Disabling webserver ...");
-        conf->enable_web_server = 0;
+    return status.sampling;
+}
+
+int rl_get_status(rl_status_t *const status) {
+    // get the status from the shared memory
+    int res = rl_status_read(status);
+    if (res < 0) {
+        // on error return reset value
+        rl_status_reset(status);
+        return res;
     }
 
-    // check ambient configuration
-    if (conf->ambient.enabled == AMBIENT_ENABLED &&
-        conf->file_format == NO_FILE) {
-        rl_log(
-            WARNING,
-            "Ambient logging not possible without file. Disabling ambient ...");
-        conf->ambient.enabled = AMBIENT_DISABLED;
+    // get file system state
+    int64_t disk_free = fs_space_free(RL_CONFIG_FILE_DIR_DEFAULT);
+    int64_t disk_total = fs_space_total(RL_CONFIG_FILE_DIR_DEFAULT);
+
+    status->disk_free = disk_free;
+    if (disk_total > 0) {
+        status->disk_free_permille = (1000 * disk_free) / disk_total;
+    } else {
+        status->disk_free_permille = 0;
     }
 
-    // store PID to file
-    pid_t pid = getpid();
-    set_pid(pid);
+    return res;
+}
 
-    // register signal handler (for stopping)
-    if (signal(SIGQUIT, sig_handler) == SIG_ERR ||
-        signal(SIGINT, sig_handler) == SIG_ERR) {
-        rl_log(ERROR, "can't register signal handler");
-        return FAILURE;
+int rl_run(rl_config_t *const config) {
+    if (rl_is_sampling()) {
+        rl_log(RL_LOG_ERROR,
+               "cannot run measurement, RocketLogger is already running.");
+        return ERROR;
+    }
+
+    // register signal handler for SIGTERM and SIGINT (for stopping)
+    struct sigaction sigterm_action_backup;
+    struct sigaction sigint_action_backup;
+    struct sigaction signal_action;
+    signal_action.sa_handler = rl_signal_handler;
+    sigemptyset(&signal_action.sa_mask);
+    signal_action.sa_flags = 0;
+
+    int ret;
+    ret = sigaction(SIGTERM, &signal_action, &sigterm_action_backup);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+    ret = sigaction(SIGINT, &signal_action, &sigint_action_backup);
+    if (ret < 0) {
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGINT; %d message: %s",
+               errno, strerror(errno));
+        return ERROR;
     }
 
     // INITIATION
-    hw_init(conf);
+
+    // init status
+    rl_status_reset(&rl_status);
+    rl_status.config = config;
+
+    // init status publishing and publish (to not be received, see zeromq docs)
+    rl_status_pub_init();
+    rl_status_write(&rl_status);
+
+    // init hardware
+    hw_init(config);
+
+    // initialize socket if webserver enabled
+    if (config->web_enable) {
+        rl_socket_init();
+        rl_socket_metadata(config);
+    }
 
     // check ambient sensor available
-    if (conf->ambient.enabled == AMBIENT_ENABLED &&
-        conf->ambient.sensor_count == 0) {
-        conf->ambient.enabled = AMBIENT_DISABLED;
-        rl_log(WARNING, "No ambient sensor found. Disabling ambient ...");
+    if (config->ambient_enable && rl_status.sensor_count == 0) {
+        config->ambient_enable = false;
+        rl_log(RL_LOG_WARNING, "No ambient sensor found. Disabling ambient...");
     }
 
     // SAMPLING
-    rl_log(INFO, "sampling start");
-    hw_sample(conf, file_comment);
-    rl_log(INFO, "sampling finished");
+    rl_log(RL_LOG_INFO, "sampling start");
+    hw_sample(config);
+    rl_log(RL_LOG_INFO, "sampling finished");
 
     // FINISH
-    hw_close(conf);
+    if (config->web_enable) {
+        rl_socket_deinit();
+    }
+    rl_status_pub_deinit();
+    hw_deinit(config);
+
+    // restore signal handlers for SIGTERM and SIGINT
+    ret = sigaction(SIGTERM, &sigterm_action_backup, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING,
+               "can't restore signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
+    }
+    ret = sigaction(SIGINT, &sigint_action_backup, NULL);
+    if (ret < 0) {
+        rl_log(RL_LOG_WARNING,
+               "can't restore signal handler for SIGINT; %d message: %s", errno,
+               strerror(errno));
+    }
 
     return SUCCESS;
 }
 
-/**
- * RocketLogger stop function (to stop continuous mode)
- * @return {@link SUCCESS} in case of success, {@link FAILURE} otherwise
- */
 int rl_stop(void) {
-
-    // check if running
-    if (rl_get_status() != RL_RUNNING) {
-        rl_log(ERROR, "RocketLogger not running");
-        return FAILURE;
+    if (!rl_is_sampling()) {
+        rl_log(RL_LOG_ERROR, "RocketLogger is not running.");
+        return ERROR;
     }
 
-    // ged pid
-    pid_t pid = get_pid();
-
-    // send stop signal
-    kill(pid, SIGQUIT);
+    // get pid and send termination signal
+    pid_t pid = rl_pid_get();
+    if (pid < 0) {
+        rl_log(RL_LOG_ERROR, "RocketLogger PID file not found; %d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    }
+    kill(pid, SIGTERM);
 
     return SUCCESS;
+}
+
+static void rl_signal_handler(int signal_number) {
+    // signal generated by stop function
+    if (signal_number == SIGTERM) {
+        // stop sampling
+        rl_status.sampling = false;
+    }
+
+    // signal generated by interactive user (ctrl+C)
+    if (signal_number == SIGINT) {
+        signal(signal_number, SIG_IGN);
+        rl_status.sampling = false;
+    }
 }

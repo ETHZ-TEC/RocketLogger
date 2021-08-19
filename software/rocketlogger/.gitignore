@@ -1,5 +1,2 @@
-bin/
-obj/
-doc/
-.vscode/
-version.c
+builddir/
+docs/

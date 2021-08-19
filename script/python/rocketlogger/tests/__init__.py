@@ -1,7 +1,7 @@
 """
 RocketLogger Python Library Tests.
 
-Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,5 +28,12 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
+
+# switch to a matplotlib backend not requiring display (before pyploy import!)
+import os
+
+if os.environ.get("MATPLOTLIB_AVAILABLE") == "true":
+    import matplotlib as mpl
+
+    mpl.use("Agg")

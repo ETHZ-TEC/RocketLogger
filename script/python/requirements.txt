@@ -1,0 +1,8 @@
+black
+coverage
+matplotlib
+nose
+numpy
+pandas
+sphinx
+tox

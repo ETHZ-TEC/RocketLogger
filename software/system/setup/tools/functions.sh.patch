@@ -1,0 +1,19 @@
+--- functions.sh.orig	2021-01-31 2021-01-01 00:00:00
++++ functions.sh	2021-01-31 2021-01-01 00:00:00
+@@ -1031,6 +1031,16 @@ _copy_rootfs() {
+ 
+   _generate_fstab
+ 
++  # RocketLogger external sdcard mount
++  echo_broadcast "==> /etc/fstab: append sdcard auto mount"
++  mkdir --parents ${tmp_rootfs_dir}/media/sdcard/
++  echo -e "# mount external sdcard on boot if available" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\t0\t2" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "# bind RocketLogger sdcard folders if available" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/rocketlogger/log\t/var/log/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++
+   #FIXME: What about when you boot from a fat partition /boot ?
+   echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"
+   sed -i -e 's:'$emmcscript':#'$emmcscript':g' ${tmp_rootfs_dir}/boot/uEnv.txt

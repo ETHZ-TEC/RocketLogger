@@ -1,0 +1,3 @@
+# include .gitignore and setup scripts
+!.gitignore
+!setup.sh

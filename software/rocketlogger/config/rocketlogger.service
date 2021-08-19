@@ -1,0 +1,24 @@
+# RocketLogger daemon service
+[Unit]
+Description=RocketLogger daemon
+Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
+
+[Service]
+Type=simple
+ExecStartPre=/bin/bash -c 'while ! lsmod | grep uio_pruss > /dev/null; do echo "await uio_pruss module loaded..."; sleep 2; done'
+ExecStart=/usr/bin/rocketloggerd
+PIDFile=/run/rocketloggerd.pid
+
+User=rocketlogger
+Group=rocketlogger
+
+TimeoutStopSec=2s
+KillMode=mixed
+KillSignal=SIGTERM
+FinalKillSignal=SIGKILL
+
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

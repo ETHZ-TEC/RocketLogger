@@ -1,25 +1,101 @@
-RocketLogger Software Documentation
-===================================
+# RocketLogger Software Documentation
 
-The RocketLogger software includes the three following binaries, which use de RocketLogger library.
+
+## Component Overview
+
+The RocketLogger software consists of multiple components that are summarized below.
 
 ### RocketLogger Binary
 
-Main RocketLogger binary defined in [rocketlogger.c](@ref rocketlogger.c). Provides a CLI to control an monitor the sampling.
+The RocketLogger tool is implemented in @ref rocketlogger.c.
+This tool provides an extensive command line interface to control and monitor the sampling.
 
-### RocketLogger Deamon
 
-RocketLogger deamon program defined in [rl_deamon.c](@ref rl_deamon.c). Continuously waits on interrupt on button GPIO and starts/stops RocketLogger.
+### RocketLogger Daemon
 
-### RocketLogger Server
+The RocketLogger service daemon is implemented in @ref rocketloggerd.c.
+This service is responsible for configuring the user space GPIOs, control the power supply of the
+cape, handles the user button actions and observes the RocketLogger sampling status.
 
-RocketLogger server program defined in [rl_server.c](@ref rl_server.c). Returns status and current sampling data (if available) when running and default configuration otherwise, for use in a webserver.
+
+### PRU Firmware
+
+The firmware sources for the Programmable Real-time Unit (PRU) are located in the @ref pru
+subfolder. The firmware is built and installed along with the rest of the software.
+
+### Device Tree Overlay
+
+The necessary device tree overlay sources for the RocketLogger Cape hardware are contained in the
+@ref overlay subfolder and installed together with the above software components (see also @ref overlay/README.md).
+
+
+### System Configuration
+
+The system configuration files provided in the @ref config subfolder provide the necessary
+`uio_pruss` module configuration, uEnv boot configuration, and RocketLogger service specification,
+as well as as default calibration parameters. These configuration files are deployed together with
+the other software components.
+
+
+## Installation
+
+To build and install the RocketLogger software components and its configuration use:
+
+```bash
+meson builddir
+cd builddir
+ninja
+sudo meson install --no-rebuild
+```
+
+
+## Documentation
+
+The documentation for the RocketLogger is found in the wiki pages at
+<https://github.com/ETHZ-TEC/RocketLogger/wiki>.
+
+
+## Dependencies
+
+### Build Tools
+
+For building the software, the following build tools are required (provided by the listed Debian
+packages):
+
+* *Linux device tree* compiler - `device-tree-compiler` package
+* *GNU C* compiler - `gcc` package
+* *Meson* build system (version >= 0.55) - `meson/buster-backports` package
+* *ninja* build system (version >= 0.10) - `ninja-build/buster-backports` package
+* *TI PRU* code generation tools - `ti-pru-cgt-installer` package
+
+
+#### Cross Compilation
+If not developing directly on the BeagleBone, there is the option to cross compile using
+`Docker Buildx`. The `build_cross.sh` helper script and the
+required `Dockerfile` can be used for this purpose.
+To use this cross-compilation option, `Docker Buildx` and a system configured to run
+privileged Docker containers is required. More information on the docker configuration is
+found at [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/) and in the
+[docker run reference](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities).
+
+
+### Software Libraries
+
+The following libraries (provided by the corresponding Debian packages) are required to build
+the software:
+
+* *libgpiod* - `libgpiod-dev` package
+* *libi2c* - `libi2c-dev` package
+* *libncurses* - `libncurses5-dev` package
+* *libzeromq* - `libzmq3-dev` package
+* BeagleBone device tree overlay headers - included as a [Meson subproject](https://github.com/beagleboard/bb.org-overlays.git)
+* Linux PRU user space driver *prussdrv* - included as a [Meson subproject](https://github.com/beagleboard/am335x_pru_package.git)
 
 
 ## License
 
 ```
-Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

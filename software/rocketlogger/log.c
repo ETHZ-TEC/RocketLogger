@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,102 +19,147 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 #include "log.h"
 
 /**
- * Log a message.
- * @param type Type of message.
- * @param format Message format.
+ * The filename of the log file to write to.
  */
-void rl_log(rl_log_type type, const char* format, ...) {
+static char log_filename[RL_LOG_PATH_LENGTH_MAX] = RL_LOG_DEFAULT_FILE;
 
-    // open/init file
-    FILE* log_fp;
-    if (access(LOG_FILE, F_OK) == -1) {
-        // create file
-        log_fp = fopen(LOG_FILE, "w");
+/**
+ * The verbosity level for printing log messages to the standard output.
+ */
+static rl_log_level_t log_verbosity = RL_LOG_VERBOSE;
+
+int rl_log_init(char const *const log_file, rl_log_level_t verbosity) {
+    // update log configuration
+    rl_log_verbosity(verbosity);
+    strncpy(log_filename, log_file, sizeof(log_filename) - 1);
+
+    // open log file (create inexistent) to check for max file size
+    FILE *log_fp = fopen(log_filename, "a");
+    if (log_fp == NULL) {
+        printf("Error: failed to open log file\n");
+        return -1;
+    }
+
+    // reset the log file if it is getting large
+    if (ftell(log_fp) > RL_LOG_FILE_SIZE_MAX) {
+        log_fp = freopen(log_filename, "w", log_fp);
         if (log_fp == NULL) {
-            printf("Error: failed to open log file\n");
-            return;
-        }
-        fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
-    } else {
-        log_fp = fopen(LOG_FILE, "a");
-        if (log_fp == NULL) {
-            printf("Error: failed to open log file\n");
-            return;
+            printf("Error: failed to reset log file size\n");
+            return -1;
         }
     }
 
-    // reset, if file too large
-    int file_size = ftell(log_fp);
-    if (file_size > MAX_LOG_FILE_SIZE) {
-        fclose(log_fp);
-        fopen(LOG_FILE, "w");
-        fprintf(log_fp, "--- RocketLogger Log File ---\n\n");
+    // write header for new (empty) file, or empty line for existing file
+    if (ftell(log_fp) == 0) {
+        fprintf(log_fp, "# RocketLogger Log File\n");
     }
 
-    // print date/time
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-    time_t nowtime = current_time.tv_sec;
-    fprintf(log_fp, "  %s", ctime(&nowtime));
+    // close log file
+    fclose(log_fp);
+    return 0;
+}
+
+void rl_log_verbosity(rl_log_level_t verbosity) { log_verbosity = verbosity; }
+
+int rl_log(rl_log_level_t log_level, char const *const format, ...) {
+    // do not handle ignore log level
+    if (log_level == RL_LOG_IGNORE) {
+        return 0;
+    }
+
+    // log only if log level is equal or higher than configured verbosity
+    if (log_level > log_verbosity) {
+        return 0;
+    }
 
     // get arguments
     va_list args;
     va_start(args, format);
 
-    // print error message
-    if (type == ERROR) {
+    // get current time
+    time_t time_raw;
+    struct tm *time_info;
+    char time_str[24];
 
-        // file
-        fprintf(log_fp, "     Error: ");
-        vfprintf(log_fp, format, args);
-        fprintf(log_fp, "\n");
-        // terminal
-        printf("Error: ");
-        vprintf(format, args);
-        printf("\n\n");
+    time(&time_raw);
+    time_info = gmtime(&time_raw);
+    strftime(time_str, sizeof(time_str), "%F %T\t", time_info);
 
-        // set state to error
-        status.state = RL_ERROR;
-
-    } else if (type == WARNING) {
-
-        // file
-        fprintf(log_fp, "     Warning: ");
-        vfprintf(log_fp, format, args);
-        fprintf(log_fp, "\n");
-        // terminal
-        printf("Warning: ");
-        vprintf(format, args);
-        printf("\n\n");
-
-    } else if (type == INFO) {
-
-        fprintf(log_fp, "     Info: ");
-        vfprintf(log_fp, format, args);
-        fprintf(log_fp, "\n");
-
-    } else {
-        // for debugging purposes
-        printf("Error: wrong error-code\n");
+    // open log file
+    FILE *log_fp = fopen(log_filename, "a");
+    if (log_fp == NULL) {
+        printf("Error: failed to open log file\n");
+        return -1;
     }
+
+    // write time, log level, and message to log file
+    fprintf(log_fp, "%s", time_str);
+    switch (log_level) {
+    case RL_LOG_ERROR:
+        fprintf(log_fp, "ERROR\t");
+        break;
+    case RL_LOG_WARNING:
+        fprintf(log_fp, "WARN\t");
+        break;
+    case RL_LOG_INFO:
+        fprintf(log_fp, "INFO\t");
+        break;
+    case RL_LOG_VERBOSE:
+        fprintf(log_fp, "VERB\t");
+        break;
+    default:
+        // for debugging purposes
+        fprintf(log_fp, "N/A\t");
+        printf("Error: unsupported log level with message:\n  ");
+        break;
+    }
+    vfprintf(log_fp, format, args);
+    fprintf(log_fp, "\n");
+
+    // close file
+    fclose(log_fp);
+
+    // output to terminal
+    switch (log_level) {
+    case RL_LOG_ERROR:
+        printf("Error: ");
+        break;
+    case RL_LOG_WARNING:
+        printf("Warning: ");
+        break;
+    case RL_LOG_INFO:
+        printf("Info: ");
+        break;
+    case RL_LOG_VERBOSE:
+        printf("Verbose: ");
+        break;
+    default:
+        // skip handled above
+        break;
+    }
+    vprintf(format, args);
+    printf("\n");
 
     // facilitate return
     va_end(args);
 
-    // close file
-    fflush(log_fp);
-    fclose(log_fp);
+    return 0;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,466 +19,301 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <sys/ipc.h>
-#include <sys/sem.h>
+#include <linux/limits.h>
+#include <pruss_intc_mapping.h>
+#include <prussdrv.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-#include "file_handling.h"
+#include "calibration.h"
+#include "log.h"
+#include "meter.h"
+#include "rl.h"
+#include "rl_file.h"
+#include "rl_socket.h"
+#include "sem.h"
+#include "sensor/sensor.h"
 #include "util.h"
-#include "web.h"
 
 #include "pru.h"
 
-// PRU TIMEOUT WRAPPER
-
-/// PRU access mutex
-pthread_mutex_t waiting = PTHREAD_MUTEX_INITIALIZER;
-
-/// Notification variable
-pthread_cond_t done = PTHREAD_COND_INITIALIZER;
-
-/**
- * Wait on PRU event
- * @param voidEvent PRU event to wait on
- */
-void* pru_wait_event(void* voidEvent) {
-
-    unsigned int event = *((unsigned int*)voidEvent);
-
-    // allow the thread to be killed at any time
-    int oldtype;
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-    // wait for pru event
-    prussdrv_pru_wait_event(event);
-
-    // notify main program
-    pthread_cond_signal(&done);
-
-    return NULL;
-}
-
-/**
- * Wrapper for PRU event waiting with time out
- * @param event PRU event to wait on
- * @param timeout Time out in seconds
- * @return error code of pthread timedwait function
- */
-int pru_wait_event_timeout(unsigned int event, unsigned int timeout) {
-
-    struct timespec abs_time;
-    pthread_t tid;
-    int err;
-
-    pthread_mutex_lock(&waiting);
-
-    // pthread cond_timedwait expects an absolute time to wait until
-    clock_gettime(CLOCK_REALTIME, &abs_time);
-    abs_time.tv_sec += timeout;
-
-    pthread_create(&tid, NULL, pru_wait_event, (void*)&event);
-
-    err = pthread_cond_timedwait(&done, &waiting, &abs_time);
-
-    if (!err) {
-        pthread_mutex_unlock(&waiting);
-    }
-
-    return err;
-}
-
-// PRU MEMORY MAPPING
-/**
- * Map PRU memory into user space
- */
-void* pru_map_memory(void) {
-
-    // get pru memory location and size
-    unsigned int pru_memory = read_file_value(MMAP_FILE "addr");
-    unsigned int size = read_file_value(MMAP_FILE "size");
-
-    // memory map file
-    int fd;
-    if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
-        rl_log(ERROR, "failed to open /dev/mem");
-        return NULL;
-    }
-
-    // map shared memory into userspace
-    void* pru_mmap = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                          (off_t)pru_memory);
-
-    if (pru_mmap == (void*)-1) {
-        rl_log(ERROR, "failed to map base address");
-        return NULL;
-    }
-
-    close(fd);
-
-    return pru_mmap;
-}
-
-/**
- * Unmap PRU memory from user space
- * @param pru_mmap Pointer to mapped memory
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_unmap_memory(void* pru_mmap) {
-
-    // get pru memory size
-    unsigned int size = read_file_value(MMAP_FILE "size");
-
-    if (munmap(pru_mmap, size) == -1) {
-        rl_log(ERROR, "failed to unmap memory");
-        return FAILURE;
-    }
-
-    return SUCCESS;
-}
-
-// PRU INITIALISATION
-
-/**
- * Write state to PRU
- * @param state PRU state to write
- */
-void pru_set_state(rl_pru_state state) {
-
-    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&state,
-                              sizeof(int));
-}
-
-/**
- * PRU initiation
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
 int pru_init(void) {
-
-    // init PRU
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
+
+    // initialize and open PRU device
     prussdrv_init();
-    if (prussdrv_open(PRU_EVTOUT_0) == -1) {
-        rl_log(ERROR, "failed to open PRU");
-        return FAILURE;
+    int ret = prussdrv_open(PRU_EVTOUT_0);
+    if (ret != 0) {
+        rl_log(RL_LOG_ERROR, "failed to open PRUSS driver");
+        return ERROR;
     }
+
+    // setup PRU interrupt mapping
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     return SUCCESS;
 }
 
-/**
- * PRU data struct setup
- * @param pru Pointer to {@link pru_data_struct} to setup
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param avg_factor Average factor for sampling rates smaller than minimal ADC
- * rate
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
-                   uint32_t avg_factor) {
+void pru_deinit(void) {
+    // disable PRU and close memory mappings
+    prussdrv_pru_disable(0);
+    prussdrv_exit();
+}
 
-    uint32_t pru_sample_rate;
+int pru_control_init(pru_control_t *const pru_control,
+                     rl_config_t const *const config, uint32_t aggregates) {
+    // zero aggregates value is also considered no aggregation
+    if (aggregates == 0) {
+        aggregates = 1;
+    }
 
     // set state
-    if (conf->mode == LIMIT) {
-        pru->state = PRU_LIMIT;
+    if (config->sample_limit > 0) {
+        pru_control->state = PRU_STATE_SAMPLE_FINITE;
     } else {
-        pru->state = PRU_CONTINUOUS;
+        pru_control->state = PRU_STATE_SAMPLE_CONTINUOUS;
     }
 
-    // set sampling rate configuration
-    switch (conf->sample_rate) {
-    case 1:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 10:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 100:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 1000:
-        pru_sample_rate = K1;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 2000:
-        pru_sample_rate = K2;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 4000:
-        pru_sample_rate = K4;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 8000:
-        pru_sample_rate = K8;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 16000:
-        pru_sample_rate = K16;
-        pru->precision = PRECISION_HIGH;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 32000:
-        pru_sample_rate = K32;
-        pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    case 64000:
-        pru_sample_rate = K64;
-        pru->precision = PRECISION_LOW;
-        pru->sample_size = SIZE_HIGH;
-        break;
-    default:
-        rl_log(ERROR, "wrong sample rate");
-        return FAILURE;
+    // set native sample rate in kSPS
+    if (config->sample_rate <= RL_SAMPLE_RATE_MIN) {
+        pru_control->sample_rate = RL_SAMPLE_RATE_MIN / 1000;
+    } else {
+        pru_control->sample_rate = config->sample_rate / 1000;
     }
 
-    // set buffer infos
-    pru->sample_limit = conf->sample_limit * avg_factor;
-    pru->buffer_size = (conf->sample_rate * avg_factor) / conf->update_rate;
+    // set sample limit and data buffer size
+    pru_control->sample_limit = config->sample_limit * aggregates;
+    pru_control->buffer_length =
+        1000 * pru_control->sample_rate / config->update_rate;
 
+    // get shared buffer addresses
     uint32_t buffer_size_bytes =
-        pru->buffer_size * (pru->sample_size * NUM_CHANNELS + PRU_DIG_SIZE) +
+        pru_control->buffer_length *
+            (PRU_SAMPLE_SIZE * RL_CHANNEL_COUNT + PRU_DIGITAL_SIZE) +
         PRU_BUFFER_STATUS_SIZE;
-    pru->buffer0_location = read_file_value(MMAP_FILE "addr");
-    pru->buffer1_location = pru->buffer0_location + buffer_size_bytes;
 
-    // set commands
-    pru->number_commands = NUMBER_ADC_COMMANDS;
-    pru->commands[0] = RESET;
-    pru->commands[1] = SDATAC;
-    pru->commands[2] = WREG | CONFIG3 | CONFIG3DEFAULT; // write configuration
-    pru->commands[3] = WREG | CONFIG1 | CONFIG1DEFAULT | pru_sample_rate;
-
-    // set channel gains
-    pru->commands[4] = WREG | CH1SET | GAIN2;  // High Range A
-    pru->commands[5] = WREG | CH2SET | GAIN2;  // High Range B
-    pru->commands[6] = WREG | CH3SET | GAIN1;  // Medium Range
-    pru->commands[7] = WREG | CH4SET | GAIN1;  // Low Range A
-    pru->commands[8] = WREG | CH5SET | GAIN1;  // Low Range B
-    pru->commands[9] = WREG | CH6SET | GAIN1;  // Voltage 1
-    pru->commands[10] = WREG | CH7SET | GAIN1; // Voltage 2
-    pru->commands[11] = RDATAC;                // continuous reading
+    void *pru_extmem_base;
+    prussdrv_map_extmem(&pru_extmem_base);
+    uint32_t pru_extmem_phys =
+        (uint32_t)prussdrv_get_phys_addr(pru_extmem_base);
+    pru_control->buffer0_addr = pru_extmem_phys;
+    pru_control->buffer1_addr = pru_extmem_phys + buffer_size_bytes;
 
     return SUCCESS;
 }
 
-/**
- * Main PRU sampling function
- * @param data_file File pointer to data file
- * @param ambient_file File pointer to ambient file
- * @param conf Pointer to current {@link rl_conf} configuration
- * @param file_comment Comment to store in the file header
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
- */
-int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
-               char* file_comment) {
+int pru_set_state(pru_state_t state) {
+    int res = prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0,
+                                        (unsigned int *)&state, sizeof(state));
+    // PRU memory write fence
+    __sync_synchronize();
+    return res;
+}
+
+int pru_sample(FILE *data_file, FILE *ambient_file,
+               rl_config_t const *const config) {
+    int res;
 
     // average (for low rates)
-    uint32_t avg_factor = 1;
-    if (conf->sample_rate < MIN_ADC_RATE) {
-        avg_factor = MIN_ADC_RATE / conf->sample_rate;
-    }
-
-    // METER
-    if (conf->mode == METER) {
-        meter_init();
-    }
-
-    // WEBSERVER
-    int sem_id = -1;
-    struct web_shm* web_data = (struct web_shm*)-1;
-
-    if (conf->enable_web_server == 1) {
-        // semaphores
-        sem_id = create_sem(SEM_KEY, NUM_SEMS);
-        set_sem(sem_id, DATA_SEM, 1);
-
-        // shared memory
-        web_data = web_create_shm();
-
-        // determine web channels count (merged)
-        int num_web_channels = count_channels(conf->channels);
-        if (conf->channels[I1H_INDEX] == CHANNEL_ENABLED &&
-            conf->channels[I1L_INDEX] == CHANNEL_ENABLED) {
-            num_web_channels--;
-        }
-        if (conf->channels[I2H_INDEX] == CHANNEL_ENABLED &&
-            conf->channels[I2L_INDEX] == CHANNEL_ENABLED) {
-            num_web_channels--;
-        }
-        if (conf->digital_inputs == DIGITAL_INPUTS_ENABLED) {
-            num_web_channels += NUM_DIGITAL_INPUTS;
-        }
-        web_data->num_channels = num_web_channels;
-
-        // web buffer sizes
-        int buffer_sizes[WEB_RING_BUFFER_COUNT] = {BUFFER1_SIZE, BUFFER10_SIZE,
-                                                   BUFFER100_SIZE};
-
-        for (int i = 0; i < WEB_RING_BUFFER_COUNT; i++) {
-            int web_buffer_element_size =
-                buffer_sizes[i] * num_web_channels * sizeof(int64_t);
-            int web_buffer_length = NUM_WEB_POINTS / buffer_sizes[i];
-            web_buffer_reset(&web_data->buffer[i], web_buffer_element_size,
-                             web_buffer_length);
-        }
+    uint32_t aggregates = 1;
+    if (config->sample_rate < RL_SAMPLE_RATE_MIN) {
+        aggregates = (uint32_t)(RL_SAMPLE_RATE_MIN / config->sample_rate);
     }
 
     // PRU SETUP
 
-    // Map the PRU's interrupts
-    tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
-    prussdrv_pruintc_init(&pruss_intc_initdata);
-
-    // setup PRU
-    struct pru_data_struct pru;
-    pru_data_setup(&pru, conf, avg_factor);
-    unsigned int number_buffers =
-        ceil_div(conf->sample_limit * avg_factor, pru.buffer_size);
-    unsigned int buffer_size_bytes =
-        pru.buffer_size * (pru.sample_size * NUM_CHANNELS + PRU_DIG_SIZE) +
-        PRU_BUFFER_STATUS_SIZE;
-
-    // check memory size
-    unsigned int max_size = read_file_value(MMAP_FILE "size");
-    if (2 * buffer_size_bytes > max_size) {
-        rl_log(ERROR, "not enough memory allocated. Run:\n  rmmod uio_pruss\n  "
-                      "modprobe uio_pruss extram_pool_sz=0x%06x",
-               2 * buffer_size_bytes);
-        pru.state = PRU_OFF;
+    // initialize PRU data structure
+    pru_control_t pru;
+    res = pru_control_init(&pru, config, aggregates);
+    if (res != SUCCESS) {
+        rl_log(RL_LOG_ERROR, "failed initializing PRU data structure");
+        return ERROR;
     }
 
-    // map PRU memory into userspace
-    void* buffer0 = pru_map_memory();
-    void* buffer1 = buffer0 + buffer_size_bytes;
+    // check max PRU buffer size
+    uint32_t pru_extmem_size = (uint32_t)prussdrv_extmem_size();
+    uint32_t pru_extmem_size_demand =
+        2 * (pru.buffer_length *
+                 (PRU_SAMPLE_SIZE * RL_CHANNEL_COUNT + PRU_DIGITAL_SIZE) +
+             PRU_BUFFER_STATUS_SIZE);
+    if (pru_extmem_size_demand > pru_extmem_size) {
+        rl_log(RL_LOG_ERROR,
+               "insufficient PRU memory allocated/available.\n"
+               "update uio_pruss configuration:"
+               "options uio_pruss extram_pool_sz=0x%06x",
+               pru_extmem_size_demand);
+        pru.state = PRU_STATE_OFF;
+    }
+
+    // get user space mapped PRU memory addresses
+    void const *buffer0 = prussdrv_get_virt_addr(pru.buffer0_addr);
+    void const *buffer1 = prussdrv_get_virt_addr(pru.buffer1_addr);
+
+    // data file headers
+    rl_file_header_t data_file_header;
+    rl_file_header_t ambient_file_header;
 
     // DATA FILE STORING
+    if (config->file_enable) {
 
-    // file header lead-in
-    struct rl_file_header file_header;
-    file_setup_lead_in(&(file_header.lead_in), conf);
+        // data file header lead-in
+        rl_file_setup_data_lead_in(&(data_file_header.lead_in), config);
 
-    // channel array
-    int total_channel_count = file_header.lead_in.channel_bin_count +
-                              file_header.lead_in.channel_count;
-    struct rl_file_channel file_channel[total_channel_count];
-    file_header.channel = file_channel;
-
-    // complete file header
-    file_setup_header(&file_header, conf, file_comment);
-
-    // store header
-    if (conf->file_format == BIN) {
-        file_store_header_bin(data_file, &file_header);
-    } else if (conf->file_format == CSV) {
-        file_store_header_csv(data_file, &file_header);
-    }
-
-    // AMBIENT FILE STORING
-
-    // file header lead-in
-    struct rl_file_header ambient_file_header;
-
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
-
-        ambient_setup_lead_in(&(ambient_file_header.lead_in), conf);
-
-        // allocate channel array
-        ambient_file_header.channel =
-            malloc(conf->ambient.sensor_count * sizeof(struct rl_file_channel));
+        // channel array
+        int total_channel_count = data_file_header.lead_in.channel_bin_count +
+                                  data_file_header.lead_in.channel_count;
+        rl_file_channel_t file_channel[total_channel_count];
+        data_file_header.channel = file_channel;
 
         // complete file header
-        ambient_setup_header(&ambient_file_header, conf, file_comment);
+        rl_file_setup_data_header(&data_file_header, config);
 
         // store header
-        file_store_header_bin(ambient_file, &ambient_file_header);
-    }
+        if (config->file_format == RL_FILE_FORMAT_RLD) {
+            rl_file_store_header_bin(data_file, &data_file_header);
+        } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+            rl_file_store_header_csv(data_file, &data_file_header);
+        }
 
+        // AMBIENT FILE STORING
+
+        // file header lead-in
+        if (config->ambient_enable) {
+
+            rl_file_setup_ambient_lead_in(&(ambient_file_header.lead_in),
+                                          config);
+
+            // allocate channel array
+            ambient_file_header.channel =
+                malloc(rl_status.sensor_count * sizeof(rl_file_channel_t));
+
+            // complete file header
+            rl_file_setup_ambient_header(&ambient_file_header, config);
+
+            // store header
+            rl_file_store_header_bin(ambient_file, &ambient_file_header);
+        }
+    }
     // EXECUTION
 
     // write configuration to PRU memory
-    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int*)&pru,
-                              sizeof(struct pru_data_struct));
+    prussdrv_pru_write_memory(PRUSS0_PRU0_DATARAM, 0, (unsigned int *)&pru,
+                              sizeof(pru));
+
+    // PRU memory write fence
+    __sync_synchronize();
 
     // run SPI on PRU0
-    if (prussdrv_exec_program(0, PRU_CODE) < 0) {
-        rl_log(ERROR, "PRU code not found");
-        pru.state = PRU_OFF;
+    res = prussdrv_exec_program(0, PRU_BINARY_FILE);
+    if (res < 0) {
+        rl_log(RL_LOG_ERROR, "Failed starting PRU, binary not found");
+        return ERROR;
     }
 
-    // wait for first PRU event
-    if (pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) == ETIMEDOUT) {
-        // timeout occured
-        rl_log(ERROR, "PRU not responding");
-        pru.state = PRU_OFF;
+    // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+    res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
+    if (res < 0) {
+        // error checking interrupt occurred
+        rl_log(RL_LOG_ERROR, "Failed waiting for PRU interrupt; %d message: %s",
+               errno, strerror(errno));
+        return ERROR;
+    } else if (res == 0) {
+        // low level ADC timeout occurred
+        rl_log(RL_LOG_ERROR, "Failed starting PRU, PRU not responding");
+        return ERROR;
     }
+
+    // initialize interactive measurement display when enabled
+    if (config->interactive_enable) {
+        meter_init();
+    }
+
+    // create daemon after if requested to run in background
+    if (config->background_enable) {
+        if (daemon(1, 1) < 0) {
+            rl_log(RL_LOG_ERROR,
+                   "failed to create background process; %d message: %s", errno,
+                   strerror(errno));
+            return ERROR;
+        }
+    }
+
+    // write PID in file (only after potential forking using daemon)
+    pid_t pid = getpid();
+    rl_pid_set(pid);
 
     // clear event
     prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
-    void* buffer_addr;
-    struct time_stamp timestamp_monotonic;
-    struct time_stamp timestamp_realtime;
+    // CHANNEL DATA MEMORY ALLOCATION
+    int32_t *const analog_buffer = (int32_t *)malloc(
+        pru.buffer_length * RL_CHANNEL_COUNT * sizeof(int32_t));
+    uint32_t *const digital_buffer =
+        (uint32_t *)malloc(pru.buffer_length * sizeof(uint32_t));
+    int32_t sensor_buffer[SENSOR_REGISTRY_SIZE];
+
+    pru_buffer_t const *pru_buffer = NULL;
+    size_t buffer_size; // number of data samples per buffer
+    size_t sensor_buffer_size = 0;
+    uint32_t sensor_rate_counter = 0;
+    rl_timestamp_t timestamp_monotonic;
+    rl_timestamp_t timestamp_realtime;
     uint32_t buffers_lost = 0;
-    uint32_t buffer_samples_count; // number of samples per buffer
-    uint32_t num_files = 1;        // number of files stored
-    uint8_t skipped_buffers = 0;   // skipped buffers for ambient reading
+    uint32_t num_files = 1; // number of files stored
+    bool web_failure_disable = false;
+
+    // buffers to read in finite mode
+    uint32_t buffer_read_count =
+        div_ceil(config->sample_limit * aggregates, pru.buffer_length);
 
     // sampling started
-    status.sampling = SAMPLING_ON;
-    write_status(&status);
+    rl_status.sampling = true;
+    res = rl_status_write(&rl_status);
+    if (res < 0) {
+        rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s", errno,
+               strerror(errno));
+    }
 
     // continuous sampling loop
-    for (uint32_t i = 0;
-         status.sampling == SAMPLING_ON && status.state == RL_RUNNING &&
-         !(conf->mode == LIMIT && i >= number_buffers);
+    for (uint32_t i = 0; rl_status.sampling &&
+                         !(config->sample_limit > 0 && i >= buffer_read_count);
          i++) {
 
-        if (conf->file_format != NO_FILE) {
+        if (config->file_enable) {
 
             // check if max file size reached
             uint64_t file_size = (uint64_t)ftello(data_file);
-            uint64_t margin =
-                conf->sample_rate * sizeof(int32_t) * (NUM_CHANNELS + 1) +
-                sizeof(struct time_stamp);
-
-            if (conf->max_file_size != 0 &&
-                file_size + margin > conf->max_file_size) {
+            if (config->file_size > 0 &&
+                file_size + rl_status.disk_use_rate > config->file_size) {
 
                 // close old data file
                 fclose(data_file);
 
                 // determine new file name
-                char file_name[MAX_PATH_LENGTH];
-                char new_file_ending[MAX_PATH_LENGTH];
-                strcpy(file_name, conf->file_name);
+                char file_name[PATH_MAX];
+                char new_file_ending[PATH_MAX];
+                strcpy(file_name, config->file_name);
 
                 // search for last .
                 char target = '.';
-                char* file_ending = file_name;
+                char *file_ending = file_name;
                 while (strchr(file_ending, target) != NULL) {
                     file_ending = strchr(file_ending, target);
                     file_ending++; // Increment file_ending, otherwise we'll
@@ -495,25 +330,27 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
                 data_file = fopen64(file_name, "w+");
 
                 // update header for new file
-                file_header.lead_in.data_block_count = 0;
-                file_header.lead_in.sample_count = 0;
+                data_file_header.lead_in.data_block_count = 0;
+                data_file_header.lead_in.sample_count = 0;
 
                 // store header
-                if (conf->file_format == BIN) {
-                    file_store_header_bin(data_file, &file_header);
-                } else if (conf->file_format == CSV) {
-                    file_store_header_csv(data_file, &file_header);
+                if (config->file_format == RL_FILE_FORMAT_RLD) {
+                    rl_file_store_header_bin(data_file, &data_file_header);
+                } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+                    rl_file_store_header_csv(data_file, &data_file_header);
                 }
 
-                rl_log(INFO, "new datafile: %s", file_name);
+                rl_log(RL_LOG_INFO, "Creating new data file: %s", file_name);
 
                 // AMBIENT FILE
-                if (conf->ambient.enabled == AMBIENT_ENABLED) {
+                if (config->ambient_enable) {
                     // close old ambient file
                     fclose(ambient_file);
 
                     // determine new file name
-                    strcpy(file_name, conf->ambient.file_name);
+                    char *ambient_file_name =
+                        rl_file_get_ambient_file_name(config->file_name);
+                    strcpy(file_name, ambient_file_name);
 
                     // search for last .
                     file_ending = file_name;
@@ -537,9 +374,10 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
                     ambient_file_header.lead_in.sample_count = 0;
 
                     // store header
-                    file_store_header_bin(ambient_file, &ambient_file_header);
+                    rl_file_store_header_bin(ambient_file,
+                                             &ambient_file_header);
 
-                    rl_log(INFO, "new ambient-file: %s", file_name);
+                    rl_log(RL_LOG_INFO, "new ambient-file: %s", file_name);
                 }
 
                 num_files++;
@@ -548,183 +386,241 @@ int pru_sample(FILE* data_file, FILE* ambient_file, struct rl_conf* conf,
 
         // select current buffer
         if (i % 2 == 0) {
-            buffer_addr = buffer0;
+            pru_buffer = buffer0;
         } else {
-            buffer_addr = buffer1;
+            pru_buffer = buffer1;
         }
 
-        // select buffer size
-        if (i < number_buffers - 1 || pru.sample_limit % pru.buffer_size == 0) {
-            buffer_samples_count = pru.buffer_size; // full buffer size
+        // select buffer size, repecting non-full last buffer
+        if (i < buffer_read_count - 1 ||
+            pru.sample_limit % pru.buffer_length == 0) {
+            buffer_size = (size_t)pru.buffer_length;
         } else {
-            buffer_samples_count =
-                pru.sample_limit % pru.buffer_size; // unfull buffer size
+            // last buffer is not fully used
+            buffer_size = (size_t)(pru.sample_limit % pru.buffer_length);
         }
 
-        // Wait for event completion from PRU
-        // only check for timeout on first buffer (else it does not work!)
-        if (i == 0) {
-            if (pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT) ==
-                ETIMEDOUT) {
-                // timeout occurred
-                rl_log(ERROR, "ADC not responding");
-                break;
+        // trigger new ambient sensor read out if enabled
+        sensor_buffer_size = 0;
+        if (config->ambient_enable) {
+            // rate limit sampling of the ambient sensors
+            if (sensor_rate_counter < RL_SENSOR_SAMPLE_RATE) {
+                // trigger sensor readout
+                sensor_buffer_size =
+                    sensors_read(sensor_buffer, rl_status.sensor_available);
             }
-        } else {
-            prussdrv_pru_wait_event(PRU_EVTOUT_0);
+            // increment rate limiting counter
+            sensor_rate_counter =
+                (sensor_rate_counter + RL_SENSOR_SAMPLE_RATE) %
+                config->update_rate;
         }
 
-        // timestamp received data
-        create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
+        // wait for PRU event indicating new data (repeat wait on interrupts)
+        do {
+            // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+            res = prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
+            // timestamp received data
+            create_time_stamp(&timestamp_realtime, &timestamp_monotonic);
+        } while (res < 0 && errno == EINTR);
+        if (res < 0) {
+            // error checking interrupt occurred
+            rl_log(RL_LOG_ERROR,
+                   "Failed waiting for PRU interrupt; %d message: %s", errno,
+                   strerror(errno));
+            rl_status.error = true;
+            break;
+        } else if (res == 0) {
+            // low level ADC timeout occurred
+            rl_log(RL_LOG_ERROR, "ADC not responsive");
+            rl_status.error = true;
+            break;
+        }
 
-        // adjust time with buffer latency
-        timestamp_realtime.nsec -= (uint64_t)1e9 / conf->update_rate;
+        // adjust data timestamps with buffer latency (adjusted relative
+        // nanoseconds)
+        timestamp_realtime.nsec -= (int64_t)2048e3 * 490 / config->update_rate;
         if (timestamp_realtime.nsec < 0) {
             timestamp_realtime.sec -= 1;
-            timestamp_realtime.nsec += (uint64_t)1e9;
+            timestamp_realtime.nsec += (int64_t)1e9;
         }
-        timestamp_monotonic.nsec -= (uint64_t)1e9 / conf->update_rate;
+        timestamp_monotonic.nsec -= (int64_t)2048e3 * 490 / config->update_rate;
         if (timestamp_monotonic.nsec < 0) {
             timestamp_monotonic.sec -= 1;
-            timestamp_monotonic.nsec += (uint64_t)1e9;
+            timestamp_monotonic.nsec += (int64_t)1e9;
         }
 
         // clear event
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
 
+        // PRU memory sync before accessing data
+        __sync_synchronize();
+
         // check for overrun (compare buffer numbers)
-        uint32_t buffer_index = *((uint32_t*)buffer_addr);
-        if (buffer_index != i) {
-            buffers_lost += (buffer_index - i);
-            rl_log(WARNING,
+        if (pru_buffer->index != i) {
+            buffers_lost += (pru_buffer->index - i);
+            rl_log(RL_LOG_WARNING,
                    "overrun: %d samples (%d buffer) lost (%d in total)",
-                   (buffer_index - i) * pru.buffer_size, buffer_index - i,
-                   buffers_lost);
-            i = buffer_index;
+                   (pru_buffer->index - i) * pru.buffer_length,
+                   pru_buffer->index - i, buffers_lost);
+            i = pru_buffer->index;
         }
 
-        // handle the buffer
-        file_handle_data(data_file, buffer_addr + 4, pru.sample_size,
-                         buffer_samples_count, &timestamp_realtime,
-                         &timestamp_monotonic, conf);
+        // process new data: copy data and apply calibration
+        for (size_t i = 0; i < buffer_size; i++) {
+            // get PRU data buffer pointer
+            pru_data_t const *const pru_data = &(pru_buffer->data[i]);
 
-        // process data for web when enabled
-        if (conf->enable_web_server == 1) {
-            web_handle_data(web_data, sem_id, buffer_addr + 4, pru.sample_size,
-                            buffer_samples_count, &timestamp_realtime, conf);
-        }
+            // get local data buffer pointers
+            int32_t *const analog_data = analog_buffer + i * RL_CHANNEL_COUNT;
+            uint32_t *const digital_data = digital_buffer + i;
 
-        // update and write header
-        if (conf->file_format != NO_FILE) {
-            // update the number of samples stored
-            file_header.lead_in.data_block_count += 1;
-            file_header.lead_in.sample_count +=
-                buffer_samples_count / avg_factor;
+            // copy digital channel data
+            *digital_data = pru_data->channel_digital;
 
-            if (conf->file_format == BIN) {
-                file_update_header_bin(data_file, &file_header);
-            } else if (conf->file_format == CSV) {
-                file_update_header_csv(data_file, &file_header);
+            // copy and calibrate analog channel data
+            for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
+                analog_data[j] = (int32_t)((pru_data->channel_analog[j] +
+                                            rl_calibration.offsets[j]) *
+                                           rl_calibration.scales[j]);
             }
-        }
-
-        // handle ambient data
-        if (skipped_buffers + 1 >= conf->update_rate) { // always 1 Sps
-            if (conf->ambient.enabled == AMBIENT_ENABLED) {
-
-                // fetch and write data
-                ambient_store_data(ambient_file, &timestamp_realtime,
-                                   &timestamp_monotonic, conf);
-
-                // update and write header
-                ambient_file_header.lead_in.data_block_count += 1;
-                ambient_file_header.lead_in.sample_count +=
-                    AMBIENT_DATA_BLOCK_SIZE;
-                file_update_header_bin(ambient_file, &ambient_file_header);
-            }
-            skipped_buffers = 0;
-        } else {
-            skipped_buffers++;
         }
 
         // update and write state
-        status.samples_taken += buffer_samples_count / avg_factor;
-        status.buffer_number = i + 1 - buffers_lost;
-        write_status(&status);
-
-        // notify web clients
-        // Note: There is a possible race condition here, which might result in
-        // one web client not getting notified once, do we care?
-        if (conf->enable_web_server == 1) {
-            int num_web_clients = semctl(sem_id, WAIT_SEM, GETNCNT);
-            set_sem(sem_id, WAIT_SEM, num_web_clients);
+        rl_status.sample_count += buffer_size / aggregates;
+        rl_status.buffer_count = i + 1 - buffers_lost;
+        res = rl_status_write(&rl_status);
+        if (res < 0) {
+            rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s",
+                   errno, strerror(errno));
         }
 
-        // print meter output
-        if (conf->mode == METER) {
-            meter_print_buffer(conf, buffer_addr + 4, pru.sample_size);
+        // process data for web when enabled
+        if (config->web_enable && !web_failure_disable) {
+            res = rl_socket_handle_data(analog_buffer, digital_buffer,
+                                        sensor_buffer, buffer_size,
+                                        sensor_buffer_size, &timestamp_realtime,
+                                        &timestamp_monotonic, config);
+            if (res < 0) {
+                // disable web interface on failure, but continue sampling
+                web_failure_disable = true;
+                rl_log(RL_LOG_WARNING,
+                       "Web server connection failed; %d message: %s", errno,
+                       strerror(errno));
+                rl_log(RL_LOG_INFO,
+                       "Disabling web interface and continue sampling.");
+            }
         }
+
+        // update and write header
+        if (config->file_enable) {
+            // write the data buffer to file
+            int block_count = rl_file_add_data_block(
+                data_file, analog_buffer, digital_buffer, buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(RL_LOG_ERROR,
+                       "Adding data block to data file failed; %d message: %s",
+                       errno, strerror(errno));
+                rl_status.error = true;
+                break;
+            }
+
+            // update and store data file header
+            data_file_header.lead_in.data_block_count += block_count;
+            data_file_header.lead_in.sample_count +=
+                block_count * (buffer_size / aggregates);
+
+            if (config->file_format == RL_FILE_FORMAT_RLD) {
+                rl_file_update_header_bin(data_file, &data_file_header);
+            } else if (config->file_format == RL_FILE_FORMAT_CSV) {
+                rl_file_update_header_csv(data_file, &data_file_header);
+            }
+        }
+
+        // handle ambient data if enabled and available
+        if (config->ambient_enable && sensor_buffer_size > 0) {
+            // fetch and write data
+            int block_count = rl_file_add_ambient_block(
+                ambient_file, sensor_buffer, sensor_buffer_size,
+                &timestamp_realtime, &timestamp_monotonic, config);
+
+            // stop sampling on file error
+            if (block_count < 0) {
+                rl_log(
+                    RL_LOG_ERROR,
+                    "Adding data block to ambient file failed; %d message: %s",
+                    errno, strerror(errno));
+                rl_status.error = true;
+                break;
+            }
+
+            // update and write header
+            ambient_file_header.lead_in.data_block_count += block_count;
+            ambient_file_header.lead_in.sample_count +=
+                block_count * RL_FILE_AMBIENT_DATA_BLOCK_SIZE;
+            rl_file_update_header_bin(ambient_file, &ambient_file_header);
+        }
+
+        // print meter output if enabled
+        if (config->interactive_enable) {
+            meter_print_buffer(analog_buffer, digital_buffer, buffer_size,
+                               &timestamp_realtime, &timestamp_monotonic,
+                               config);
+        }
+    }
+
+    // stop PRU
+    pru_stop();
+
+    // sampling stopped, update status
+    rl_status.sampling = false;
+    res = rl_status_write(&rl_status);
+    if (res < 0) {
+        rl_log(RL_LOG_WARNING, "Failed writing status; %d message: %s", errno,
+               strerror(errno));
+    }
+
+    // CLEANUP CHANNEL DATA MEMORY ALLOCATION
+    free(analog_buffer);
+    free(digital_buffer);
+
+    // deinitialize interactive measurement display when enabled
+    if (config->interactive_enable) {
+        meter_deinit();
     }
 
     // FILE FINISH (flush)
     // flush ambient data and cleanup file header
-    if (conf->ambient.enabled == AMBIENT_ENABLED) {
+    if (config->ambient_enable) {
         fflush(ambient_file);
         free(ambient_file_header.channel);
     }
 
-    if (conf->file_format != NO_FILE && status.state != RL_ERROR) {
+    if (config->file_enable && !(rl_status.error)) {
         fflush(data_file);
-        rl_log(INFO, "stored %llu samples to file", status.samples_taken);
-        printf("Stored %llu samples to file.\n", status.samples_taken);
-    }
-
-    // PRU FINISH (unmap memory)
-    pru_unmap_memory(buffer0);
-
-    // WEBSERVER FINISH
-    // unmap shared memory
-    if (conf->enable_web_server == 1) {
-        remove_sem(sem_id);
-        shmdt(web_data);
-    }
-
-    // METER FINISH
-    if (conf->mode == METER) {
-        meter_stop();
+        rl_log(RL_LOG_INFO, "stored %llu samples to file",
+               rl_status.sample_count);
     }
 
     // STATE
-    if (status.state == RL_ERROR) {
-        return FAILURE;
+    if (rl_status.error) {
+        return ERROR;
     }
 
     return SUCCESS;
 }
 
-/**
- * Stop and shut down PRU operation.
- * @note When sampling in continuous mode, this has to be called before {@link
- * pru_close}.
- */
 void pru_stop(void) {
 
     // write OFF to PRU state (so PRU can clean up)
-    pru_set_state(PRU_OFF);
+    pru_set_state(PRU_STATE_OFF);
 
-    // wait for interrupt (if no ERROR occured) and clear event
-    if (status.state != RL_ERROR) {
-        pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT);
+    // wait for interrupt (if no ERROR occurred) and clear event
+    if (!(rl_status.error)) {
+        // wait for PRU event (returns 0 on timeout, -1 on error with errno)
+        prussdrv_pru_wait_event_timeout(PRU_EVTOUT_0, PRU_TIMEOUT_US);
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
     }
-}
-
-/**
- * Disable PRU
- */
-void pru_close(void) {
-
-    // Disable PRU and close memory mappings
-    prussdrv_pru_disable(0);
-    prussdrv_exit();
 }

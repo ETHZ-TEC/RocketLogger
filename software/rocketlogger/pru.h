@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, Swiss Federal Institute of Technology (ETH Zurich)
+ * Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -19,189 +19,179 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef PRU_H_
 #define PRU_H_
 
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <math.h>
-#include <pruss_intc_mapping.h>
-#include <prussdrv.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <time.h>
-#include <unistd.h>
 
-#include "ambient.h"
-#include "calibration.h"
-#include "file_handling.h"
-#include "log.h"
-#include "meter.h"
-#include "sem.h"
-#include "types.h"
-#include "util.h"
-#include "web.h"
+#include "rl.h"
 
-// ------  ADC DEFINITIONS  ------ //
-
-/**
- * ADS131E08S command (extended to 32 bits for PRU use) definitions
- */
-#define WAKEUP 0x02000000
-#define STANDBY 0x04000000
-#define RESET 0x06000000
-#define START 0x08000000
-#define STOP 0x0A000000
-#define OFFSETCAL 0x1A000000
-#define RDATAC 0x10000000
-#define SDATAC 0x11000000
-#define RDATA 0x12000000
-#define RREG 0x20000000
-#define WREG 0x40000000
-
-/**
- * ADS131E08S register definitions
- */
-#define ID 0x00000000
-#define CONFIG1 0x01000000
-#define CONFIG2 0x02000000
-#define CONFIG3 0x03000000
-#define CH1SET 0x05000000
-#define CH2SET 0x06000000
-#define CH3SET 0x07000000
-#define CH4SET 0x08000000
-#define CH5SET 0x09000000
-#define CH6SET 0x0A000000
-#define CH7SET 0x0B000000
-#define CH8SET 0x0C000000
-
-/**
- * ADS131E08S gain settings
- */
-#define GAIN1 0x1000
-#define GAIN2 0x2000
-#define GAIN12 0x6000
-
-/**
- * ADS131E08S sampling rates
- */
-#define K1 0x0600
-#define K2 0x0500
-#define K4 0x0400
-#define K8 0x0300
-#define K16 0x0200
-#define K32 0x0100
-#define K64 0x0000
-
-/**
- * ADS131E08S configuration default value defines
- */
-#define CONFIG1DEFAULT 0x9000
-#define CONFIG2DEFAULT 0xE000
-#define CONFIG3DEFAULT 0xE800
-
-// ------  FILES  ------ //
-
-/// Memory map file
-#define MMAP_FILE "/sys/class/uio/uio0/maps/map1/"
 /// PRU binary file location
-#define PRU_CODE "/lib/firmware/rocketlogger_spi.bin"
+#define PRU_BINARY_FILE "/lib/firmware/rocketlogger.bin"
 
-// ------  PRU DEFINES  ------ //
-
-/**
- * ADS131E08S precision defines({@link PRECISION_HIGH} for low sampling rates,
- * {@link PRECISION_LOW} for high ones)
- */
-#define PRECISION_HIGH 24
-#define PRECISION_LOW 16
+/// Overall size of FRU digital channels in bytes
+#define PRU_DIGITAL_SIZE 4
+/// Size of PRU channel data in bytes
+#define PRU_SAMPLE_SIZE 4
+/// Size of PRU buffer status in bytes
+#define PRU_BUFFER_STATUS_SIZE 4
 
 /**
- * Sample size definitions
+ * Digital channel bit position in PRU digital information
  */
-#define SIZE_HIGH 4
-#define SIZE_LOW 2
+#define PRU_DIGITAL_INPUT_MASK 0x3F
+#define PRU_DIGITAL_INPUT1_MASK 0x01
+#define PRU_DIGITAL_INPUT2_MASK 0x02
+#define PRU_DIGITAL_INPUT3_MASK 0x04
+#define PRU_DIGITAL_INPUT4_MASK 0x08
+#define PRU_DIGITAL_INPUT5_MASK 0x10
+#define PRU_DIGITAL_INPUT6_MASK 0x20
+#define PRU_DIGITAL_I1L_VALID_MASK 0x40
+#define PRU_DIGITAL_I2L_VALID_MASK 0x80
 
-/// Mask for valid bit read from PRU
-#define VALID_MASK 0x1
-/// Mask for binary inputs read from PRU
-#define BINARY_MASK 0xE
-
-/// PRU time out in seconds
-#define PRU_TIMEOUT 3
+/// PRU time out in micro seconds
+#define PRU_TIMEOUT_US 2000000
 
 /**
  * PRU state definition
  */
-typedef enum pru_state {
-    PRU_OFF = 0,       //!< PRU off
-    PRU_LIMIT = 1,     //!< Limited sampling mode
-    PRU_CONTINUOUS = 3 //!< Continuous sampling mode
-} rl_pru_state;
-
-/// Number of ADC commands
-#define NUMBER_ADC_COMMANDS 12
-
-/**
- * Struct for data exchange with PRU
- */
-struct pru_data_struct {
-    /// Current PRU state
-    rl_pru_state state;
-    /// ADC precision (in bit)
-    uint32_t precision;
-    /// Sample size in shared memory
-    uint32_t sample_size;
-    /// Pointer to shared buffer 0
-    uint32_t buffer0_location;
-    /// Pointer to shared buffer 1
-    uint32_t buffer1_location;
-    /// Shared buffer size
-    uint32_t buffer_size;
-    /// Samples to take (0 for continuous)
-    uint32_t sample_limit;
-    /// Number of ADC commands to send
-    uint32_t number_commands;
-    /// ADC commands to send
-    uint32_t commands[NUMBER_ADC_COMMANDS];
+enum pru_state {
+    PRU_STATE_OFF = 0x00,               /// PRU off
+    PRU_STATE_SAMPLE_FINITE = 0x01,     /// PRU sampling in finite mode
+    PRU_STATE_SAMPLE_CONTINUOUS = 0x03, /// PRU sampling in continuous mode
 };
 
-// ------  FUNCTIONS  ------ //
+/**
+ * Typedef for PRU state
+ */
+typedef enum pru_state pru_state_t;
 
-void* pru_wait_event(void* voidEvent);
-int pru_wait_event_timeout(unsigned int event, unsigned int timeout);
+/**
+ * Struct for controlling the PRU
+ */
+struct pru_control {
+    /// Current PRU state
+    pru_state_t state;
+    /// Sample rate of the ADC (in kSPS)
+    uint32_t sample_rate;
+    /// Samples to take (0 for continuous)
+    uint32_t sample_limit;
+    /// Shared buffer length in number of data elements
+    uint32_t buffer_length;
+    /// Memory address of the shared buffer 0
+    uint32_t buffer0_addr;
+    /// Memory address of the shared buffer 1
+    uint32_t buffer1_addr;
+};
 
-void pru_set_state(rl_pru_state state);
+/**
+ * Typedef for PRU control data structure
+ */
+typedef struct pru_control pru_control_t;
+
+/**
+ * PRU channel data block structure
+ */
+struct pru_data {
+    /**
+     * digital channel data.
+     * bit map order (LSB frist): DI1, ..., DI6, I1L_valid, I2L_valid
+     */
+    uint32_t channel_digital;
+    /**
+     * analog channel data
+     * data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
+     */
+    int32_t channel_analog[RL_CHANNEL_COUNT];
+};
+
+/**
+ * Typedef for PRU channel data block structure
+ */
+typedef struct pru_data pru_data_t;
+
+/**
+ * PRU data buffer structure
+ */
+struct pru_buffer {
+    /// buffer index
+    uint32_t index;
+    /// the data blocks
+    pru_data_t const data[];
+};
+
+/**
+ * Typedef for PRU data buffer structure
+ */
+typedef struct pru_buffer pru_buffer_t;
+
+/**
+ * Initialize PRU driver.
+ *
+ * Map PRU shared memory and enable PRU interrupts.
+ *
+ * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ */
 int pru_init(void);
-int pru_data_setup(struct pru_data_struct* pru, struct rl_conf* conf,
-                   uint32_t avg_factor);
 
-int pru_sample(FILE* data, FILE* ambient_file, struct rl_conf* conf,
-               char* file_comment);
+/**
+ * Shutdown PRU and deinitialize PRU driver.
+ *
+ * Halt the PRU, unmap PRU shared memory and disable PRU interrupts.
+ */
+void pru_deinit(void);
 
+/**
+ * PRU data structure initialization.
+ *
+ * @param pru_control PRU data structure to initialize
+ * @param config Current measurement configuration
+ * @param aggregates Number of samples to aggregate for sampling rates smaller
+ * than the minimal ADC rate (set 1 for no aggregates)
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int pru_control_init(pru_control_t *const pru_control,
+                     rl_config_t const *const config, uint32_t aggregates);
+
+/**
+ * Write a new state to the PRU shared memory.
+ *
+ * @param state The PRU state to write
+ * @return Returns number of bytes written, negative on failure with errno set
+ * accordingly
+ */
+int pru_set_state(pru_state_t state);
+
+/**
+ * Main PRU sampling routine.
+ *
+ * Configures and runs the actual RocketLogger measurements.
+ *
+ * @param data_file Data file to write to
+ * @param ambient_file Ambient file to write to
+ * @param config Current measurement configuration
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+int pru_sample(FILE *data_file, FILE *ambient_file,
+               rl_config_t const *const config);
+
+/**
+ * Stop running PRU measurements.
+ *
+ * @note When sampling in continuous mode, this has to be called before {@link
+ * pru_deinit}.
+ */
 void pru_stop(void);
-void pru_close(void);
 
 #endif /* PRU_H_ */

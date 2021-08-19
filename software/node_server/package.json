@@ -1,0 +1,46 @@
+{
+  "name": "rocketlogger",
+  "version": "2.0.0",
+  "description": "RocketLogger web interface",
+  "homepage": "https://github.com/ETHZ-TEC/RocketLogger#readme",
+  "author": "ETH Zurich, Computer Engineering Group",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "measurement",
+    "sensing",
+    "power",
+    "control",
+    "interface"
+  ],
+  "main": "app.js",
+  "files": [
+    "app.js",
+    "rl.js",
+    "util.js",
+    "static",
+    "template"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.0.1",
+    "debug": "^4.3.1",
+    "express": "^4.17.1",
+    "glob": "^7.1.7",
+    "jquery": "~3.6.x",
+    "nunjucks": "^3.2.3",
+    "plotly.js": "^2.0.0",
+    "socket.io": "^4.1.2",
+    "socket.io-client": "^4.1.2",
+    "timesync": "^1.0.8",
+    "zeromq": "6.0.0-beta.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ETHZ-TEC/RocketLogger"
+  },
+  "bugs": {
+    "url": "https://github.com/ETHZ-TEC/RocketLogger/issues"
+  }
+}

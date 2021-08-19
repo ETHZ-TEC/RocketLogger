@@ -1,10 +1,8 @@
-RocketLogger Software
-=====================
+# RocketLogger Software
 
-The RocketLogger software includes the following parts:
-* [Debian](debian): Debian operating system setup and configuration files
-* [Device Tree Overlay](device_tree_overlay): device tree overlay configuration files
-* [RocketLogger Binary](rocketlogger): main progamm code
-* [Webserver](webserver): webserver code for remote control
+The RocketLogger software is grouped into the following components:
+* [RocketLogger](rocketlogger) - main RocketLogger user-space tools, PRU firmware, and configuration
+* [Debian base system](system) - operating system configuration with setup and image patching scripts
+* [Node.js server](node_server) - Node.js based web interface server (*optional component*)
 
-See also the documentation in the [RocketLogger Wiki](https://gitlab.ethz.ch/tec/public/rocketlogger/wikis/).
+See also the documentation in the [RocketLogger Wiki](https://github.com/ETHZ-TEC/RocketLogger/wiki).

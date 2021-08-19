@@ -1,0 +1,49 @@
+{% extends "rocketlogger/status.html" %}
+
+{% block rocketlogger_status_title %}RocketLogger Status & Control{% endblock %}
+{% block rocketlogger_status_footer %}
+  {% block rocketlogger_control %}
+    <hr />
+    <h3>Controls</h3>
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="mb-3">
+          <button id="button_start" class="btn btn-success">Start</button>
+          <button id="button_stop" class="btn btn-dark" disabled>Stop</button>
+        </div>
+      </div>
+      <div class="col-sm-auto">
+        <div class="mb-3">
+          <button id="button_status" class="btn btn-outline-dark">Force Status Update</button>
+        </div>
+      </div>
+      <div class="col-sm-auto">
+        <div class="mb-3">
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              System
+            </button>
+            <ul class="dropdown-menu">
+              <li><h6 class="dropdown-header alert-warning mb-2">Stop mesaurement first to prevent data corruption!</h6></li>
+              <li><button id="button_reset" class="dropdown-item" type="button">Reset RocketLogger Hardware</a></li>
+              <li><button id="button_reboot" class="dropdown-item" type="button">Reboot RocketLogger System</a></li>
+              <li><button id="button_poweroff" class="dropdown-item" type="button">Shut down RocketLogger System</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+  {% block rocketlogger_download %}
+    <hr />
+    <h3>Download & Calibration</h3>
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="mb-3">
+          <a href="/data/" target="_blank" class="btn btn-outline-dark" role="button">Browse measurements</a>
+          <a href="/log/" target="_blank" class="btn btn-outline-dark" role="button">Open log file</a>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+{% endblock %}
