@@ -7,31 +7,31 @@ The RocketLogger software consists of multiple components that are summarized be
 
 ### RocketLogger Binary
 
-The RocketLogger tool is implemented in [`rocketlogger.c`](rocketlogger.c).
+The RocketLogger tool is implemented in @ref rocketlogger.c.
 This tool provides an extensive command line interface to control and monitor the sampling.
 
 
 ### RocketLogger Daemon
 
-The RocketLogger service daemon is implemented in [`rocketloggerd.c`](rocketloggerd.c).
+The RocketLogger service daemon is implemented in @ref rocketloggerd.c.
 This service is responsible for configuring the user space GPIOs, control the power supply of the
 cape, handles the user button actions and observes the RocketLogger sampling status.
 
 
 ### PRU Firmware
 
-The firmware sources for the Programmable Real-time Unit (PRU) are located in the [`pru`](pru/)
+The firmware sources for the Programmable Real-time Unit (PRU) are located in the @ref pru
 subfolder. The firmware is built and installed along with the rest of the software.
 
 ### Device Tree Overlay
 
 The necessary device tree overlay sources for the RocketLogger Cape hardware are contained in the
-[`overlay`](overlay/) subfolder and installed together with the above software components.
+@ref overlay subfolder and installed together with the above software components (see also @ref overlay/README.md).
 
 
 ### System Configuration
 
-The system configuration files provided in the [`config`](config/) subfolder provide the necessary
+The system configuration files provided in the @ref config subfolder provide the necessary
 `uio_pruss` module configuration, uEnv boot configuration, and RocketLogger service specification,
 as well as as default calibration parameters. These configuration files are deployed together with
 the other software components.
