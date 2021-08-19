@@ -1,6 +1,49 @@
 # Changelog
 
 
+## Version 2.0.0 (2021-08-19)
+
+The changes since version [1.1.6](#version-116-2019-07-31) include all changes of the the beta release [2.0.0-beta1](#version-200-beta1-2021-06-12) and the fixes and improvements listed below.
+
+Base operating system:
+* [CHANGED] update to Debian *buster* release 10.10
+* [CHANGED] improve robustness and usability of system setup scripts
+* [CHANGED] optimize the size of locally patched operating system image
+* [FIXED] remote system installation script not working (#25)
+
+RocketLogger software:
+* [CHANGED] additional actions available via hardware button gestures
+* [FIXED] startup artifacts after RocketLogger system startup or hardware reset (#19)
+* [FIXED] segmentation fault in logging output (#29)
+* [FIXED] no data plotted in web interface when measuring low current channel only (#26)
+* [FIXED] incorrect plot selection shown when reloading web interface (#27)
+* [FIXED] invalid configuration in web interface for low sample rates (#31)
+
+Python support library:
+* [FIXED] use effectively configured instead of theoretical ADC sample rate for the calculation of relative timestamps _(backward incompatible)_ (#13)
+* [FIXED] invalid absolute timestamp calculation for last data block (#30)
+
+Additionally, the documentation in the repository and the accompanying [wiki pages](https://github.com/ETHZ-TEC/RocketLogger/wiki) was updated and significantly extended. These changes address several documentation related issues (#20, #21, #22, #23, #32).
+
+
+_Notes:_
+
+This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch and a simplified, more robust command line interface.
+The Python support library received new device calibration features and extended data processing functionality.
+
+Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal eMMC memory, the RocketLogger system needs to be reinstalled.
+
+
+_Backward Incompatible Changes:_
+
+* The updated calibration file format requires conversion of existing calibration data when upgrading from previous versions. Follow the [upgrade instructions](https://github.com/ETHZ-TEC/RocketLogger/wiki/upgrade-v2) when updating from RocketLogger version 1.x.
+* The new RocketLogger command line interface uses different modes and arguments. The changes are summarized under [CLI update summary](https://github.com/ETHZ-TEC/RocketLogger/wiki/measurement-control#command-line-interface-changes-from-version-1x-to-200).
+* The Python Support Library's `get_time()` API has changed. Remove the `absolute_time` argument and use only the updated `time_reference` argument for timestamp reference selection. For detailed API documentation refer to the [Python documentation](https://github.com/ETHZ-TEC/RocketLogger/wiki/python).
+* The Python Support Library's `get_time()` implementation for relative timestamp calculation (i.e. using `time_reference="relative"`) has been fixed to use the exact used ADC sample rate instead of the theoretically targeted sample rate. Expect different timestamp values and derived analysis compared to versions 1.x when using `get_time()` with `time_reference="relative"` (corresponding to the default argument value)!
+* The MATLAB calibration support has been removed in favor of the new calibration tools included in the Python Support Library.
+
+
+
 ## Version 2.0.0-beta1 (2021-06-12)
 
 Base operating system:
@@ -11,6 +54,7 @@ Base operating system:
 
 RocketLogger software:
 * [ADDED] use meson build framework for combined build and installation of all software components
+* [ADDED] PRU measured ADC sample interval, available as optional `DT` channel (#17)
 * [ADDED] switch to ZeroMQ messaging library for data streaming to the webserver
 * [ADDED] Node.js based web interface with server side data streaming capability (#3, #5, #9)
 * [CHANGED] command line interface update: improved argument consistency and more robust argument parsing _(backward incompatible)_
@@ -35,8 +79,8 @@ MATLAB support:
 
 _Notes:_
 
-This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch.
-Calibration feature was added to the Python support library and the data functionality was extended. The updated web interface now allows on-device calibration.
+This beta release for the next major version updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch.
+Calibration features were added to the Python support library and the data processing functionality was extended.
 
 Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal eMMC memory, the RocketLogger system needs to be reinstalled.
 
