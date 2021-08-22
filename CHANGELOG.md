@@ -1,44 +1,99 @@
+# Changelog
 
-## in development
+
+## Version 2.0.0 (2021-08-19)
+
+The changes since version [1.1.6](#version-116-2019-07-31) include all changes of the the beta release [2.0.0-beta1](#version-200-beta1-2021-06-12) and the fixes and improvements listed below.
 
 Base operating system:
-* [ADDED] local operating system image patching to generate ready to use RocketLogger image (#60)
-* [ADDED] switch to Debian buster release (#10, #123)
-* [CHANGED] install operating system to BeagleBone's embedded EMMC memory, use external SD card for configuration and data storage
-* [CHANGED] simplify remote system setup procedure
+* [CHANGED] update to Debian *buster* release 10.10
+* [CHANGED] improve robustness and usability of system setup scripts
+* [CHANGED] optimize the size of locally patched operating system image
+* [FIXED] remote system installation script not working (#25)
 
 RocketLogger software:
-* [ADDED] use meson build framework for combined build and installation of all software components
-* [ADDED] switch to ZeroMQ messaging library for data streaming to the webserver
-* [ADDED] Node.js based web interface with server side data streaming capability (#51, #122)
-* [CHANGED] command line interface update: improved argument consistency and more robust argument parsing _(backward incompatible)_
-* [CHANGED] rework low level hardware interfacing for Debian buster compatibility (#123)
-* [CHANGED] update an reorganize internal software API and headers for increased consistency
-* [CHANGED] update to latest and official compiler tools (#135)
-* [REMOVED] legacy web control interface
+* [CHANGED] additional actions available via hardware button gestures
+* [FIXED] startup artifacts after RocketLogger system startup or hardware reset (#19)
+* [FIXED] segmentation fault in logging output (#29)
+* [FIXED] no data plotted in web interface when measuring low current channel only (#26)
+* [FIXED] incorrect plot selection shown when reloading web interface (#27)
+* [FIXED] invalid configuration in web interface for low sample rates (#31)
 
 Python support library:
-* [ADDED] extended get data API to access relevant header fields and filename, add pandas DataFrame generation
-* [ADDED] add header only import, recovery mode for truncated file import (#109)
-* [ADDED] add calibration support (#125)
-* [CHANGED] make plotting an optional feature to reduce package dependencies
-* [CHANGED] `get_time()` API: use `time_reference` for timestamp reference selection (using updated parameters!), drop `absolute_time` argument _(backward incompatible)_
-* [FIXED] deprecated NumPy API dependency (#129)
+* [FIXED] use effectively configured instead of theoretical ADC sample rate for the calculation of relative timestamps _(backward incompatible)_ (#13)
+* [FIXED] invalid absolute timestamp calculation for last data block (#30)
 
-MATLAB support:
-* [DEPRECATED] The MATLAB support for processing RocketLogger data is deprecated and will be removed in a future release. It is recommended to switch to the more feature rich Python support library. (#126)
-* [REMOVED] The MATLAB calibration support has been dropped. Use the Python support library to generate new or convert existing calibration data.
+Additionally, the documentation in the repository and the accompanying [wiki pages](https://github.com/ETHZ-TEC/RocketLogger/wiki) was updated and significantly extended. These changes address several documentation related issues (#20, #21, #22, #23, #32).
 
 
 _Notes:_
 
-This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. Most noticeable change for the user is the new web control interface that was implemented from scratch.
-Calibration feature was added to the Python support library and the data functionality extended. he updated web interface now allows on-device calibration.
+This major release updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch and a simplified, more robust command line interface.
+The Python support library received new device calibration features and extended data processing functionality.
 
-Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal EMMC memory, the RocketLogger system needs to be reinstalled.
+Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal eMMC memory, the RocketLogger system needs to be reinstalled.
 
 
-## v1.1.6 (2019-07-31)
+_Backward Incompatible Changes:_
+
+* The updated calibration file format requires conversion of existing calibration data when upgrading from previous versions. Follow the [upgrade instructions](https://github.com/ETHZ-TEC/RocketLogger/wiki/upgrade-v2) when updating from RocketLogger version 1.x.
+* The new RocketLogger command line interface uses different modes and arguments. The changes are summarized under [CLI update summary](https://github.com/ETHZ-TEC/RocketLogger/wiki/measurement-control#command-line-interface-changes-from-version-1x-to-200).
+* The Python Support Library's `get_time()` API has changed. Remove the `absolute_time` argument and use only the updated `time_reference` argument for timestamp reference selection. For detailed API documentation refer to the [Python documentation](https://github.com/ETHZ-TEC/RocketLogger/wiki/python).
+* The Python Support Library's `get_time()` implementation for relative timestamp calculation (i.e. using `time_reference="relative"`) has been fixed to use the exact used ADC sample rate instead of the theoretically targeted sample rate. Expect different timestamp values and derived analysis compared to versions 1.x when using `get_time()` with `time_reference="relative"` (corresponding to the default argument value)!
+* The MATLAB calibration support has been removed in favor of the new calibration tools included in the Python Support Library.
+
+
+
+## Version 2.0.0-beta1 (2021-06-12)
+
+Base operating system:
+* [ADDED] local operating system image patching to generate ready to use RocketLogger image (#4)
+* [ADDED] switch to Debian *buster* release (#2)
+* [CHANGED] install operating system to BeagleBone's embedded eMMC memory, use external SD card for configuration and data storage
+* [CHANGED] simplify remote system setup procedure
+
+RocketLogger software:
+* [ADDED] use meson build framework for combined build and installation of all software components
+* [ADDED] PRU measured ADC sample interval, available as optional `DT` channel (#17)
+* [ADDED] switch to ZeroMQ messaging library for data streaming to the webserver
+* [ADDED] Node.js based web interface with server side data streaming capability (#3, #5, #9)
+* [CHANGED] command line interface update: improved argument consistency and more robust argument parsing _(backward incompatible)_
+* [CHANGED] rework low level hardware interfacing for Debian *buster* compatibility (#2)
+* [CHANGED] update and reorganize internal software API and headers for increased consistency
+* [CHANGED] update to latest and official compiler tools (#18)
+* [REMOVED] legacy web control interface
+
+Python support library:
+* [ADDED] extended get data API to access relevant header fields and filenames, add pandas DataFrame generation
+* [ADDED] add header-only import, recovery mode for truncated file import
+* [ADDED] add calibration support (#10)
+* [ADDED] sample data processing and calibration scripts (#7)
+* [CHANGED] make plotting an optional feature to reduce package dependencies
+* [CHANGED] `get_time()` API: use `time_reference` for timestamp reference selection (using updated parameters!), drop `absolute_time` argument _(backward incompatible)_
+* [FIXED] deprecated NumPy API dependency (#12)
+
+MATLAB support:
+* [DEPRECATED] The MATLAB support for processing RocketLogger data is deprecated and will be removed in a future release. It is recommended to switch to the more feature-rich Python support library (#11)
+* [REMOVED] The MATLAB calibration support has been dropped. Use the Python support library to generate new or convert existing calibration data
+
+
+_Notes:_
+
+This beta release for the next major version updates the base operating system to run the latest Debian version and includes numerous internal software and development tool changes. The most noticeable change for the user is the new web control interface that was implemented from scratch.
+Calibration features were added to the Python support library and the data processing functionality was extended.
+
+Due to the major upgrade of the base operating system from Debian version 7 to 10, and the change of the install location to the internal eMMC memory, the RocketLogger system needs to be reinstalled.
+
+
+_Known Issues:_
+
+* Unresponsive web interface when system partition is running out of space (#23)
+* Startup artifacts after RocketLogger system startup or hardware reset (#19)
+* Python library uses target instead of theoretical configured sample rate for relative timestamp calculation (#13)
+
+
+
+## Version 1.1.6 (2019-07-31)
 
 * [FIXED] Software: potential corruption of ambient file name (#127)
 * [FIXED] Software: typo in ambient file channel name (#128)
@@ -50,33 +105,33 @@ _Notes:_
 This hotfix release addresses two issues related to storing ambient sensor data and an invalid default value in the measurement file split configuration. The Python support package was tested to successfully work with recent Python and NumPy updates.
 
 
-## v1.1.5 (2019-03-04)
+## Version 1.1.5 (2019-03-04)
 
 * [FIXED] Software: corrupt data when writing files >2 GB (#119)
-* [FIXED] Software/web interface: data aggregation issue for larger time scale (#117).
-* [FIXED] Documentation: more detailed description of common measurement setups and user interfaces (#114, #120).
+* [FIXED] Software/web interface: data aggregation issue for larger time scales (#117)
+* [FIXED] Documentation: more detailed description of common measurement setups and user interfaces (#114, #120)
 * [CHANGED] Software: split data files at 1 GB by default (relates to #119)
 
 _Notes:_
 
-This hotfix release resolves a file writing issue when saving the measurements to single large data file and a data aggregation issue in the web interface preview. Furthermore, the documentation in the wiki on measurement setup and control has been updated and extended.
+This hotfix release resolves a file writing issue when saving the measurements to a single large data file and a data aggregation issue in the web interface preview. Furthermore, the documentation in the wiki on measurement setup and control has been updated and extended.
 
 
-## v1.1.4 (2018-06-26)
+## Version 1.1.4 (2018-06-26)
 
 * [FIXED] Software: corrupt data when using high sampling rates and values are close to full range (#116)
 * [FIXED] Python support: single data block file import issue (#115).
 
 _Notes:_
 
-This hotfix release resolves a data wrap-around issue for sampling rates of 32 kSps and 64 kSps and a python support bug when importing files with a single data block.
+This hotfix release resolves a data wrap-around issue for sampling rates of 32 kSps and 64 kSps and a Python support bug when importing files with a single data block.
 
 
-## v1.1.3 (2018-04-26)
+## Version 1.1.3 (2018-04-26)
 
 * [FIXED] Software: corrupt low current valid channel when digital channels are disabled (#108)
 * [FIXED] Software: invalid lux calculation for mid/high range of TSL4531 (#111)
-* [FIXED] Software/web interface: add more detailed version information (#112).
+* [FIXED] Software/web interface: add more detailed version information (#112)
 * [FIXED] Software: invalid data block timestamps in sensor file (#113). Credits: Mojtaba Masoudinejad
 
 _Notes:_
@@ -85,7 +140,7 @@ This hotfix release resolves an issue with the low current valid channel when di
 The software now includes the git revision and build date in its version information output.
 
 
-## v1.1.2 (2018-02-26)
+## Version 1.1.2 (2018-02-26)
 
 * [FIXED] Software: invalid comment length calculation in binary file header (#107)
 
@@ -94,22 +149,22 @@ _Notes:_
 This hotfix release fixes a comment length calculation issue that generated invalid files headers for some specific file comment lengths.
 
 
-## v1.1.1 (2018-01-25)
+## Version 1.1.1 (2018-01-25)
 
 * [FIXED] Python support: overflow in channel merge functionality (#106). Credits: Alex Raimondi
-* [FIXED] Python support: specify tested python dependencies and automated testing for different environments
+* [FIXED] Python support: specify tested Python dependencies and automated testing for different environments
 
 _Notes:_
 
-This hotfix release fixes a data overflow problem in the python support library's channel merge functionality that occurs with v1.1 on some platforms.
+This hotfix release fixes a data overflow problem in the Python support library's channel merge functionality that occurs with v1.1 on some platforms.
 
 
-## v1.1 (2017-12-19)
+## Version 1.1 (2017-12-19)
 
 * [FIXED] Hardware: ground loop in cape supply (#97)
 * [FIXED] Software/web interface: filename length check (#96)
 * [CHANGED] Binary file format: zero based valid link indexing
-* [CHANGED] Binary file format: increment file version to 0x03
+* [CHANGED] Binary file format: increment file version to `0x03`
 * [ADDED] Ambient sensor logging integrated into the main application
 * [ADDED] Python support for RocketLogger data file processing
 * [ADDED] Command line option to set file comment field
@@ -122,6 +177,6 @@ _Notes:_
 While previous file versions used (undocumented) one-based channel indexing (e.g. for valid links), this was changed to zero-based indexing for consistency reasons and added to the documentation. To reflect this backward incompatible change and format extensions listed above, the file version was incremented to `0x03`. The Python and Matlab analysis scripts were updated to support these changes, while guaranteeing full backward compatibility with files using the older data format.
 
 
-## v1.0 (2017-03-15)
+## Version 1.0 (2017-03-15)
 
 * [ADDED] First publicly available version

@@ -1,5 +1,6 @@
 #!/bin/bash
-# Download the beagle bone image from the beaglebone archive
+# Download the BeagleBone image from the archive
+# Usage: ./get_image.sh
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -31,18 +32,17 @@
 #
 
 # Debian buster console image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-03-29/buster-console/"
-IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.9-console-armhf-2021-03-29-1gb.img.xz"
-IMAGE_FLASHER_SHA256="839f703c51be1d377c178a1dc5e17d4ed38307a5d7db013b6af852924b9d7725"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-06-22/buster-console/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.10-console-armhf-2021-06-22-1gb.img.xz"
+IMAGE_FLASHER_SHA256="ac8a2702ca6a0756103f23b03e9f3f62088faab3b1953d9c9d5792e5d7d0a768"
 
 # download image
 curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"
 
 # check downloaded file hash
-SHA256=`sha256sum "${IMAGE_FLASHER_FILE}" | awk '{print $1}'`
-if [[ "$SHA256" != "${IMAGE_FLASHER_SHA256}" ]]; then
+if [[ `echo "${IMAGE_FLASHER_SHA256}  ${IMAGE_FLASHER_FILE}" | sha256sum --check --strict` ]]; then
+  echo "SHA256 hash checked successfully."
+else
   echo "SHA256 hash verification failed!"
   exit 1
-else
-  echo "SHA256 hash checked successfully."
 fi

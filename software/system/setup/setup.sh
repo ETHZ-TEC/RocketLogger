@@ -1,6 +1,8 @@
 #!/bin/bash
 # Basic operating system initalization of a new BeagleBone Black/Green/Green Wireless
 # Usage: setup.sh [<hostname>]
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -133,6 +135,7 @@ echo "> Update some security and permission settings"
 
 # copy more secure ssh configuration
 cp --force ssh/sshd_config /etc/ssh/
+systemctl reload sshd
 
 # copy public keys for log in
 mkdir --parents /home/rocketlogger/.ssh/
@@ -159,10 +162,12 @@ mkdir --parents /etc/rocketlogger
 # user configuration and data folder for rocketlogger, bind sdcard folders if available
 mkdir --parents /home/rocketlogger/.config/rocketlogger/
 mkdir --parents /home/rocketlogger/data/
+mkdir --parents /var/log/rocketlogger/
 echo -e "# bind RocketLogger sdcard folders if available" >> /etc/fstab
 
 echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
+echo -e "/media/sdcard/rocketlogger/log\t/var/log/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 
 # make user owner of its own files
 chown --recursive rocketlogger:rocketlogger /home/rocketlogger/

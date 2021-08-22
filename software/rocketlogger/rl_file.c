@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -364,11 +365,13 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
     }
     if (data_file == NULL) {
         rl_log(RL_LOG_ERROR, "invalid data file provided, skip append data");
+        errno = EINVAL;
         return ERROR;
     }
     if (aggregate_count > buffer_size) {
         rl_log(RL_LOG_ERROR, "cannot aggregate more data than the buffer size, "
                              "skip append data");
+        errno = EINVAL;
         return ERROR;
     }
 

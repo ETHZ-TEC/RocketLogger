@@ -19,7 +19,7 @@ generation of RocketLogger device calibration file from measurements.
 Features
 --------
 
-Python support for RocketLogger Data (\*.rld) files by the 
+Python support for RocketLogger Data (``*.rld``) files by the 
 :mod:`rocketlogger.data` module.
 
 - Import
@@ -38,7 +38,7 @@ Support for RocketLogger Device Calibration by the
 Installation
 ------------
 
-Install the RocketLogger Python Support from the `Python Package Index <https://pypi.org/>`_ using:
+Install the RocketLogger Python Support from the `Python Package Index <https://pypi.org/project/rocketlogger/>`_ using:
 
     ``pip install rocketlogger``
 
@@ -55,7 +55,7 @@ Contribute
 
 - Source code:   https://github.com/ETHZ-TEC/RocketLogger
 - Issue tracker: https://github.com/ETHZ-TEC/RocketLogger/issues
-- Documentation: https://github.com/ETHZ-TEC/RocketLogger/wiki
+- Documentation: https://github.com/ETHZ-TEC/RocketLogger/wiki/python
 
 
 License

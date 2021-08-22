@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -131,7 +132,8 @@ void sensors_deinit(void) {
 int sensors_open_bus(void) {
     int bus = open(I2C_BUS_FILENAME, O_RDWR);
     if (bus < 0) {
-        rl_log(RL_LOG_ERROR, "failed to open the I2C bus", bus);
+        rl_log(RL_LOG_ERROR, "failed to open the I2C bus; %d message: %s", bus,
+               errno, strerror(errno));
     }
     return bus;
 }
@@ -139,7 +141,8 @@ int sensors_open_bus(void) {
 int sensors_close_bus(int bus) {
     int result = close(bus);
     if (result < 0) {
-        rl_log(RL_LOG_ERROR, "failed to close the I2C bus", bus);
+        rl_log(RL_LOG_ERROR, "failed to close the I2C bus; %d message: %s", bus,
+               errno, strerror(errno));
     }
     return result;
 }
@@ -187,7 +190,7 @@ int sensors_scan(bool sensor_available[SENSOR_REGISTRY_SIZE]) {
         message[strlen(message) - 3] = 0;
         rl_log(RL_LOG_INFO, "%s", message);
     } else {
-        rl_log(RL_LOG_WARNING, "no ambient sensor found...");
+        rl_log(RL_LOG_WARNING, "no ambient sensor found.");
     }
     return sensor_count;
 }

@@ -1,6 +1,9 @@
 #!/bin/bash
-# Flash a BeagleBone image to an SD card
-# Usage: ./flash_image.sh <image.img[.xz]> <sdcard-dev>
+# Flash a BeagleBone system image to an SD card
+# Usage: ./flash_image.sh <image> <sdcard>
+# * <image> presents the (optionally xz-compressed) system image to flash
+# * <sdcard> speficies the SD card device to flash the image to, has to
+#   refer to a raw block device, e.g. specify /dev/sdX instead of /dev/sdX1
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -45,16 +48,16 @@ fi
 
 # check arguments
 if [ $# -lt 2 ]; then
-  echo "Usage: ./flash_image.sh <image.img[.xz]> <sdcard-dev>"
+  echo "Usage: ./flash_image.sh <image> <sdcard>"
   exit 1
 fi
 
 # decompress (if necessary) and write SD card image, sync file system at the end
 echo "> Flashing SD card..."
 if [[ ${IMAGE_FILE} =~ ^.*.xz$ ]]; then
-  xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=4M conv=fsync status=progress
+  xz --decompress --stdout ${IMAGE_FILE} | dd of=${SDCARD_DEV} bs=16M conv=fsync oflag=sync status=progress
 else
-  dd if=${IMAGE_FILE} of=${SDCARD_DEV} bs=4M conv=fsync status=progress
+  dd if=${IMAGE_FILE} of=${SDCARD_DEV} bs=4M conv=fsync oflag=sync status=progress
 fi
 sync ${SDCARD_DEV}
 echo "> Flashing SD card complete."

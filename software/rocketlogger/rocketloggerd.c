@@ -30,6 +30,7 @@
  */
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -42,18 +43,40 @@
 #include "log.h"
 #include "pwm.h"
 #include "rl.h"
+#include "rl_lib.h"
 
 /// Minimal time interval between two interrupts (in seconds)
 #define RL_DAEMON_MIN_INTERVAL 1
 
+/// Duration of calibration run (in seconds)
+#define RL_CALIBRATION_DURATION_SEC 1
+
 /// Delay on cape power up (in microseconds)
 #define RL_POWERUP_DELAY_US 5000
 
-/// Min duration of long button press (in seconds)
-#define RL_BUTTON_LONG_PRESS 3
+/// Min duration of a long button press (in seconds)
+#define RL_BUTTON_LONG_PRESS_SEC 3
 
-/// Min duration of very long button press (in seconds)
-#define RL_BUTTON_VERY_LONG_PRESS 10
+/// Min duration of a very long button press (in seconds)
+#define RL_BUTTON_VERY_LONG_PRESS_SEC 6
+
+/// Min duration of an extra long button press (in seconds)
+#define RL_BUTTON_EXTRA_LONG_PRESS_SEC 10
+
+/**
+ * Daemon exit system action definition
+ */
+enum system_action {
+    SYSTEM_ACTION_NONE,     //!< perform no system action
+    SYSTEM_ACTION_REBOOT,   //!< reboot the system
+    SYSTEM_ACTION_POWEROFF, //!< power off the system
+};
+
+/**
+ * Typedef for daemon exit system action
+ */
+typedef enum system_action system_action_t;
+
 
 /// RocketLogger daemon log file.
 static char const *const log_filename = RL_DAEMON_LOG_FILE;
@@ -61,14 +84,51 @@ static char const *const log_filename = RL_DAEMON_LOG_FILE;
 /// Flag to terminate the infinite daemon loop
 volatile bool daemon_shutdown = false;
 
-/// Flag to shutdown the system when exiting the daemon
-volatile bool system_reboot = false;
+/// System action to perform when exiting the daemon
+volatile system_action_t system_action = SYSTEM_ACTION_NONE;
 
 /// GPIO handle for power switch
 gpio_t *gpio_power = NULL;
 
 /// GPIO handle for user button
 gpio_t *gpio_button = NULL;
+
+/**
+ * Perform RocketLogger ADC reference voltage calibration.
+ *
+ * Run a measurement without data output to file or web for the given duration.
+ * Resets the sampling status to default after completion.
+ *
+ * @param duration The duration of the calibration run in seconds
+ * @return Measurement run return value, 0 on success, negative on failure with
+ * errno set accordingly
+ */
+int adc_calibrate(uint64_t duration) {
+    if (duration == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // configure run with minimal data output
+    static rl_config_t rl_config_calibration;
+    rl_config_reset(&rl_config_calibration);
+    rl_config_calibration.background_enable = false;
+    rl_config_calibration.interactive_enable = false;
+    rl_config_calibration.web_enable = false;
+    rl_config_calibration.file_enable = false;
+    rl_config_calibration.sample_rate = RL_SAMPLE_RATE_MIN;
+    rl_config_calibration.sample_limit = RL_SAMPLE_RATE_MIN * duration;
+
+    // perform calibration run
+    int res = rl_run(&rl_config_calibration);
+
+    // reset sampling status to default
+    rl_status_t rl_status;
+    rl_status_reset(&rl_status);
+    rl_status_write(&rl_status);
+
+    return res;
+}
 
 /**
  * GPIO interrupt handler
@@ -98,21 +158,31 @@ void button_interrupt_handler(int value) {
         rl_status_t status;
         int ret = rl_status_read(&status);
         if (ret < 0) {
-            rl_log(RL_LOG_ERROR, "Failed reading status.");
+            rl_log(RL_LOG_ERROR, "Failed reading status; %d message: %s", errno,
+                   strerror(errno));
         }
 
-        if (duration >= RL_BUTTON_VERY_LONG_PRESS) {
+        if (duration >= RL_BUTTON_EXTRA_LONG_PRESS_SEC) {
             rl_log(RL_LOG_INFO,
-                   "Registered very long press, requesting system shutdown.");
+                   "Registered extra long press, requesting system shutdown.");
             daemon_shutdown = true;
-            system_reboot = true;
+            system_action = SYSTEM_ACTION_POWEROFF;
             if (!status.sampling) {
                 return;
             }
-        } else if (duration >= RL_BUTTON_LONG_PRESS) {
+        } else if (duration >= RL_BUTTON_VERY_LONG_PRESS_SEC) {
             rl_log(RL_LOG_INFO,
-                   "Registered long press, requesting daemon shutdown.");
+                   "Registered very long press, requesting system reboot.");
             daemon_shutdown = true;
+            system_action = SYSTEM_ACTION_REBOOT;
+            if (!status.sampling) {
+                return;
+            }
+        } else if (duration >= RL_BUTTON_LONG_PRESS_SEC) {
+            rl_log(RL_LOG_INFO,
+                   "Registered long press, requesting daemon restart.");
+            daemon_shutdown = true;
+            system_action = SYSTEM_ACTION_NONE;
             if (!status.sampling) {
                 return;
             }
@@ -128,14 +198,14 @@ void button_interrupt_handler(int value) {
         // create child process to start RocketLogger
         pid_t pid = fork();
         if (pid < 0) {
-            rl_log(RL_LOG_ERROR, "Failed forking process. %d message: %s",
+            rl_log(RL_LOG_ERROR, "Failed forking process; %d message: %s",
                    errno, strerror(errno));
         }
         if (pid == 0) {
             // in child process, execute RocketLogger
             execvp(cmd[0], cmd);
             rl_log(RL_LOG_ERROR,
-                   "Failed executing `rocketlogger %s`. %d message: %s", cmd,
+                   "Failed executing `rocketlogger %s`; %d message: %s", cmd,
                    errno, strerror(errno));
         } else {
             // in parent process log pid
@@ -176,7 +246,7 @@ int main(void) {
     // set effective user ID of the process
     ret = setuid(0);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed setting effective user ID. %d message: %s",
+        rl_log(RL_LOG_ERROR, "Failed setting effective user ID; %d message: %s",
                errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -192,12 +262,14 @@ int main(void) {
     // hardware initialization
     gpio_t *gpio_power = gpio_setup(GPIO_POWER, GPIO_MODE_OUT, "rocketloggerd");
     if (gpio_power == NULL) {
-        rl_log(RL_LOG_ERROR, "Failed configuring power switch.");
+        rl_log(RL_LOG_ERROR, "Failed configuring power switch; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
     ret = gpio_set_value(gpio_power, 1);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed powering up cape.");
+        rl_log(RL_LOG_ERROR, "Failed powering up cape; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -207,13 +279,15 @@ int main(void) {
     gpio_t *gpio_button =
         gpio_setup_interrupt(GPIO_BUTTON, GPIO_INTERRUPT_BOTH, "rocketloggerd");
     if (gpio_button == NULL) {
-        rl_log(RL_LOG_ERROR, "Failed configuring button.");
+        rl_log(RL_LOG_ERROR, "Failed configuring button; %d message: %s", errno,
+               strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     ret = pwm_init();
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules.");
+        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -232,11 +306,18 @@ int main(void) {
 
     ret = sigaction(SIGTERM, &signal_action, NULL);
     if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "can't register signal handler for SIGTERM.");
+        rl_log(RL_LOG_ERROR,
+               "can't register signal handler for SIGTERM; %d message: %s",
+               errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    rl_log(RL_LOG_INFO, "RocketLogger daemon started.");
+    // calibrate ADC reference voltage
+    rl_log(RL_LOG_INFO, "Performing ADC reference calibration.");
+    adc_calibrate(RL_CALIBRATION_DURATION_SEC);
+
+    // daemon main loop
+    rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
 
     daemon_shutdown = false;
     while (!daemon_shutdown) {
@@ -257,11 +338,15 @@ int main(void) {
     gpio_release(gpio_button);
     gpio_deinit();
 
-    // reboot system if requested
-    if (system_reboot) {
+    // perform requested system action
+    if (system_action == SYSTEM_ACTION_REBOOT) {
         rl_log(RL_LOG_INFO, "Rebooting system.");
         sync();
         reboot(RB_AUTOBOOT);
+    } else if(system_action == SYSTEM_ACTION_POWEROFF) {
+        rl_log(RL_LOG_INFO, "Powering off system.");
+        sync();
+        reboot(RB_POWER_OFF);
     }
 
     exit(EXIT_SUCCESS);

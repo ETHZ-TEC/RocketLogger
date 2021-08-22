@@ -298,7 +298,7 @@ io.on('connection', (socket) => {
             const res = rl.status();
             try {
                 res.status.sdcard_available = !util.is_same_filesystem(rl.path_data, __dirname);
-            } catch(err) {
+            } catch (err) {
                 res.err.push(`Error checking for mounted SD card: ${err}`);
             }
             res.req = req;
@@ -349,27 +349,26 @@ async function data_proxy() {
             debug(`zmq data: metadata processing error: ${err}`);
             continue;
         }
-
-        // get downsample factor
         const downsample_factor = Math.max(1, meta.data_rate / rl.web_data_rate);
-        const buffer_length = data[data.length - 1].length / Uint32Array.BYTES_PER_ELEMENT / downsample_factor;
+
+        // get timestamp and digital data views and size
+        const time_in_view = new BigInt64Array(data[1].buffer);
+        const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
+        const buffer_in_length = digital_in_view.length;
+        const buffer_out_length = buffer_in_length / downsample_factor;
 
         // generate timestamps (second data element)
-        const time_in_view = new BigInt64Array(data[1].buffer);
-        const time_out = new ArrayBuffer(buffer_length * Float64Array.BYTES_PER_ELEMENT);
-        const time_out_view = new Float64Array(time_out);
-        for (let j = 0; j < time_out_view.length; j++) {
-            time_out_view[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
+        const time_out = new Float64Array(buffer_out_length);
+        for (let j = 0; j < time_out.length; j++) {
+            time_out[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
                 + j * 1e3 / rl.web_data_rate;
         }
         rep.time = time_out;
 
         // process digital data (last data element)
-        const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
-        const digital_out = new ArrayBuffer(buffer_length * Uint8Array.BYTES_PER_ELEMENT);
-        const digital_out_view = new Uint8Array(digital_out);
-        for (let j = 0; j < Math.min(digital_out_view.length, digital_in_view.length / downsample_factor); j++) {
-            digital_out_view[j] = digital_in_view[j * downsample_factor];
+        const digital_out = new Uint8Array(buffer_out_length);
+        for (let j = 0; j < Math.min(digital_out.length, digital_in_view.length / downsample_factor); j++) {
+            digital_out[j] = digital_in_view[j * downsample_factor];
             /// @todo any/none down sampling
         }
         rep.digital = digital_out;
@@ -387,10 +386,9 @@ async function data_proxy() {
             }
 
             const data_in_view = new Int32Array(data[i].buffer);
-            const data_out = new ArrayBuffer(buffer_length * Float32Array.BYTES_PER_ELEMENT);
-            const data_out_view = new Float32Array(data_out).fill(NaN);
-            for (let j = 0; j < Math.min(data_out_view.length, data_in_view.length / downsample_factor); j++) {
-                data_out_view[j] = data_in_view[j * downsample_factor] * ch.scale;
+            const data_out = new Float32Array(buffer_out_length).fill(NaN);
+            for (let j = 0; j < Math.min(data_out.length, data_in_view.length / downsample_factor); j++) {
+                data_out[j] = data_in_view[j * downsample_factor] * ch.scale;
             }
             rep.data[ch.name] = data_out;
             i = i + 1;
@@ -398,25 +396,39 @@ async function data_proxy() {
 
         // merge current channel data if available
         for (const ch of [1, 2]) {
-            // generate new channel data and info (reuse HI channel in-place)
-            rep.data[`I${ch}`] = rep.data[`I${ch}H`];
-            const merge_out = rep.data[`I${ch}`];
+            // reuse HI channel in-place if available
+            if (`I${ch}H` in rep.data) {
+                rep.data[`I${ch}`] = rep.data[`I${ch}H`];
+                rep.metadata[`I${ch}`] = rep.metadata[`I${ch}H`];
 
-            const channel_lo = rep.data[`I${ch}L`];
-            const channel_lo_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
-            for (let j = 0; j < merge_out.length; j++) {
-                if (rep.digital & channel_lo_valid_mask) {
-                    merge_out[j] = channel_lo[j];
-                }
+                // delete merged channel
+                delete rep.data[`I${ch}H`];
+                delete rep.metadata[`I${ch}H`];
             }
-            // rep.data[`I${ch}`] = merge_out;
-            rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
 
-            // delete merged channels
-            delete rep.data[`I${ch}L`];
-            delete rep.metadata[`I${ch}L`];
-            delete rep.data[`I${ch}H`];
-            delete rep.metadata[`I${ch}H`];
+            // merge valid LO current values if available
+            if (`I${ch}L` in rep.data) {
+                const channel_lo = rep.data[`I${ch}L`];
+                const channel_lo_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
+
+                // generate new channel data array with NaNs if not available
+                if (`I${ch}` in rep.data === false) {
+                    rep.data[`I${ch}`] = new Float32Array(channel_lo.length).fill(NaN);
+                    rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
+                }
+                const channel_merged = rep.data[`I${ch}`];
+                for (let j = 0; j < channel_merged.length; j++) {
+                    if (rep.digital[j] & channel_lo_valid_mask) {
+                        channel_merged[j] = channel_lo[j];
+                    }
+                }
+
+                // delete merged channel
+                delete rep.data[`I${ch}L`];
+                delete rep.metadata[`I${ch}L`];
+            }
+
+            // always delete channel valid links
             delete rep.metadata[`I${ch}L_valid`];
         }
 

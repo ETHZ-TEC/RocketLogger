@@ -108,7 +108,7 @@ char const *const RL_CHANNEL_VALID_NAMES[RL_CHANNEL_SWITCHED_COUNT] = {
     "I1L_valid", "I2L_valid"};
 
 /// Global RocketLogger status variable.
-//rl_status_t rl_status = rl_status_default;
+// rl_status_t rl_status = rl_status_default;
 rl_status_t rl_status = {
     .sampling = false,
     .error = false,
@@ -383,8 +383,9 @@ int rl_config_read_default(rl_config_t *const config) {
     // open config file
     FILE *file = fopen(config_file, "r");
     if (file == NULL) {
-        rl_log(RL_LOG_ERROR, "failed to open configuration file '%s'",
-               config_file);
+        rl_log(RL_LOG_ERROR,
+               "failed to open configuration file '%s'; %d message: %s",
+               config_file, errno, strerror(errno));
         return ERROR;
     }
 
@@ -395,7 +396,7 @@ int rl_config_read_default(rl_config_t *const config) {
     fclose(file);
 
     // reset file comment, as it is not stored yet
-    /// @todo drop when comment is stored
+    /// @todo drop once comment is stored together with default config
     config->file_comment = RL_CONFIG_COMMENT_DEFAULT;
 
     // check version
@@ -414,7 +415,9 @@ int rl_config_write_default(rl_config_t const *const config) {
     // open config file
     FILE *file = fopen(RL_CONFIG_USER_FILE, "w");
     if (file == NULL) {
-        rl_log(RL_LOG_ERROR, "failed to create configuration file");
+        rl_log(RL_LOG_ERROR,
+               "failed to create configuration file; %d message: %s", errno,
+               strerror(errno));
         return ERROR;
     }
     // write values
@@ -518,7 +521,8 @@ pid_t rl_pid_get(void) {
 int rl_pid_set(pid_t pid) {
     FILE *file = fopen(RL_PID_FILE, "w");
     if (file == NULL) {
-        rl_log(RL_LOG_ERROR, "Failed to create pid file");
+        rl_log(RL_LOG_ERROR, "Failed to create pid file; %d message: %s", errno,
+               strerror(errno));
         return ERROR;
     }
 
@@ -578,7 +582,7 @@ int rl_status_shm_deinit(void) {
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
-               "failed getting shared memory id for removal; message: %s",
+               "failed getting shared memory id for removal; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -602,7 +606,7 @@ int rl_status_read(rl_status_t *const status) {
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
                "failed getting shared memory id for reading the "
-               "status; message: %s",
+               "status; %d message: %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -640,8 +644,8 @@ int rl_status_write(rl_status_t *const status) {
         shmget(RL_SHMEM_STATUS_KEY, sizeof(rl_status_t), RL_SHMEM_PERMISSIONS);
     if (shm_id == -1) {
         rl_log(RL_LOG_ERROR,
-               "failed getting shared memory id for writing the status; "
-               "message: %s",
+               "failed getting shared memory id for writing the status; %d "
+               "message %s",
                errno, strerror(errno));
         return ERROR;
     }
@@ -650,7 +654,7 @@ int rl_status_write(rl_status_t *const status) {
     if (shm_status == (void *)-1) {
         rl_log(RL_LOG_ERROR,
                "failed mapping shared memory for writing the status; %d "
-               "message: %s",
+               "message %s",
                errno, strerror(errno));
         return ERROR;
     }
