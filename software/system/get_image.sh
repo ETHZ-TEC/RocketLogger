@@ -1,5 +1,6 @@
 #!/bin/bash
-# Download the beagle bone image from the beaglebone archive
+# Download the BeagleBone image from the archive
+# Usage: ./get_image.sh
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.

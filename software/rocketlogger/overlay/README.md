@@ -1,6 +1,6 @@
 # RocketLogger Device Tree Overlay
 
-This folder include the device tree overlay source for the RocketLogger software and the related uEnv configuration to deploy it.
+This folder includes the device tree overlay source for the RocketLogger software and the related uEnv configuration to deploy it.
 
 
 ## Documentation

@@ -1,5 +1,6 @@
 #!/bin/bash
 # Patch a BeagleBone system image with RocketLogger installation and configuration
+# Usage: ./patch_image.sh
 
 LOG_FILE="patch_image.log"
 GIT_REVISION=`git describe --tags`

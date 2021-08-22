@@ -46,9 +46,9 @@
 #define ERROR (-1)
 
 /// RocketLogger measurement log file
-#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger.log"
+#define RL_MEASUREMENT_LOG_FILE "/var/log/rocketlogger/rocketlogger.log"
 /// RocketLogger daemon log file
-#define RL_DAEMON_LOG_FILE "/var/log/rocketloggerd.log"
+#define RL_DAEMON_LOG_FILE "/var/log/rocketlogger/rocketloggerd.log"
 /// Process ID file for the RocketLogger process
 #define RL_PID_FILE "/run/rocketlogger.pid"
 
