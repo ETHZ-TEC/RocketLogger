@@ -1,6 +1,8 @@
 #!/bin/bash
 # Basic operating system initalization of a new BeagleBone Black/Green/Green Wireless
 # Usage: setup.sh [<hostname>]
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -162,6 +164,7 @@ cat /home/flocklab/.ssh/rocketlogger.default_rsa.pub > /home/flocklab/.ssh/autho
 
 # copy more secure ssh configuration
 cp --force ssh/sshd_config /etc/ssh/
+systemctl reload sshd
 
 # change ssh welcome message
 cp --force system/issue.net /etc/issue.net
@@ -185,10 +188,12 @@ mkdir --parents /etc/flocklab
 # user configuration and data folder for rocketlogger, bind sdcard folders if available
 mkdir --parents /home/flocklab/.config/rocketlogger/
 mkdir --parents /home/flocklab/data/
+mkdir --parents /var/log/flocklab/
 echo -e "# bind FlockLab sdcard folders if available" >> /etc/fstab
 
 echo -e "/media/sdcard/flocklab/config\t/home/flocklab/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 echo -e "/media/sdcard/flocklab/data\t/home/flocklab/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
+echo -e "/media/sdcard/flocklab/log\t/var/log/flocklab\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 
 # make user owner of its own files
 chown --recursive flocklab:flocklab /home/flocklab/

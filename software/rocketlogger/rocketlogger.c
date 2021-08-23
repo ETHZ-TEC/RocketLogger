@@ -341,7 +341,6 @@ int main(int argc, char *argv[]) {
             printf("Wait for measurement to stop...\n");
         }
         rl_stop();
-        /// @todo wait for measurement process to stop
     }
     if (strcmp(action, "config") == 0) {
         if (arguments.json) {
@@ -365,7 +364,6 @@ int main(int argc, char *argv[]) {
         } else {
             rl_status_print(&status);
         }
-        // @todo encode status in exit value
     }
     exit(EXIT_SUCCESS);
 }

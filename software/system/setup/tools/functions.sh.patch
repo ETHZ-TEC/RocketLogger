@@ -1,6 +1,6 @@
 --- functions.sh.orig	2021-01-31 2021-01-01 00:00:00
 +++ functions.sh	2021-01-31 2021-01-01 00:00:00
-@@ -1031,6 +1031,15 @@ _copy_rootfs() {
+@@ -1031,6 +1031,16 @@ _copy_rootfs() {
  
    _generate_fstab
  
@@ -9,9 +9,10 @@
 +  mkdir --parents ${tmp_rootfs_dir}/media/sdcard/
 +  echo -e "# mount external sdcard on boot if available" >> ${tmp_rootfs_dir}/etc/fstab
 +  echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\t0\t2" >> ${tmp_rootfs_dir}/etc/fstab
-+  echo -e "# bind RocketLogger sdcard folders if available" >> ${tmp_rootfs_dir}/etc/fstab
-+  echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
-+  echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "# bind FlockLab sdcard folders if available" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/flocklab/config\t/home/flocklab/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/flocklab/data\t/home/flocklab/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
++  echo -e "/media/sdcard/flocklab/log\t/var/log/flocklab\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> ${tmp_rootfs_dir}/etc/fstab
 +
    #FIXME: What about when you boot from a fat partition /boot ?
    echo_broadcast "==> /boot/uEnv.txt: disabling eMMC flasher script"

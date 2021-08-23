@@ -7,31 +7,31 @@ The RocketLogger software consists of multiple components that are summarized be
 
 ### RocketLogger Binary
 
-The RocketLogger tool is implemented in [`rocketlogger.c`](@ref rocketlogger.c). This tool provides
-an extensive command line interface to control and monitor the sampling.
+The RocketLogger tool is implemented in @ref rocketlogger.c.
+This tool provides an extensive command line interface to control and monitor the sampling.
 
 
 ### RocketLogger Daemon
 
-The RocketLogger service daemon is implemented in [`rocketloggerd.c`](@ref rocketloggerd.c).
-This service is responsible to configure the user space GPIOs, control the power supply of the
+The RocketLogger service daemon is implemented in @ref rocketloggerd.c.
+This service is responsible for configuring the user space GPIOs, control the power supply of the
 cape, handles the user button actions and observes the RocketLogger sampling status.
 
 
 ### PRU Firmware
 
-The firmware sources for the Programmable Real-time Unit (PRU) is located in the [`pru`](pru/)
-subfolder. The firmware is build and installed along with the rest of the software.
+The firmware sources for the Programmable Real-time Unit (PRU) are located in the @ref pru
+subfolder. The firmware is built and installed along with the rest of the software.
 
 ### Device Tree Overlay
 
-The necessary device tree overlay sources for the RocketLogger Cape hardware is contained in the
-[`overlay`](overlay/) subfolder and installed together with the above software components.
+The necessary device tree overlay sources for the RocketLogger Cape hardware are contained in the
+@ref overlay subfolder and installed together with the above software components (see also @ref overlay/README.md).
 
 
 ### System Configuration
 
-The system configuration files provided in the [`config`](config/) subfolder provide the necessary
+The system configuration files provided in the @ref config subfolder provide the necessary
 `uio_pruss` module configuration, uEnv boot configuration, and RocketLogger service specification,
 as well as as default calibration parameters. These configuration files are deployed together with
 the other software components.
@@ -42,9 +42,9 @@ the other software components.
 To build and install the RocketLogger software components and its configuration use:
 
 ```bash
-meson builddir 
-cd builddir 
-ninja 
+meson builddir
+cd builddir
+ninja
 sudo meson install --no-rebuild
 ```
 
@@ -59,21 +59,21 @@ The documentation for the RocketLogger is found in the wiki pages at
 
 ### Build Tools
 
-For building the software the following build tools are required (provided by the listed Debian
+For building the software, the following build tools are required (provided by the listed Debian
 packages):
 
-* Linux device tree compiler - `device-tree-compiler` package
-* GNU C compiler - `gcc` package
-* Meson build system (version >= 0.55) - `meson/stretch-backports` package
-* ninja build system (version >= 0.10) - `ninja-build/stretch-backports` package
-* TI PRU code generation tools - `ti-pru-cgt-installer` package
+* *Linux device tree* compiler - `device-tree-compiler` package
+* *GNU C* compiler - `gcc` package
+* *Meson* build system (version >= 0.55) - `meson/buster-backports` package
+* *ninja* build system (version >= 0.10) - `ninja-build/buster-backports` package
+* *TI PRU* code generation tools - `ti-pru-cgt-installer` package
 
 
 #### Cross Compilation
-If not developing directly on the BeagleBone, there is the option to cross compile using 
-`Docker Buildx`. For this purpose there exists the `build_cross.sh` helper script and the
-required `Dockerfile`.
-For using this cross-compilation option, `Docker Buildx` and a system configured to run
+If not developing directly on the BeagleBone, there is the option to cross compile using
+`Docker Buildx`. The `build_cross.sh` helper script and the
+required `Dockerfile` can be used for this purpose.
+To use this cross-compilation option, `Docker Buildx` and a system configured to run
 privileged Docker containers is required. More information on the docker configuration is
 found at [Docker Buildx](https://docs.docker.com/buildx/working-with-buildx/) and in the
 [docker run reference](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities).
@@ -88,10 +88,8 @@ the software:
 * *libi2c* - `libi2c-dev` package
 * *libncurses* - `libncurses5-dev` package
 * *libzeromq* - `libzmq3-dev` package
-* Linux PRU user space driver *prussdrv* - included as Meson subproject from source repository
-  <https://github.com/beagleboard/am335x_pru_package.git>
-* BeagleBone device tree overlay headers - included as Meson subproject from source repository
-  <https://github.com/beagleboard/bb.org-overlays.git>
+* BeagleBone device tree overlay headers - included as a [Meson subproject](https://github.com/beagleboard/bb.org-overlays.git)
+* Linux PRU user space driver *prussdrv* - included as a [Meson subproject](https://github.com/beagleboard/am335x_pru_package.git)
 
 
 ## License

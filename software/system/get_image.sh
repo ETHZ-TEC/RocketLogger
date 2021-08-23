@@ -1,5 +1,6 @@
 #!/bin/bash
-# Download the beagle bone image from the beaglebone archive
+# Download the BeagleBone image from the archive
+# Usage: ./get_image.sh
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -31,9 +32,9 @@
 #
 
 # Debian stretch console image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-05-28/stretch-console/"
-IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-9.13-console-armhf-2021-05-28-1gb.img.xz"
-IMAGE_FLASHER_SHA256="656dc664c12c8bf6793a5f45c59b63cba435b98af8e08c2d7ca71a6891fde25a"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2020-05-02/stretch-console/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-9.12-console-armhf-2020-05-02-1gb.img.xz"
+IMAGE_FLASHER_SHA256="fe42cbf958953e8a3921048e465e1dae561be0e885a6f64b88e279762cbdbd5f"
 
 # download image
 curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"

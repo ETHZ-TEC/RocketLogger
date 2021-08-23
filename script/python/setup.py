@@ -39,7 +39,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rocketlogger",
-    version="2.0.0-beta1",
+    version="2.0.0",
     author="ETH Zurich, Computer Engineering Group",
     description="RocketLogger Python Support",
     long_description=long_description,
@@ -47,7 +47,7 @@ setup(
     license="BSD 3-Clause",
     url="https://github.com/ETHZ-TEC/RocketLogger#readme",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Information Analysis",
@@ -73,7 +73,7 @@ setup(
         "test": ["coverage", "nose", "tox"],
     },
     project_urls={
-        "Documentation": "https://github.com/ETHZ-TEC/RocketLogger/wiki",
+        "Documentation": "https://github.com/ETHZ-TEC/RocketLogger/wiki/python",
         "Source": "https://github.com/ETHZ-TEC/RocketLogger",
         "Tracker": "https://github.com/ETHZ-TEC/RocketLogger/issues",
     },

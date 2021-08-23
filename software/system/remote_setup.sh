@@ -1,6 +1,9 @@
 #!/bin/bash
-# Remotely configure operating system of a new BeagleBone Black/Green/Green Wireless
-# Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]
+# Remotely configure operating system of a new BeagleBone Green or Black
+# Usage: ./remote_setup.sh <host> [<hostname>]
+# * <host> specifys the hostname or IP address of the BeagleBone device to set up
+# * <hostname> optionally specifies the the hostname to assign to the device
+#   during setup, if not provided the default hostname used is: rocketlogger
 #
 # Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
 # All rights reserved.
@@ -33,9 +36,13 @@
 
 REBOOT_TIMEOUT=120
 
+REPO_LOCAL_COPY=`mktemp --directory`
+REPO_PATH=`git rev-parse --show-toplevel`
+REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
+
 # check arguments
 if [ $# -lt 1 ]; then
-  echo "Usage: ./remote_setup.sh <beaglebone-host-address> [<hostname>]"
+  echo "Usage: ./remote_setup.sh <host> [<hostname>]"
   exit -1
 fi
 HOST=$1
@@ -61,11 +68,12 @@ scp -F /dev/null -P 22 -r setup debian@${HOST}: > /dev/null
 
 # verify copy setup files was successful
 COPY=$?
+rm --force --recursive ${REPO_LOCAL_COPY} # clean up local repo copy in any case
 if [ $COPY -ne 0 ]; then
-  echo "[ !! ] Copy setup files failed (code $COPY). CHECK SSH CONFIGURATION."
+  echo "[ !! ] Copy setup files to remote failed (code $COPY). CHECK SSH CONFIGURATION."
   exit $COPY
 else
-  echo "[ OK ] Copy setup files successful."
+  echo "[ OK ] Copy setup files to remote successful."
 fi
 
 # remove password file
@@ -81,7 +89,7 @@ if [ $CONFIG -ne 0 ] && [ $CONFIG -ne 255 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
   exit $CONFIG
 else
-  echo "[ OK ] System configuration was successful."
+  echo "[ OK ] Remote system configuration was successful."
 fi
 
 # wait for system to reboot

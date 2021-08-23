@@ -396,7 +396,7 @@ int rl_config_read_default(rl_config_t *const config) {
     fclose(file);
 
     // reset file comment, as it is not stored yet
-    /// @todo drop when comment is stored
+    /// @todo drop once comment is stored together with default config
     config->file_comment = RL_CONFIG_COMMENT_DEFAULT;
 
     // check version
