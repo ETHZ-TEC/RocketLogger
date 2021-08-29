@@ -109,7 +109,7 @@ function render_page(req, res, template_name, context = null) {
         context.version = rl_version.version;
     }
 
-    res.render(template_name, context);
+    res.render(template_name, context);  /// @todo sync IO call
 }
 
 
@@ -132,9 +132,9 @@ app.get('/', (req, res) => { render_page(req, res, 'control.html') });
 
 app.get('/data', (req, res) => {
     let files = [];
-    glob.sync(path.join(rl.path_data, '*.@(rld|csv)')).forEach(file => {
+    glob.sync(path.join(rl.path_data, '*.@(rld|csv)')).forEach(file => {  /// @todo sync IO call (glob.sync)
         try {
-            let stat = fs.statSync(file);
+            let stat = fs.statSync(file);  /// @todo sync IO call
             let file_info = {
                 name: path.basename(file),
                 modified: stat.mtime.toISOString().split('.')[0].replace('T', ' '),
@@ -157,7 +157,7 @@ app.get('/data', (req, res) => {
 app.get('/log', (req, res) => {
     const logfile = rl.path_system_logfile;
     try {
-        fs.accessSync(logfile, fs.constants.F_OK);
+        fs.accessSync(logfile, fs.constants.F_OK);  /// @todo sync IO call
     } catch (err) {
         res.status(404).send('Log file was not found. Please check your systems configuration!');
         return;
@@ -180,7 +180,7 @@ app.get('/data/download/:filename', (req, res) => {
     }
 
     try {
-        fs.accessSync(filepath, fs.constants.R_OK);
+        fs.accessSync(filepath, fs.constants.R_OK);  /// @todo sync IO call
         res.download(filepath, req.params.filename);
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
@@ -196,14 +196,14 @@ app.get('/data/delete/:filename', (req, res) => {
     }
 
     try {
-        fs.accessSync(filepath);
+        fs.accessSync(filepath);  /// @todo sync IO call
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
         return;
     }
 
     try {
-        fs.unlinkSync(filepath);
+        fs.unlinkSync(filepath);  /// @todo sync IO call
     } catch (err) {
         res.status(403).send(`Error deleting file ${req.params.filename}: ${err}`);
         return;

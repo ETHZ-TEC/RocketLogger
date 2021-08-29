@@ -60,15 +60,15 @@ module.exports = {
 
     /// check if two files or paths are located on the same filesystem
     is_same_filesystem(first, second) {
-        const stat_first = fs.statSync(first);
-        const stat_second = fs.statSync(second);
+        const stat_first = fs.statSync(first);  /// @todo sync IO call
+        const stat_second = fs.statSync(second);  /// @todo sync IO call
         return stat_first.dev === stat_second.dev;
     },
 
     /// helper function to reboot the system
     system_reboot() {
         const args = ['shutdown', '--reboot', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             return cmd.error;
         }
@@ -78,7 +78,7 @@ module.exports = {
     /// helper function to shutdown the system
     system_poweroff() {
         const args = ['shutdown', '--poweroff', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             return cmd.error;
         }

@@ -60,7 +60,7 @@ const rl = {
         };
 
         const args = ['status', '--json'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });
+        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
@@ -116,7 +116,7 @@ const rl = {
         };
 
         const args = ['stop'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });
+        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
@@ -138,7 +138,7 @@ const rl = {
         };
 
         const args = ['pkill', 'rocketloggerd'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });
+        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             res.err.push('Restarting RocketLogger service failed. ' +
                 'Please check your system configuration!');
@@ -164,7 +164,7 @@ const rl = {
         if (config) {
             args.push('--default');
         }
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });
+        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
@@ -199,7 +199,7 @@ const rl = {
         };
 
         const args = ['--version'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });
+        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
         if (cmd.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
