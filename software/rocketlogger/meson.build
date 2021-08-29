@@ -81,7 +81,6 @@ common_src = [
     'rl_socket.c',
     'rl.c',
     'sem.c',
-    'sysfs.c',
     'util.c',
     version_c,
 ]

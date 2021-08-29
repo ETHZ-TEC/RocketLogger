@@ -29,10 +29,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "rl.h"
-#include "sysfs.h"
 
 #include "pwm.h"
+
+
+/**
+ * Write an integer to a sysfs device file.
+ *
+ * @param sysfs_file The sysfs file to write to
+ * @param value The value to write to write
+ * @return Returns 0 on success, negative on failure with errno set accordingly
+ */
+static int sysfs_write_int(char const *const sysfs_file, int value);
+
 
 int pwm_init(void) {
     sysfs_write_int((EPWM0A_DEVICE "period"), PWM_PERIOD_DEFAULT);
@@ -54,4 +71,25 @@ void pwm_deinit(void) {
     sysfs_write_int((EPWM0A_DEVICE "enable"), 0);
     sysfs_write_int((EPWM1A_DEVICE "enable"), 0);
     sysfs_write_int((EPWM1B_DEVICE "enable"), 0);
+}
+
+static int sysfs_write_int(char const *const sysfs_file, int value) {
+    static char buffer[16] = {0};
+    int len = snprintf(buffer, sizeof(buffer), "%d", value);
+    if (len <= 0 || len >= (int)sizeof(buffer)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int fd = open(sysfs_file, O_WRONLY);
+    if (fd < 0) {
+        return fd;
+    }
+
+    int ret = write(fd, buffer, len);
+    close(fd);
+    if (ret < 0) {
+        return ret;
+    }
+    return 0;
 }
