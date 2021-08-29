@@ -35,34 +35,23 @@
 #include "pwm.h"
 
 int pwm_init(void) {
-    sysfs_export_unexported((EPWM0A_SYSFS_PATH), (PWMSS0_SYSFS_PATH "export"),
-                            EPWM0A_SYSFS_INDEX);
-    sysfs_export_unexported((EPWM1A_SYSFS_PATH), (PWMSS1_SYSFS_PATH "export"),
-                            EPWM1A_SYSFS_INDEX);
-    sysfs_export_unexported((EPWM1B_SYSFS_PATH), (PWMSS1_SYSFS_PATH "export"),
-                            EPWM1B_SYSFS_INDEX);
+    sysfs_write_int((EPWM0A_DEVICE "period"), PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM1A_DEVICE "period"), PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM1B_DEVICE "period"), PWM_PERIOD_DEFAULT);
 
-    sysfs_write_int((EPWM0A_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
-    sysfs_write_int((EPWM1A_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
-    sysfs_write_int((EPWM1B_SYSFS_PATH "period"), PWM_PERIOD_DEFAULT);
+    sysfs_write_int((EPWM0A_DEVICE "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
+    sysfs_write_int((EPWM1A_DEVICE "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
+    sysfs_write_int((EPWM1B_DEVICE "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
 
-    sysfs_write_int((EPWM0A_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
-    sysfs_write_int((EPWM1A_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
-    sysfs_write_int((EPWM1B_SYSFS_PATH "duty_cycle"), PWM_DUTY_CYCLE_DEFAULT);
-
-    sysfs_write_int((EPWM0A_SYSFS_PATH "enable"), 1);
-    sysfs_write_int((EPWM1A_SYSFS_PATH "enable"), 1);
-    sysfs_write_int((EPWM1B_SYSFS_PATH "enable"), 1);
+    sysfs_write_int((EPWM0A_DEVICE "enable"), 1);
+    sysfs_write_int((EPWM1A_DEVICE "enable"), 1);
+    sysfs_write_int((EPWM1B_DEVICE "enable"), 1);
 
     return SUCCESS;
 }
 
 void pwm_deinit(void) {
-    sysfs_write_int((EPWM0A_SYSFS_PATH "enable"), 0);
-    sysfs_write_int((EPWM1A_SYSFS_PATH "enable"), 0);
-    sysfs_write_int((EPWM1B_SYSFS_PATH "enable"), 0);
-
-    sysfs_unexport((PWMSS0_SYSFS_PATH "unexport"), EPWM0A_SYSFS_INDEX);
-    sysfs_unexport((PWMSS1_SYSFS_PATH "unexport"), EPWM1A_SYSFS_INDEX);
-    sysfs_unexport((PWMSS1_SYSFS_PATH "unexport"), EPWM1B_SYSFS_INDEX);
+    sysfs_write_int((EPWM0A_DEVICE "enable"), 0);
+    sysfs_write_int((EPWM1A_DEVICE "enable"), 0);
+    sysfs_write_int((EPWM1B_DEVICE "enable"), 0);
 }

@@ -32,25 +32,12 @@
 #ifndef PWM_H_
 #define PWM_H_
 
-/// Linux sysfs paths device files
-/// Path to the Linux sysfs PWMSS0 module device files
-#define PWMSS0_SYSFS_PATH "/sys/class/pwm/pwmchip0/"
-/// Path to the Linux sysfs PWMSS1 module device files
-#define PWMSS1_SYSFS_PATH "/sys/class/pwm/pwmchip2/"
-
-/// Index of the Linux sysfs ePWM0A module
-#define EPWM0A_SYSFS_INDEX 0
-/// Index of the Linux sysfs ePWM1A module
-#define EPWM1A_SYSFS_INDEX 0
-/// Index of the Linux sysfs ePWM1B module
-#define EPWM1B_SYSFS_INDEX 1
-
-/// Path to the Linux sysfs ePWM0A module
-#define EPWM0A_SYSFS_PATH PWMSS0_SYSFS_PATH "pwm-0:0/"
-/// Path to the Linux sysfs ePWM1A module
-#define EPWM1A_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-2:0/"
-/// Path to the Linux sysfs ePWM1B module
-#define EPWM1B_SYSFS_PATH PWMSS1_SYSFS_PATH "pwm-2:1/"
+/// uDev device export for ePWM0A module
+#define EPWM0A_DEVICE "/dev/pwm/ehrpwm0a/"
+/// uDev device export for ePWM1A module
+#define EPWM1A_DEVICE "/dev/pwm/ehrpwm1a/"
+/// uDev device export for ePWM1B module
+#define EPWM1B_DEVICE "/dev/pwm/ehrpwm1b/"
 
 /// Default PWM period in nanoseconds
 #define PWM_PERIOD_DEFAULT 490
@@ -60,7 +47,7 @@
 /**
  * Initialize PWM modules.
  *
- * Export and enable PWM peripherals via sysfs interface.
+ * Enable PWM output via udev exported devices.
  *
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
@@ -69,7 +56,7 @@ int pwm_init(void);
 /**
  * Deinitialize PWM modules.
  *
- * Disable and unexport peripheral via sysfs interface.
+ * Disable PWM output via udev exported devices.
  */
 void pwm_deinit(void);
 
