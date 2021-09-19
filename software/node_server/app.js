@@ -73,7 +73,7 @@ nunjucks.configure(path_templates, {
 });
 
 /// render page templates
-function render_page(req, res, template_name, context = null) {
+async function render_page(req, res, template_name, context = null) {
     let date = new Date();
 
     // build or extend existing context
@@ -96,7 +96,7 @@ function render_page(req, res, template_name, context = null) {
     context.asset_version = asset_version;
 
     // validate compatibility of binary and web interface
-    const rl_version = rl.version();
+    const rl_version = await rl.version();
     for (const err of rl_version.err) {
         context.err.push(err);
     }
@@ -228,24 +228,24 @@ io.on('connection', (socket) => {
     });
 
     // handle control command
-    socket.on('control', (req) => {
+    socket.on('control', async (req) => {
         debug(`rl control: ${JSON.stringify(req)}`);
         // handle control command and emit on status channel
         let res = null;
         switch (req.cmd) {
             case 'start':
-                res = rl.start(req.config);
+                res = await rl.start(req.config);
                 break;
 
             case 'stop':
-                res = rl.stop();
+                res = await rl.stop();
                 break;
 
             case 'config':
                 if (req.config && req.default) {
-                    res = rl.config(req.config);
+                    res = await rl.config(req.config);
                 } else {
-                    res = rl.config();
+                    res = await rl.config();
                 }
                 break;
 
@@ -254,8 +254,8 @@ io.on('connection', (socket) => {
                     res = { err: [`invalid reset key: ${req.key}`] };
                     break;
                 }
-                rl.stop();
-                res = rl.reset();
+                await rl.stop();
+                res = await rl.reset();
                 break;
 
             case 'reboot':
@@ -263,7 +263,7 @@ io.on('connection', (socket) => {
                     res = { err: [`invalid reboot key: ${req.key}`] };
                     break;
                 }
-                rl.stop();
+                await rl.stop();
                 res = { status: util.system_reboot() };
                 break;
 
@@ -272,7 +272,7 @@ io.on('connection', (socket) => {
                     res = { err: [`invalid poweroff key: ${req.key}`] };
                     break;
                 }
-                rl.stop();
+                await rl.stop();
                 res = { status: util.system_poweroff() };
                 break;
 
@@ -290,12 +290,12 @@ io.on('connection', (socket) => {
     });
 
     // handle status request
-    socket.on('status', (req) => {
+    socket.on('status', async (req) => {
         debug(`rl status: ${JSON.stringify(req)}`);
 
         // poll status and emit on status channel
         if (req.cmd === 'status') {
-            const res = rl.status();
+            const res = await rl.status();
             try {
                 res.status.sdcard_available = !util.is_same_filesystem(rl.path_data, __dirname);
             } catch (err) {

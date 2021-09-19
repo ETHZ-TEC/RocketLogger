@@ -31,7 +31,9 @@
 "use strict";
 
 const path = require('path');
-const { spawn, spawnSync } = require('child_process');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const { spawn } = require('child_process');
 
 /// RocketLogger status and data update rate [in 1/s]
 const rl_update_rate = 10;
@@ -51,7 +53,7 @@ const rl = {
     web_data_rate: rl_web_data_rate,
 
     /// get RocketLogger status
-    status: () => {
+    status: async () => {
         const res = {
             err: [],
             warn: [],
@@ -59,28 +61,28 @@ const rl = {
             status: null,
         };
 
-        const args = ['status', '--json'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            res.err.push('RocketLogger binary was not found. ' +
-                'Please check your system configuration!');
-            return res;
-        }
+        const cmd = 'rocketlogger status --json';
+        const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+            .catch(err => {
+                res.err.push('RocketLogger binary was not found. ' +
+                    'Please check your system configuration!');
+                return res;
+            });
 
         try {
-            res.status = JSON.parse(cmd.stdout.toString());
+            res.status = JSON.parse(stdout);
         } catch (err) {
             res.err.push(`RocketLogger status processing error: ${err}`);
-            res.err.push(`stdout: ${cmd.stdout}`);
-            res.err.push(`stderr: ${cmd.stderr}`);
+            res.err.push(`stdout: ${stdout}`);
+            res.err.push(`stderr: ${stderr}`);
         }
 
-        res.cli = `rocketlogger ${args.join(' ')}`;
+        res.cli = cmd;
         return res;
     },
 
     /// start RocketLogger measurement
-    start: (config) => {
+    start: async (config) => {
         const res = {
             err: [],
             warn: [],
@@ -89,25 +91,25 @@ const rl = {
             start: null,
         };
 
-        const args = config_to_args('start', config);
-        const cmd = spawn('rocketlogger', args, {
+        const args = config_to_args_list('start', config);
+        const cmd = `rocketlogger ${args.join(' ')}`;
+        const child_process = spawn('rocketlogger', args, {
             detached: true,
             stdio: 'ignore',
         });
-        if (cmd.error) {
+        if (child_process.error) {
             res.err.push('RocketLogger binary was not found. ' +
                 'Please check your system configuration!');
             return res;
         }
 
-        res.start = cmd.status;
         res.config = config;
-        res.cli = `rocketlogger ${args.join(' ')}`;
+        res.cli = cmd;
         return res;
     },
 
     /// stop RocketLogger measurement
-    stop: () => {
+    stop: async () => {
         const res = {
             err: [],
             warn: [],
@@ -115,21 +117,21 @@ const rl = {
             stop: null,
         };
 
-        const args = ['stop'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            res.err.push('RocketLogger binary was not found. ' +
-                'Please check your system configuration!');
-            return res;
-        }
+        const cmd = 'rocketlogger stop';
+        const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+            .catch(err => {
+                res.err.push('RocketLogger binary was not found. ' +
+                    'Please check your system configuration!');
+                return res;
+            });
 
-        res.stop = cmd.status;
-        res.cli = `rocketlogger ${args.join(' ')}`;
+        res.stop = stdout;
+        res.cli = cmd;
         return res;
     },
 
     /// reset RocketLogger by restarting the rocketloggerd service
-    reset: () => {
+    reset: async () => {
         const res = {
             err: [],
             warn: [],
@@ -137,21 +139,21 @@ const rl = {
             reset: null,
         };
 
-        const args = ['pkill', 'rocketloggerd'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            res.err.push('Restarting RocketLogger service failed. ' +
-                'Please check your system configuration!');
-            return res;
-        }
+        const cmd = 'sudo pkill rocketloggerd';
+        const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+            .catch(err => {
+                res.err.push('RocketLogger binary was not found. ' +
+                    'Please check your system configuration!');
+                return res;
+            });
 
-        res.reset = cmd.status;
-        res.cli = `sudo ${args.join(' ')}`;
+        res.reset = stdout;
+        res.cli = cmd;
         return res;
     },
 
     /// load/store RocketLogger default configuration
-    config: (config) => {
+    config: async (config) => {
         const res = {
             err: [],
             warn: [],
@@ -160,36 +162,37 @@ const rl = {
             default: false,
         };
 
-        const args = config_to_args('config', config);
+        const args = config_to_args_list('config', config);
         if (config) {
             args.push('--default');
         }
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            res.err.push('RocketLogger binary was not found. ' +
-                'Please check your system configuration!');
-            return res;
-        }
+        const cmd = `rocketlogger ${args.join(' ')}`
+        const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+            .catch(err => {
+                res.err.push('RocketLogger binary was not found. ' +
+                    'Please check your system configuration!');
+                return res;
+            });
 
         // parse and filter config
         try {
-            res.config = JSON.parse(cmd.stdout.toString());
+            res.config = JSON.parse(stdout);
             if (res.config.file) {
                 res.config.file.filename = path.basename(res.config.file.filename);
             }
         } catch (err) {
             res.err.push(`RocketLogger configuration processing error: ${err}`);
-            res.err.push(`stdout: ${cmd.stdout}`);
-            res.err.push(`stderr: ${cmd.stderr}`);
+            res.err.push(`stdout: ${stdout}`);
+            res.err.push(`stderr: ${stderr}`);
         }
 
         res.default = (config != null);
-        res.cli = `rocketlogger ${args.join(' ')}`;
+        res.cli = cmd;
         return res;
     },
 
     /// get the RocketLogger CLI version
-    version: () => {
+    version: async () => {
         const res = {
             err: [],
             warn: [],
@@ -198,18 +201,25 @@ const rl = {
             version_string: null,
         };
 
-        const args = ['--version'];
-        const cmd = spawnSync('rocketlogger', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            res.err.push('RocketLogger binary was not found. ' +
-                'Please check your system configuration!');
-            return res;
-        } else {
-            res.version_string = cmd.stdout.toString();
-            res.version = res.version_string.split('\n')[0].split(' ').reverse()[0];
+        const cmd = 'rocketlogger --version';
+        const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+            .catch(err => {
+                res.err.push('RocketLogger binary was not found. ' +
+                    'Please check your system configuration!');
+                return res;
+            });
+
+        // parse RocketLogger version
+        try {
+            res.version_string = stdout;
+            res.version = stdout.split('\n')[0].split(' ').reverse()[0];
+        } catch (err) {
+            res.err.push(`RocketLogger version processing error: ${err}`);
+            res.err.push(`stdout: ${stdout}`);
+            res.err.push(`stderr: ${stderr}`);
         }
 
-        res.cli = `rocketlogger ${args.join(' ')}`;
+        res.cli = cmd;
         return res;
     },
 };
@@ -217,14 +227,14 @@ const rl = {
 module.exports = rl;
 
 /// get RocketLogger CLI arguments from JSON configuration
-function config_to_args(mode, config) {
+function config_to_args_list(mode, config) {
     const args = [mode, '--json'];
     if (config == null) {
         return args;
     }
 
     // force some defaults
-    config.samples = 0; // continuous sampling
+    config.samples = 0;  // continuous sampling
     config.update_rate = rl_update_rate;
     if (config.sample_rate < config.update_rate) {
         config.update_rate = config.sample_rate;
