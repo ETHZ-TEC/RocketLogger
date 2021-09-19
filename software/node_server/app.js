@@ -32,18 +32,25 @@
 
 // imports
 const os = require('os');
-const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
+const util = require('util');
+const glob = util.promisify(require('glob'));
 const http = require('http');
 const express = require('express');
 const nunjucks = require('nunjucks');
 const socketio = require('socket.io');
 const zmq = require('zeromq');
+
 const debug = require('debug')('rocketlogger');
+const fs = {
+    constants: require('fs').constants,
+    access: util.promisify(require('fs').access),
+    stat: util.promisify(require('fs').stat),
+    unlink: util.promisify(require('fs').unlink),
+};
 
 const rl = require('./rl.js');
-const util = require('./util.js');
+const { bytes_to_string, is_same_filesystem, system_poweroff, system_reboot } = require('./util.js');
 
 // get version of package and client-side assets
 const version = require(path.join(__dirname, 'package.json')).version;
@@ -130,34 +137,37 @@ app.get('/sitemap.xml', express.static(path_static));
 // routing of rendered pages
 app.get('/', (req, res) => { render_page(req, res, 'control.html') });
 
-app.get('/data', (req, res) => {
-    let files = [];
-    glob.sync(path.join(rl.path_data, '*.@(rld|csv)')).forEach(file => {  /// @todo sync IO call (glob.sync)
-        try {
-            let stat = fs.statSync(file);  /// @todo sync IO call
-            let file_info = {
-                name: path.basename(file),
-                modified: stat.mtime.toISOString().split('.')[0].replace('T', ' '),
-                size: util.bytes_to_string(stat.size),
-                filename: path.dirname(file),
-                href_download: `/data/download/${path.basename(file)}`,
-                href_delete: `/data/delete/${path.basename(file)}`,
-            };
-            files.push(file_info);
-        } catch (err) {
-            debug(`Error listing file ${file}: ${err}`);
-        }
-    });
-
-    render_page(req, res, 'data.html', { files: files });
+app.get('/data', async (req, res) => {
+    let files_info = [];
+    try {
+        files_info = await Promise.all(
+            (await glob(path.join(rl.path_data, '*.@(rld|csv)'))).map(async file => {
+                const file_basename = path.basename(file);
+                const file_stat = await fs.stat(file);
+                const file_info = {
+                    name: file_basename,
+                    modified: file_stat.mtime.toISOString().split('.')[0].replace('T', ' '),
+                    size: bytes_to_string(file_stat.size),
+                    filename: path.dirname(file),
+                    href_download: `/data/download/${file_basename}`,
+                    href_delete: `/data/delete/${file_basename}`,
+                };
+                return file_info;
+            })
+        );
+    } catch (err) {
+        debug(`Error listing file ${file}: ${err}`);
+    }
+    const files_info_sorted = files_info.sort((a, b) => a.name.localeCompare(b.name));
+    render_page(req, res, 'data.html', { files: files_info_sorted });
 });
 
 
 // routing of file actions
-app.get('/log', (req, res) => {
+app.get('/log', async (req, res) => {
     const logfile = rl.path_system_logfile;
     try {
-        fs.accessSync(logfile, fs.constants.F_OK);  /// @todo sync IO call
+        await fs.access(logfile, fs.constants.F_OK);
     } catch (err) {
         res.status(404).send('Log file was not found. Please check your systems configuration!');
         return;
@@ -171,7 +181,7 @@ app.get('/log', (req, res) => {
     }
 });
 
-app.get('/data/download/:filename', (req, res) => {
+app.get('/data/download/:filename', async (req, res) => {
     let filepath = path.join(rl.path_data, req.params.filename);
 
     if (req.params.filename.indexOf(path.sep) >= 0) {
@@ -180,14 +190,14 @@ app.get('/data/download/:filename', (req, res) => {
     }
 
     try {
-        fs.accessSync(filepath, fs.constants.R_OK);  /// @todo sync IO call
+        await fs.access(filepath, fs.constants.R_OK);
         res.download(filepath, req.params.filename);
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
     }
 });
 
-app.get('/data/delete/:filename', (req, res) => {
+app.get('/data/delete/:filename', async (req, res) => {
     let filepath = path.join(rl.path_data, req.params.filename);
 
     if (req.params.filename.indexOf(path.sep) >= 0) {
@@ -196,14 +206,14 @@ app.get('/data/delete/:filename', (req, res) => {
     }
 
     try {
-        fs.accessSync(filepath);  /// @todo sync IO call
+        await fs.access(filepath);
     } catch (err) {
         res.status(404).send(`File ${req.params.filename} was not found.`);
         return;
     }
 
     try {
-        fs.unlinkSync(filepath);  /// @todo sync IO call
+        await fs.unlink(filepath);
     } catch (err) {
         res.status(403).send(`Error deleting file ${req.params.filename}: ${err}`);
         return;
@@ -264,7 +274,7 @@ io.on('connection', (socket) => {
                     break;
                 }
                 await rl.stop();
-                res = { status: util.system_reboot() };
+                res = { status: await system_reboot() };
                 break;
 
             case 'poweroff':
@@ -273,7 +283,7 @@ io.on('connection', (socket) => {
                     break;
                 }
                 await rl.stop();
-                res = { status: util.system_poweroff() };
+                res = { status: await system_poweroff() };
                 break;
 
             default:
@@ -297,7 +307,8 @@ io.on('connection', (socket) => {
         if (req.cmd === 'status') {
             const res = await rl.status();
             try {
-                res.status.sdcard_available = !util.is_same_filesystem(rl.path_data, __dirname);
+                const data_on_rootfs = await is_same_filesystem(rl.path_data, __dirname);
+                res.status.sdcard_available = !data_on_rootfs;
             } catch (err) {
                 res.err.push(`Error checking for mounted SD card: ${err}`);
             }
@@ -315,10 +326,10 @@ io.on('connection', (socket) => {
     });
 
     // handle timesync request
-    socket.on('timesync', function (data) {
-        debug(`timeync: ${JSON.stringify(data)}`);
+    socket.on('timesync', (data) => {
+        debug(`timesync: ${JSON.stringify(data)}`);
         socket.emit('timesync', {
-            id: data && 'id' in data ? data.id : null,
+            id: data?.id,
             result: Date.now()
         });
     });

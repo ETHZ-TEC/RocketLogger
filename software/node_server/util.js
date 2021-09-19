@@ -30,8 +30,9 @@
 
 "use strict";
 
-const fs = require('fs');
-const { spawnSync } = require('child_process');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const stat = util.promisify(require('fs').stat);
 
 module.exports = {
     /// helper function to display byte values
@@ -59,29 +60,25 @@ module.exports = {
     },
 
     /// check if two files or paths are located on the same filesystem
-    is_same_filesystem(first, second) {
-        const stat_first = fs.statSync(first);  /// @todo sync IO call
-        const stat_second = fs.statSync(second);  /// @todo sync IO call
-        return stat_first.dev === stat_second.dev;
+    async is_same_filesystem(first, second) {
+        const files_stat = await Promise.all([
+            stat(first),
+            stat(second),
+        ]);
+        return files_stat[0].dev === files_stat[1].dev;
     },
 
     /// helper function to reboot the system
-    system_reboot() {
-        const args = ['shutdown', '--reboot', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            return cmd.error;
-        }
-        return cmd.status;
+    async system_reboot() {
+        const cmd = 'sudo shutdown --reboot now';
+        const { stdout } = await exec(cmd, { timeout: 500 });
+        return stdout;
     },
 
     /// helper function to shutdown the system
-    system_poweroff() {
-        const args = ['shutdown', '--poweroff', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });  /// @todo sync IO call
-        if (cmd.error) {
-            return cmd.error;
-        }
-        return cmd.status;
+    async system_poweroff() {
+        const cmd = 'sudo shutdown --poweroff now';
+        const { stdout } = await exec(cmd, { timeout: 500 });
+        return stdout;
     },
 };
