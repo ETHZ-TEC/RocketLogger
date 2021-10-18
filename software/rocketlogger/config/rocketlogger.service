@@ -5,7 +5,7 @@ Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
 
 [Service]
 Type=simple
-ExecStartPre=/bin/bash -c 'while ! lsmod | grep uio_pruss > /dev/null; do echo "await uio_pruss module loaded..."; sleep 2; done'
+ExecStartPre=/bin/bash -c 'while ! lsmod | grep uio_pruss > /dev/null; do echo "await uio_pruss module loaded..."; sleep 2; done; sleep 10'
 ExecStart=/usr/bin/rocketloggerd
 PIDFile=/run/rocketloggerd.pid
 
