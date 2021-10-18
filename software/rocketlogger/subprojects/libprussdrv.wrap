@@ -4,7 +4,7 @@ revision = 1e9ff57815b84af028451d23e37482ced711c098
 
 patch_url = /dev/null
 patch_filename = libprussdrv.patch.tar.bz2
-patch_hash = 675b0fc153f52c63be290da014c8b4a9fcc53f01646c9dddb3937c9b1993a8cf
+patch_hash = ce725da0aeb5ee1a98b917359f4889aab225a701d0e3e6cc48ee8e393a4c0ae5
 
 [provide]
 libprussdrv = libprussdrv_dep

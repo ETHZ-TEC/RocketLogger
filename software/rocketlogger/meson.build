@@ -1,7 +1,7 @@
 project('rocketlogger', 'c',
     version : '2.1.0-dev',
     default_options : ['buildtype=debugoptimized',
-        'c_std=c11', 'cpp_std=c++11', 'warning_level=3',
+        'c_std=c11', 'cpp_std=c++11', 'warning_level=3', 'werror=true',
         'prefix=/usr', 'install_umask=0022'],
     license : 'BSD-3-Clause')
 
