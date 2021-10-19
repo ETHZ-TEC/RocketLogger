@@ -4,5 +4,6 @@ include convert_calibration.py
 include example.py
 include requirements.txt
 include test_coverage.sh
-include data/*.rld
-include data/*.dat
+recursive-include data *.rld
+recursive-include data *.dat
+recursive-include tests *.py
