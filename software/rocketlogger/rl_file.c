@@ -354,7 +354,7 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
                            rl_timestamp_t const *const timestamp_monotonic,
                            rl_config_t const *const config) {
     // aggregation buffer and configuration
-    int32_t aggregate_analog[RL_CHANNEL_COUNT] = {0};
+    int64_t aggregate_analog[RL_CHANNEL_COUNT] = {0};
     uint32_t aggregate_digital = ~(0);
     ;
     size_t aggregate_count = RL_SAMPLE_RATE_MIN / config->sample_rate;
@@ -419,7 +419,7 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
                 // on last sample of the window: average analog data and store
                 if ((i + 1) % aggregate_count == 0) {
                     for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-                        aggregate_analog[j] =
+                        ((int32_t*)aggregate_analog)[j] =
                             aggregate_analog[j] / aggregate_count;
                     }
 
