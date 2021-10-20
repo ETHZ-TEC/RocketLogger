@@ -425,7 +425,7 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
 
                     // store aggregated data
                     analog_data = (int32_t const *)aggregate_analog;
-                    digital_data = (uint32_t const *)aggregate_digital;
+                    digital_data = (uint32_t const *)&aggregate_digital;
                     aggregate_store = true;
                 }
                 break;
