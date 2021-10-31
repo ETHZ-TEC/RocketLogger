@@ -396,7 +396,7 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
 
             // reset aggregate buffer on window start
             if (i % aggregate_count == 0) {
-                memset(aggregate_analog, 0, sizeof(aggregate_analog));
+                memset(aggregate_analog_sum, 0, sizeof(aggregate_analog_sum));
                 aggregate_digital = ~(0);
             }
 
