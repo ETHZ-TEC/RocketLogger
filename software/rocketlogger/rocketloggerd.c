@@ -122,9 +122,11 @@ int adc_calibrate(uint64_t duration) {
     // perform calibration run
     int res = rl_run(&rl_config_calibration);
 
-    // reset sampling status to default
+    // reset sampling status counters
     rl_status_t rl_status;
-    rl_status_reset(&rl_status);
+    rl_status_read(&rl_status);
+    rl_status.sample_count = 0,
+    rl_status.buffer_count = 0,
     rl_status_write(&rl_status);
 
     return res;
