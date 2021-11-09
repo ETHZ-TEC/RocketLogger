@@ -1046,6 +1046,9 @@ STOP:
     pwm_stop
     pwm_deinit
 
+    ; stop and deinitialize IEP capture timer
+    iep_timer_deinit
+
     ; clear status LED
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
