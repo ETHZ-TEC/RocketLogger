@@ -101,7 +101,7 @@ I1L_REG                         .set    r5
 I1H_REG                         .set    r6
 I2L_REG                         .set    r7
 I2H_REG                         .set    r8
-DT_REG                          .set    r9      ; PRU cycle counter
+TIME_REG                        .set    r9      ; timer capture on ADC ready
 
 ; PRU register definitions: double sampled channel data from ADC
 I1L_2_REG                       .set    r10
@@ -437,11 +437,12 @@ iep_timer_reset .macro
 ; (check for update and read new capture value, sets zero if not captured)
 iep_timer_capture_read .macro
     ; clear capture value
-    ZERO    &DT_REG, 4
+    ZERO    &TIME_REG, 4
 
     ; check if new CAPF6 (pr1_edc_latch0, P9_20) value was captured and read if available
     LBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_STS_OFFSET, 4
     QBBC    RETURN?, MTMP_REG, IEP_TMR_CMP_STS_CAPF6_VALID_BIT
+    LBCO    &TIME_REG, C_PRU_IEP, IEP_TMR_CAPF6_OFFSET, 4
 RETURN?:
     .endm
 
@@ -870,6 +871,9 @@ INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
+    ; initialize IEP capture timer
+    iep_timer_init
+
     ; initialize PWM modules
     pwm_init
 
@@ -947,9 +951,6 @@ READ:
     ; wait for data ready
     WBC     ADC_IN_REG, DR1_BIT
 
-    ; immediately timestamp data
-    timestamp_restart DT_REG
-
     ; signal end wait, using status LED as busy wait indicator
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
@@ -1023,6 +1024,9 @@ DATAPROCESSING:
     ADD     I1L_REG, I1L_REG, I1L_2_REG
     ADD     I2H_REG, I2H_REG, I2H_2_REG
     ADD     I2L_REG, I2L_REG, I2L_2_REG
+
+    ; read captured ADC ready timestamp
+    iep_timer_capture_read
 
     ; single block transfer to DDR of all data channels
     ; data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
