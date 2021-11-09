@@ -370,66 +370,66 @@ timestamp_restart .macro reg
 
 
 ; ---------------------------- IEP Timer Macros ----------------------------- ;
-; IEP TIMER INIT
+; IEP TIMER INITIALIZATION
 ; (initialize the IEP timer in free runing mode with capture compare input)
 iep_timer_init .macro
     ; set global configuration with enable bit cleared
-    LDI     &MTMP_REG, IEP_TMR_GLB_CFG_CONFIG
-    CLR     &MTMP_REG, IEP_TMR_GLB_CFG_CNT_ENABLE_BIT
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_GLB_CFG_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_GLB_CFG_CONFIG
+    CLR     MTMP_REG, MTMP_REG, IEP_TMR_GLB_CFG_CNT_ENABLE_BIT
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_GLB_CFG_OFFSET, 4
 
     ; reset counter register by writing all bits set
     ZERO    &MTMP_REG, 4
-    NOT     &MTMP_REG, MTMP_REG
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CNT_OFFSET, 4
+    NOT     MTMP_REG, MTMP_REG
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CNT_OFFSET, 4
 
     ; clear counter overflow flag
-    LDI     &MTMP_REG, IEP_TMR_GLB_STS_CNT_OVF_MASK
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_GLB_STS_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_GLB_STS_CNT_OVF_MASK
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_GLB_STS_OFFSET, 4
 
     ; set compensation configuration
-    LDI     &MTMP_REG, IEP_TMR_COMPEN_CONFIG
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_COMPEN_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_COMPEN_CONFIG
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_COMPEN_OFFSET, 4
 
     ; set capture configuration
-    LDI     &MTMP_REG, IEP_TMR_CAP_CFG_CONFIG
-    SET     &MTMP_REG, TMP_REG, IEP_TMR_CMP_STS_CAPF6_VALID_BIT
-
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_CFG_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_CAP_CFG_CONFIG
+    SET     MTMP_REG, MTMP_REG, IEP_TMR_CMP_CFG_CAPF6_EN_BIT
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_CFG_OFFSET, 4
 
     ; clear capture state by register read
-    LBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_STS_OFFSET, 4
+    LBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_STS_OFFSET, 4
 
     ; set global configuration with enable
-    LDI     &MTMP_REG, IEP_TMR_GLB_CFG_CONFIG
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_GLB_CFG_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_GLB_CFG_CONFIG
+    SET     MTMP_REG, MTMP_REG, IEP_TMR_GLB_CFG_CNT_ENABLE_BIT
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_GLB_CFG_OFFSET, 4
     .endm
 
 
-; IEP TIMER RESET
-; (stop the IEP timer and reset to default values)
-iep_timer_reset .macro
+; IEP TIMER DE-INITIALIZATION
+; (stop the IEP timer and reset registers to default values)
+iep_timer_deinit .macro
     ; reset global timer config to zero to stop initial zero state
-    LDI     &MTMP_REG, IEP_TMR_GLB_CFG_RESET
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_GLB_CFG_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_GLB_CFG_RESET
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_GLB_CFG_OFFSET, 4
 
     ; reset counter register by writing all bits set
     ZERO    &MTMP_REG, 4
-    NOT     &MTMP_REG, MTMP_REG
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CNT_OFFSET, 4
+    NOT     MTMP_REG, MTMP_REG
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CNT_OFFSET, 4
 
     ; reset compensation and capture config to initial zero state
-    LDI     &MTMP_REG, IEP_TMR_COMPEN_RESET
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_COMPEN_OFFSET, 4
-    LDI     &MTMP_REG, IEP_TMR_CAP_CFG_RESET
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_CFG_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_COMPEN_RESET
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_COMPEN_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_CAP_CFG_RESET
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_CFG_OFFSET, 4
 
     ; clear overflow flag
-    LDI     &MTMP_REG, IEP_TMR_GLB_STS_CNT_OVF_MASK
-    SBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_GLB_STS_OFFSET, 4
+    LDI     MTMP_REG, IEP_TMR_GLB_STS_CNT_OVF_MASK
+    SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_GLB_STS_OFFSET, 4
 
     ; clear capture state by register read
-    LBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_STS_OFFSET, 4
+    LBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_STS_OFFSET, 4
     .endm
 
 
@@ -440,9 +440,9 @@ iep_timer_capture_read .macro
     ZERO    &TIME_REG, 4
 
     ; check if new CAPF6 (pr1_edc_latch0, P9_20) value was captured and read if available
-    LBCO    &MTMP_REG, C_PRU_IEP, IEP_TMR_CAP_STS_OFFSET, 4
+    LBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_STS_OFFSET, 4
     QBBC    RETURN?, MTMP_REG, IEP_TMR_CMP_STS_CAPF6_VALID_BIT
-    LBCO    &TIME_REG, C_PRU_IEP, IEP_TMR_CAPF6_OFFSET, 4
+    LBCO    &TIME_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAPF6_OFFSET, 4
 RETURN?:
     .endm
 
