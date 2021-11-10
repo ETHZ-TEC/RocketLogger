@@ -73,6 +73,7 @@
     "P9.31",
     "P8.15",
     "P8.16",
+    "P9.20",
 
     "P9.14", /* PWM pins */
     "P9.16",
@@ -101,6 +102,7 @@
       P9_31_pinmux { status = "disabled"; }; /* SCLK pin, PRU0 controlled */
       P8_15_pinmux { status = "disabled"; }; /* DR1 pin, PRU0 controlled */
       P8_16_pinmux { status = "disabled"; }; /* DR0 pin, PRU0 controlled */
+      P9_20_pinmux { status = "disabled"; }; /* DR0 pin, PRU-ICSS IEP edc_latch0_in */
       P9_11_pinmux { status = "disabled"; }; /* nForce high range 1 pin */
       P9_12_pinmux { status = "disabled"; }; /* nForce high range 2 pin */
       P8_11_pinmux { status = "disabled"; }; /* Status LED pin, MUX_MODE7 for GPIO, MUX_MODE6 for PRU0 controlled */
@@ -143,8 +145,9 @@
           BONE_P9_29 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* MOSI pin, PRU0 controlled */
           BONE_P9_30 (PIN_INPUT_PULLDOWN | MUX_MODE6) /* MISO0 pin, PRU0 controlled */
           BONE_P9_31 (PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* SCLK pin, PRU0 controlled */
-          BONE_P8_15 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR1 pin, PRU0 controlled */
-          BONE_P8_16 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR0 pin, PRU0 controlled */
+          BONE_P8_15 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR0 pin, PRU0 controlled */
+          BONE_P8_16 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR1 pin, PRU0 controlled */
+          BONE_P9_20 (PIN_INPUT_PULLUP | MUX_MODE6) /* DR0 pin, PRU-ICSS IEP edc_latch0_in */
         >;
       };
 
