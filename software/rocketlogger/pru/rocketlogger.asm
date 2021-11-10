@@ -393,7 +393,7 @@ iep_timer_init .macro
 
     ; set capture configuration
     LDI     MTMP_REG, IEP_TMR_CAP_CFG_CONFIG
-    SET     MTMP_REG, MTMP_REG, IEP_TMR_CMP_CFG_CAPF6_EN_BIT
+    SET     MTMP_REG, MTMP_REG, IEP_TMR_CMP_CFG_CAPF7_EN_BIT
     SBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_CFG_OFFSET, 4
 
     ; clear capture state by register read
@@ -439,10 +439,10 @@ iep_timer_capture_read .macro
     ; clear capture value
     ZERO    &TIME_REG, 4
 
-    ; check if new CAPF6 (pr1_edc_latch0, P9_20) value was captured and read if available
+    ; check if new CAPF7 (pr1_edc_latch1, P9_19) value was captured and read if available
     LBCO    &MTMP_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAP_STS_OFFSET, 4
-    QBBC    RETURN?, MTMP_REG, IEP_TMR_CMP_STS_CAPF6_VALID_BIT
-    LBCO    &TIME_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAPF6_OFFSET, 4
+    QBBC    RETURN?, MTMP_REG, IEP_TMR_CMP_STS_CAPF7_VALID_BIT
+    LBCO    &TIME_REG, PRU_ICSS_IEP_BASE_CONST, IEP_TMR_CAPF7_OFFSET, 4
 RETURN?:
     .endm
 
