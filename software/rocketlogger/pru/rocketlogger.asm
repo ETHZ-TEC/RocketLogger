@@ -207,6 +207,24 @@ PWM_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0
 PWM_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
 
 
+; ------------------------ PRU-ICSS eCAP Definitions ------------------------- ;
+; PRU-ICSS eCAP module and configuration register offsets
+PRU_ICSS_ECAP_BASE_CONST    .set    C_PRU_ECAP
+ECAP_TSCTR_OFFSET           .set    0x0000  ; ECAP_TSCTR register address offset
+ECAP_CTRPHS_OFFSET          .set    0x0004  ; ECAP_CTRPHS register address offset
+ECAP_CAP1_OFFSET            .set    0x0008  ; ECAP_CAP1 register address offset
+ECAP_CAP2_OFFSET            .set    0x000C  ; ECAP_CAP2 register address offset
+ECAP_CAP3_OFFSET            .set    0x0010  ; ECAP_CAP3 register address offset
+ECAP_CAP4_OFFSET            .set    0x0014  ; ECAP_CAP4 register address offset
+ECAP_ECCTL1_OFFSET          .set    0x0028  ; ECAP_ECCTL1 register address offset
+ECAP_ECCTL2_OFFSET          .set    0x002A  ; ECAP_ECCTL2 register address offset
+ECAP_ECEINT_OFFSET          .set    0x002C  ; ECAP_ECEINT register address offset
+ECAP_ECFLG_OFFSET           .set    0x002E  ; ECAP_ECFLG register address offset
+ECAP_ECCLR_OFFSET           .set    0x0030  ; ECAP_ECCLR register address offset
+ECAP_ECFRC_OFFSET           .set    0x0032  ; ECAP_ECFRC register address offset
+ECAP_REVID_OFFSET           .set    0x005C  ; ECAP_REVID register address offset
+
+
 ; ----------------------------- SPI Definitions ----------------------------- ;
 ; SPI delay cycle definitions
 SPI_SELECT_GUARD_CYCLES     .set    4       ; min. 20ns after CS before SCLK rise
