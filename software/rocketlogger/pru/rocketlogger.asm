@@ -794,7 +794,7 @@ READ:
     SET     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
     ; wait for data ready
-    WBC     ADC_IN_REG, DR1_BIT
+    WBC     ADC_IN_REG, DR2_BIT
 
     ; immediately timestamp data
     timestamp_restart DT_REG
