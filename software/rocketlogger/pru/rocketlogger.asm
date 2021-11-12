@@ -100,7 +100,7 @@ I1L_REG                     .set    r5
 I1H_REG                     .set    r6
 I2L_REG                     .set    r7
 I2H_REG                     .set    r8
-TIME_REG                    .set    r9      ; timer capture on ADC ready
+DT_REG                      .set    r9      ; delta capture on ADC ready
 
 ; PRU register definitions: double sampled channel data from ADC
 I1L_2_REG                   .set    r10
@@ -226,7 +226,7 @@ ECAP_REVID_OFFSET           .set    0x005C  ; ECAP_REVID register address offset
 
 ; PRU-ICSS eCAP register value definitions and constants (selection)
 ECAP_ECCTL1_RESET           .set    0x0000  ; ECAP_ECCTL1 register reset value
-ECAP_ECCTL1_CONFIG          .set    0x0101  ; ECAP_ECCTL1 register configuration value
+ECAP_ECCTL1_CONFIG          .set    0x0103  ; ECAP_ECCTL1 register configuration value
 ECAP_ECCTL1_CAP1POL_BIT     .set    0       ; ECAP_ECCTL1 CAP1POL bit offset
 ECAP_ECCTL1_CTRRST1_BIT     .set    1       ; ECAP_ECCTL1 CTRRST1 bit offset
 ECAP_ECCTL1_CAP2POL_BIT     .set    2       ; ECAP_ECCTL1 CAP2POL bit offset
@@ -400,12 +400,14 @@ ecap_deinit .macro
 ; (check for update and read new capture value, sets zero if not captured)
 ecap_capture_read .macro
     ; clear result value
-    ZERO    &TIME_REG, 4
+    ZERO    &DT_REG, 4
 
-    ; check if new CAP1 (pr1_ecap0_ecap_capin_apwm_o, P8_15) value was captured and read if available
+    ; check if new CAP1 (pr1_ecap0_ecap_capin_apwm_o, P8_15) was captured
     LBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECFLG_OFFSET, 2
     QBBC    RETURN?, MTMP_REG, ECAP_INT_CEVT1_BIT
-    LBCO    &TIME_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP1_OFFSET, 4
+    ; read capture value and increment by 1 for the extra zero reset cycle
+    LBCO    &DT_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP1_OFFSET, 4
+    ADD     DT_REG, DT_REG, 1
 RETURN?:
     .endm
 
