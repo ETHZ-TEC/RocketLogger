@@ -100,7 +100,7 @@ I1L_REG                     .set    r5
 I1H_REG                     .set    r6
 I2L_REG                     .set    r7
 I2H_REG                     .set    r8
-DT_REG                      .set    r9      ; PRU cycle counter
+TIME_REG                    .set    r9      ; timer capture on ADC ready
 
 ; PRU register definitions: double sampled channel data from ADC
 I1L_2_REG                   .set    r10
@@ -834,6 +834,9 @@ INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
+    ; initialize eCAP module
+    ecap_init
+
     ; initialize PWM modules
     pwm_init
 
@@ -911,9 +914,6 @@ READ:
     ; wait for data ready
     WBC     ADC_IN_REG, DR2_BIT
 
-    ; immediately timestamp data
-    timestamp_restart DT_REG
-
     ; signal end wait, using status LED as busy wait indicator
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
@@ -988,6 +988,9 @@ DATAPROCESSING:
     ADD     I2H_REG, I2H_REG, I2H_2_REG
     ADD     I2L_REG, I2L_REG, I2L_2_REG
 
+    ; read captured ADC ready timestamp
+    ecap_capture_read
+
     ; single block transfer to DDR of all data channels
     ; data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
     SBBO    &DI_REG, MEM_POINTER, 0, BUFFER_BLOCK_SIZE
@@ -1005,6 +1008,9 @@ STOP:
     ; stop and deinitialize PWM modules
     pwm_stop
     pwm_deinit
+
+    ; stop and deinitialize eCAP module
+    ecap_deinit
 
     ; clear status LED
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
