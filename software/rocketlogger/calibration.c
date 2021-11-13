@@ -108,6 +108,10 @@ int calibration_load(void) {
 
     memcpy(&rl_calibration, &(calibration_file.data), sizeof(rl_calibration_t));
 
+    // PRU DT channel has implementation specific, fixed conversion
+    rl_calibration.offsets[RL_CONFIG_CHANNEL_DT] = 0;
+    rl_calibration.scales[RL_CONFIG_CHANNEL_DT] = 5;
+
     // store calibration info information to status
     rl_status.calibration_time = calibration_file.calibration_time;
     strncpy(rl_status.calibration_file, calibration_file_name,
