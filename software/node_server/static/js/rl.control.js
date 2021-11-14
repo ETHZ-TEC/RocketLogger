@@ -39,6 +39,8 @@ if (typeof (rl) === 'undefined') {
 const RL_CHANNEL_NAMES = ['V1', 'V2', 'V3', 'V4', 'I1L', 'I1H', 'I2L', 'I2H'];
 /// RocketLogger force range channel names
 const RL_CHANNEL_FORCE_NAMES = ['I1H', 'I2H'];
+/// RocketLogger data file formats
+const RL_FILE_FORMATS = ['rld', 'csv'];
 
 /// initialize RocketLogger control functionality
 function rocketlogger_init_control() {
@@ -199,6 +201,8 @@ function config_change() {
         if ($('#file_split').prop('checked')) {
             config.file.size = $('#file_size').val() * $('#file_size_scale').val();
         }
+        adjust_filename_extension(config.file);
+        $('#file_filename').val(config.file.filename);
     }
 
     // update stored config
@@ -225,6 +229,18 @@ function config_change() {
     } else {
         $('#status_remaining').text('indefinite');
     }
+}
+
+function adjust_filename_extension(file_config) {
+    if (has_rl_extension(file_config.filename)) {
+        const pos = file_config.filename.lastIndexOf('.') + 1;
+        file_config.filename = file_config.filename.substr(0, pos) + file_config.format;
+    }
+}
+
+function has_rl_extension(filename) {
+    return RL_FILE_FORMATS.some(
+        (ext) => filename.toLowerCase().endsWith('.' + ext));
 }
 
 /// update configuration interface to RocketLogger default configuration
