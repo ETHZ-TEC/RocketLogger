@@ -318,17 +318,26 @@ int main(void) {
     rl_log(RL_LOG_INFO, "Performing ADC reference calibration.");
     adc_calibrate(RL_CALIBRATION_DURATION_SEC);
 
-    // daemon main loop
-    rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
+    // check error status
+    rl_status_t status;
+    rl_status_read(&status);
+    if (status.error) {
+        rl_log(RL_LOG_ERROR, "ADC reference calibration failed, terminating.");
+    } else {
+        // daemon main loop
+        rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
 
-    daemon_shutdown = false;
-    while (!daemon_shutdown) {
-        // wait for interrupt with infinite timeout
-        int value = gpio_wait_interrupt(gpio_button, NULL);
-        button_interrupt_handler(value);
+        daemon_shutdown = false;
+        while (!daemon_shutdown) {
+            // wait for interrupt with infinite timeout
+            int value = gpio_wait_interrupt(gpio_button, NULL);
+            button_interrupt_handler(value);
+        }
+
+        rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
     }
 
-    rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
+    rl_status_read(&status);
 
     // remove shared memory for state
     rl_status_shm_deinit();
@@ -351,5 +360,8 @@ int main(void) {
         reboot(RB_POWER_OFF);
     }
 
+    if (status.error) {
+        exit(EXIT_FAILURE);
+    }
     exit(EXIT_SUCCESS);
 }
