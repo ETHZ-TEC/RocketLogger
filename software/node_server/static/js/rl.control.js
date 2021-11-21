@@ -233,9 +233,10 @@ function config_change() {
 
 function adjust_filename_extension(file_config) {
     if (has_rl_extension(file_config.filename)) {
-        const pos = file_config.filename.lastIndexOf('.') + 1;
-        file_config.filename = file_config.filename.substr(0, pos) + file_config.format;
+        const pos = file_config.filename.lastIndexOf('.');
+        file_config.filename = file_config.filename.substr(0, pos);
     }
+    file_config.filename = file_config.filename + '.' + file_config.format;
 }
 
 function has_rl_extension(filename) {
