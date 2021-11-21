@@ -355,8 +355,8 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
                            rl_config_t const *const config) {
     // aggregation buffer and configuration
     int32_t aggregate_analog[RL_CHANNEL_COUNT] = {0};
-    uint32_t aggregate_digital = ~(0);
-    ;
+    int64_t aggregate_analog_sum[RL_CHANNEL_COUNT] = {0};
+    uint32_t aggregate_digital = ~((uint32_t)0);
     size_t aggregate_count = RL_SAMPLE_RATE_MIN / config->sample_rate;
 
     // skip if not storing to file, or invalid file structure
@@ -396,7 +396,7 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
 
             // reset aggregate buffer on window start
             if (i % aggregate_count == 0) {
-                memset(aggregate_analog, 0, sizeof(aggregate_analog));
+                memset(aggregate_analog_sum, 0, sizeof(aggregate_analog_sum));
                 aggregate_digital = ~(0);
             }
 
@@ -410,22 +410,23 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
                 break;
 
             case RL_AGGREGATION_MODE_AVERAGE:
-                // accumulate data of the aggregate window, store at the end
+                // accumulate data of the aggregate window, store when window complete
                 for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
-                    aggregate_analog[j] += *(analog_data + j);
+                    aggregate_analog_sum[j] += *(analog_data + j);
                 }
                 aggregate_digital = aggregate_digital & *digital_data;
 
                 // on last sample of the window: average analog data and store
                 if ((i + 1) % aggregate_count == 0) {
+                    // calculate aggregated data block
                     for (int j = 0; j < RL_CHANNEL_COUNT; j++) {
                         aggregate_analog[j] =
-                            aggregate_analog[j] / aggregate_count;
+                            aggregate_analog_sum[j] / aggregate_count;
                     }
 
                     // store aggregated data
-                    analog_data = (int32_t const *)aggregate_analog;
-                    digital_data = (uint32_t const *)&aggregate_digital;
+                    analog_data = aggregate_analog;
+                    digital_data = &aggregate_digital;
                     aggregate_store = true;
                 }
                 break;
