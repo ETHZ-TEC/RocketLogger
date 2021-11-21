@@ -125,8 +125,8 @@ int adc_calibrate(uint64_t duration) {
     // reset sampling status counters
     rl_status_t rl_status;
     rl_status_read(&rl_status);
-    rl_status.sample_count = 0,
-    rl_status.buffer_count = 0,
+    rl_status.sample_count = 0;
+    rl_status.buffer_count = 0;
     rl_status_write(&rl_status);
 
     return res;
@@ -354,7 +354,7 @@ int main(void) {
         rl_log(RL_LOG_INFO, "Rebooting system.");
         sync();
         reboot(RB_AUTOBOOT);
-    } else if(system_action == SYSTEM_ACTION_POWEROFF) {
+    } else if (system_action == SYSTEM_ACTION_POWEROFF) {
         rl_log(RL_LOG_INFO, "Powering off system.");
         sync();
         reboot(RB_POWER_OFF);

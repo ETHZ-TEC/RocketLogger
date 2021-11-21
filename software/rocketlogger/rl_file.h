@@ -37,7 +37,6 @@
 
 #include "pru.h"
 #include "rl.h"
-#include "rl_file.h"
 #include "util.h"
 
 /// File header magic number (ascii %RLD)
