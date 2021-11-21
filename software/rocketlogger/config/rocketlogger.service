@@ -2,6 +2,8 @@
 [Unit]
 Description=RocketLogger daemon
 Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
+StartLimitIntervalSec=30s
+StartLimitBurst=5
 
 [Service]
 Type=simple
