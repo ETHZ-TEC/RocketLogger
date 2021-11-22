@@ -13,4 +13,4 @@ Submodules
 
     rocketlogger.data
     rocketlogger.calibration
-    rocketlogger.tests
+    tests
