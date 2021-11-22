@@ -46,7 +46,7 @@ from rocketlogger.calibration import (
     _CALIBRATION_PRU_CYCLES_OFFSET,
     _CALIBRATION_PRU_CYCLES_SCALE,
 )
-from rocketlogger.tests.test_data import _file_copy_byte_flipped
+from tests.test_data import _file_copy_byte_flipped
 
 
 _TEST_FILE_DIR = "data"

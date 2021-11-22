@@ -4,6 +4,7 @@ include create_calibration.py
 include process_data.py
 include requirements.txt
 include test_coverage.sh
+include test_performance.py
 recursive-include data *.rld
 recursive-include data *.dat
 recursive-include tests *.py

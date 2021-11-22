@@ -47,7 +47,7 @@ Testing
 -------
 
 The source installation comes with automated test cases and the relevant sample data.
-For more details see the test documentation of :doc:`rocketlogger.tests`.
+For more details see the test documentation of :doc:`tests`.
 
 
 Contribute
