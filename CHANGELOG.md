@@ -5,8 +5,8 @@
 
 RocketLogger software:
 * [FIXED] RocketLogger reporting "uncalibrated" after restart (#34)
-* [FIXED] Sample aggregation not working, resulting in segmentation fault (#35) by @rdaforno
-* [FIXED] Sample aggregation "average" produces invalid results (#42) by @rdaforno
+* [FIXED] Sample aggregation not working, resulting in segmentation fault (#35) by [@rdaforno](https://github.com/rdaforno)
+* [FIXED] Sample aggregation "average" produces invalid results (#42) by [@rdaforno](https://github.com/rdaforno)
 * [FIXED] Web interface: filename not adjusted when changing file format (#49)
 * [FIXED] RocketLogger daemon not terminating on failure (#50)
 
@@ -154,7 +154,7 @@ This hotfix release resolves a data wrap-around issue for sampling rates of 32 k
 * [FIXED] Software: corrupt low current valid channel when digital channels are disabled (#108)
 * [FIXED] Software: invalid lux calculation for mid/high range of TSL4531 (#111)
 * [FIXED] Software/web interface: add more detailed version information (#112)
-* [FIXED] Software: invalid data block timestamps in sensor file (#113). Credits: Mojtaba Masoudinejad
+* [FIXED] Software: invalid data block timestamps in sensor file (#113) by [@masoudinejad](https://github.com/masoudinejad)
 
 _Notes:_
 
@@ -173,7 +173,7 @@ This hotfix release fixes a comment length calculation issue that generated inva
 
 ## Version 1.1.1 (2018-01-25)
 
-* [FIXED] Python support: overflow in channel merge functionality (#106). Credits: Alex Raimondi
+* [FIXED] Python support: overflow in channel merge functionality (#106) by [@AlexRaimondi](https://github.com/AlexRaimondi)
 * [FIXED] Python support: specify tested Python dependencies and automated testing for different environments
 
 _Notes:_
