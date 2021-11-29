@@ -66,10 +66,11 @@ keep a log file along with the calibration):
 
 
 An example script that can be used for performing the calibration
-calculations is available in ``create_calibration.py`` distributed with the package.
+calculations is available in ``create_calibration.py`` distributed with the
+source package or available in the package's repository.
 
-Further, the ``convert_calibration.py`` script is distributed with the package to
-convert legacy calibration files used for RocketLogger versions `1.x` to the latest format.
+Further, the ``convert_calibration.py`` script is available to convert legacy
+calibration files used for RocketLogger versions `1.x` to the latest format.
 
 
 For more details on the individual functions and its optional parameters,

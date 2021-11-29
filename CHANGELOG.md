@@ -1,6 +1,28 @@
 # Changelog
 
 
+## Version 2.0.1 (2021-11-29)
+
+RocketLogger software:
+* [FIXED] RocketLogger reporting "uncalibrated" after restart (#34)
+* [FIXED] Sample aggregation not working, resulting in segmentation fault (#35) by [@rdaforno](https://github.com/rdaforno)
+* [FIXED] Sample aggregation "average" produces invalid results (#42) by [@rdaforno](https://github.com/rdaforno)
+* [FIXED] Web interface: filename not adjusted when changing file format (#49)
+* [FIXED] RocketLogger daemon not terminating on failure (#50)
+
+Python support library:
+* [FIXED] Python support calibration conversion script availability documentation (#33)
+* [FIXED] Exclude tests from Python package installation (#40)
+* [FIXED] Remove debug console output in Python support library (#46)
+* [FIXED] Specify exact versions of Python support package dependencies (#48)
+
+
+_Notes:_
+
+This bugfix release resolves issues related to the sample aggregation for low data rates, the Python support package and the web interface. See the respective bug reports linked in the list above for more details.
+Measurements with samples rates <1 kSps, and average aggregation mode (with CLI option `--aggregate=average`)performed with RocketLogger version 2.0.0 and earlier may be corrupted. Users relying on the web interface only and not setting this specific mode as default using the CLI are _not_ affected.
+
+
 ## Version 2.0.0 (2021-08-19)
 
 The changes since version [1.1.6](#version-116-2019-07-31) include all changes of the the beta release [2.0.0-beta1](#version-200-beta1-2021-06-12) and the fixes and improvements listed below.
@@ -132,7 +154,7 @@ This hotfix release resolves a data wrap-around issue for sampling rates of 32 k
 * [FIXED] Software: corrupt low current valid channel when digital channels are disabled (#108)
 * [FIXED] Software: invalid lux calculation for mid/high range of TSL4531 (#111)
 * [FIXED] Software/web interface: add more detailed version information (#112)
-* [FIXED] Software: invalid data block timestamps in sensor file (#113). Credits: Mojtaba Masoudinejad
+* [FIXED] Software: invalid data block timestamps in sensor file (#113) by [@masoudinejad](https://github.com/masoudinejad)
 
 _Notes:_
 
@@ -151,7 +173,7 @@ This hotfix release fixes a comment length calculation issue that generated inva
 
 ## Version 1.1.1 (2018-01-25)
 
-* [FIXED] Python support: overflow in channel merge functionality (#106). Credits: Alex Raimondi
+* [FIXED] Python support: overflow in channel merge functionality (#106) by [@AlexRaimondi](https://github.com/AlexRaimondi)
 * [FIXED] Python support: specify tested Python dependencies and automated testing for different environments
 
 _Notes:_
