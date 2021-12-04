@@ -314,14 +314,14 @@ class RocketLoggerData:
         else:
             raise FileNotFoundError(f"File '{filename}' does not exist.")
 
-    def _read_file_header(self, file_handle):
+    def _read_file_header_lead_in(self, file_handle):
         """
-        Read a RocketLogger data file's header, including comment and channels.
+        Read a RocketLogger data file's header fixed size lead-in
 
         :param file_handle: The file handle to read from, with pointer
             positioned at file start
 
-        :returns: Dictionary containing the read file header data
+        :returns: Dictionary containing the read file header lead-in data
         """
         header = {}
 
@@ -386,6 +386,19 @@ class RocketLoggerData:
                 )
             )
 
+        return header
+
+    def _read_file_header(self, file_handle):
+        """
+        Read a RocketLogger data file's header, including comment and channels.
+
+        :param file_handle: The file handle to read from, with pointer
+            positioned after lead-in/at start of comment
+
+        :returns: Dictionary containing the read file header data
+        """
+        header = self._read_file_header_lead_in(file_handle)
+
         # read comment field
         header["comment"] = _read_str(file_handle, header["comment_length"])
 
@@ -420,6 +433,14 @@ class RocketLoggerData:
 
             # add channel to header
             header["channels"].append(channel)
+
+        # consistency check: file stream position matches header size
+        stream_position = file_handle.tell()
+        if stream_position != header["header_length"]:
+            raise RocketLoggerFileError(
+                f"File position {stream_position} does not match "
+                f"header size {header['header_length']}"
+            )
 
         return header
 
@@ -786,17 +807,7 @@ class RocketLoggerData:
                 # read file header
                 header = self._read_file_header(file_handle)
 
-                # consistency check: file stream position matches header size
-                if "header_length" not in header:
-                    raise RocketLoggerFileError("Invalid file header read.")
-
-                stream_position = file_handle.tell()
-                if stream_position != header["header_length"]:
-                    raise RocketLoggerFileError(
-                        f"File position {stream_position} does not match "
-                        f"header size {header['header_length']}"
-                    )
-
+                # validate decimation factor argument
                 if (header["data_block_size"] % decimation_factor) > 0:
                     raise ValueError(
                         "Decimation factor needs to be divider of the buffer size."
