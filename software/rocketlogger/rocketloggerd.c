@@ -122,9 +122,11 @@ int adc_calibrate(uint64_t duration) {
     // perform calibration run
     int res = rl_run(&rl_config_calibration);
 
-    // reset sampling status to default
+    // reset sampling status counters
     rl_status_t rl_status;
-    rl_status_reset(&rl_status);
+    rl_status_read(&rl_status);
+    rl_status.sample_count = 0;
+    rl_status.buffer_count = 0;
     rl_status_write(&rl_status);
 
     return res;
@@ -316,17 +318,26 @@ int main(void) {
     rl_log(RL_LOG_INFO, "Performing ADC reference calibration.");
     adc_calibrate(RL_CALIBRATION_DURATION_SEC);
 
-    // daemon main loop
-    rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
+    // check error status
+    rl_status_t status;
+    rl_status_read(&status);
+    if (status.error) {
+        rl_log(RL_LOG_ERROR, "ADC reference calibration failed, terminating.");
+    } else {
+        // daemon main loop
+        rl_log(RL_LOG_INFO, "RocketLogger daemon running.");
 
-    daemon_shutdown = false;
-    while (!daemon_shutdown) {
-        // wait for interrupt with infinite timeout
-        int value = gpio_wait_interrupt(gpio_button, NULL);
-        button_interrupt_handler(value);
+        daemon_shutdown = false;
+        while (!daemon_shutdown) {
+            // wait for interrupt with infinite timeout
+            int value = gpio_wait_interrupt(gpio_button, NULL);
+            button_interrupt_handler(value);
+        }
+
+        rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
     }
 
-    rl_log(RL_LOG_INFO, "RocketLogger daemon stopped.");
+    rl_status_read(&status);
 
     // remove shared memory for state
     rl_status_shm_deinit();
@@ -343,11 +354,14 @@ int main(void) {
         rl_log(RL_LOG_INFO, "Rebooting system.");
         sync();
         reboot(RB_AUTOBOOT);
-    } else if(system_action == SYSTEM_ACTION_POWEROFF) {
+    } else if (system_action == SYSTEM_ACTION_POWEROFF) {
         rl_log(RL_LOG_INFO, "Powering off system.");
         sync();
         reboot(RB_POWER_OFF);
     }
 
+    if (status.error) {
+        exit(EXIT_FAILURE);
+    }
     exit(EXIT_SUCCESS);
 }

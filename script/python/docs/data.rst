@@ -50,8 +50,9 @@ You can also plot the (merged) file data a single command, e.g. for preview:
     >>> RocketLoggerData("data.rld").merge_channels().plot()
 
 
-A data processing template script is provided in ``process_data.py``
-distributed with the package.
+An example illustrating post processing of measurement data is provided in
+``process_data.py`` that is distributed with the source package or
+available in the package's repository.
 
 For more details on the individual functions and its optional parameters,
 please we refer to the API documentation of the

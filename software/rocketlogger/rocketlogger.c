@@ -215,7 +215,10 @@ void (*argp_program_version_hook)(FILE *, struct argp_state *) = print_version;
  * The full `argp` parser configuration
  */
 static struct argp argp = {
-    .options = options, .parser = parse_opt, .args_doc = args_doc, .doc = doc,
+    .options = options,
+    .parser = parse_opt,
+    .args_doc = args_doc,
+    .doc = doc,
 };
 
 /**

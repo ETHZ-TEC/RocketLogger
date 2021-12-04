@@ -769,7 +769,6 @@ class RocketLoggerData:
         while True:
             # skip excluded files
             if file_number in exclude_part:
-                print(f"Skipping part {file_number}")
                 file_number = file_number + 1
                 continue
 
@@ -921,7 +920,6 @@ class RocketLoggerData:
         )
 
         self._filename = filename
-        print(f"Read {files_loaded} file(s)")
 
     def get_channel_names(self):
         """
@@ -1187,10 +1185,6 @@ class RocketLoggerData:
                 self.remove_channel(candidate["low"])
                 self.remove_channel(candidate["high"])
 
-            print(
-                f"Merged channels '{candidate['low']}' and '{candidate['high']}' "
-                f"to '{candidate['merged']}'."
-            )
             merged_channels = True
 
         if not merged_channels:
