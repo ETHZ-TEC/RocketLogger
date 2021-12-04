@@ -444,6 +444,31 @@ class RocketLoggerData:
 
         return header
 
+    def _validate_matching_header(self, header1, header2):
+        """
+        Validate that file headers match, i.e. correspond to the same measurement.
+
+        :param header1: First file header data to compare
+
+        :param header2: Second file header data to compare
+        """
+        required_matches = [
+            "file_version",
+            "header_length",
+            "data_block_size",
+            "sample_rate",
+            "mac_address",
+            "start_time",
+            "comment_length",
+            "channel_binary_count",
+            "channel_analog_count",
+        ]
+        for header_field in required_matches:
+            if header1[header_field] != header2[header_field]:
+                raise RocketLoggerDataError(
+                    f"File header not matching at field: {header_field}"
+                )
+
     def _read_file_data(
         self, file_handle, file_header, decimation_factor=1, memory_mapped=True
     ):
@@ -804,8 +829,20 @@ class RocketLoggerData:
                 break
 
             with open(file_name, "rb") as file_handle:
-                # read file header
-                header = self._read_file_header(file_handle)
+                if files_loaded == 0:
+                    # read full header for first file
+                    header = self._read_file_header(file_handle)
+                else:
+                    # read header lead-in only for continuation file
+                    header = self._read_file_header_lead_in(file_handle)
+                    file_handle.seek(header["header_length"])
+
+                    # consistency check against first file
+                    self._validate_matching_header(header, self._header)
+
+                    # reuse previously read header fields
+                    header["comment"] = self._header["comment"]
+                    header["channels"] = self._header["channels"]
 
                 # validate decimation factor argument
                 if (header["data_block_size"] % decimation_factor) > 0:
@@ -813,14 +850,13 @@ class RocketLoggerData:
                         "Decimation factor needs to be divider of the buffer size."
                     )
 
-                if header_only is True:
+                if header_only:
                     # set data arrays to None on header only import
                     self._timestamps_realtime = None
                     self._timestamps_monotonic = None
                     self._data = None
                 else:
-                    # calculate file and data block sizes
-                    file_size = file_handle.seek(0, os.SEEK_END)
+                    # calculate data block size
                     block_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * ceil(
                         header["channel_binary_count"]
                         / (_BINARY_CHANNEL_STUFF_BYTES * 8)
@@ -837,11 +873,12 @@ class RocketLoggerData:
                     ] * (block_bin_bytes + block_analog_bytes)
 
                     # file size and header consistency check and recovery
-                    if (
-                        file_size
-                        != header["header_length"]
+                    file_size = file_handle.seek(0, os.SEEK_END)
+                    file_data_bytes = (
+                        header["header_length"]
                         + header["data_block_count"] * block_size_bytes
-                    ):
+                    )
+                    if file_size != file_data_bytes:
                         data_blocks_recovered = floor(
                             (file_size - header["header_length"]) / block_size_bytes
                         )
