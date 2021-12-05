@@ -12,6 +12,10 @@ support to generate calibration data from measurements.
 * Matplotlib: for plotting data overview
 * pandas: for pandas DataFrame export
 
+**Compatibility**
+* Data processing: supports all officially specified RLD file version (versions 2-4)
+* Calibration: compatible with RocketLogger calibration file version 2
+
 
 ## Installation
 
