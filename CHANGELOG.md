@@ -83,6 +83,7 @@ RocketLogger software:
 * [CHANGED] rework low level hardware interfacing for Debian *buster* compatibility (#2)
 * [CHANGED] update and reorganize internal software API and headers for increased consistency
 * [CHANGED] update to latest and official compiler tools (#18)
+* [CHANGED] Binary file format: increment file version to `0x04`
 * [REMOVED] legacy web control interface
 
 Python support library:
