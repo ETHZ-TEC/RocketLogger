@@ -1,6 +1,31 @@
 # Changelog
 
 
+## Version 2.0.2 (2021-12-09)
+
+RocketLogger software:
+* [FIXED] Corrupt RLD files when logging no binary channels (#57)
+* [FIXED] Corrupt channel info in split RLD files (#62)
+
+Python support library:
+* [ADDED] Standalone script to recover RLD files corrupted by #57
+* [FIXED] Missing documentation of file revision changes (#61)
+* [CHANGED] Cross validate file headers and tolerate channel info corruption of split files (relates to #62)
+
+
+_Notes:_
+
+This bugfix release resolves RLD file corruption related issues. Details on how to fully recover affected measurement files are given below.
+A timely update is highly recommended to avoid generating corrupt data files.
+
+
+_Recover Corrupt Data Files:_
+
+Measurement files affected by bugs #57 or #62 can be recovered without data loss:
+* To recover files affected by #57 use the `bug57_recover.py` script provided in the Python source package (or available directly from the repository).
+* The updated Python library can tolerate channel info header corruption of split files due to bug #62 if all files of the same measurement are imported in one batch.
+
+
 ## Version 2.0.1 (2021-11-29)
 
 RocketLogger software:
