@@ -176,11 +176,10 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
         // data file header lead-in
         rl_file_setup_data_lead_in(&(data_file_header.lead_in), config);
 
-        // channel array
+        // allocate channel info array
         int total_channel_count = data_file_header.lead_in.channel_bin_count +
                                   data_file_header.lead_in.channel_count;
-        rl_file_channel_t file_channel[total_channel_count];
-        data_file_header.channel = file_channel;
+        data_file_header.channel = malloc(total_channel_count * sizeof(rl_file_channel_t));
 
         // complete file header
         rl_file_setup_data_header(&data_file_header, config);
@@ -592,16 +591,21 @@ int pru_sample(FILE *data_file, FILE *ambient_file,
     }
 
     // FILE FINISH (flush)
-    // flush ambient data and cleanup file header
-    if (config->ambient_enable) {
-        fflush(ambient_file);
-        free(ambient_file_header.channel);
-    }
-
-    if (config->file_enable && !(rl_status.error)) {
+    if (config->file_enable) {
+        // flush data file and clean up file header
         fflush(data_file);
-        rl_log(RL_LOG_INFO, "stored %llu samples to file",
-               rl_status.sample_count);
+        free(data_file_header.channel);
+
+        // flush ambient file and clean up file header
+        if (config->ambient_enable) {
+            fflush(ambient_file);
+            free(ambient_file_header.channel);
+        }
+
+        if (rl_status.error == false) {
+            rl_log(RL_LOG_INFO, "stored %llu samples to file",
+                rl_status.sample_count);
+        }
     }
 
     // STATE
