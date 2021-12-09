@@ -466,8 +466,10 @@ int rl_file_add_data_block(FILE *data_file, int32_t const *analog_buffer,
                 index++;
             }
 
-            // write digital data to file
-            fwrite(&data, sizeof(data), 1, data_file);
+            // write digital data to file if any channel available
+            if (index > 0) {
+                fwrite(&data, sizeof(data), 1, data_file);
+            }
         } else if (config->file_format == RL_FILE_FORMAT_CSV) {
             if (config->digital_enable) {
                 uint32_t binary_mask = PRU_DIGITAL_INPUT1_MASK;

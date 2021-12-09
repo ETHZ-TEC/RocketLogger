@@ -64,6 +64,7 @@ _SINGLE_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_v3_only.rld")
 _HEADER_UNALIGNED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_header_unaligned.rld")
 _TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_truncated.rld")
 _SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_split.rld")
+_NON_SPLIT_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_non_split.rld")
 _SPLIT_TRUNCATED_TEST_FILE = os.path.join(_TEST_FILE_DIR, "test_split_truncated.rld")
 _TEMP_FILE = os.path.join(_TEST_FILE_DIR, "temp_data.rld")
 
@@ -350,6 +351,12 @@ class TestJoinFile(TestCase):
                 ]
             ),
         )
+
+
+class TestJoinMissmatch(TestCase):
+    def test_exclude_all(self):
+        with self.assertRaisesRegex(RocketLoggerDataError, "header not matching at field: start_time"):
+            RocketLoggerData(_NON_SPLIT_TEST_FILE)
 
 
 class TestJoinExclude(TestCase):

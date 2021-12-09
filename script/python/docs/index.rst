@@ -19,16 +19,15 @@ generation of RocketLogger device calibration file from measurements.
 Features
 --------
 
-Python support for RocketLogger Data (``*.rld``) files by the 
-:mod:`rocketlogger.data` module.
+Python support for RocketLogger Data (``*.rld``) files by the :mod:`rocketlogger.data` module.
+Supports any officially specified RocketLogger data file version (versions 2-4).
 
 - Import
 - Channel merging
 - Data extraction
 - Plotting of file data
 
-Support for RocketLogger Device Calibration by the
-:mod:`rocketlogger.calibration` module.
+Support for RocketLogger Device Calibration by the :mod:`rocketlogger.calibration` module.
 
 - Generate new calibrations from measurements
 - Read/write calibration files
