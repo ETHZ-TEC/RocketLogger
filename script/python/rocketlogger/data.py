@@ -314,14 +314,14 @@ class RocketLoggerData:
         else:
             raise FileNotFoundError(f"File '{filename}' does not exist.")
 
-    def _read_file_header(self, file_handle):
+    def _read_file_header_lead_in(self, file_handle):
         """
-        Read a RocketLogger data file's header, including comment and channels.
+        Read a RocketLogger data file's header fixed size lead-in
 
         :param file_handle: The file handle to read from, with pointer
             positioned at file start
 
-        :returns: Dictionary containing the read file header data
+        :returns: Dictionary containing the read file header lead-in data
         """
         header = {}
 
@@ -386,6 +386,19 @@ class RocketLoggerData:
                 )
             )
 
+        return header
+
+    def _read_file_header(self, file_handle):
+        """
+        Read a RocketLogger data file's header, including comment and channels.
+
+        :param file_handle: The file handle to read from, with pointer
+            positioned after lead-in/at start of comment
+
+        :returns: Dictionary containing the read file header data
+        """
+        header = self._read_file_header_lead_in(file_handle)
+
         # read comment field
         header["comment"] = _read_str(file_handle, header["comment_length"])
 
@@ -422,7 +435,40 @@ class RocketLoggerData:
             # add channel to header
             header["channels"].append(channel)
 
+        # consistency check: file stream position matches header size
+        stream_position = file_handle.tell()
+        if stream_position != header["header_length"]:
+            raise RocketLoggerFileError(
+                f"File position {stream_position} does not match "
+                f"header size {header['header_length']}"
+            )
+
         return header
+
+    def _validate_matching_header(self, header1, header2):
+        """
+        Validate that file headers match, i.e. correspond to the same measurement.
+
+        :param header1: First file header data to compare
+
+        :param header2: Second file header data to compare
+        """
+        required_matches = [
+            "file_version",
+            "header_length",
+            "data_block_size",
+            "sample_rate",
+            "mac_address",
+            "start_time",
+            "comment_length",
+            "channel_binary_count",
+            "channel_analog_count",
+        ]
+        for header_field in required_matches:
+            if header1[header_field] != header2[header_field]:
+                raise RocketLoggerDataError(
+                    f"File header not matching at field: {header_field}"
+                )
 
     def _read_file_data(
         self, file_handle, file_header, decimation_factor=1, memory_mapped=True
@@ -785,33 +831,34 @@ class RocketLoggerData:
                 break
 
             with open(file_name, "rb") as file_handle:
-                # read file header
-                header = self._read_file_header(file_handle)
+                if files_loaded == 0:
+                    # read full header for first file
+                    header = self._read_file_header(file_handle)
+                else:
+                    # read header lead-in only for continuation file
+                    header = self._read_file_header_lead_in(file_handle)
+                    file_handle.seek(header["header_length"])
 
-                # consistency check: file stream position matches header size
-                if "header_length" not in header:
-                    raise RocketLoggerFileError("Invalid file header read.")
+                    # consistency check against first file
+                    self._validate_matching_header(header, self._header)
 
-                stream_position = file_handle.tell()
-                if stream_position != header["header_length"]:
-                    raise RocketLoggerFileError(
-                        f"File position {stream_position} does not match "
-                        f"header size {header['header_length']}"
-                    )
+                    # reuse previously read header fields
+                    header["comment"] = self._header["comment"]
+                    header["channels"] = self._header["channels"]
 
+                # validate decimation factor argument
                 if (header["data_block_size"] % decimation_factor) > 0:
                     raise ValueError(
                         "Decimation factor needs to be divider of the buffer size."
                     )
 
-                if header_only is True:
+                if header_only:
                     # set data arrays to None on header only import
                     self._timestamps_realtime = None
                     self._timestamps_monotonic = None
                     self._data = None
                 else:
-                    # calculate file and data block sizes
-                    file_size = file_handle.seek(0, os.SEEK_END)
+                    # calculate data block size
                     block_bin_bytes = _BINARY_CHANNEL_STUFF_BYTES * ceil(
                         header["channel_binary_count"]
                         / (_BINARY_CHANNEL_STUFF_BYTES * 8)
@@ -828,11 +875,12 @@ class RocketLoggerData:
                     ] * (block_bin_bytes + block_analog_bytes)
 
                     # file size and header consistency check and recovery
-                    if (
-                        file_size
-                        != header["header_length"]
+                    file_size = file_handle.seek(0, os.SEEK_END)
+                    file_data_bytes = (
+                        header["header_length"]
                         + header["data_block_count"] * block_size_bytes
-                    ):
+                    )
+                    if file_size != file_data_bytes:
                         data_blocks_recovered = floor(
                             (file_size - header["header_length"]) / block_size_bytes
                         )
