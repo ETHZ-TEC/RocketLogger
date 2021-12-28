@@ -235,15 +235,15 @@
     __overlay__ {
       status = "okay";
       ti,no-idle;  /* keep EPWMSS0 clock always enabled */
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm0_pins>;
     };
   };
 
   fragment@31 {
     target = <&ehrpwm0>;
     __overlay__ {
-      status = "okay";
-      pinctrl-names = "default";
-      pinctrl-0 = <&rl_pwm0_pins>;
+      status = "disabled";
     };
   };
 
@@ -252,15 +252,15 @@
     __overlay__ {
       status = "okay";
       ti,no-idle;  /* keep EPWMSS1 clock always enabled */
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm1_pins>;
     };
   };
 
   fragment@33 {
     target = <&ehrpwm1>;
     __overlay__ {
-      status = "okay";
-      pinctrl-names = "default";
-      pinctrl-0 = <&rl_pwm1_pins>;
+      status = "disabled";
     };
   };
 
