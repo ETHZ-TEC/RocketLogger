@@ -25,16 +25,16 @@
       <tbody>
         {% for file in files %}
         <tr>
-          <th>{{ file.name }}</th>
+          <th>{{ file.basename }}</th>
           <td>{{ file.modified }}</td>
           <td>{{ file.size }}</td>
           <td class="dropdown">
-            <a href="{{ file.href_download }}" class="btn btn-primary btn-sm" role="button">Download</a>
+            <a href="{{ href_download_base + file.basename }}" class="btn btn-primary btn-sm" role="button">Download</a>
             <button class="btn btn-outline-danger btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Delete
             </button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{{ file.href_delete }}">Delete file: {{ file.name }}</a></li>
+              <li><a class="dropdown-item" href="{{ href_delete_base + file.basename }}">Delete file: {{ file.basename }}</a></li>
             </ul>
           </td>
         </tr>

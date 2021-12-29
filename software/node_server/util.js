@@ -59,6 +59,11 @@ module.exports = {
         }
     },
 
+    /// helper function to display dates
+    date_to_string(date) {
+        return date.toISOString().split('.')[0].replace('T', ' ')
+    },
+
     /// check if two files or paths are located on the same filesystem
     async is_same_filesystem(first, second) {
         const files_stat = await Promise.all([

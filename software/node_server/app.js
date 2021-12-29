@@ -32,6 +32,8 @@
 
 // imports
 const os = require('os');
+const fs = require('fs/promises');
+fs.constants = require('fs').constants;
 const path = require('path');
 const util = require('util');
 const glob = util.promisify(require('glob'));
@@ -42,15 +44,9 @@ const socketio = require('socket.io');
 const zmq = require('zeromq');
 
 const debug = require('debug')('rocketlogger');
-const fs = {
-    constants: require('fs').constants,
-    access: util.promisify(require('fs').access),
-    stat: util.promisify(require('fs').stat),
-    unlink: util.promisify(require('fs').unlink),
-};
 
 const rl = require('./rl.js');
-const { bytes_to_string, is_same_filesystem, system_poweroff, system_reboot } = require('./util.js');
+const { bytes_to_string, date_to_string, is_same_filesystem, system_poweroff, system_reboot } = require('./util.js');
 
 // get version of package and client-side assets
 const version = require(path.join(__dirname, 'package.json')).version;
@@ -79,24 +75,86 @@ nunjucks.configure(path_templates, {
     express: app,
 });
 
-/// render page templates
-async function render_page(request, reply, template_name, context = null) {
-    let date = new Date();
 
-    // build or extend existing context
+// routing of static files
+app.use('/assets', [
+    express.static(__dirname + '/node_modules/bootstrap/dist/css'),
+    express.static(__dirname + '/node_modules/bootstrap/dist/js'),
+    express.static(__dirname + '/node_modules/jquery/dist'),
+    express.static(__dirname + '/node_modules/plotly.js/dist'),
+    express.static(__dirname + '/node_modules/socket.io-client/dist'),
+    express.static(__dirname + '/node_modules/timesync/dist')
+]);
+app.use('/static', express.static(path_static));
+app.get('/robots.txt', express.static(path_static));
+app.get('/sitemap.xml', express.static(path_static));
+
+
+// route dynamically rendered pages
+app.get('/', async (request, reply) => { await render_page(reply, 'control.html'); });
+
+app.get('/log/', async (request, reply) => {
+    await serve_file(reply, path.basename(rl.path_system_logfile), path.dirname(rl.path_system_logfile));
+});
+
+app.get('/data/', async (request, reply) => {
+    const context = {
+        files: await get_data_file_info(),
+        href_download_base: request.path + 'download/',
+        href_delete_base: request.path + 'delete/',
+    }
+    await render_page(reply, 'data.html', context);
+});
+
+app.get('/data/download/:filename', async (request, reply) => {
+    await serve_file_if_valid(reply, request.params.filename, rl.path_data);
+});
+
+app.get('/data/delete/:filename', async (request, reply) => {
+    const deleted = await delete_file_if_valid(reply, request.params.filename, rl.path_data);
+    if (deleted) {
+        redirect_back_or_message(request, reply, `Deleted file ${request.params.filename}`);
+    }
+});
+
+
+// request handling helper functions
+async function is_valid_filename(filename) {
+    return filename.indexOf(path.sep) >= 0;
+}
+
+function redirect_back_or_message(request, reply, message) {
+    const referer = request.headers?.referer;
+    if (referer) {
+        reply.redirect(referer);
+    } else {
+        reply.send(message);
+    }
+}
+
+// render page template
+async function render_page(reply, template_name, context = null) {
+    // init context if none provided
     if (context === null) {
         context = {};
     }
+    await amend_system_context(context);
+    return reply.render(template_name, context);  /// @todo sync IO call
+}
+
+async function amend_system_context(context) {
     if (!context.err) {
         context.err = [];
     }
     if (!context.warn) {
         context.warn = [];
     }
+
+    const now = new Date();
     context.today = {
-        year: date.getUTCFullYear(),
-        month: date.getUTCMonth(),
-        day: date.getUTCDay(),
+        year: now.getUTCFullYear(),
+        month: now.getUTCMonth(),
+        day: now.getUTCDay(),
     };
     context.hostname = os.hostname();
 
@@ -115,112 +173,79 @@ async function render_page(request, reply, template_name, context = null) {
         context.version_string = rl_version.version_string;
         context.version = rl_version.version;
     }
-
-    reply.render(template_name, context);  /// @todo sync IO call
 }
 
 
-// routing of static files
-app.use('/assets', [
-    express.static(__dirname + '/node_modules/bootstrap/dist/css'),
-    express.static(__dirname + '/node_modules/bootstrap/dist/js'),
-    express.static(__dirname + '/node_modules/jquery/dist'),
-    express.static(__dirname + '/node_modules/plotly.js/dist'),
-    express.static(__dirname + '/node_modules/socket.io-client/dist'),
-    express.static(__dirname + '/node_modules/timesync/dist')
-]);
-app.use('/static', express.static(path_static));
-app.get('/robots.txt', express.static(path_static));
-app.get('/sitemap.xml', express.static(path_static));
+// data file info helper functions
+async function get_data_file_info() {
+    const files = await get_data_files();
+    const files_info = await Promise.all(files.map(get_file_info));
+    return sort_file_info(files_info);
+}
 
+async function get_data_files(filename_glob = '*.@(rld|csv)') {
+    const glob_promise = util.promisify(glob);
+    return await glob_promise(path.join(rl.path_data, filename_glob));
+}
 
-// routing of rendered pages
-app.get('/', (request, reply) => { render_page(request, reply, 'control.html') });
+function sort_file_info(files_info) {
+    const compare_name = (a, b) => a.basename.localeCompare(b.basename);
+    return files_info.sort(compare_name);
+}
 
-app.get('/data', async (request, reply) => {
-    let files_info = [];
+async function get_file_info(filename) {
+    const file_stat = await fs.stat(filename);
+    const file_info = {
+        basename: path.basename(filename),
+        dirname: path.dirname(filename),
+        modified: date_to_string(file_stat.mtime),
+        size: bytes_to_string(file_stat.size),
+    };
+    return file_info;
+}
+
+// file operation helper functions
+async function serve_file_if_valid(reply, basename, dirname) {
+    if (is_valid_filename(basename)) {
+        return await serve_file(reply, basename, dirname);
+    }
+    reply.status(400).send(`Invalid filename ${basename}.`);
+}
+
+async function serve_file(reply, basename, dirname) {
     try {
-        files_info = await Promise.all(
-            (await glob(path.join(rl.path_data, '*.@(rld|csv)'))).map(async file => {
-                const file_basename = path.basename(file);
-                const file_stat = await fs.stat(file);
-                const file_info = {
-                    name: file_basename,
-                    modified: file_stat.mtime.toISOString().split('.')[0].replace('T', ' '),
-                    size: bytes_to_string(file_stat.size),
-                    filename: path.dirname(file),
-                    href_download: `/data/download/${file_basename}`,
-                    href_delete: `/data/delete/${file_basename}`,
-                };
-                return file_info;
-            })
-        );
+        await fs.access(dirname, fs.constants.R_OK);
+        reply.sendFile(path.join(dirname, basename));
     } catch (err) {
-        debug(`Error listing file ${file}: ${err}`);
+        reply.status(404).send(`File ${basename} was not found.`);
     }
-    const files_info_sorted = files_info.sort((a, b) => a.name.localeCompare(b.name));
-    render_page(request, reply, 'data.html', { files: files_info_sorted });
-});
+}
 
-
-// routing of file actions
-app.get('/log', async (request, reply) => {
-    const logfile = rl.path_system_logfile;
-    try {
-        await fs.access(logfile, fs.constants.F_OK);
-    } catch (err) {
-        reply.status(404).send('Log file was not found. Please check your systems configuration!');
-        return;
+async function delete_file_if_valid(reply, basename, dirname) {
+    if (is_valid_filename(basename)) {
+        return await delete_file(reply, basename, dirname);
     }
+    reply.status(400).send(`Invalid filename ${basename}.`);
+    return false;
+}
 
-    try {
-        reply.sendFile(logfile);
-    } catch (err) {
-        reply.status(403).send('Error accessing log file. Please check your systems configuration!');
-        return;
-    }
-});
-
-app.get('/data/download/:filename', async (request, reply) => {
-    let filepath = path.join(rl.path_data, request.params.filename);
-
-    if (request.params.filename.indexOf(path.sep) >= 0) {
-        reply.status(400).send(`Invalid filename ${request.params.filename}.`);
-        return;
-    }
-
-    try {
-        await fs.access(filepath, fs.constants.R_OK);
-        reply.download(filepath, request.params.filename);
-    } catch (err) {
-        reply.status(404).send(`File ${request.params.filename} was not found.`);
-    }
-});
-
-app.get('/data/delete/:filename', async (request, reply) => {
-    let filepath = path.join(rl.path_data, request.params.filename);
-
-    if (request.params.filename.indexOf(path.sep) >= 0) {
-        reply.status(400).send(`Invalid filename ${request.params.filename}.`);
-        return;
-    }
-
+async function delete_file(reply, basename, dirname) {
+    const filepath = path.join(dirname, basename);
     try {
         await fs.access(filepath);
     } catch (err) {
-        reply.status(404).send(`File ${request.params.filename} was not found.`);
-        return;
+        reply.status(404).send(`File ${basename} was not found.`);
+        return false;
     }
-
     try {
         await fs.unlink(filepath);
     } catch (err) {
-        reply.status(403).send(`Error deleting file ${request.params.filename}: ${err}`);
-        return;
+        reply.status(403).send(`Error deleting file ${filename}: ${err}`);
+        return false;
     }
+    return true;
+}
 
-    reply.redirect('back');
-});
 
 // socket.io configure new connection
 io.on('connection', (socket) => {
