@@ -256,12 +256,6 @@ io.on('connection', (socket) => {
         debug(`socket.io disconnect: ${socket.id}`);
     });
 
-    // default message: echo back
-    socket.on('message', (data) => {
-        debug(`socket.io echo: ${data}`);
-        socket.send({ echo: data });
-    });
-
     // handle control command
     socket.on('control', async (req) => {
         debug(`rl control: ${JSON.stringify(req)}`);

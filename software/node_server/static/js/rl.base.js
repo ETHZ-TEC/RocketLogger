@@ -81,10 +81,6 @@ function rocketlogger_init_base() {
         console.log(`socket.io connection closed.`);
         $('#error_offline').show();
     });
-    // init default message callback
-    rl._data.socket.on('message', (msg) => {
-        console.log(`socket.io message: ${msg}`);
-    });
 
     // init status with reset default
     rl._data.status = status_get_reset();
