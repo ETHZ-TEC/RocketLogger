@@ -247,95 +247,57 @@ async function delete_file(reply, basename, dirname) {
 }
 
 
-// socket.io configure new connection
-io.on('connection', (socket) => {
-    debug(`socket.io connect: ${socket.id}`);
+// configure new client connection
+const client_connected = (socket) => {
+    debug(`client connected: ${socket.id}`);
 
     // logging disconnect
     socket.on('disconnect', () => {
-        debug(`socket.io disconnect: ${socket.id}`);
+        debug(`client disconnected: ${socket.id}`);
+    });
+
+    // handle time synchronization
+    socket.on('timesync', (request) => {
+        debug(`timesync: ${JSON.stringify(request)}`);
+        socket.emit('timesync', {
+            id: request?.id,
+            result: Date.now(),
+        });
     });
 
     // handle control command
-    socket.on('control', async (req) => {
-        debug(`rl control: ${JSON.stringify(req)}`);
-        // handle control command and emit on status channel
-        let res = null;
-        switch (req.cmd) {
-            case 'start':
-                res = await rl.start(req.config);
-                break;
+    socket.on('control', async (request) => {
+        debug(`rl control: ${JSON.stringify(request)}`);
 
-            case 'stop':
-                res = await rl.stop();
-                break;
-
-            case 'config':
-                if (req.config && req.default) {
-                    res = await rl.config(req.config);
-                } else {
-                    res = await rl.config();
-                }
-                break;
-
-            case 'reset':
-                if (req.key !== req.cmd) {
-                    res = { err: [`invalid reset key: ${req.key}`] };
-                    break;
-                }
-                await rl.stop();
-                res = await rl.reset();
-                break;
-
-            case 'reboot':
-                if (req.key !== req.cmd) {
-                    res = { err: [`invalid reboot key: ${req.key}`] };
-                    break;
-                }
-                await rl.stop();
-                res = { status: await system_reboot() };
-                break;
-
-            case 'poweroff':
-                if (req.key !== req.cmd) {
-                    res = { err: [`invalid poweroff key: ${req.key}`] };
-                    break;
-                }
-                await rl.stop();
-                res = { status: await system_poweroff() };
-                break;
-
-            default:
-                res = { err: [`invalid control command: ${req.cmd}`] };
-                break;
-        }
-        // process and send result
-        if (res) {
-            res.req = req;
-            socket.emit('control', res);
-        } else {
-            socket.emit('control', { err: [`error processing command: ${req.cmd}`] });
-        }
+        const reply = await control_action(request)
+            .catch(err => {
+                reply.err = [err];
+            });
+        reply.req = request;
+        socket.emit('control', reply);
     });
 
     // handle status request
-    socket.on('status', async (req) => {
-        debug(`rl status: ${JSON.stringify(req)}`);
+    socket.on('status', async (request) => {
+        debug(`rl status: ${JSON.stringify(request)}`);
+
+        // validate status update request
+        if (request.cmd !== 'status') {
+            socket.emit('status', { err: [`invalid status command: ${request.cmd}`] });
+            return;
+        }
 
         // poll status and emit on status channel
-        if (req.cmd === 'status') {
-            const res = await rl.status();
-            try {
-                const data_on_rootfs = await is_same_filesystem(rl.path_data, __dirname);
-                res.status.sdcard_available = !data_on_rootfs;
-            } catch (err) {
-                res.err.push(`Error checking for mounted SD card: ${err}`);
-            }
-            res.req = req;
-            socket.emit('status', res);
-        } else {
-            socket.emit('status', { err: [`invalid status command: ${req.cmd}`] });
-        }
+        const reply = await rl.status()
+            .catch(err => {
+                reply.err = [err];
+            });
+        reply.status.sdcard_available = await is_sdcard_mounted()
+            .catch(err => {
+                reply.err.push(`Error checking for mounted SD card: ${err}`);
+            });
+        reply.req = request;
+        socket.emit('status', reply);
     });
 
     // handle cached data request
@@ -343,16 +305,52 @@ io.on('connection', (socket) => {
         // @todo: implement local data caching
         debug(`rl data: ${JSON.stringify(req)}`);
     });
+};
 
-    // handle timesync request
-    socket.on('timesync', (data) => {
-        debug(`timesync: ${JSON.stringify(data)}`);
-        socket.emit('timesync', {
-            id: data?.id,
-            result: Date.now()
-        });
-    });
-});
+async function is_sdcard_mounted() {
+    return !await is_same_filesystem(rl.path_data, __dirname);
+}
+
+async function control_action(request) {
+    switch (request.cmd) {
+        case 'start':
+            return await rl.start(request.config);
+
+        case 'stop':
+            return await rl.stop();
+
+        case 'config':
+            if (request.config && request.default) {
+                return await rl.config(request.config);
+            } else {
+                return await rl.config();
+            }
+
+        case 'reset':
+            if (request.key !== request.cmd) {
+                throw `invalid reset key: ${request.key}`;
+            }
+            await rl.stop();
+            return await rl.reset();
+
+        case 'reboot':
+            if (request.key !== request.cmd) {
+                throw `invalid reboot key: ${request.key}`;
+            }
+            await rl.stop();
+            return { status: await system_reboot() };
+
+        case 'poweroff':
+            if (request.key !== request.cmd) {
+                throw `invalid poweroff key: ${request.key}`;
+            }
+            await rl.stop();
+            return { status: await system_poweroff() };
+
+        default:
+            throw `invalid control command: ${request.cmd}`;
+    }
+}
 
 
 // zeromq data buffer proxy handlers
@@ -486,6 +484,9 @@ async function status_proxy() {
     }
 }
 
+
+// install socket.io connect handler
+io.on('connect', client_connected);
 
 // run webserver and data buffer proxies
 server.listen(port, hostname, () => {
