@@ -271,7 +271,7 @@ const client_connected = (socket) => {
 
         const reply = await control_action(request)
             .catch(err => {
-                reply.err = [err];
+                return { err: [err.toString()] };
             });
         reply.req = request;
         socket.emit('control', reply);
@@ -290,7 +290,7 @@ const client_connected = (socket) => {
         // poll status and emit on status channel
         const reply = await rl.status()
             .catch(err => {
-                reply.err = [err];
+                return { err: [err.toString()] };
             });
         reply.status.sdcard_available = await is_sdcard_mounted()
             .catch(err => {
@@ -328,160 +328,199 @@ async function control_action(request) {
 
         case 'reset':
             if (request.key !== request.cmd) {
-                throw `invalid reset key: ${request.key}`;
+                throw Error(`invalid reset key: ${request.key}`);
             }
             await rl.stop();
             return await rl.reset();
 
         case 'reboot':
             if (request.key !== request.cmd) {
-                throw `invalid reboot key: ${request.key}`;
+                throw Error(`invalid reboot key: ${request.key}`);
             }
             await rl.stop();
             return { status: await system_reboot() };
 
         case 'poweroff':
             if (request.key !== request.cmd) {
-                throw `invalid poweroff key: ${request.key}`;
+                throw Error(`invalid poweroff key: ${request.key}`);
             }
             await rl.stop();
             return { status: await system_poweroff() };
 
         default:
-            throw `invalid control command: ${request.cmd}`;
+            throw Error(`invalid control command: ${request.cmd}`);
     }
 }
 
 
-// zeromq data buffer proxy handlers
+// data buffer update subscriber
 async function data_proxy() {
-    const sock = new zmq.Subscriber
+    const sock = new zmq.Subscriber();
 
     sock.connect(rl.zmq_data_socket);
     debug(`zmq data subscribe to ${rl.zmq_data_socket}`);
     sock.subscribe();
 
     for await (const data of sock) {
-        const rep = {
-            t: Date.now(),
-            metadata: {},
-            data: {},
-            digital: null,
-        };
-
-        // parse metadata (first data element)
-        let meta;
+        // debug(`zmq new data: ${data[0]}`);
+        const time_received = Date.now();
         try {
-            meta = JSON.parse(data[0]);
+            const data_message = parse_data_to_message(data);
+            data_message.t = time_received;
+            io.emit('data', data_message);
+            /// @todo perform local data caching
         } catch (err) {
-            debug(`zmq data: metadata processing error: ${err}`);
+            debug(`data proxy parse error: ${err}`);
             continue;
         }
-        const downsample_factor = Math.max(1, meta.data_rate / rl.web_data_rate);
-
-        // get timestamp and digital data views and size
-        const time_in_view = new BigInt64Array(data[1].buffer);
-        const digital_in_view = new Uint32Array(data[data.length - 1].buffer);
-        const buffer_in_length = digital_in_view.length;
-        const buffer_out_length = buffer_in_length / downsample_factor;
-
-        // generate timestamps (second data element)
-        const time_out = new Float64Array(buffer_out_length);
-        for (let j = 0; j < time_out.length; j++) {
-            time_out[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
-                + j * 1e3 / rl.web_data_rate;
-        }
-        rep.time = time_out;
-
-        // process digital data (last data element)
-        const digital_out = new Uint8Array(buffer_out_length);
-        for (let j = 0; j < Math.min(digital_out.length, digital_in_view.length / downsample_factor); j++) {
-            digital_out[j] = digital_in_view[j * downsample_factor];
-            /// @todo any/none down sampling
-        }
-        rep.digital = digital_out;
-
-        // process channel data (starting at third data element)
-        let i = 2;
-        for (const ch of meta.channels) {
-            rep.metadata[ch.name] = {
-                scale: ch.scale,
-                unit: ch.unit,
-                bit: ch.bit,
-            };
-            if (ch.unit === 'binary') {
-                continue;
-            }
-
-            const data_in_view = new Int32Array(data[i].buffer);
-            const data_out = new Float32Array(buffer_out_length).fill(NaN);
-            for (let j = 0; j < Math.min(data_out.length, data_in_view.length / downsample_factor); j++) {
-                data_out[j] = data_in_view[j * downsample_factor] * ch.scale;
-            }
-            rep.data[ch.name] = data_out;
-            i = i + 1;
-        }
-
-        // merge current channel data if available
-        for (const ch of [1, 2]) {
-            // reuse HI channel in-place if available
-            if (`I${ch}H` in rep.data) {
-                rep.data[`I${ch}`] = rep.data[`I${ch}H`];
-                rep.metadata[`I${ch}`] = rep.metadata[`I${ch}H`];
-
-                // delete merged channel
-                delete rep.data[`I${ch}H`];
-                delete rep.metadata[`I${ch}H`];
-            }
-
-            // merge valid LO current values if available
-            if (`I${ch}L` in rep.data) {
-                const channel_lo = rep.data[`I${ch}L`];
-                const channel_lo_valid_mask = (0x01 << rep.metadata[`I${ch}L_valid`].bit);
-
-                // generate new channel data array with NaNs if not available
-                if (`I${ch}` in rep.data === false) {
-                    rep.data[`I${ch}`] = new Float32Array(channel_lo.length).fill(NaN);
-                    rep.metadata[`I${ch}`] = rep.metadata[`I${ch}L`];
-                }
-                const channel_merged = rep.data[`I${ch}`];
-                for (let j = 0; j < channel_merged.length; j++) {
-                    if (rep.digital[j] & channel_lo_valid_mask) {
-                        channel_merged[j] = channel_lo[j];
-                    }
-                }
-
-                // delete merged channel
-                delete rep.data[`I${ch}L`];
-                delete rep.metadata[`I${ch}L`];
-            }
-
-            // always delete channel valid links
-            delete rep.metadata[`I${ch}L_valid`];
-        }
-
-        // send new data packet to clients
-        io.emit('data', rep);
-
-        /// @todo perform local data caching
     }
 }
 
+function parse_data_to_message(data) {
+    const message = {
+        metadata: {},
+        data: {},
+        digital: null,
+    };
+
+    const header = parse_data_header(data);
+
+    for (const metadata of header.channels) {
+        message.metadata[metadata.name] = metadata;
+    }
+
+    message.time = parse_time_data(header, data[1]);
+    message.digital = parse_digital_data(header, data[data.length -1]);
+
+    // process channel metadata and non-binary data channels
+    let channel_data_index = 2;
+    for (const channel in message.metadata) {
+        const metadata = message.metadata[channel];
+        if (metadata.unit === 'binary') {
+            continue;
+        }
+
+        message.data[channel] = parse_channel_data(header, metadata, data[channel_data_index]);
+        channel_data_index = channel_data_index + 1;
+    }
+
+    merge_channels(message.metadata, message.data, message.digital);
+
+    return message;
+}
+
+function parse_data_header(data) {
+    const header = JSON.parse(data[0]);
+
+    header.downsample_factor = Math.max(1, header.data_rate / rl.web_data_rate);
+    header.sample_count = (new Uint32Array(data[data.length - 1].buffer)).length;
+
+    return header;
+}
+
+function parse_time_data(header, data) {
+    const time_in_view = new BigInt64Array(data.buffer);
+    const data_out_length = header.sample_count / header.downsample_factor;
+
+    const data_out = new Float64Array(data_out_length);
+    for (let j = 0; j < data_out_length; j++) {
+        data_out[j] = Number(time_in_view[0]) * 1e3 + Number(time_in_view[1]) / 1e6
+            + j * 1e3 / rl.web_data_rate;
+    }
+
+    return data_out;
+}
+function parse_digital_data(header, data) {
+    const data_in_view = new Uint32Array(data.buffer);
+    const data_out_length = data_in_view.length / header.downsample_factor;
+
+    const data_out = new Uint8Array(data_out_length);
+    for (let j = 0; j < Math.min(data_out_length, data_in_view.length / header.downsample_factor); j++) {
+        data_out[j] = data_in_view[j * header.downsample_factor];
+        /// @todo any/none down sampling
+    }
+
+    return data_out;
+}
+
+function parse_channel_data(header, metadata, data) {
+    if (metadata.unit === 'binary') {
+        throw Error('cannot parse binary as non-binary data');
+    }
+
+    const data_in_view = new Int32Array(data.buffer);
+    const data_out_length = data_in_view.length / header.downsample_factor;
+
+    const data_out = new Float32Array(data_out_length).fill(NaN);
+    for (let j = 0; j < Math.min(data_out_length, data_in_view.length / header.downsample_factor); j++) {
+        data_out[j] = data_in_view[j * header.downsample_factor] * metadata.scale;
+    }
+
+    return data_out;
+}
+
+function merge_channels(metadata, channel_data, digital_data) {
+    // merge current channel data if available
+    for (const ch of [1, 2]) {
+        // reuse HI channel in-place if available
+        if (`I${ch}H` in channel_data) {
+            channel_data[`I${ch}`] = channel_data[`I${ch}H`];
+            metadata[`I${ch}`] = metadata[`I${ch}H`];
+
+            // delete merged channel
+            delete channel_data[`I${ch}H`];
+            delete metadata[`I${ch}H`];
+        }
+
+        // merge valid LO current values if available
+        if (`I${ch}L` in channel_data) {
+            const channel_lo = channel_data[`I${ch}L`];
+            const channel_lo_valid_mask = (0x01 << metadata[`I${ch}L_valid`].bit);
+
+            // generate new channel data array with NaNs if not available
+            if (`I${ch}` in channel_data === false) {
+                channel_data[`I${ch}`] = new Float32Array(channel_lo.length).fill(NaN);
+                metadata[`I${ch}`] = metadata[`I${ch}L`];
+            }
+            const channel_merged = channel_data[`I${ch}`];
+            for (let j = 0; j < channel_merged.length; j++) {
+                if (digital_data[j] & channel_lo_valid_mask) {
+                    channel_merged[j] = channel_lo[j];
+                }
+            }
+
+            // delete merged channel
+            delete channel_data[`I${ch}L`];
+            delete metadata[`I${ch}L`];
+        }
+
+        // always delete channel valid links
+        delete metadata[`I${ch}L_valid`];
+    }
+}
+
+
+// status update subscriber
 async function status_proxy() {
-    const sock = new zmq.Subscriber
+    const sock = new zmq.Subscriber();
 
     sock.connect(rl.zmq_status_socket);
     debug(`zmq status subscribe to ${rl.zmq_status_socket}`);
     sock.subscribe();
 
     for await (const status of sock) {
-        // debug(`zmq new status: ${status}`);
+        // debug(`zmq new status: ${status_data}`);
         try {
-            io.emit('status', { status: JSON.parse(status) });
+            const status_message = parse_status_to_message(status);
+            io.emit('status', status_message);
         } catch (err) {
-            debug(`zmq status processing error: ${err}`);
+            debug(`status proxy parse error: ${err}`);
         }
     }
+}
+
+function parse_status_to_message(status_data) {
+    return { status: JSON.parse(status_data) };
 }
 
 
