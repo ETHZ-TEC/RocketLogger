@@ -31,44 +31,56 @@
 "use strict";
 
 // imports
-const os = require('os');
-const fs = require('fs/promises');
-fs.constants = require('fs').constants;
-const path = require('path');
-const util = require('util');
-const glob = util.promisify(require('glob'));
-const http = require('http');
-const express = require('express');
-const nunjucks = require('nunjucks');
-const socketio = require('socket.io');
-const zmq = require('zeromq');
+import * as os from 'os';
+import * as fs from 'fs/promises';
+import { constants } from 'fs';
+import * as path from 'path';
+import url from 'url';
+import debug from 'debug';
+import { promisify } from 'util';
+import G from 'glob';
+import * as http from 'http';
+import express from 'express';
+import nunjucks from 'nunjucks';
+import * as socketio from 'socket.io'
+import * as zmq from 'zeromq';
 
-const debug = require('debug')('rocketlogger');
+import * as rl from './rl.js';
+import { bytes_to_string, date_to_string, is_same_filesystem, system_poweroff, system_reboot } from './util.js';
 
-const rl = require('./rl.js');
-const { bytes_to_string, date_to_string, is_same_filesystem, system_poweroff, system_reboot } = require('./util.js');
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// get version of package and client-side assets
-const version = require(path.join(__dirname, 'package.json')).version;
-const asset_version = {
-    bootstrap: require('bootstrap/package.json').version,
-    jquery: require('jquery/package.json').version,
-    plotly: require('plotly.js/package.json').version,
-    socketio: require('socket.io-client/package.json').version,
-    timesync: require('timesync/package.json').version,
+const server_debug = debug('server');
+const data_proxy_debug = debug('data_proxy');
+const status_proxy_debug = debug('status_proxy');
+const glob = promisify(G);
+
+// get version of a package
+const get_version = async (package_path = __dirname) => {
+    return JSON.parse(await fs.readFile(path.join(package_path, 'package.json'))).version;
 }
 
 // configuration
+const version = await get_version();
 const hostname = 'localhost';
 const port = 5000;
 const path_static = path.join(__dirname, 'static');
+const path_modules = path.join(__dirname, 'node_modules');
 const path_templates = path.join(__dirname, 'templates');
+const asset_version = {
+    bootstrap: await get_version(path.join(path_modules, 'bootstrap')),
+    jquery: await get_version(path.join(path_modules, 'jquery')),
+    plotly: await get_version(path.join(path_modules, 'plotly.js')),
+    socketio: await get_version(path.join(path_modules, 'socket.io-client')),
+    timesync: await get_version(path.join(path_modules, 'timesync')),
+};
 
 
 // initialize
 const app = express();
 const server = http.Server(app);
-const io = socketio(server);
+const io = new socketio.Server(server);
 
 nunjucks.configure(path_templates, {
     autoescape: true,
@@ -184,8 +196,7 @@ async function get_data_file_info() {
 }
 
 async function get_data_files(filename_glob = '*.@(rld|csv)') {
-    const glob_promise = util.promisify(glob);
-    return await glob_promise(path.join(rl.path_data, filename_glob));
+    return await glob(path.join(rl.path_data, filename_glob));
 }
 
 function sort_file_info(files_info) {
@@ -214,7 +225,7 @@ async function serve_file_if_valid(reply, basename, dirname) {
 
 async function serve_file(reply, basename, dirname) {
     try {
-        await fs.access(dirname, fs.constants.R_OK);
+        await fs.access(dirname, constants.R_OK);
         reply.sendFile(path.join(dirname, basename));
     } catch (err) {
         reply.status(404).send(`File ${basename} was not found.`);
@@ -249,16 +260,16 @@ async function delete_file(reply, basename, dirname) {
 
 // configure new client connection
 const client_connected = (socket) => {
-    debug(`client connected: ${socket.id}`);
+    server_debug(`client connected: ${socket.id}`);
 
     // logging disconnect
     socket.on('disconnect', () => {
-        debug(`client disconnected: ${socket.id}`);
+        server_debug(`client disconnected: ${socket.id}`);
     });
 
     // handle time synchronization
     socket.on('timesync', (request) => {
-        debug(`timesync: ${JSON.stringify(request)}`);
+        server_debug(`timesync: ${JSON.stringify(request)}`);
         socket.emit('timesync', {
             id: request?.id,
             result: Date.now(),
@@ -267,7 +278,7 @@ const client_connected = (socket) => {
 
     // handle control command
     socket.on('control', async (request) => {
-        debug(`rl control: ${JSON.stringify(request)}`);
+        server_debug(`rl control: ${JSON.stringify(request)}`);
 
         const reply = await control_action(request)
             .catch(err => {
@@ -279,7 +290,7 @@ const client_connected = (socket) => {
 
     // handle status request
     socket.on('status', async (request) => {
-        debug(`rl status: ${JSON.stringify(request)}`);
+        server_debug(`rl status: ${JSON.stringify(request)}`);
 
         // validate status update request
         if (request.cmd !== 'status') {
@@ -303,7 +314,7 @@ const client_connected = (socket) => {
     // handle cached data request
     socket.on('data', (req) => {
         // @todo: implement local data caching
-        debug(`rl data: ${JSON.stringify(req)}`);
+        server_debug(`rl data: ${JSON.stringify(req)}`);
     });
 };
 
@@ -357,8 +368,8 @@ async function control_action(request) {
 async function data_proxy() {
     const sock = new zmq.Subscriber();
 
-    sock.connect(rl.zmq_data_socket);
-    debug(`zmq data subscribe to ${rl.zmq_data_socket}`);
+    sock.connect(rl.data_socket);
+    data_proxy_debug(`zmq data subscribe to ${rl.data_socket}`);
     sock.subscribe();
 
     for await (const data of sock) {
@@ -370,7 +381,7 @@ async function data_proxy() {
             io.emit('data', data_message);
             /// @todo perform local data caching
         } catch (err) {
-            debug(`data proxy parse error: ${err}`);
+            data_proxy_debug(`data proxy parse error: ${err}`);
             continue;
         }
     }
@@ -504,8 +515,8 @@ function merge_channels(metadata, channel_data, digital_data) {
 async function status_proxy() {
     const sock = new zmq.Subscriber();
 
-    sock.connect(rl.zmq_status_socket);
-    debug(`zmq status subscribe to ${rl.zmq_status_socket}`);
+    sock.connect(rl.status_socket);
+    status_proxy_debug(`zmq status subscribe to ${rl.status_socket}`);
     sock.subscribe();
 
     for await (const status of sock) {
@@ -514,7 +525,7 @@ async function status_proxy() {
             const status_message = parse_status_to_message(status);
             io.emit('status', status_message);
         } catch (err) {
-            debug(`status proxy parse error: ${err}`);
+            status_proxy_debug(`status proxy parse error: ${err}`);
         }
     }
 }
@@ -529,7 +540,7 @@ io.on('connect', client_connected);
 
 // run webserver and data buffer proxies
 server.listen(port, hostname, () => {
-    debug(`RocketLogger web interface version ${version} listening at http://${hostname}:${port}`);
+    server_debug(`RocketLogger web interface version ${version} listening at http://${hostname}:${port}`);
 });
 
 status_proxy();

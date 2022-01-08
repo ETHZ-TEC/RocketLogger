@@ -13,6 +13,7 @@
     "interface"
   ],
   "main": "app.js",
+  "type": "module",
   "files": [
     "app.js",
     "rl.js",
