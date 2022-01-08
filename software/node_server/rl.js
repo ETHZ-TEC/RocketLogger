@@ -34,7 +34,7 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { exec as exec_, spawn } from 'child_process';
 
-export { status, start, stop, reset, config, version, path_data, path_system_logfile, status_socket, data_socket, web_data_rate };
+export { status, start, stop, reset, config, version, path_data, path_system_logfile, status_socket, data_socket };
 
 const exec = promisify(exec_);
 
@@ -54,8 +54,6 @@ const status_socket = 'tcp://127.0.0.1:8276';
 /// ZeroMQ socket identifier for status publishing
 const data_socket = 'tcp://127.0.0.1:8277';
 
-/// RocketLogger maximum web downstream data rate [in 1/s]
-const web_data_rate = 1000;
 
 /// get RocketLogger status
 async function status() {
