@@ -31,15 +31,13 @@
 "use strict";
 
 // imports
-import * as os from 'os';
-import * as fs from 'fs/promises';
-import { constants } from 'fs';
-import * as path from 'path';
+import os from 'os';
+import fs from 'fs/promises';
+import path from 'path';
 import url from 'url';
 import debug from 'debug';
-import { promisify } from 'util';
-import G from 'glob';
-import * as http from 'http';
+import picomatch from 'picomatch';
+import http from 'http';
 import express from 'express';
 import nunjucks from 'nunjucks';
 import * as socketio from 'socket.io'
@@ -50,7 +48,6 @@ import { bytes_to_string, date_to_string, is_same_filesystem, system_poweroff, s
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const glob = promisify(G);
 
 const server_debug = debug('server');
 
@@ -244,8 +241,11 @@ async function get_data_file_info() {
     return sort_file_info(files_info);
 }
 
-async function get_data_files(filename_glob = '*.@(rld|csv)') {
-    return glob(path.join(rl.path_data, filename_glob));
+async function get_data_files() {
+    const is_data_file = picomatch('*.@(rld|csv)');
+    const dir_files = await fs.readdir(rl.path_data);
+    const data_files = dir_files.filter(f => is_data_file(f));
+    return data_files.map(f => path.join(rl.path_data, f));
 }
 
 function sort_file_info(files_info) {
