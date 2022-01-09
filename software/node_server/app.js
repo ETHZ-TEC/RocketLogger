@@ -143,8 +143,8 @@ app.get('/data/delete/:filename', async (request, reply) => {
 
 
 // request handling helper functions
-async function is_valid_filename(filename) {
-    return filename.indexOf(path.sep) >= 0;
+function is_valid_filename(filename) {
+    return filename.indexOf(path.sep) < 0;
 }
 
 function redirect_back_or_message(request, reply, message) {
