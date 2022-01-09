@@ -245,7 +245,7 @@ async function get_data_file_info() {
 }
 
 async function get_data_files(filename_glob = '*.@(rld|csv)') {
-    return await glob(path.join(rl.path_data, filename_glob));
+    return glob(path.join(rl.path_data, filename_glob));
 }
 
 function sort_file_info(files_info) {
@@ -332,16 +332,16 @@ async function is_sdcard_mounted() {
 async function control_action(request) {
     switch (request.cmd) {
         case 'start':
-            return await rl.start(request.config);
+            return rl.start(request.config);
 
         case 'stop':
-            return await rl.stop();
+            return rl.stop();
 
         case 'config':
             if (request.config && request.default) {
-                return await rl.config(request.config);
+                return rl.config(request.config);
             } else {
-                return await rl.config();
+                return rl.config();
             }
 
         case 'reset':
@@ -349,7 +349,7 @@ async function control_action(request) {
                 throw Error(`invalid reset key: ${request.key}`);
             }
             await rl.stop();
-            return await rl.reset();
+            return rl.reset();
 
         case 'reboot':
             if (request.key !== request.cmd) {
