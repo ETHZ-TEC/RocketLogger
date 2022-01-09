@@ -91,7 +91,7 @@ const server_start = async () => {
     try {
         io.on('connect', client_connected);
         server.listen(port, hostname, () => {
-            server_debug(`RocketLogger web interface version ${version} listening at http://${hostname}:${port}`);
+            console.log(`RocketLogger web interface version ${version} listening at http://${hostname}:${port}`);
         });
     } catch (err) {
         console.error(err);
@@ -117,10 +117,6 @@ app.get('/sitemap.xml', express.static(path_static));
 // route dynamically rendered pages
 app.get('/', async (request, reply) => { await render_page(reply, 'control.html'); });
 
-app.get('/log/', async (request, reply) => {
-    await serve_file(reply, path.basename(rl.path_system_logfile), path.dirname(rl.path_system_logfile));
-});
-
 app.get('/data/', async (request, reply) => {
     const context = {
         files: await get_data_file_info(),
@@ -131,22 +127,62 @@ app.get('/data/', async (request, reply) => {
 });
 
 app.get('/data/download/:filename', async (request, reply) => {
-    await serve_file_if_valid(reply, request.params.filename, rl.path_data);
+    const filename = request.params.filename;
+    try {
+        await validate_data_file(filename);
+        reply.sendFile(get_data_path(filename));
+    }
+    catch (err) {
+        reply.status(400).send(`Error accessing data file ${filename}: ${err}`);
+    }
 });
 
 app.get('/data/delete/:filename', async (request, reply) => {
-    const deleted = await delete_file_if_valid(reply, request.params.filename, rl.path_data);
-    if (deleted) {
-        redirect_back_or_message(request, reply, `Deleted file ${request.params.filename}`);
+    const filename = request.params.filename;
+    try {
+        await validate_data_file(filename); 
+        await delete_data_file(filename);
+        redirect_back_or_message(request, reply, `Deleted file ${filename}`);
+    } catch (err) {
+        reply.status(400).send(`Error deleting data file ${filename}: ${err}`);
+    }
+});
+
+app.get('/log/', async (request, reply) => {
+    try {
+        reply.sendFile(get_log_path());
+    }
+    catch (err) {
+        reply.status(400).send(`Error accessing log file: ${err}`);
     }
 });
 
 
-// request handling helper functions
-function is_valid_filename(filename) {
+// data and log file helper functions
+async function validate_data_file(filename) {
+    if (!is_valid_data_file(filename)) {
+        throw Error(`invalid data filename: ${filename}`);
+    }
+}
+
+function is_valid_data_file(filename) {
     return filename.indexOf(path.sep) < 0;
 }
 
+async function delete_data_file(filename) {
+    return fs.unlink(get_data_path(filename));
+}
+
+function get_data_path(filename) {
+    return path.join(rl.path_data, filename);
+}
+
+function get_log_path() {
+    return rl.path_system_logfile;
+}
+
+
+// request handling helper functions
 function redirect_back_or_message(request, reply, message) {
     const referer = request.headers?.referer;
     if (referer) {
@@ -155,6 +191,7 @@ function redirect_back_or_message(request, reply, message) {
         reply.send(message);
     }
 }
+
 
 // render page template
 async function render_page(reply, template_name, context = null) {
@@ -225,48 +262,6 @@ async function get_file_info(filename) {
         size: bytes_to_string(file_stat.size),
     };
     return file_info;
-}
-
-// file operation helper functions
-async function serve_file_if_valid(reply, basename, dirname) {
-    if (is_valid_filename(basename)) {
-        return await serve_file(reply, basename, dirname);
-    }
-    reply.status(400).send(`Invalid filename ${basename}.`);
-}
-
-async function serve_file(reply, basename, dirname) {
-    try {
-        await fs.access(dirname, constants.R_OK);
-        reply.sendFile(path.join(dirname, basename));
-    } catch (err) {
-        reply.status(404).send(`File ${basename} was not found.`);
-    }
-}
-
-async function delete_file_if_valid(reply, basename, dirname) {
-    if (is_valid_filename(basename)) {
-        return await delete_file(reply, basename, dirname);
-    }
-    reply.status(400).send(`Invalid filename ${basename}.`);
-    return false;
-}
-
-async function delete_file(reply, basename, dirname) {
-    const filepath = path.join(dirname, basename);
-    try {
-        await fs.access(filepath);
-    } catch (err) {
-        reply.status(404).send(`File ${basename} was not found.`);
-        return false;
-    }
-    try {
-        await fs.unlink(filepath);
-    } catch (err) {
-        reply.status(403).send(`Error deleting file ${filename}: ${err}`);
-        return false;
-    }
-    return true;
 }
 
 
