@@ -34,25 +34,13 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { exec as exec_, spawn } from 'child_process';
 
-export { status, start, stop, reset, config, version, path_data, path_system_logfile, status_socket, data_socket };
+export { status, start, stop, reset, config, version };
 
 const exec = promisify(exec_);
 
 
 /// RocketLogger status and data update rate [in 1/s]
 const rl_update_rate = 10;
-
-/// RocketLogger measurement data path
-const path_data = '/home/rocketlogger/data';
-
-/// RocketLogger measurement log file
-const path_system_logfile = '/var/log/rocketlogger/rocketlogger.log';
-
-/// ZeroMQ socket identifier for data publishing status
-const status_socket = 'tcp://127.0.0.1:8276';
-
-/// ZeroMQ socket identifier for status publishing
-const data_socket = 'tcp://127.0.0.1:8277';
 
 
 /// get RocketLogger status

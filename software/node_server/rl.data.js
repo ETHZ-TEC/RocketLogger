@@ -4,10 +4,14 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 
-import { data_socket, status_socket } from './rl.js';
-
 export { data_proxy, status_proxy, web_data_rate };
 
+
+/// ZeroMQ socket identifier for data publishing status
+const status_socket = 'tcp://127.0.0.1:8276';
+
+/// ZeroMQ socket identifier for status publishing
+const data_socket = 'tcp://127.0.0.1:8277';
 
 /// RocketLogger maximum web downstream data rate [in 1/s]
 const web_data_rate = 1000;
