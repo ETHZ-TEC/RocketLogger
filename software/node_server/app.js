@@ -41,9 +41,7 @@ import express from 'express';
 import nunjucks from 'nunjucks';
 import * as socketio from 'socket.io'
 
-import * as rl from './rl.js';
-import { data_proxy, status_proxy } from './rl.data.js';
-import { delete_data_file, get_data_path, get_data_file_info, get_log_path, validate_data_file } from './rl.files.js'
+import { control as rl_control, data as rl_data, files as rl_files } from './rl.js';
 import { is_same_filesystem, system_poweroff, system_reboot } from './util.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
@@ -116,7 +114,7 @@ app.get('/', async (request, reply) => { await render_page(reply, 'control.html'
 
 app.get('/data/', async (request, reply) => {
     const context = {
-        files: await get_data_file_info(),
+        files: await rl_files.get_data_file_info(),
         href_download_base: request.path + 'download/',
         href_delete_base: request.path + 'delete/',
     }
@@ -126,8 +124,9 @@ app.get('/data/', async (request, reply) => {
 app.get('/data/download/:filename', async (request, reply) => {
     const filename = request.params.filename;
     try {
-        await validate_data_file(filename);
-        reply.sendFile(get_data_path(filename));
+        await rl_files.validate_data_file(filename);
+        const datafile_path = rl_files.get_data_path(filename);
+        reply.sendFile(datafile_path);
     }
     catch (err) {
         reply.status(400).send(`Error accessing data file ${filename}: ${err}`);
@@ -137,8 +136,8 @@ app.get('/data/download/:filename', async (request, reply) => {
 app.get('/data/delete/:filename', async (request, reply) => {
     const filename = request.params.filename;
     try {
-        await validate_data_file(filename); 
-        await delete_data_file(filename);
+        await rl_files.validate_data_file(filename);
+        await rl_files.delete_data_file(filename);
         redirect_back_or_message(request, reply, `Deleted file ${filename}`);
     } catch (err) {
         reply.status(400).send(`Error deleting data file ${filename}: ${err}`);
@@ -146,8 +145,9 @@ app.get('/data/delete/:filename', async (request, reply) => {
 });
 
 app.get('/log/', async (request, reply) => {
+    const logfile_path = rl_files.get_log_path();
     try {
-        reply.sendFile(get_log_path());
+        reply.sendFile(logfile_path);
     }
     catch (err) {
         reply.status(400).send(`Error accessing log file: ${err}`);
@@ -195,7 +195,7 @@ async function amend_system_context(context) {
     context.asset_version = asset_version;
 
     // validate compatibility of binary and web interface
-    const rl_version = await rl.version();
+    const rl_version = await rl_control.version();
     for (const err of rl_version.err) {
         context.err.push(err);
     }
@@ -251,7 +251,7 @@ const client_connected = (socket) => {
         }
 
         // poll status and emit on status channel
-        const reply = await rl.status()
+        const reply = await rl_control.status()
             .catch(err => {
                 return { err: [err.toString()] };
             });
@@ -271,43 +271,43 @@ const client_connected = (socket) => {
 };
 
 async function is_sdcard_mounted() {
-    return !await is_same_filesystem(rl.path_data, __dirname);
+    return !await is_same_filesystem(rl_files.path_data, __dirname);
 }
 
 async function control_action(request) {
     switch (request.cmd) {
         case 'start':
-            return rl.start(request.config);
+            return rl_control.start(request.config);
 
         case 'stop':
-            return rl.stop();
+            return rl_control.stop();
 
         case 'config':
             if (request.config && request.default) {
-                return rl.config(request.config);
+                return rl_control.config(request.config);
             } else {
-                return rl.config();
+                return rl_control.config();
             }
 
         case 'reset':
             if (request.key !== request.cmd) {
                 throw Error(`invalid reset key: ${request.key}`);
             }
-            await rl.stop();
-            return rl.reset();
+            await rl_control.stop();
+            return rl_control.reset();
 
         case 'reboot':
             if (request.key !== request.cmd) {
                 throw Error(`invalid reboot key: ${request.key}`);
             }
-            await rl.stop();
+            await rl_control.stop();
             return { status: await system_reboot() };
 
         case 'poweroff':
             if (request.key !== request.cmd) {
                 throw Error(`invalid poweroff key: ${request.key}`);
             }
-            await rl.stop();
+            await rl_control.stop();
             return { status: await system_poweroff() };
 
         default:
@@ -319,5 +319,5 @@ async function control_action(request) {
 // run application
 server_start();
 
-status_proxy(async (data) => io.emit('status', data));
-data_proxy(async (data) => io.emit('data', data));
+rl_data.status_proxy(async (data) => io.emit('status', data));
+rl_data.data_proxy(async (data) => io.emit('data', data));
