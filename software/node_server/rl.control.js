@@ -3,6 +3,7 @@
 import * as path from 'path';
 import { promisify } from 'util';
 import { exec as exec_, spawn } from 'child_process';
+import { get_data_path } from './rl.files.js';
 
 export { status, start, stop, reset, config, version };
 
@@ -208,7 +209,7 @@ function config_to_args_list(mode, config) {
     if (config.file == null) {
         args.push('--output=0');
     } else {
-        args.push(`--output=${path.join(path_data, config.file.filename)}`);
+        args.push(`--output=${get_data_path(config.file.filename)}`);
         args.push(`--format=${config.file.format}`);
         args.push(`--size=${config.file.size}`);
         args.push(`--comment=${config.file.comment.replace(/"/g, '')}`);
