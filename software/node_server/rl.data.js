@@ -81,7 +81,7 @@ function parse_data_to_message(data) {
     }
 
     message.time = parse_time_data(header, data[1]);
-    message.digital = parse_digital_data(header, data[data.length -1]);
+    message.digital = parse_digital_data(header, data[data.length - 1]);
 
     // process channel metadata and non-binary data channels
     let channel_data_index = 2;

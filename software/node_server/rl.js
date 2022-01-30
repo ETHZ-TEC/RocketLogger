@@ -34,4 +34,4 @@ import * as control from './rl.control.js';
 import * as data from './rl.data.js';
 import * as files from './rl.files.js';
 
-export { control, data, files};
+export { control, data, files };
