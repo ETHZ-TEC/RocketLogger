@@ -195,17 +195,17 @@ async function amend_system_context(context) {
     context.asset_version = asset_version;
 
     // validate compatibility of binary and web interface
-    const rl_version = await rl_control.version();
-    for (const err of rl_version.err) {
-        context.err.push(err);
-    }
-    if (rl_version.version) {
-        if (rl_version.version != version) {
+    try {
+        const rl_version = await rl_control.version()
+        if (rl_version?.version != version) {
             context.warn.push(`Potentially incompatible binary and web interface ` +
                 `versions (interface: ${version}, binary: ${rl_version.version})`);
         }
-        context.version_string = rl_version.version_string;
-        context.version = rl_version.version;
+        context.version_string = rl_version?.version_string;
+        context.version = rl_version?.version;
+    }
+    catch (err) {
+        context.err.push(err.toString());
     }
 }
 
@@ -232,12 +232,14 @@ const client_connected = (socket) => {
     socket.on('control', async (request) => {
         server_debug(`rl control: ${JSON.stringify(request)}`);
 
-        const reply = await control_action(request)
-            .catch(err => {
-                return { err: [err.toString()] };
-            });
-        reply.req = request;
-        socket.emit('control', reply);
+        try {
+            const reply = await control_action(request);
+            reply.req = request;
+            socket.emit('control', reply);
+        }
+        catch (err) {
+            socket.emit('control', { err: [err.toString()] });
+        }
     });
 
     // handle status request
@@ -251,22 +253,25 @@ const client_connected = (socket) => {
         }
 
         // poll status and emit on status channel
-        const reply = await rl_control.status()
-            .catch(err => {
-                return { err: [err.toString()] };
-            });
-        reply.status.sdcard_available = await is_sdcard_mounted()
-            .catch(err => {
-                reply.err.push(`Error checking for mounted SD card: ${err}`);
-            });
-        reply.req = request;
-        socket.emit('status', reply);
+        try {
+            const reply = await rl_control.status()
+            reply.status.sdcard_available = await is_sdcard_mounted()
+                .catch(err => {
+                    reply.status.sdcard_available = false;
+                    reply.err = [`Error checking for mounted SD card: ${err}`];
+                });
+            reply.req = request;
+            socket.emit('status', reply);
+        }
+        catch (err) {
+            socket.emit('status', { err: [err.toString()] });
+        }
     });
 
     // handle cached data request
-    socket.on('data', (req) => {
+    socket.on('data', (request) => {
         // @todo: implement local data caching
-        server_debug(`rl data: ${JSON.stringify(req)}`);
+        server_debug(`rl data: ${JSON.stringify(request)}`);
     });
 };
 
