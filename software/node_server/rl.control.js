@@ -2,40 +2,48 @@
 
 import * as path from 'path';
 import { promisify } from 'util';
-import { exec as exec_, spawn } from 'child_process';
+import { execFile as execFile_, spawn } from 'child_process';
 import { get_data_path } from './rl.files.js';
 
 export { status, start, stop, reset, config, version };
 
-const exec = promisify(exec_);
+const execFile = promisify(execFile_);
 
 
 /// RocketLogger status and data update rate [in 1/s]
 const rl_update_rate = 10;
 
+/// RocketLogger CLI command timeout [in ms]
+const command_timeout = 500;
+
+/// RocketLogger command early exit delay timeout [in ms]
+const command_early_exit_timeout = 1000;
+
 
 /// get RocketLogger status
 async function status() {
-    const result = await cli_command('status --json');
+    const args = ['status', '--json'];
+    const result = await rocketlogger_cli(args);
 
     try {
         const status = JSON.parse(result);
         return { status: status };
     } catch (err) {
-        throw Error(`RocketLogger status processing error: ${err} ` +
-            `(stdout: ${result}; stderr: ${stderr})`);
+        throw Error(`RocketLogger status processing error: ${err} (${result})`);
     }
 }
 
 /// start RocketLogger measurement
 async function start(config) {
-    cli_start(config);
+    const args = config_to_args_list('start', config);
+    await rocketlogger_cli_detached(args);
     return { config: config };
 }
 
 /// stop RocketLogger measurement
 async function stop() {
-    const result = await cli_command('stop');
+    const args = ['stop'];
+    const result = await rocketlogger_cli(args);
     return { stop: result };
 }
 
@@ -51,7 +59,7 @@ async function config(config = null) {
     if (config) {
         args.push('--default');
     }
-    const result = await cli_command(args.join(' '));
+    const result = await rocketlogger_cli(args);
 
     try {
         const config_result = JSON.parse(result);
@@ -60,52 +68,62 @@ async function config(config = null) {
         }
         return { config: config_result, default: config !== null };
     } catch (err) {
-        throw Error(`RocketLogger configuration processing error: ${err} ` +
-            `(${result})`);
+        throw Error(`RocketLogger configuration processing error: ${err} (${result})`);
     }
 }
 
 /// get the RocketLogger CLI version
 async function version() {
-    const result = await cli_command('--version');
+    const args = ['--version'];
+    const result = await rocketlogger_cli(args);
 
     try {
         const version = result.split('\n')[0].split(' ').reverse()[0];
         return { version_string: result, version: version };
     } catch (err) {
-        throw Error(`RocketLogger version processing error: ${err} ` +
-            `(${result})`);
+        throw Error(`RocketLogger version processing error: ${err} (${result})`);
     }
 }
 
 
-/// run a RocketLogger cli command
-async function cli_command(args) {
-    const cmd = 'rocketlogger ' + args;
-    const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+/// run a RocketLogger cli command with timeout and awaiting result
+async function rocketlogger_cli(args) {
+    const { stdout } = await execFile('rocketlogger', args, { timeout: command_timeout })
         .catch(err => {
-            throw Error(`Failed to run RocketLogger CLI command: ${err} ` +
-                `(cli: ${cmd})`);
+            throw Error(`Failed to run RocketLogger CLI command: ${err} (args: ${args})`);
         });
     return stdout;
 }
 
-/// start a RocketLogger measurement in background
-async function cli_start(config) {
-    const args = config_to_args_list('start', config);
-    const subprocess = spawn('rocketlogger', args, {
-        detached: true,
-        stdio: 'ignore',
+/// start a RocketLogger cli command in background process
+async function rocketlogger_cli_detached(args) {
+    return new Promise((resolve, reject) => {
+        const subprocess = spawn('rocketlogger', args, {
+            detached: true,
+            stdio: 'ignore',
+        });
+
+        // check for error during process spawning
+        subprocess.on('error', err => {
+            reject(Error(`Failed to run RocketLogger CLI command: ${err} (args: ${args})`));
+        });
+        subprocess.on('exit', (code, signal) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(Error(`RocketLogger CLI command terminated early exit code: ${code} (args: ${args})`));
+            }
+        });
+        setTimeout(resolve, command_early_exit_timeout);
     });
 }
 
 /// reset RocketLogger service
 async function reset_service() {
-    const cmd = 'sudo pkill rocketloggerd';
-    const { stdout, stderr } = await exec(cmd, { timeout: 500 })
+    const args = ['pkill', 'rocketloggerd'];
+    const { stdout } = await execFile('sudo', args, { timeout: command_timeout })
         .catch(err => {
-            throw Error(`Failed to reset RocketLogger service: ${err} ` +
-                `(cli: ${cmd})`);
+            throw Error(`Failed to reset RocketLogger service: ${err}`);
         });
     return stdout;
 }
@@ -136,7 +154,7 @@ function config_to_args_list(mode, config) {
         args.push(`--output=${get_data_path(config.file.filename)}`);
         args.push(`--format=${config.file.format}`);
         args.push(`--size=${config.file.size}`);
-        args.push(`--comment=${config.file.comment.replace(/"/g, '')}`);
+        args.push(`--comment=${config.file.comment.replace(/"/g, '``')}`);
     }
     args.push(`--rate=${config.sample_rate}`);
     args.push(`--web=${config.web_enable}`);
