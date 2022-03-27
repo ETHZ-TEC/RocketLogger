@@ -80,7 +80,7 @@ nunjucks.configure(path_templates, {
 });
 
 /// render page templates
-async function render_page(req, res, template_name, context = null) {
+async function render_page(request, reply, template_name, context = null) {
     let date = new Date();
 
     // build or extend existing context
@@ -116,7 +116,7 @@ async function render_page(req, res, template_name, context = null) {
         context.version = rl_version.version;
     }
 
-    res.render(template_name, context);  /// @todo sync IO call
+    reply.render(template_name, context);  /// @todo sync IO call
 }
 
 
@@ -135,9 +135,9 @@ app.get('/sitemap.xml', express.static(path_static));
 
 
 // routing of rendered pages
-app.get('/', (req, res) => { render_page(req, res, 'control.html') });
+app.get('/', (request, reply) => { render_page(request, reply, 'control.html') });
 
-app.get('/data', async (req, res) => {
+app.get('/data', async (request, reply) => {
     let files_info = [];
     try {
         files_info = await Promise.all(
@@ -159,67 +159,67 @@ app.get('/data', async (req, res) => {
         debug(`Error listing file ${file}: ${err}`);
     }
     const files_info_sorted = files_info.sort((a, b) => a.name.localeCompare(b.name));
-    render_page(req, res, 'data.html', { files: files_info_sorted });
+    render_page(request, reply, 'data.html', { files: files_info_sorted });
 });
 
 
 // routing of file actions
-app.get('/log', async (req, res) => {
+app.get('/log', async (request, reply) => {
     const logfile = rl.path_system_logfile;
     try {
         await fs.access(logfile, fs.constants.F_OK);
     } catch (err) {
-        res.status(404).send('Log file was not found. Please check your systems configuration!');
+        reply.status(404).send('Log file was not found. Please check your systems configuration!');
         return;
     }
 
     try {
-        res.sendFile(logfile);
+        reply.sendFile(logfile);
     } catch (err) {
-        res.status(403).send('Error accessing log file. Please check your systems configuration!');
+        reply.status(403).send('Error accessing log file. Please check your systems configuration!');
         return;
     }
 });
 
-app.get('/data/download/:filename', async (req, res) => {
-    let filepath = path.join(rl.path_data, req.params.filename);
+app.get('/data/download/:filename', async (request, reply) => {
+    let filepath = path.join(rl.path_data, request.params.filename);
 
-    if (req.params.filename.indexOf(path.sep) >= 0) {
-        res.status(400).send(`Invalid filename ${req.params.filename}.`);
+    if (request.params.filename.indexOf(path.sep) >= 0) {
+        reply.status(400).send(`Invalid filename ${request.params.filename}.`);
         return;
     }
 
     try {
         await fs.access(filepath, fs.constants.R_OK);
-        res.download(filepath, req.params.filename);
+        reply.download(filepath, request.params.filename);
     } catch (err) {
-        res.status(404).send(`File ${req.params.filename} was not found.`);
+        reply.status(404).send(`File ${request.params.filename} was not found.`);
     }
 });
 
-app.get('/data/delete/:filename', async (req, res) => {
-    let filepath = path.join(rl.path_data, req.params.filename);
+app.get('/data/delete/:filename', async (request, reply) => {
+    let filepath = path.join(rl.path_data, request.params.filename);
 
-    if (req.params.filename.indexOf(path.sep) >= 0) {
-        res.status(400).send(`Invalid filename ${req.params.filename}.`);
+    if (request.params.filename.indexOf(path.sep) >= 0) {
+        reply.status(400).send(`Invalid filename ${request.params.filename}.`);
         return;
     }
 
     try {
         await fs.access(filepath);
     } catch (err) {
-        res.status(404).send(`File ${req.params.filename} was not found.`);
+        reply.status(404).send(`File ${request.params.filename} was not found.`);
         return;
     }
 
     try {
         await fs.unlink(filepath);
     } catch (err) {
-        res.status(403).send(`Error deleting file ${req.params.filename}: ${err}`);
+        reply.status(403).send(`Error deleting file ${request.params.filename}: ${err}`);
         return;
     }
 
-    res.redirect('back');
+    reply.redirect('back');
 });
 
 // socket.io configure new connection
