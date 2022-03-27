@@ -49,7 +49,7 @@ async function stop() {
 
 /// reset RocketLogger by restarting the service
 async function reset() {
-    const result = reset_service();
+    const result = await reset_service();
     return { reset: result };
 }
 

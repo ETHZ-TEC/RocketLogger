@@ -298,21 +298,18 @@ async function control_action(request) {
             if (request.key !== request.cmd) {
                 throw Error(`invalid reset key: ${request.key}`);
             }
-            await rl_control.stop();
             return rl_control.reset();
 
         case 'reboot':
             if (request.key !== request.cmd) {
                 throw Error(`invalid reboot key: ${request.key}`);
             }
-            await rl_control.stop();
             return { status: await system_reboot() };
 
         case 'poweroff':
             if (request.key !== request.cmd) {
                 throw Error(`invalid poweroff key: ${request.key}`);
             }
-            await rl_control.stop();
             return { status: await system_poweroff() };
 
         default:
