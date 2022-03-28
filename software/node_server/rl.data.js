@@ -224,50 +224,35 @@ function data_cache_reset() {
     data_cache.reset = true;
 }
 
-// write new data to cache
-async function data_cache_write(reply) {
+// write new data message to cache
+async function data_cache_write(message) {
     // check for pending cache reset
     if (data_cache.reset) {
         data_proxy_debug('clear and re-initialize data cache');
         data_cache_clear();
-        data_cache_init(reply.metadata);
+        data_cache_init(message.metadata);
     }
 
     // validate metadata of incoming data
-    if (data_cache.metadata.length !== reply.metadata.length) {
+    if (data_cache.metadata.length !== message.metadata.length) {
         data_proxy_debug('metadata mismatch of data cache and incoming data!');
         return;
     }
 
-    const time_view = new Float64Array(reply.time);
-    for (let i = 0; i < time_view.length; i++) {
-        data_cache.time.push(time_view[i]);
-    }
-    if (data_cache.time.length > data_cache_size) {
-        data_cache.time.splice(0, data_cache.time.length - data_cache_size);
-    }
+    // append message arrays to cache
+    const time_view = new Float64Array(message.time);
+    data_cache_array_enqueue(time_view, data_cache.time, data_cache_size);
 
-    const digital_view = new Uint8Array(reply.digital);
-    for (let i = 0; i < digital_view.length; i++) {
-        data_cache.digital.push(digital_view[i]);
-    }
-    if (data_cache.digital.length > data_cache_size) {
-        data_cache.digital.splice(0, data_cache.digital.length - data_cache_size);
-    }
+    const digital_view = new Uint8Array(message.digital);
+    data_cache_array_enqueue(digital_view, data_cache.digital, data_cache_size);
 
     for (const ch in data_cache.metadata) {
         if (data_cache.metadata[ch].unit === 'binary') {
             continue;
         }
 
-        const tmp = new Float32Array(data_cache.data[ch].length + reply.data[ch].length);
-        tmp.set(data_cache.data[ch], 0);
-        tmp.set(reply.data[ch], data_cache.data[ch].length);
-        data_cache.data[ch] = tmp;
-
-        if (data_cache.data[ch].length > data_cache_size) {
-            data_cache.data[ch].splice(0, data_cache.data[ch].length - data_cache_size);
-        }
+        const data_view = new Float32Array(message.data[ch]);
+        data_cache_array_enqueue(data_view, data_cache.data[ch], data_cache_size);
     }
     // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
 }
@@ -293,6 +278,16 @@ function data_cache_init(metadata) {
         data_cache.data[ch] = [];
     }
     data_cache.reset = false;
+}
+
+// enqueue data to buffer array
+async function data_cache_array_enqueue(data_in, buffer, buffer_size) {
+    const buffer_trim_length = Math.max(0, data_in.length + buffer.length - buffer_size);
+    buffer.splice(0, buffer_trim_length);
+
+    for (const value of data_in) {
+        buffer.push(value);
+    }
 }
 
 // read from data cache for values before time_reference
