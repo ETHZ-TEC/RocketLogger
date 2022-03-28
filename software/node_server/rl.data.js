@@ -230,7 +230,7 @@ async function data_cache_write(message) {
     if (data_cache.reset) {
         data_proxy_debug('clear and re-initialize data cache');
         data_cache_clear();
-        data_cache_init(message.metadata);
+        data_cache_init(message.metadata, data_cache_size);
     }
 
     // validate metadata of incoming data
@@ -241,18 +241,14 @@ async function data_cache_write(message) {
 
     // append message arrays to cache
     const time_view = new Float64Array(message.time);
-    data_cache_array_enqueue(time_view, data_cache.time, data_cache_size);
+    typedarray_enqueue(time_view, data_cache.time);
 
     const digital_view = new Uint8Array(message.digital);
-    data_cache_array_enqueue(digital_view, data_cache.digital, data_cache_size);
+    typedarray_enqueue(digital_view, data_cache.digital);
 
-    for (const ch in data_cache.metadata) {
-        if (data_cache.metadata[ch].unit === 'binary') {
-            continue;
-        }
-
+    for (const ch in message.data) {
         const data_view = new Float32Array(message.data[ch]);
-        data_cache_array_enqueue(data_view, data_cache.data[ch], data_cache_size);
+        typedarray_enqueue(data_view, data_cache.data[ch]);
     }
     // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
 }
@@ -268,26 +264,24 @@ function data_cache_clear() {
 }
 
 // initialize data cache
-function data_cache_init(metadata) {
+function data_cache_init(metadata, cache_size) {
     debug('init data cache');
     data_cache.metadata = metadata;
-    data_cache.time = [];
-    data_cache.digital = [];
+    data_cache.time = new Float64Array(cache_size).fill(NaN);
+    data_cache.digital = new Uint8Array(cache_size);
     data_cache.data = {};
     for (const ch in data_cache.metadata) {
-        data_cache.data[ch] = [];
+        if (data_cache.metadata[ch].unit !== 'binary') {
+            data_cache.data[ch] = new Float32Array(cache_size);
+        }
     }
     data_cache.reset = false;
 }
 
-// enqueue data to buffer array
-async function data_cache_array_enqueue(data_in, buffer, buffer_size) {
-    const buffer_trim_length = Math.max(0, data_in.length + buffer.length - buffer_size);
-    buffer.splice(0, buffer_trim_length);
-
-    for (const value of data_in) {
-        buffer.push(value);
-    }
+// enqueue typed array data at end of typed array buffer
+async function typedarray_enqueue(data, buffer) {
+    buffer.set(buffer.subarray(data.length));
+    buffer.set(data, buffer.length - data.length)
 }
 
 // read from data cache for values before time_reference
