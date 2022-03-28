@@ -8,18 +8,22 @@ import { filter_data_filename } from './rl.files.js';
 export { DataSubscriber, StatusSubscriber, data_cache_reset, data_cache_read };
 
 
-/// ZeroMQ socket identifier for data publishing status
+/// ZeroMQ socket identifier for status publishing
 const status_socket = 'tcp://127.0.0.1:8276';
 
-/// ZeroMQ socket identifier for status publishing
+/// ZeroMQ socket identifier for data publishing
 const data_socket = 'tcp://127.0.0.1:8277';
 
 /// RocketLogger maximum web downstream data rate [in 1/s]
 const web_data_rate = 1000;
 
-// data cache
+/// Measurement data cache size [in number of timestamps]
 const data_cache_size = 1000000;
+
+/// Size of reply to data cache requests [in number of timestamps]
 const data_cache_reply_size = data_cache_size / 20;
+
+/// Measurement data cache buffer
 const data_cache = {
     metadata: {},
     time: [],
@@ -291,19 +295,11 @@ function data_cache_init(metadata) {
     data_cache.reset = false;
 }
 
-// read from data cache
-async function data_cache_read(request) {
-    if (request.cmd !== 'data') {
-        return { err: [`invalid data command: ${request.cmd}`] };
-    }
+// read from data cache for values before time_reference
+async function data_cache_read(time_reference) {
+    data_proxy_debug(`cache read: time_reference=${time_reference}, cache_size=${data_cache.time.length}`);
 
-    if (request.time === null) {
-        return { err: ['missing reference timestamp of last available data'] };
-    }
-
-    const reply = {
-        t: Date.now(),
-        req: request,
+    const message = {
         metadata: {},
         time: null,
         data: {},
@@ -312,42 +308,39 @@ async function data_cache_read(request) {
 
     // reverse lookup first unavailable data data from cache
     const cache_time_view = new Float64Array(data_cache.time);
-    let cache_hit = cache_time_view.length - 1;
-    while (cache_hit >= 0) {
-        if (cache_time_view[cache_hit] < request.time) {
+    let index_end = cache_time_view.length;
+    while (index_end > 0) {
+        if (cache_time_view[index_end - 1] < time_reference) {
             break;
         }
-        cache_hit--;
+        index_end--;
     }
 
-    // data available, otherwise reply with empty data
-    if (cache_hit >= 0) {
-        const index_start = Math.max(0, cache_hit - data_cache_reply_size + 1);
-        const index_end = cache_hit + 1;
-        const buffer_length = index_end - index_start;
+    // check for and return on cache miss
+    if (index_end <= 0) {
+        data_proxy_debug('cache miss: send empty message');
+        return message;
+    }
 
-        data_proxy_debug(`cache hit: send data range [${index_start}:${index_end}], size=${data_cache.time.length}`);
+    // cache hit, calculate data range for message
+    const index_start = Math.max(0, index_end - data_cache_reply_size);
+    data_proxy_debug(`cache hit: send data range ${index_start}:${index_end}`);
 
-        // assemble response from cache
-        reply.metadata = data_cache.metadata;
+    // assemble data reply message from cache
+    message.metadata = data_cache.metadata;
+    message.time = cache_time_view.slice(index_start, index_end);
 
-        const cache_time_view = new Float64Array(data_cache.time);
-        reply.time = cache_time_view.slice(index_start, index_end);
-
-        const cache_digital_view = new Uint8Array(data_cache.digital);
-        reply.digital = cache_digital_view.slice(index_start, index_end);
-
-        for (const ch in data_cache.metadata) {
-            if (data_cache.metadata[ch].unit === 'binary') {
-                continue;
-            }
-
-            const cache_data_view = new Float32Array(data_cache.data[ch]);
-            reply.data[ch] = cache_data_view.slice(index_start, index_end);
+    for (const ch in data_cache.metadata) {
+        if (data_cache.metadata[ch].unit === 'binary') {
+            continue;
         }
-    } else {
-        data_proxy_debug(`cache miss: send empty response, cache_size=${data_cache.time.length}`);
+
+        const cache_data_view = new Float32Array(data_cache.data[ch]);
+        message.data[ch] = cache_data_view.slice(index_start, index_end);
     }
 
-    return reply;
+    const cache_digital_view = new Uint8Array(data_cache.digital);
+    message.digital = cache_digital_view.slice(index_start, index_end);
+
+    return message;
 }

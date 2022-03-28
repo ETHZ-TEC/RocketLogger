@@ -268,12 +268,29 @@ const client_connected = (socket) => {
         }
     });
 
-    // handle cached data request
+    // handle data request
     socket.on('data', async (request) => {
         server_debug(`rl data: ${JSON.stringify(request)}`);
 
-        const reply = await rl_data.data_cache_read(request);
-        socket.emit('data', reply);
+        // validate cached data request
+        if (request.cmd !== 'data') {
+            socket.emit('data', { err: [`invalid data command: ${request.cmd}`] });
+            return;
+        }
+        if (request.time === null) {
+            socket.emit('data', { err: ['missing reference timestamp of last available data'] });
+            return;
+        }
+
+        // read data from cache
+        try {
+            const reply = await rl_data.data_cache_read(request.time);
+            reply.req = request;
+            socket.emit('data', reply);
+        }
+        catch (err) {
+            socket.emit('data', { err: [err.toString()] });
+        }
     });
 };
 
