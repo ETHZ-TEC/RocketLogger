@@ -18,17 +18,23 @@ const data_socket = 'tcp://127.0.0.1:8277';
 const web_data_rate = 1000;
 
 /// Measurement data cache size [in number of timestamps]
-const data_cache_size = 1000000;
+const data_cache_size = 10000;
+
+/// Number of buffer levels
+const data_cache_buffer_levels = 3;
+
+/// Aggregation factor between data cache levels
+const data_cache_aggregation_factor = 10;
 
 /// Size of reply to data cache requests [in number of timestamps]
-const data_cache_reply_size = data_cache_size / 20;
+const data_cache_reply_size = 5000;
 
 /// Measurement data cache buffer
 const data_cache = {
     metadata: {},
-    time: [],
+    time: {},
     data: {},
-    digital: [],
+    digital: {},
     reset: true,
 };
 
@@ -240,15 +246,11 @@ async function data_cache_write(message) {
     }
 
     // append message arrays to cache
-    const time_view = new Float64Array(message.time);
-    typedarray_enqueue(time_view, data_cache.time);
-
-    const digital_view = new Uint8Array(message.digital);
-    typedarray_enqueue(digital_view, data_cache.digital);
+    buffer_add(data_cache.time, message.time);
+    buffer_add(data_cache.digital, message.digital);
 
     for (const ch in message.data) {
-        const data_view = new Float32Array(message.data[ch]);
-        typedarray_enqueue(data_view, data_cache.data[ch]);
+        buffer_add(data_cache.data[ch], message.data[ch]);
     }
     // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
 }
@@ -257,8 +259,8 @@ async function data_cache_write(message) {
 function data_cache_clear() {
     data_proxy_debug('clear data cache');
     data_cache.metadata = {};
-    data_cache.time = [];
-    data_cache.digital = [];
+    data_cache.time = {};
+    data_cache.digital = {};
     data_cache.data = {};
     data_cache.reset = true;
 }
@@ -267,21 +269,15 @@ function data_cache_clear() {
 function data_cache_init(metadata, cache_size) {
     debug('init data cache');
     data_cache.metadata = metadata;
-    data_cache.time = new Float64Array(cache_size).fill(NaN);
-    data_cache.digital = new Uint8Array(cache_size);
-    data_cache.data = {};
+    buffer_init(data_cache.time, Float64Array, NaN);
+    buffer_init(data_cache.digital, Uint8Array);
     for (const ch in data_cache.metadata) {
         if (data_cache.metadata[ch].unit !== 'binary') {
-            data_cache.data[ch] = new Float32Array(cache_size);
+            data_cache.data[ch] = {};
+            buffer_init(data_cache.data[ch], Float32Array);
         }
     }
     data_cache.reset = false;
-}
-
-// enqueue typed array data at end of typed array buffer
-async function typedarray_enqueue(data, buffer) {
-    buffer.set(buffer.subarray(data.length));
-    buffer.set(data, buffer.length - data.length)
 }
 
 // read from data cache for values before time_reference
@@ -296,7 +292,7 @@ async function data_cache_read(time_reference) {
     };
 
     // reverse lookup first unavailable data data from cache
-    const cache_time_view = new Float64Array(data_cache.time);
+    const cache_time_view = buffer_get_view(data_cache.time);
     let index_end = cache_time_view.length;
     while (index_end > 0) {
         if (cache_time_view[index_end - 1] < time_reference) {
@@ -311,8 +307,20 @@ async function data_cache_read(time_reference) {
         return message;
     }
 
-    // cache hit, calculate data range for message
-    const index_start = Math.max(0, index_end - data_cache_reply_size);
+    // cache hit, trim to valid non-NaN data range for message
+    let index_start = Math.max(0, index_end - data_cache_reply_size);
+    while (index_start < index_end) {
+        if (!isNaN(cache_time_view[index_start])) {
+            break;
+        }
+        index_start++;
+    }
+
+    // check for and return on no valid data
+    if (index_start === index_end) {
+        data_proxy_debug('cache miss (no valid data): send empty message');
+        return message;
+    }
     data_proxy_debug(`cache hit: send data range ${index_start}:${index_end}`);
 
     // assemble data reply message from cache
@@ -324,12 +332,61 @@ async function data_cache_read(time_reference) {
             continue;
         }
 
-        const cache_data_view = new Float32Array(data_cache.data[ch]);
+        const cache_data_view = buffer_get_view(data_cache.data[ch]);
         message.data[ch] = cache_data_view.slice(index_start, index_end);
     }
 
-    const cache_digital_view = new Uint8Array(data_cache.digital);
+    const cache_digital_view = buffer_get_view(data_cache.digital);
     message.digital = cache_digital_view.slice(index_start, index_end);
 
     return message;
+}
+
+
+function buffer_init(buffer, TypedArrayT, initial_value = null) {
+    buffer.data = new TypedArrayT(data_cache_size * data_cache_buffer_levels);
+    if (initial_value !== null) {
+        buffer.data.fill(initial_value);
+    }
+    buffer.level = [];
+    for (let i = 0; i < data_cache_buffer_levels; i++) {
+        buffer.level[i] = buffer.data.subarray(i * data_cache_size, (i + 1) * data_cache_size);
+    }
+}
+
+function buffer_add(buffer, data) {
+    for (let i = 1; i <= data_cache_buffer_levels; i++) {
+        if (i == data_cache_buffer_levels) {
+            // enqueue new data
+            typedarray_enqueue(buffer.level[i - 1], data);
+            break;
+        }
+
+        // aggregate data about to be dequeued to next lower buffer
+        const aggregate_count = data.length / (data_cache_aggregation_factor ** (data_cache_buffer_levels - i));
+        typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, data_cache_aggregation_factor);
+    }
+}
+
+function buffer_get_view(buffer) {
+    return buffer.data;
+}
+
+// enqueue typed array data at end of typed array buffer
+function typedarray_enqueue(buffer_out, buffer_in) {
+    buffer_out.set(buffer_out.subarray(buffer_in.length));
+    buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
+}
+
+// enqueue aggregates of a typed array at end of typed array buffer
+function typedarray_enqueue_aggregate(buffer_out, buffer_in, count, aggregation_factor) {
+    buffer_out.set(buffer_out.subarray(count));
+    aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
+}
+
+// typed array to typed array sample aggregation
+function aggregate(buffer_out, buffer_in, factor) {
+    for (let i = 0; i < buffer_out.length; i++) {
+        buffer_out[i] = buffer_in[i * factor];
+    }
 }
