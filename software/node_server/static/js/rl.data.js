@@ -46,6 +46,16 @@ const RL_PLOT_MAX_FPS = 50;
 /// interval for server timesync [ms]
 const RL_TIMESYNC_INTERVAL_MS = 60e3;
 
+/// Measurement data cache size [in number of timestamps]
+const data_store_size = 10000;
+
+/// Number of buffer levels
+const data_store_buffer_levels = 3;
+
+/// Aggregation factor between data cache levels
+const data_store_aggregation_factor = 10;
+
+
 /// initialize RocketLogger data and plot functionality
 function rocketlogger_init_data() {
     // check RocketLogger base functionality is initialized
@@ -66,11 +76,12 @@ function rocketlogger_init_data() {
 
     // provide data() method to poll cached data
     rl.data = () => {
+        const time_view = buffer_get_valid_view(rl._data.time);
         const req = {
             cmd: 'data',
-            time: (rl._data.time.length > 0) ? rl._data.time[0] : null,
+            time: time_view.length ? time_view[0] : null,
         };
-        console.log(`request cached data, time: ${(new Date(req.time)).toISOString()}`);
+        console.log(`request cached data, time: ${req.time === null ? 'null' : (new Date(req.time)).toISOString()}`);
         rl._data.socket.emit('data', req);
     }
 
@@ -125,19 +136,23 @@ function rocketlogger_init_data() {
 }
 
 /// process new measurement data
+// cached data on initial load: prepend -> validate self-restructuring by aggregation (?)
 function process_data(res) {
     // reset and initialize metadata, buffers and plots
     if (rl._data.reset) {
         rl._data.metadata = res.metadata;
-        rl._data.time = [];
+        rl._data.time = {};
+        buffer_init(rl._data.time, Float64Array, NaN);
         rl._data.buffer = {};
         for (const ch in rl._data.metadata) {
-            rl._data.buffer[ch] = [];
+            rl._data.buffer[ch] = {};
+            buffer_init(rl._data.buffer[ch], Float32Array, NaN);
         }
         for (const plot of rl.plot.plots) {
             Plotly.purge(plot.id);
             plot.data = null;
         }
+        /// TODO: only if not self-requested measurement start/(no data received yet)
         // lazy request historical data
         setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
         rl._data.reset = false;
@@ -152,11 +167,12 @@ function process_data(res) {
 
     // check cached or updated data, reject processing if partially overlapping
     let cached_data = false;
-    if (rl._data.time.length == 0) {
+    const buffer_time_view = buffer_get_valid_view(rl._data.time);
+    if (buffer_time_view.length === 0) {
         /* initial data update */
-    } else if (time_view[0] > rl._data.time[rl._data.time.length - 1]) {
+    } else if (time_view[0] > buffer_time_view[buffer_time_view.length - 1]) {
         /* data update */
-    } else if (time_view[time_view.length - 1] < rl._data.time[0]) {
+    } else if (time_view[time_view.length - 1] < buffer_time_view[0]) {
         cached_data = true;
         // lazy request historical data
         setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
@@ -169,51 +185,37 @@ function process_data(res) {
     }
 
     // process data
-    let tmp = new Float64Array(rl._data.time.length + time_view.length);
     if (cached_data) {
-        tmp.set(time_view, 0);
-        tmp.set(rl._data.time, time_view.length);
+        console.warn("processing cache data not yet implemented!");
+        /// TODO: implementation idea: prepend to existing data within the buffer level
+        ///       a) only on the buffer level the earliest available data value identified for the cached data request
+        ///       b) dropping any overflowing values and request new cached data for next lower level
     } else {
-        tmp.set(rl._data.time, 0);
-        tmp.set(time_view, rl._data.time.length);
-    }
-    rl._data.time = tmp;
-
-    if (rl._data.time.length > RL_DATA_BUFFER_LENGTH) {
-        rl._data.time.splice(0,
-            rl._data.time.length - RL_DATA_BUFFER_LENGTH);
+        buffer_add(rl._data.time, time_view);
     }
 
     // decode channel data
     for (const ch in rl._data.metadata) {
-        const tmp = new Float32Array(rl._data.buffer[ch].length + time_view.length);
-        let buffer_view;
+        let data_view;
         if (rl._data.metadata[ch].unit === 'binary') {
+            /// TODO: evaluate potential optimization using buffer_add() with conversion capability
             const digital_view = new Uint8Array(res.digital);
-            buffer_view = new Float32Array(digital_view.length);
+            data_view = new Float32Array(digital_view.length);
             for (let i = 0; i < digital_view.length; i++) {
-                buffer_view[i] = 
+                data_view[i] = 
                     ((digital_view[i] & (0x01 << rl._data.metadata[ch].bit)) ? 0.7 : 0)
                     + rl._data.metadata[ch].bit;
             }
         }
         else {
-            buffer_view = new Float32Array(res.data[ch]);
+            data_view = new Float32Array(res.data[ch]);
         }
 
         if (cached_data) {
-            tmp.set(buffer_view, 0);
-            tmp.set(rl._data.buffer[ch], buffer_view.length);
+            console.warn("processing cache data not yet implemented!");
+            /// see above
         } else {
-            tmp.set(rl._data.buffer[ch], 0);
-            tmp.set(buffer_view, rl._data.buffer[ch].length);
-        }
-        rl._data.buffer[ch] = tmp;
-
-        // drop overflow values
-        if (rl._data.buffer[ch].length > RL_DATA_BUFFER_LENGTH) {
-            rl._data.buffer[ch].splice(0,
-                rl._data.buffer[ch].length - RL_DATA_BUFFER_LENGTH);
+            buffer_add(rl._data.buffer[ch], data_view);
         }
     }
 }
@@ -375,32 +377,26 @@ async function update_plots() {
             xaxis: xaxis,
         };
 
+        const time_view = buffer_get_valid_view(rl._data.time);
+
         // collect data series to plot
         for (const ch in rl._data.buffer) {
             const meta = rl._data.metadata[ch];
-            const buffer = rl._data.buffer[ch];
+            const buffer_view = buffer_get_valid_view(rl._data.buffer[ch]);
             let trace = null;
 
-            // find existing channel trace or initialize new
-            let trace_index = 0;
-            while (trace_index < plot.data.length) {
-                if (plot.data[trace_index].name === ch) {
-                    trace = plot.data[trace_index];
-                    trace.x.length = 0;
-                    trace.y.length = 0;
-                    break;
-                }
-                trace_index++;
-            }
-            if (trace_index === plot.data.length) {
+            // find existing channel trace or initialize and add new
+            const trace_index = plot.data.findIndex((value) => value.name === ch);
+            if (trace_index < 0) {
                 trace = {
-                    x: [],
-                    y: [],
                     type: 'scattergl',
                     mode: 'lines',
                     name: ch,
                     hoverinfo: 'y+name',
-                }
+                };
+                plot.data.push(trace);
+            } else {
+                trace = plot.data[trace_index];
             }
 
             // check if channel of ambient plot
@@ -413,30 +409,15 @@ async function update_plots() {
                     trace.mode = 'markers';
                 }
 
-                // downsample to non NaN values
-                for (let i = Math.max(0, buffer.length - 11 * rl.plot.time_scale);
-                    i < buffer.length; i++) {
-                    if (isNaN(buffer[i])) {
-                        continue;
-                    }
-                    trace.x.push(rl._data.time[i]);
-                    trace.y.push(buffer[i]);
-                }
+                const start_index = Math.max(0, buffer_view.length - 11 * rl.plot.time_scale);
+                trace.x = time_view.subarray(start_index);
+                trace.y = buffer_view.subarray(start_index);
             } else if (meta.unit === plot.unit) {
-                // downsample to correct scale
-                const step = Math.floor(10 * rl.plot.time_scale / RL_PLOT_POINTS);
-                for (let i = Math.max(0, buffer.length - 10 * rl.plot.time_scale);
-                    i < buffer.length; i += step) {
-                    trace.x.push(rl._data.time[i]);
-                    trace.y.push(buffer[i]);
-                }
+                const start_index = Math.max(0, buffer_view.length - 10 * rl.plot.time_scale);
+                trace.x = time_view.subarray(start_index);
+                trace.y = buffer_view.subarray(start_index);
             } else {
                 continue;
-            }
-
-            // add data trace if not existing
-            if (trace_index === plot.data.length) {
-                plot.data.push(trace);
             }
         }
 
@@ -487,7 +468,7 @@ $(() => {
         switch (event.which) {
             case ascii('p'):
             case ascii(' '):
-                $('#plot_update').trigger('click')
+                $('#plot_update').trigger('click');
                 break;
             case ascii('1'):
                 $('#plot_time_scale').val(1000).trigger('change');
@@ -504,3 +485,60 @@ $(() => {
         event.preventDefault();
     });
 });
+
+
+function buffer_init(buffer, TypedArrayT, initial_value = null) {
+    buffer.data = new TypedArrayT(data_store_size * data_store_buffer_levels);
+    if (initial_value !== null) {
+        buffer.data.fill(initial_value);
+    }
+    buffer.level = [];
+    for (let i = 0; i < data_store_buffer_levels; i++) {
+        buffer.level[i] = buffer.data.subarray(i * data_store_size, (i + 1) * data_store_size);
+    }
+}
+
+function buffer_add(buffer, data) {
+    for (let i = 1; i <= data_store_buffer_levels; i++) {
+        if (i == data_store_buffer_levels) {
+            // enqueue new data
+            typedarray_enqueue(buffer.level[i - 1], data);
+            break;
+        }
+
+        // aggregate data about to be dequeued to next lower buffer
+        const aggregate_count = data.length / (data_store_aggregation_factor ** (data_store_buffer_levels - i));
+        typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, data_store_aggregation_factor);
+    }
+}
+
+function buffer_get_view(buffer) {
+    return buffer.data;
+}
+
+function buffer_get_valid_view(buffer) {
+    const index_start = buffer_get_view(buffer).findIndex((value) => !isNaN(value));
+    if (index_start < 0) {
+        return buffer.data.subarray(0, 0);
+    }
+    return buffer.data.subarray(index_start);
+}
+
+// enqueue typed array data at end of typed array buffer
+function typedarray_enqueue(buffer_out, buffer_in) {
+    buffer_out.set(buffer_out.subarray(buffer_in.length));
+    buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
+}
+
+// enqueue aggregates of a typed array at end of typed array buffer
+function typedarray_enqueue_aggregate(buffer_out, buffer_in, count, aggregation_factor) {
+    buffer_out.set(buffer_out.subarray(count));
+    aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
+}
+
+// typed array to typed array sample aggregation
+function aggregate(buffer_out, buffer_in, factor) {
+    for (let i = 0; i < buffer_out.length; i++) {
+        buffer_out[i] = buffer_in[i * factor];
+    }
+}
