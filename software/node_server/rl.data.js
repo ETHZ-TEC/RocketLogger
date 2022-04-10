@@ -266,7 +266,7 @@ function data_cache_clear() {
 }
 
 // initialize data cache
-function data_cache_init(metadata, cache_size) {
+function data_cache_init(metadata) {
     debug('init data cache');
     data_cache.metadata = metadata;
     buffer_init(data_cache.time, Float64Array, NaN);
@@ -291,41 +291,23 @@ async function data_cache_read(time_reference) {
         digital: null,
     };
 
-    // reverse lookup first unavailable data data from cache
+    // find cache buffer index of first already available data element
     const cache_time_view = buffer_get_view(data_cache.time);
-    let index_end = cache_time_view.length;
-    while (index_end > 0) {
-        if (cache_time_view[index_end - 1] < time_reference) {
-            break;
-        }
-        index_end--;
-    }
+    const index_start = cache_time_view.findIndex(value => !isNaN(value));
+    const index_end = index_start + cache_time_view.subarray(index_start).findIndex(value => value >= time_reference);
 
     // check for and return on cache miss
-    if (index_end <= 0) {
+    if (index_start < 0 || index_end <= index_start) {
         data_proxy_debug('cache miss: send empty message');
         return message;
     }
 
-    // cache hit, trim to valid non-NaN data range for message
-    let index_start = Math.max(0, index_end - data_cache_reply_size);
-    while (index_start < index_end) {
-        if (!isNaN(cache_time_view[index_start])) {
-            break;
-        }
-        index_start++;
-    }
-
-    // check for and return on no valid data
-    if (index_start === index_end) {
-        data_proxy_debug('cache miss (no valid data): send empty message');
-        return message;
-    }
-    data_proxy_debug(`cache hit: send data range ${index_start}:${index_end}`);
-
     // assemble data reply message from cache
+    const index_start_reply = Math.max(index_start, index_end - data_cache_reply_size);
+    data_proxy_debug(`cache hit: send data range ${index_start_reply}:${index_end}`);
+
     message.metadata = data_cache.metadata;
-    message.time = cache_time_view.slice(index_start, index_end);
+    message.time = cache_time_view.slice(index_start_reply, index_end);
 
     for (const ch in data_cache.metadata) {
         if (data_cache.metadata[ch].unit === 'binary') {
@@ -333,11 +315,11 @@ async function data_cache_read(time_reference) {
         }
 
         const cache_data_view = buffer_get_view(data_cache.data[ch]);
-        message.data[ch] = cache_data_view.slice(index_start, index_end);
+        message.data[ch] = cache_data_view.slice(index_start_reply, index_end);
     }
 
     const cache_digital_view = buffer_get_view(data_cache.digital);
-    message.digital = cache_digital_view.slice(index_start, index_end);
+    message.digital = cache_digital_view.slice(index_start_reply, index_end);
 
     return message;
 }
