@@ -463,7 +463,15 @@ function data_add(message, cache_data = false) {
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
-            insert(rl._data.buffer[ch], data_view);
+            if (time_view.length == data_view.length) {
+                insert(rl._data.buffer[ch], data_view);
+            } else {
+                // interleave sub-sampled data with NaN
+                const ratio = Math.floor(time_view.length / data_view.length);
+                const data = new Float32Array(time_view.length).map((_, i) =>
+                    i % ratio == 0 ? data_view[i / ratio] : NaN);
+                insert(rl._data.buffer[ch], data);
+            }
         }
     }
 }

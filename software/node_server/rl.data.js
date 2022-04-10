@@ -250,7 +250,15 @@ async function data_cache_write(message) {
     buffer_add(data_cache.digital, message.digital);
 
     for (const ch in message.data) {
-        buffer_add(data_cache.data[ch], message.data[ch]);
+        if (message.time.length == message.data[ch].length) {
+            buffer_add(data_cache.data[ch], message.data[ch]);
+        } else {
+            // interleave sub-sampled data with NaN
+            const ratio = Math.floor(message.time.length / message.data[ch].length);
+            const data = new Float32Array(message.time.length).map((_, i) =>
+                i % ratio == 0 ? message.data[ch][i / ratio] : NaN);
+            buffer_add(data_cache.data[ch], data);
+        }
     }
     // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
 }
