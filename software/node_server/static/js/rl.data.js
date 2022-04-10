@@ -35,20 +35,20 @@ if (typeof rl === 'undefined') {
     throw Error('need to load rl.base.js before loading rl.data.js');
 }
 
-/// data buffer initalization interval for requesting cached data [ms]
+/// data buffer initialization interval for requesting cached data [ms]
 const RL_DATA_INIT_INTERVAL = 3000;
 /// maximum plot update rate [frames/sec]
 const RL_PLOT_MAX_FPS = 50;
 /// interval for server timesync [ms]
 const RL_TIMESYNC_INTERVAL_MS = 60e3;
 
-/// Measurement data cache size [in number of timestamps]
+/// Measurement data buffer size [in number of elements]
 const data_store_size = 10000;
 
 /// Number of buffer levels
 const data_store_buffer_levels = 3;
 
-/// Aggregation factor between data cache levels
+/// Aggregation factor between data buffer levels
 const data_store_aggregation_factor = 10;
 
 
@@ -168,14 +168,7 @@ function process_data(reply) {
     }
 
     // process data
-    if (cached_data) {
-        /// TODO: implementation idea: prepend to existing data within the buffer level
-        ///       a) only on the buffer level the earliest available data value identified for the cached data request
-        ///       b) dropping any overflowing values and request new cached data for next lower level
-        console.warn("processing cache data not yet implemented!");
-    } else {
-        data_add(reply);
-    }
+    data_add(reply, cached_data);
 }
 
 
@@ -365,7 +358,7 @@ async function plot_reset(plot, xaxis) {
 
 async function plot_update(plot, xaxis) {
     if (!document.getElementById(plot.id)?.data) {
-        console.warn("skip update of un-initialized plot");
+        console.warn('skip update of un-initialized plot');
         return;
     }
 
@@ -455,9 +448,11 @@ function data_reset(metadata) {
     rl._data.reset = false;
 }
 
-function data_add(message) {
+function data_add(message, cache_data = false) {
+    const insert = cache_data ? buffer_prepend : buffer_add;
+
     const time_view = new Float64Array(message.time);
-    buffer_add(rl._data.time, time_view);
+    insert(rl._data.time, time_view);
 
     // decode channel data
     for (const ch in rl._data.metadata) {
@@ -465,10 +460,10 @@ function data_add(message) {
             const bit_offset = rl._data.metadata[ch].bit;
             const data_digital = Float32Array.from(new Uint8Array(message.digital),
                 value => bit_offset + (value & (0x01 << bit_offset) ? 0.7 : 0));
-            buffer_add(rl._data.buffer[ch], data_digital);
+            insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
-            buffer_add(rl._data.buffer[ch], data_view);
+            insert(rl._data.buffer[ch], data_view);
         }
     }
 }
@@ -497,6 +492,29 @@ function buffer_add(buffer, data) {
         const aggregate_count = data.length / (data_store_aggregation_factor ** (data_store_buffer_levels - i));
         typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, data_store_aggregation_factor);
     }
+}
+
+function buffer_prepend(buffer, data) {
+    let buffer_start_index = buffer_get_view(buffer).findIndex(value => !isNaN(value));
+    if (buffer_start_index < 0) {
+        // no buffered data -> enqueue all data across buffer levels
+        typedarray_enqueue(buffer.data, data);
+        return;
+    }
+
+    for (let i = 0; i < data_store_buffer_levels; i++) {
+        // skip to next non-full buffer level
+        if (buffer_start_index > buffer.level[i].length) {
+            buffer_start_index -= buffer.level[i].length;
+            continue;
+        }
+
+        // insert data limited to non-full buffer level
+        const insert_size = Math.min(buffer_start_index, data.length);
+        buffer.level[i].set(data.subarray(data.length - insert_size), buffer_start_index - insert_size);
+        return;
+    }
+    console.warn('failed inserting cached data into buffer');
 }
 
 function buffer_get_view(buffer) {
