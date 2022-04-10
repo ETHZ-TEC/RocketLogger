@@ -7,7 +7,7 @@ import picomatch from 'picomatch';
 
 import { bytes_to_string, date_to_string } from './util.js';
 
-export { delete_data_file, get_data_path, get_data_file_info, get_log_path, validate_data_file };
+export { delete_data_file, filter_data_filename, get_data_path, get_data_file_info, get_log_path, validate_data_file };
 
 
 /// RocketLogger measurement data path
@@ -30,6 +30,11 @@ function is_valid_data_file(filename) {
 
 async function delete_data_file(filename) {
     return fs.unlink(get_data_path(filename));
+}
+
+function filter_data_filename(filename) {
+    const basename = path.basename(filename);
+    return basename;
 }
 
 function get_data_path(filename) {

@@ -3,6 +3,7 @@
 // imports
 import debug from 'debug';
 import * as zmq from 'zeromq';
+import { filter_data_filename } from './rl.files.js';
 
 export { DataSubscriber, StatusSubscriber };
 
@@ -57,7 +58,11 @@ class StatusSubscriber extends Subscriber {
     }
 
     _parse(raw) {
-        return { status: JSON.parse(raw) };
+        const status = JSON.parse(raw);
+        if (status.config?.file) {
+            status.config.file.filename = filter_data_filename(status.config.file?.filename);
+        }
+        return { status: status };
     }
 }
 
