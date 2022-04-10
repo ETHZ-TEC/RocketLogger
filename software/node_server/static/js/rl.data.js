@@ -133,35 +133,38 @@ function rocketlogger_init_data() {
 
 /// process new measurement data
 function process_data(reply) {
-    // reset and data store and plots
-    if (rl._data.reset) {
-        data_reset(reply.metadata);
-        plots_reset();
-    }
-
-    // handle timestamp buffer, drop overflow values
+    // check received timestamp buffer, drop overflow values
     const time_view = new Float64Array(reply.time);
     if (time_view.length === 0) {
         console.log('cache miss, skip data processing');
         return;
     }
 
-    // check cached or updated data, reject processing if partially overlapping
+    // check cached or updated data, skip processing if partially overlapping
+    let reset = rl._data.reset || (reply.reset) ? rl._data.reset : false;
     let cached_data = false;
-    const buffer_time_view = buffer_get_valid_view(rl._data.time);
-    if (buffer_time_view.length === 0) {
-        // initial data update -> lazy request historical data
-        setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
-    } else if (time_view[0] > buffer_time_view[buffer_time_view.length - 1]) {
-        /* data update */
-    } else if (time_view[time_view.length - 1] < buffer_time_view[0]) {
-        cached_data = true;
-        // lazy request historical data
-        setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
-        console.log(`cache hit:   [${(new Date(time_view[0])).toISOString()}, ${(new Date(time_view[time_view.length - 1])).toISOString()}], size=${time_view.length}`);
+    if (rl._data.time) {
+        const buffer_time_view = buffer_get_valid_view(rl._data.time);
+        if (time_view[0] > buffer_time_view[buffer_time_view.length - 1]) {
+            // data update
+        } else if (time_view[time_view.length - 1] < buffer_time_view[0]) {
+            // data update from cache -> cache processing and lazy request additional historical data 
+            cached_data = true;
+            setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
+            console.log(`cache hit:   [${(new Date(time_view[0])).toISOString()}, ${(new Date(time_view[time_view.length - 1])).toISOString()}], size=${time_view.length}`);
+        } else {
+            console.warn('data overlapping with buffer received');
+        }
     } else {
-        console.warn('overlapping data, reject data processing');
-        return;
+        // initial data update -> reset and lazy request historical data
+        reset = true;
+        setTimeout(rl.data, RL_DATA_INIT_INTERVAL);
+    }
+
+    // check for reset and data store and plots
+    if (reset) {
+        data_reset(reply.metadata);
+        plots_reset();
     }
 
     // process data
@@ -182,57 +185,53 @@ function plots_init() {
     rl.plot.time_scale = 1000;
 
     // register plots to update
-    rl.plot.plots.push({
-        id: 'plot_voltage',
-        range_control: $('#plot_voltage_range'),
-        range: 0,
-        unit: 'V',
-    });
-    rl.plot.plots.push({
-        id: 'plot_current',
-        range_control: $('#plot_current_range'),
-        range: 0,
-        unit: 'A',
-    });
-    rl.plot.plots.push({
-        id: 'plot_digital',
-        range_control: null,
-        range: null,
-        unit: 'binary',
-    });
-    rl.plot.plots.push({
-        id: 'plot_ambient',
-        range_control: null,
-        range: 0,
-        unit: 'ambient',
-    });
+    rl.plot.plots = [
+        {
+            id: 'plot_voltage',
+            range_control: $('#plot_voltage_range'),
+            range: 0,
+            unit: 'V',
+        },
+        {
+            id: 'plot_current',
+            range_control: $('#plot_current_range'),
+            range: 0,
+            unit: 'A',
+        },
+        {
+            id: 'plot_digital',
+            range_control: null,
+            range: null,
+            unit: 'binary',
+        },
+        {
+            id: 'plot_ambient',
+            range_control: null,
+            range: 0,
+            unit: 'ambient',
+        },
+    ];
 
-    const xaxis = plot_get_xlayout(rl.plot.time_scale);
+    plots_reset();
+
+    // register range control handlers for plots
     for (const plot of rl.plot.plots) {
-        // init new plot with default layout
-        const layout = plot_get_base_layout();
-        layout.xaxis = xaxis;
-        layout.yaxis = plot_get_ylayout(plot);
-        Plotly.newPlot(plot.id, [], layout, { responsive: true, displayModeBar: false });
-
-        // init range control callback handlers
         if (plot.range_control) {
             plot.range_control.on('change', () => {
                 plot.range = plot.range_control.val();
             }).trigger('change');
         }
     }
-    // init time control callback handlers
+
+    // register time scale control handler
     $('#plot_time_scale').on('change', () => {
         rl.plot.time_scale = $('#plot_time_scale').val();
     }).trigger('change');
 }
 
-function plots_reset() {
-    for (const plot of rl.plot.plots) {
-        Plotly.purge(plot.id);
-        plot.data = null;
-    }
+async function plots_reset() {
+    const xaxis = plot_get_xlayout(rl.plot.time_scale);
+    return Promise.all(rl.plot.plots.map(plot => plot_reset(plot, xaxis)));
 }
 
 /// async update of all plots with new data
@@ -323,70 +322,76 @@ function plot_get_ylayout(plot_config) {
     return yaxis;
 }
 
-async function plot_update(plot, xaxis) {
-    // initialize plot data array
-    if (!plot.data) {
-        plot.data = [];
-    }
-
-    const time_view = buffer_get_valid_view(rl._data.time);
+async function plot_reset(plot, xaxis) {
+    // purge plot and reset traces
+    Plotly.purge(plot.id);
+    plot.data = [];
 
     // collect data series to plot
     for (const ch in rl._data.buffer) {
         const meta = rl._data.metadata[ch];
-        const buffer_view = buffer_get_valid_view(rl._data.buffer[ch]);
-        let trace = null;
 
-        // find existing channel trace or initialize and add new
-        const trace_index = plot.data.findIndex(value => value.name === ch);
-        if (trace_index < 0) {
-            trace = {
-                type: 'scattergl',
-                mode: 'lines',
-                name: ch,
-                hoverinfo: 'y+name',
-            };
-            plot.data.push(trace);
+        // skip channels of other plots
+        if (plot.unit === 'ambient') {
+            const non_ambient = rl.plot.plots.some(value => value.unit === meta.unit);
+            if (non_ambient) {
+                continue;
+            }
         } else {
-            trace = plot.data[trace_index];
+            if (plot.unit !== meta.unit) {
+                continue;
+            }
         }
 
-        // check if channel of ambient plot
-        if ((plot.unit === 'ambient') && (meta.unit !== 'A') &&
-            (meta.unit !== 'V') && (meta.unit !== 'binary')) {
-            // time scale dependent display mode
+        // assemble and add trace config
+        const trace = {
+            type: 'scattergl',
+            mode: 'lines',
+            connectgaps: true,
+            name: ch,
+            hoverinfo: 'y+name',
+            x: buffer_get_view(rl._data.time),
+            y: buffer_get_view(rl._data.buffer[ch]),
+        };
+        plot.data.push(trace);
+    }
+
+    // init new plot with default layout
+    const layout = plot_get_base_layout();
+    layout.xaxis = xaxis;
+    layout.yaxis = plot_get_ylayout(plot);
+    Plotly.newPlot(plot.id, plot.data, layout, { responsive: true, displayModeBar: false });
+}
+
+async function plot_update(plot, xaxis) {
+    if (!document.getElementById(plot.id)?.data) {
+        console.warn("skip update of un-initialized plot");
+        return;
+    }
+
+    const time_view = buffer_get_view(rl._data.time);
+    const index_start = time_view.findIndex(value => value >= xaxis.range[0]);
+    for (const trace of plot.data) {
+        // get range of values to plot
+        const buffer_view = buffer_get_view(rl._data.buffer[trace.name]);
+        trace.x = time_view.subarray(index_start);
+        trace.y = buffer_view.subarray(index_start);
+
+        // time scale dependent display mode
+        if (plot.unit === 'ambient') {
             if (rl.plot.time_scale > 1e3) {
                 trace.mode = 'lines';
             } else {
                 trace.mode = 'markers';
             }
-
-            const start_index = Math.max(0, buffer_view.length - 11 * rl.plot.time_scale);
-            trace.x = time_view.subarray(start_index);
-            trace.y = buffer_view.subarray(start_index);
-        } else if (meta.unit === plot.unit) {
-            const start_index = Math.max(0, buffer_view.length - 10 * rl.plot.time_scale);
-            trace.x = time_view.subarray(start_index);
-            trace.y = buffer_view.subarray(start_index);
-        } else {
-            continue;
         }
     }
 
-    // check for existing plot
-    if (document.getElementById(plot.id).data) {
-        const layout = {
-            xaxis: xaxis,
-            yaxis: plot_get_ylayout(plot),
-        };
-        Plotly.update(plot.id, plot.data, layout);
-    } else {
-        // init new plot with default layout
-        const layout = plot_get_base_layout();
-        layout.xaxis = xaxis;
-        layout.yaxis = plot_get_ylayout(plot);
-        Plotly.newPlot(plot.id, plot.data, layout, { responsive: true, displayModeBar: false });
-    }
+    const layout_update = {
+        xaxis: xaxis,
+        yaxis: plot_get_ylayout(plot),
+    };
+    Plotly.update(plot.id, plot.data, layout_update);
 }
 
 /**
