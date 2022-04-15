@@ -4,6 +4,7 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 import { filter_data_filename } from './rl.files.js';
+import { buffer_init, buffer_add, buffer_get_view } from './buffer.js';
 
 export { DataSubscriber, StatusSubscriber, data_cache_reset, data_cache_read };
 
@@ -21,7 +22,7 @@ const web_data_rate = 1000;
 const data_cache_size = 10000;
 
 /// Number of buffer levels
-const data_cache_buffer_levels = 3;
+const data_cache_levels = 3;
 
 /// Aggregation factor between data cache levels
 const data_cache_aggregation_factor = 10;
@@ -277,12 +278,12 @@ function data_cache_clear() {
 function data_cache_init(metadata) {
     debug('init data cache');
     data_cache.metadata = metadata;
-    buffer_init(data_cache.time, Float64Array, NaN);
-    buffer_init(data_cache.digital, Uint8Array);
+    buffer_init(data_cache.time, Float64Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor, NaN);
+    buffer_init(data_cache.digital, Uint8Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
     for (const ch in data_cache.metadata) {
         if (data_cache.metadata[ch].unit !== 'binary') {
             data_cache.data[ch] = {};
-            buffer_init(data_cache.data[ch], Float32Array);
+            buffer_init(data_cache.data[ch], Float32Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
         }
     }
     data_cache.reset = false;
@@ -290,7 +291,7 @@ function data_cache_init(metadata) {
 
 // read from data cache for values before time_reference
 async function data_cache_read(time_reference) {
-    data_proxy_debug(`cache read: time_reference=${time_reference}, cache_size=${data_cache.time.length}`);
+    data_proxy_debug(`cache read: time_reference=${time_reference}`);
 
     const message = {
         metadata: {},
@@ -330,53 +331,4 @@ async function data_cache_read(time_reference) {
     message.digital = cache_digital_view.slice(index_start_reply, index_end);
 
     return message;
-}
-
-
-function buffer_init(buffer, TypedArrayT, initial_value = null) {
-    buffer.data = new TypedArrayT(data_cache_size * data_cache_buffer_levels);
-    if (initial_value !== null) {
-        buffer.data.fill(initial_value);
-    }
-    buffer.level = [];
-    for (let i = 0; i < data_cache_buffer_levels; i++) {
-        buffer.level[i] = buffer.data.subarray(i * data_cache_size, (i + 1) * data_cache_size);
-    }
-}
-
-function buffer_add(buffer, data) {
-    for (let i = 1; i <= data_cache_buffer_levels; i++) {
-        if (i == data_cache_buffer_levels) {
-            // enqueue new data
-            typedarray_enqueue(buffer.level[i - 1], data);
-            break;
-        }
-
-        // aggregate data about to be dequeued to next lower buffer
-        const aggregate_count = data.length / (data_cache_aggregation_factor ** (data_cache_buffer_levels - i));
-        typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, data_cache_aggregation_factor);
-    }
-}
-
-function buffer_get_view(buffer) {
-    return buffer.data;
-}
-
-// enqueue typed array data at end of typed array buffer
-function typedarray_enqueue(buffer_out, buffer_in) {
-    buffer_out.set(buffer_out.subarray(buffer_in.length));
-    buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
-}
-
-// enqueue aggregates of a typed array at end of typed array buffer
-function typedarray_enqueue_aggregate(buffer_out, buffer_in, count, aggregation_factor) {
-    buffer_out.set(buffer_out.subarray(count));
-    aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
-}
-
-// typed array to typed array sample aggregation
-function aggregate(buffer_out, buffer_in, factor) {
-    for (let i = 0; i < buffer_out.length; i++) {
-        buffer_out[i] = buffer_in[i * factor];
-    }
 }

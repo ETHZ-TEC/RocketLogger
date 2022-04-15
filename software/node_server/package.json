@@ -16,10 +16,14 @@
   "type": "module",
   "files": [
     "app.js",
+    "buffer.js",
     "rl.js",
+    "rl.data.js",
+    "rl.files.js",
     "util.js",
     "static",
-    "template"
+    "template",
+    "tests"
   ],
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
