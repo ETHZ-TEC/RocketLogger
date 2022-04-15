@@ -3,40 +3,79 @@
 import { AggregatingBuffer } from '../buffer.js';
 
 
-test('AggregatingBuffer w/o initial value', () => {
-    const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10);
-    buffer._data.forEach((_, i, arr) => { arr[i] = i; });
+describe('AggregatingBuffer class', () => {
+    describe('construction', () => {
+        test('Float32 w/o initial value', () => {
+            const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10);
 
-    const data_view = buffer.getView();
-    expect(data_view[0]).toBe(0);
-    expect(data_view[73]).toBe(73);
-    expect(data_view[data_view.length - 31]).toBe(data_view.length - 31);
-    expect(data_view[data_view.length - 1]).toBe(data_view.length - 1);
-});
+            const data_view = buffer.getView();
+            expect(data_view.every(value => value === 0)).toBeTruthy();
+        });
 
-test('AggregatingBuffer with initial value', () => {
-    const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10, NaN);
+        test('Uint16 w/o initial value', () => {
+            const buffer = new AggregatingBuffer(Uint16Array, 1000, 3, 10);
 
-    const data_view = buffer.getView();
-    expect(data_view[0]).toBe(NaN);
-    expect(data_view[73]).toBe(NaN);
-    expect(data_view[data_view.length - 17]).toBe(NaN);
-    expect(data_view[data_view.length - 1]).toBe(NaN);
-});
+            const data_view = buffer.getView();
+            expect(data_view.every(value => value === 0)).toBeTruthy();
+        });
 
+        test('Float32 with -17 initial value', () => {
+            const initial_value = -17;
+            const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10, initial_value);
 
-test('AggregatingBuffer values after add()', () => {
-    const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10);
-    buffer._data.forEach((_, i, arr) => { arr[i] = i; });
+            const data_view = buffer.getView();
+            expect(data_view.every(value => value === initial_value)).toBeTruthy();
+        });
 
-    const data_to_add = new Float32Array(100).fill(NaN);
-    buffer.add(data_to_add);
+        test('Uint16 with 31 initial value', () => {
+            const initial_value = 31;
+            const buffer = new AggregatingBuffer(Uint16Array, 1000, 3, 10, initial_value);
 
-    const data_view = buffer.getView();
-    expect(data_view[0]).toBe(1);
-    expect(data_view[1]).toBe(2);
-    expect(data_view[data_view.length - data_to_add.length - 13]).toBe(data_view.length - 13);
-    expect(data_view[data_view.length - data_to_add.length - 1]).toBe(data_view.length - 1);
-    expect(data_view[data_view.length - data_to_add.length]).toBe(NaN);
-    expect(data_view[data_view.length - 1]).toBe(NaN);
+            const data_view = buffer.getView();
+            expect(data_view.every(value => value === initial_value)).toBeTruthy();
+        });
+
+        test('Float32 with NaN initial value', () => {
+            const buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10, NaN);
+
+            const data_view = buffer.getView();
+            expect(data_view.every(value => isNaN(value))).toBeTruthy();
+        });
+
+        test('Uint16 with NaN initial value to initialize to 0', () => {
+            const buffer = new AggregatingBuffer(Uint16Array, 1000, 3, 10, NaN);
+
+            const data_view = buffer.getView();
+            expect(data_view.every(value => value === 0)).toBeTruthy();
+        });
+    });
+
+    describe('buffer values', () => {
+        let buffer;
+        beforeEach(() => {
+            buffer = new AggregatingBuffer(Float32Array, 1000, 3, 10);
+            buffer._data.forEach((_, i, arr) => { arr[i] = i; });
+        });
+
+        test('before add()', () => {
+            const data_view = buffer.getView();
+            expect(data_view[0]).toBe(0);
+            expect(data_view[73]).toBe(73);
+            expect(data_view[data_view.length - 31]).toBe(data_view.length - 31);
+            expect(data_view[data_view.length - 1]).toBe(data_view.length - 1);
+        });
+
+        test('after add()', () => {
+            const data_to_add = new Float32Array(100).fill(NaN);
+            buffer.add(data_to_add);
+
+            const data_view = buffer.getView();
+            expect(data_view[0]).toBe(1);
+            expect(data_view[1]).toBe(2);
+            expect(data_view[data_view.length - data_to_add.length - 13]).toBe(data_view.length - 13);
+            expect(data_view[data_view.length - data_to_add.length - 1]).toBe(data_view.length - 1);
+            expect(data_view[data_view.length - data_to_add.length]).toBe(NaN);
+            expect(data_view[data_view.length - 1]).toBe(NaN);
+        });
+    });
 });

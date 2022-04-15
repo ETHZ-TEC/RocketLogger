@@ -4,16 +4,13 @@ export { AggregatingBuffer };
 
 
 class AggregatingBuffer {
-    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = null) {
+    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = 0) {
         this._size = size;
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;
-        this._data = new TypedArrayT(this._levels * this._size);
+        this._data = new TypedArrayT(this._levels * this._size).fill(initial_value);
         this._dataLevel = Array.from({ length: this._levels },
             (_, i) => this._data.subarray(i * this._size, (i + 1) * this._size));
-        if (initial_value !== null) {
-            this._data.fill(initial_value);
-        }
     }
 
     add(data) {
