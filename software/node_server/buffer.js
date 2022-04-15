@@ -20,13 +20,13 @@ class AggregatingBuffer {
         for (let i = 1; i <= this._levels; i++) {
             if (i == this._levels) {
                 // enqueue new data
-                typedarray_enqueue(this._dataLevel[i - 1], data);
+                typedarray_enqueue(data, this._dataLevel[i - 1]);
                 break;
             }
 
             // aggregate data about to be dequeued to next lower buffer
             const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
-            typedarray_enqueue_aggregate(this._dataLevel[i - 1], this._dataLevel[i], aggregate_count, this._aggregation_factor);
+            typedarray_enqueue_aggregate(this._dataLevel[i], this._dataLevel[i - 1], aggregate_count, this._aggregation_factor);
         }
     }
 
@@ -36,13 +36,13 @@ class AggregatingBuffer {
 }
 
 // enqueue typed array data at end of typed array buffer
-function typedarray_enqueue(buffer_out, buffer_in) {
+function typedarray_enqueue(buffer_in, buffer_out) {
     buffer_out.set(buffer_out.subarray(buffer_in.length));
     buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
 }
 
 // enqueue aggregates of a typed array at end of typed array buffer
-function typedarray_enqueue_aggregate(buffer_out, buffer_in, count, aggregation_factor) {
+function typedarray_enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
     buffer_out.set(buffer_out.subarray(count));
     aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
 }
