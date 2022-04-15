@@ -4,7 +4,7 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 import { filter_data_filename } from './rl.files.js';
-import { buffer_init, buffer_add, buffer_get_view } from './buffer.js';
+import { AggregatingBuffer } from './buffer.js';
 
 export { DataSubscriber, StatusSubscriber, data_cache_reset, data_cache_read };
 
@@ -247,18 +247,18 @@ async function data_cache_write(message) {
     }
 
     // append message arrays to cache
-    buffer_add(data_cache.time, message.time);
-    buffer_add(data_cache.digital, message.digital);
+    data_cache.time.add(message.time);
+    data_cache.digital.add(message.digital);
 
     for (const ch in message.data) {
         if (message.time.length == message.data[ch].length) {
-            buffer_add(data_cache.data[ch], message.data[ch]);
+            data_cache.data[ch].add(message.data[ch]);
         } else {
             // interleave sub-sampled data with NaN
             const ratio = Math.floor(message.time.length / message.data[ch].length);
             const data = new Float32Array(message.time.length).map((_, i) =>
                 i % ratio == 0 ? message.data[ch][i / ratio] : NaN);
-            buffer_add(data_cache.data[ch], data);
+            data_cache.data[ch].add(data);
         }
     }
     // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
@@ -278,12 +278,12 @@ function data_cache_clear() {
 function data_cache_init(metadata) {
     debug('init data cache');
     data_cache.metadata = metadata;
-    buffer_init(data_cache.time, Float64Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor, NaN);
-    buffer_init(data_cache.digital, Uint8Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
+    data_cache.time = new AggregatingBuffer(Float64Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor, NaN);
+    data_cache.digital = new AggregatingBuffer(Uint8Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
     for (const ch in data_cache.metadata) {
         if (data_cache.metadata[ch].unit !== 'binary') {
             data_cache.data[ch] = {};
-            buffer_init(data_cache.data[ch], Float32Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
+            data_cache.data[ch] = new AggregatingBuffer(Float32Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
         }
     }
     data_cache.reset = false;
@@ -301,7 +301,7 @@ async function data_cache_read(time_reference) {
     };
 
     // find cache buffer index of first already available data element
-    const cache_time_view = buffer_get_view(data_cache.time);
+    const cache_time_view = data_cache.time.getView();
     const index_start = cache_time_view.findIndex(value => !isNaN(value));
     const index_end = index_start + cache_time_view.subarray(index_start).findIndex(value => value >= time_reference);
 
@@ -323,11 +323,11 @@ async function data_cache_read(time_reference) {
             continue;
         }
 
-        const cache_data_view = buffer_get_view(data_cache.data[ch]);
+        const cache_data_view = data_cache.data[ch].getView();
         message.data[ch] = cache_data_view.slice(index_start_reply, index_end);
     }
 
-    const cache_digital_view = buffer_get_view(data_cache.digital);
+    const cache_digital_view = data_cache.digital.getView();
     message.digital = cache_digital_view.slice(index_start_reply, index_end);
 
     return message;

@@ -1,38 +1,38 @@
 "use strict";
 
-export { buffer_init, buffer_add, buffer_get_view };
+export { AggregatingBuffer };
 
 
-function buffer_init(buffer, TypedArrayT, size, levels, aggregation_factor, initial_value = null) {
-    buffer.size = size;
-    buffer.levels = levels;
-    buffer.aggregation_factor = aggregation_factor;
-    buffer.data = new TypedArrayT(buffer.size * buffer.levels);
-    if (initial_value !== null) {
-        buffer.data.fill(initial_value);
-    }
-    buffer.level = [];
-    for (let i = 0; i < buffer.levels; i++) {
-        buffer.level[i] = buffer.data.subarray(i * buffer.size, (i + 1) * buffer.size);
-    }
-}
-
-function buffer_add(buffer, data) {
-    for (let i = 1; i <= buffer.levels; i++) {
-        if (i == buffer.levels) {
-            // enqueue new data
-            typedarray_enqueue(buffer.level[i - 1], data);
-            break;
+class AggregatingBuffer {
+    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = null) {
+        this._size = size;
+        this._levels = levels;
+        this._aggregation_factor = aggregation_factor;
+        this._data = new TypedArrayT(this._levels * this._size);
+        this._dataLevel = Array.from({ length: this._levels },
+            (_, i) => this._data.subarray(i * this._size, (i + 1) * this._size));
+        if (initial_value !== null) {
+            this._data.fill(initial_value);
         }
-
-        // aggregate data about to be dequeued to next lower buffer
-        const aggregate_count = data.length / (buffer.aggregation_factor ** (buffer.levels - i));
-        typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, buffer.aggregation_factor);
     }
-}
 
-function buffer_get_view(buffer) {
-    return buffer.data;
+    add(data) {
+        for (let i = 1; i <= this._levels; i++) {
+            if (i == this._levels) {
+                // enqueue new data
+                typedarray_enqueue(this._dataLevel[i - 1], data);
+                break;
+            }
+
+            // aggregate data about to be dequeued to next lower buffer
+            const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
+            typedarray_enqueue_aggregate(this._dataLevel[i - 1], this._dataLevel[i], aggregate_count, this._aggregation_factor);
+        }
+    }
+
+    getView() {
+        return this._data;
+    }
 }
 
 // enqueue typed array data at end of typed array buffer
