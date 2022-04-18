@@ -19,6 +19,7 @@
     "buffer.js",
     "rl.js",
     "rl.data.js",
+    "rl.data.cache.js",
     "rl.files.js",
     "util.js",
     "static",

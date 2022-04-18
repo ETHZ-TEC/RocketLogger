@@ -4,9 +4,9 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 import { filter_data_filename } from './rl.files.js';
-import { AggregatingBuffer } from './buffer.js';
+import { DataCache } from './rl.data.cache.js';
 
-export { DataSubscriber, StatusSubscriber, data_cache_reset, data_cache_read };
+export { DataSubscriber, StatusSubscriber, get_data, reset_data };
 
 
 /// ZeroMQ socket identifier for status publishing
@@ -27,19 +27,22 @@ const data_cache_levels = 3;
 /// Aggregation factor between data cache levels
 const data_cache_aggregation_factor = 10;
 
-/// Size of reply to data cache requests [in number of timestamps]
-const data_cache_reply_size = 5000;
+/// RocketLogger data cache
+let data_cache = null;
 
-/// Measurement data cache buffer
-const data_cache = {
-    metadata: {},
-    time: {},
-    data: {},
-    digital: {},
-    reset: true,
-};
 
-const data_proxy_debug = debug('data_proxy');
+/// Get data from cache prior to `time_reference`, limited to a maximum of `limit` timestamps
+function get_data(time_reference, limit = 5000) {
+    if (data_cache === null) {
+        throw Error('no valid cache data found');
+    }
+    return data_cache.get(time_reference, limit);
+}
+
+/// Reset data cache
+function reset_data() {
+    data_cache?.reset();
+}
 
 class Subscriber {
     constructor(socketAddress) {
@@ -96,7 +99,10 @@ class DataSubscriber extends Subscriber {
 
     _parse(raw) {
         const data_message = parse_data_to_message(raw);
-        data_cache_write(data_message);
+        if (data_cache === null) {
+            data_cache = new DataCache(data_cache_size, data_cache_levels, data_cache_aggregation_factor, data_message.metadata);
+        }
+        data_cache.add(data_message);
         return data_message;
     }
 }
@@ -223,112 +229,4 @@ function merge_channels(metadata, channel_data, digital_data) {
         // always delete channel valid links
         delete metadata[`I${ch}L_valid`];
     }
-}
-
-
-// reset data cache with next write
-function data_cache_reset() {
-    data_cache.reset = true;
-}
-
-// write new data message to cache
-async function data_cache_write(message) {
-    // check for pending cache reset
-    if (data_cache.reset) {
-        data_proxy_debug('clear and re-initialize data cache');
-        data_cache_clear();
-        data_cache_init(message.metadata, data_cache_size);
-    }
-
-    // validate metadata of incoming data
-    if (data_cache.metadata.length !== message.metadata.length) {
-        data_proxy_debug('metadata mismatch of data cache and incoming data!');
-        return;
-    }
-
-    // append message arrays to cache
-    data_cache.time.add(message.time);
-    data_cache.digital.add(message.digital);
-
-    for (const ch in message.data) {
-        if (message.time.length == message.data[ch].length) {
-            data_cache.data[ch].add(message.data[ch]);
-        } else {
-            // interleave sub-sampled data with NaN
-            const ratio = Math.floor(message.time.length / message.data[ch].length);
-            const data = new Float32Array(message.time.length).map((_, i) =>
-                i % ratio == 0 ? message.data[ch][i / ratio] : NaN);
-            data_cache.data[ch].add(data);
-        }
-    }
-    // data_proxy_debug(`data write: cache_size=${data_cache.time.length}`);
-}
-
-// clear data cache
-function data_cache_clear() {
-    data_proxy_debug('clear data cache');
-    data_cache.metadata = {};
-    data_cache.time = {};
-    data_cache.digital = {};
-    data_cache.data = {};
-    data_cache.reset = true;
-}
-
-// initialize data cache
-function data_cache_init(metadata) {
-    debug('init data cache');
-    data_cache.metadata = metadata;
-    data_cache.time = new AggregatingBuffer(Float64Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor, NaN);
-    data_cache.digital = new AggregatingBuffer(Uint8Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
-    for (const ch in data_cache.metadata) {
-        if (data_cache.metadata[ch].unit !== 'binary') {
-            data_cache.data[ch] = {};
-            data_cache.data[ch] = new AggregatingBuffer(Float32Array, data_cache_size, data_cache_levels, data_cache_aggregation_factor);
-        }
-    }
-    data_cache.reset = false;
-}
-
-// read from data cache for values before time_reference
-async function data_cache_read(time_reference) {
-    data_proxy_debug(`cache read: time_reference=${time_reference}`);
-
-    const message = {
-        metadata: {},
-        time: null,
-        data: {},
-        digital: null,
-    };
-
-    // find cache buffer index of first already available data element
-    const cache_time_view = data_cache.time.getView();
-    const index_start = cache_time_view.findIndex(value => !isNaN(value));
-    const index_end = index_start + cache_time_view.subarray(index_start).findIndex(value => value >= time_reference);
-
-    // check for and return on cache miss
-    if (index_start < 0 || index_end <= index_start) {
-        data_proxy_debug('cache miss: send empty message');
-        return message;
-    }
-
-    // assemble data reply message from cache
-    const index_start_reply = Math.max(index_start, index_end - data_cache_reply_size);
-    data_proxy_debug(`cache hit: send data range ${index_start_reply}:${index_end}`);
-
-    message.metadata = data_cache.metadata;
-    message.time = cache_time_view.slice(index_start_reply, index_end);
-
-    for (const ch in data_cache.metadata) {
-        if (data_cache.metadata[ch].unit === 'binary') {
-            continue;
-        }
-
-        const cache_data_view = data_cache.data[ch].getView();
-        message.data[ch] = cache_data_view.slice(index_start_reply, index_end);
-    }
-
-    const cache_digital_view = data_cache.digital.getView();
-    message.digital = cache_digital_view.slice(index_start_reply, index_end);
-
-    return message;
 }

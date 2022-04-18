@@ -284,7 +284,7 @@ const client_connected = (socket) => {
 
         // read data from cache
         try {
-            const reply = await rl_data.data_cache_read(request.time);
+            const reply = await rl_data.get_data(request.time);
             reply.req = request;
             socket.emit('data', reply);
         }
@@ -302,7 +302,7 @@ async function control_action(request) {
     switch (request.cmd) {
         case 'start':
             const result = await rl_control.start(request.config);
-            rl_data.data_cache_reset();
+            rl_data.reset_data();
             return result;
 
         case 'stop':
