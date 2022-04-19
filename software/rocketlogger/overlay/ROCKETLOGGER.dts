@@ -234,15 +234,16 @@
     target = <&epwmss0>;
     __overlay__ {
       status = "okay";
+      ti,no-idle;  /* keep EPWMSS0 clock always enabled */
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm0_pins>;
     };
   };
 
   fragment@31 {
     target = <&ehrpwm0>;
     __overlay__ {
-      status = "okay";
-      pinctrl-names = "default";
-      pinctrl-0 = <&rl_pwm0_pins>;
+      status = "disabled";
     };
   };
 
@@ -250,15 +251,30 @@
     target = <&epwmss1>;
     __overlay__ {
       status = "okay";
+      ti,no-idle;  /* keep EPWMSS1 clock always enabled */
+      pinctrl-names = "default";
+      pinctrl-0 = <&rl_pwm1_pins>;
     };
   };
 
   fragment@33 {
     target = <&ehrpwm1>;
     __overlay__ {
-      status = "okay";
-      pinctrl-names = "default";
-      pinctrl-0 = <&rl_pwm1_pins>;
+      status = "disabled";
+    };
+  };
+
+  fragment@34 {
+    target = <&ehrpwm0_tbclk>;
+    __overlay__ {
+      ti,set-bit-to-disable;  /* make kernel to set bit for default "off" (to actually enable clock by default) */
+    };
+  };
+
+  fragment@35 {
+    target = <&ehrpwm1_tbclk>;
+    __overlay__ {
+      ti,set-bit-to-disable;  /* make kernel to set bit for default "off" (to actually enable clock by default) */
     };
   };
 };

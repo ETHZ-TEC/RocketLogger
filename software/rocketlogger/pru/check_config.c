@@ -56,10 +56,15 @@
 
 // CONTROL module register base addresses, offsets and sizes
 /// CONTROL register base address
-#define CONTROL_BASE        0x44E10000
-#define CONTROL_SIZE        0x20000
+#define CONTROL_BASE            0x44E10000
+#define CONTROL_SIZE            0x20000
 
-#define PWMSS_CTRL_OFFSET   0x664
+#define PWMSS_CTRL_OFFSET       0x664
+#define CONF_GMPC_AD14_OFFSET   0x838   /* nDR1 pin, PRU0 controlled */
+#define CONF_GMPC_AD15_OFFSET   0x83C   /* nDR0 pin, MUX_MODE6 for PRU0 controlled, MUX_MODE5 for pr1_ecap0_ecap_capin_apwm_o */
+#define CONF_GMPC_A2_OFFSET     0x848   /* Latch reset A pin, ehrpwm1A controlled */
+#define CONF_GMPC_A3_OFFSET     0x84C   /* Latch reset B pin, ehrpwm1B controlled */
+#define CONF_SPI0_SCLK_OFFSET   0x950   /* ADC clock pin, ehrpwm0A controlled */
 
 // PWM module register base addresses, offsets and sizes
 /// PWM0 register base address
@@ -167,7 +172,7 @@ int main() {
     // map CONTROL registers
     control_mem = (volatile uint8_t const *)mmap(0, CONTROL_SIZE, PROT_READ | PROT_WRITE,
                                         MAP_SHARED, mem_fd, CONTROL_BASE);
-    if ((void *)cm_per_mem == MAP_FAILED) {
+    if ((void *)control_mem == MAP_FAILED) {
         return EXIT_FAILURE;
     }
 
@@ -212,9 +217,24 @@ int main() {
     // get pointers of CONTROL registers
     volatile uint32_t const *control_pwmss_ctrl =
         (volatile uint32_t const *)(control_mem + PWMSS_CTRL_OFFSET);
+    volatile uint32_t const *control_conf_gpmc_ad14 =
+        (volatile uint32_t const *)(control_mem + CONF_GMPC_AD14_OFFSET);
+    volatile uint32_t const *control_conf_gpmc_ad15 =
+        (volatile uint32_t const *)(control_mem + CONF_GMPC_AD15_OFFSET);
+    volatile uint32_t const *control_conf_gpmc_a2 =
+        (volatile uint32_t const *)(control_mem + CONF_GMPC_A2_OFFSET);
+    volatile uint32_t const *control_conf_gpmc_a3 =
+        (volatile uint32_t const *)(control_mem + CONF_GMPC_A3_OFFSET);
+    volatile uint32_t const *control_conf_spi0_sclk =
+        (volatile uint32_t const *)(control_mem + CONF_SPI0_SCLK_OFFSET);
 
     printf("CONTROL registers:\n");
-    printf("  PWMSS_CTRL:  \t0x%08x\n", *control_pwmss_ctrl);
+    printf("  PWMSS_CTRL:    \t0x%08x\n", *control_pwmss_ctrl);
+    printf("  CONF_GMPC_AD14:\t0x%08x (ADC1 nDR)\n", *control_conf_gpmc_ad14);
+    printf("  CONF_GMPC_AD15:\t0x%08x (ADC0 nDR)\n", *control_conf_gpmc_ad15);
+    printf("  CONF_GMPC_A2:  \t0x%08x (LATCH A reset)\n", *control_conf_gpmc_a2);
+    printf("  CONF_GMPC_A3:  \t0x%08x (LATCH B reset)\n", *control_conf_gpmc_a3);
+    printf("  CONF_SPI0_SCLK:\t0x%08x (ADC clock)\n", *control_conf_spi0_sclk);
 
     // get pointers of PWMSS0 registers
     volatile uint32_t const *pwmss0_sysconfig =

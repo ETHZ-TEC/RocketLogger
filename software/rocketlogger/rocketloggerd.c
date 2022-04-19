@@ -41,7 +41,6 @@
 
 #include "gpio.h"
 #include "log.h"
-#include "pwm.h"
 #include "rl.h"
 #include "rl_lib.h"
 
@@ -286,13 +285,6 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    ret = pwm_init();
-    if (ret < 0) {
-        rl_log(RL_LOG_ERROR, "Failed initializing PWM modules; %d message: %s",
-               errno, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
     // create shared memory for state
     ret = rl_status_shm_init();
     if (ret < 0) {
@@ -343,7 +335,6 @@ int main(void) {
     rl_status_shm_deinit();
 
     // deinitialize and shutdown hardware
-    pwm_deinit();
     gpio_set_value(gpio_power, 0);
     gpio_release(gpio_power);
     gpio_release(gpio_button);

@@ -56,7 +56,7 @@ C_EHRPWM0                   .set    C18     ; eHRPWM0/eCAP0/eQEP0 0x4830_0000
 C_EHRPWM1                   .set    C19     ; eHRPWM1/eCAP1/eQEP1 0x4830_2000
 C_EHRPWM2                   .set    C20     ; eHRPWM1/eCAP1/eQEP1 0x4830_4000
 
-; PRU data layout (address offets in PRU local memory)
+; PRU data layout (address offsets in PRU local memory)
 STATE_OFFSET                .set    0x00
 SAMPLE_RATE_OFFSET          .set    0x04
 SAMPLE_LIMIT_OFFSET         .set    0x08
@@ -139,31 +139,6 @@ ADC1_STATUS_REG             .set    DI_REG
 ADC2_STATUS_REG             .set    TMP_REG
 
 
-; ---------------------- CLOCK MANAGEMENT Definitions ----------------------- ;
-; clock managment register offsets
-CM_PER_BASE                 .set    0x44E00000
-CM_PER_EPWMSS1_OFFSET       .set    0xCC
-CM_PER_EPWMSS0_OFFSET       .set    0xD4
-CM_PER_EPWMSS2_OFFSET       .set    0xD8
-
-; clock managements register values (selection)
-CM_MODULEMODE_DISABLE       .set    0x00
-CM_MODULEMODE_ENABLE        .set    0x02
-CM_IDLESTATUS_FUNC          .set    0x000000
-CM_IDLESTATUS_TRANS         .set    0x010000
-CM_IDLESTATUS_IDLE          .set    0x020000
-CM_IDLESTATUS_DISABLE       .set    0x030000
-
-
-; --------------------------- CONTROL Definitions --------------------------- ;
-; control register offsets and PWMSS values (selection)
-CONTROL_PWMSS_CTRL          .set    0x44E10664
-PWMSS_CTRL_PWMSS_RESET      .set    0x00
-PWMSS_CTRL_PWMSS0_TBCLKEN   .set    0x01
-PWMSS_CTRL_PWMSS1_TBCLKEN   .set    0x02
-PWMSS_CTRL_PWMSS2_TBCLKEN   .set    0x04
-
-
 ; ----------------------------- PWM Definitions ----------------------------- ;
 ; ePWM module and configuration register offsets
 EPWM0_BASE                  .set    0x48300200  ; ePWM0 module base address
@@ -181,12 +156,15 @@ EPWM_AQCTLA_OFFSET          .set    0x16    ; Action-Qualifier Control Register 
 EPWM_AQCTLB_OFFSET          .set    0x18    ; Action-Qualifier Control Register for Output B (EPWMxB)
 
 ; ePWM configuration register values (selection)
-TBCTL_FREERUN               .set    0xC000  ; TBCTL default value after reset
+TBCTL_RESET                 .set    0x0083  ; TBCTL reset register value
 TBCTL_COUNT_UP              .set    0x0000  ; Up counting mode
+TBCTL_COUNT_DOWN            .set    0x0001  ; Down counting mode
 TBCTL_COUNT_UP_DOWN         .set    0x0002  ; Up-down counting mode
+TBCTL_COUNT_STOP            .set    0x0003  ; Stop counting mode
 TBCTL_PRDLD                 .set    0x0008  ; Period register double buffer disable
-TBCTL_CLKDIV_1              .set    0x0000  ; Use counter clock prescaler of 1
-TBCTL_CLKDIV_2              .set    0x0400  ; Use counter clock prescaler of 2
+TBCTL_CLKDIV_1              .set    0x0000  ; Use counter clock pre-scaler of 1
+TBCTL_CLKDIV_2              .set    0x0400  ; Use counter clock pre-scaler of 2
+TBCTL_FREERUN               .set    0xC000  ; free running counter during emulation mode
 
 AQ_ZROCLR                   .set    0x0001  ; Action qualifier: clear on zero
 AQ_ZROSET                   .set    0x0002  ; Action qualifier: set on zero
@@ -244,7 +222,7 @@ ADC_REGISTER_CH8SET         .set    0x0C
 ADC_CONFIG1_VALUE           .set    0x90    ; no daisy-chain, clock out, data rate omitted
 ADC_CONFIG2_VALUE           .set    0xE0    ; reset value of test configuration
 ADC_CONFIG3_VALUE           .set    0xE8    ; 4V reference, internal opamp ref
-ADC_CONFIG1_DR_BASE         .set    0x06    ; base value for DR calcualtion
+ADC_CONFIG1_DR_BASE         .set    0x06    ; base value for DR calculation
 ADC_CHANNEL_GAIN1           .set    0x10
 ADC_CHANNEL_GAIN2           .set    0x20
 ADC_PRECISION_LOW_BITS      .set    16      ; data bits for >= 32 kSPS sample rate
@@ -335,7 +313,7 @@ OUTHIGH?:
     ; timed delay (2 cycles)
     NOP
     NOP
-    ; QBBC (1 cycle) at begining of next loop iteration
+    ; QBBC (1 cycle) at beginning of next loop iteration
 
 END_SPI_BIT_WRITE?:
     ; MOSI idle low (optional, helps debugging)
@@ -446,13 +424,10 @@ adc_write_register .macro register, data_reg
 
 
 ; ADC INITIALIZATION
-; (initialize ADC for sampling at a rate of `sample_rate_reg` ksps)
+; (initialize ADC for sampling at a rate of `sample_rate_reg` kSps)
 adc_init .macro sample_rate_reg
     ; reset ADC START signal
     CLR     ADC_OUT_REG, ADC_OUT_REG, START_BIT
-
-    ; setup and enable ADC clock
-    pwm_setup_adc_clock
 
     ; initialize SPI interface
     spi_reset
@@ -561,76 +536,32 @@ adc_read_continuous .macro
 
 
 ; ------------------------------- PWM Macros -------------------------------- ;
-; PWM MODULE INITIALIZATION
-; (setup/enable PWM clock sources and signals)
-pwm_init .macro
-; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
-;    ; load CM_PER base address
-;    LDI32   TMP_REG, CM_PER_BASE
-;
-;    ; enable EPWMSS0 and EPWMSS1 interface clocks
-;    LDI32   MTMP_REG, CM_IDLESTATUS_FUNC | CM_MODULEMODE_ENABLE
-;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS0_OFFSET, 4
-;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS1_OFFSET, 4
-;
-;    ; enable EPWMSS0 and EPWMSS1 counter clocks (handled via sysfs driver)
-;    ;LDI32   TMP_REG, CONTROL_PWMSS_CTRL
-;    ;LDI     MTMP_REG, PWMSS_CTRL_PWMSS1_TBCLKEN | PWMSS_CTRL_PWMSS0_TBCLKEN
-;    ;SBBO    &MTMP_REG, TMP_REG, 0, 2
+; RESET PWM REGISTERS
+; (stop PWM and reset configuration register values)
+pwm_reset_module .macro pwm_base_address
+    ; reset EPWM1 control to stop counting mode, no period double buffering
+    LDI     MTMP_REG, TBCTL_RESET
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_TBCTL_OFFSET, 2
 
+    ; reset EPWM0 period, counter, compare and action registers to initial zero state
+    ZERO    &MTMP_REG, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_TBPRD_OFFSET, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_TBCNT_OFFSET, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_CMPA_OFFSET, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_CMPB_OFFSET, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_AQCTLA_OFFSET, 2
+    SBBO    &MTMP_REG, pwm_base_address, EPWM_AQCTLB_OFFSET, 2
     .endm
 
 
-; PWM MODULE DE-INITIALIZATION
-; (reset/disable PWM clock sources and signals)
-pwm_deinit .macro
-; DO NOTHING HERE => HANDLED BY SYSFS INTERFACE
-;    ; load CM_PER base address
-;    LDI32   TMP_REG, CM_PER_BASE
-;
-;    ; disable EPWMSS0 and EPWMSS1 interface clocks
-;    LDI32   MTMP_REG, CM_IDLESTATUS_DISABLE | CM_MODULEMODE_DISABLE
-;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS0_OFFSET, 4
-;    SBBO    &MTMP_REG, TMP_REG, CM_PER_EPWMSS1_OFFSET, 4
-;
-;    ; disable EPWMSS0 and EPWMSS1 counter clocks (handled via sysfs driver)
-;    LDI32   TMP_REG, CONTROL_PWMSS_CTRL
-;    LDI     MTMP_REG, PWMSS_CTRL_PWMSS_RESET
-;    SBBO    &MTMP_REG, TMP_REG, 0, 2
-
-    .endm
-
-
-; PWM MODULE STOP
-; (stop PWM counter and outputs)
-pwm_stop .macro
-    ; initialize value register to zero
-    ZERO    &MTMP_REG, 4
-
-    ; load EPWM0 base address from constants memory
-    LDI32   TMP_REG, EPWM0_BASE
-
-    ; reset EPWM0 config and counters to initial zero state
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCNT_OFFSET, 2
-
-    ; load EPWM1 base address from constants memory
-    LDI32   TMP_REG, EPWM1_BASE
-
-    ; reset EPWM1 config and counters to initial zero state
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
-    SBBO    &MTMP_REG, TMP_REG, EPWM_TBCNT_OFFSET, 2
-
-    .endm
-
-
-; SETUP PWM FOR ADC CLOCK GENERATION
+; INITIALIZE PWM FOR ADC CLOCK GENERATION
 ; (configure PWM for ADC clock generation)
-pwm_setup_adc_clock .macro
-    ; load EPWM0 base address from constants memory
+pwm_init_adc_clock .macro
+    ; load EPWM0 base address
     LDI32   TMP_REG, EPWM0_BASE
+
+    ; reset PWM registers prior to re-configuration
+    pwm_reset_module TMP_REG
 
     ; set period and compare register values (interval = TBPRD + 1)
     LDI     MTMP_REG, (PWM_ADC_CLOCK_PERIOD - 1)
@@ -645,21 +576,22 @@ pwm_setup_adc_clock .macro
     ; set clock prescaler 1 and up counting mode, no period double buffering
     LDI     MTMP_REG, TBCTL_FREERUN | TBCTL_CLKDIV_1 | TBCTL_PRDLD | TBCTL_COUNT_UP
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
-
     .endm
 
 
-; SETUP PWM FOR RANGE VALID RESET SIGNALS
-; (configure PWM for range reset signals for a sample rate of `sample_rate_reg`)
-pwm_setup_range_valid_reset .macro sample_rate_reg
-
-    ; calculate period from samle rate
+; INITIALIZE PWM FOR RANGE VALID RESET SIGNALS
+; (configure PWM for range valid reset signals for a sample rate of `sample_rate_reg`)
+pwm_init_range_valid_reset .macro sample_rate_reg
+    ; calculate PWM period from sample rate
     LDI32   MTMP_REG, (PWM_RANGE_RESET_PERIOD_BASE)
     LMBD    TMP_REG, sample_rate_reg, 1   ; get exponent of 2 of the sample rate
     LSR     MTMP_REG, MTMP_REG, TMP_REG
 
-    ; load EPWM1 base address from constants memory
+    ; load EPWM1 base address
     LDI32   TMP_REG, EPWM1_BASE
+
+    ; reset PWM registers prior to re-configuration
+    pwm_reset_module TMP_REG
 
     ; store calculated period value
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
@@ -679,7 +611,24 @@ pwm_setup_range_valid_reset .macro sample_rate_reg
     ; configure PWM operational mode
     LDI     MTMP_REG, TBCTL_FREERUN | TBCTL_CLKDIV_2 | TBCTL_PRDLD | TBCTL_COUNT_UP_DOWN
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBCTL_OFFSET, 2
+    .endm
 
+
+; RESET PWM FOR ADC CLOCK GENERATION
+; (stop PWM counter and outputs for ADC clock generation)
+pwm_reset_adc_clock .macro
+    ; load EPWM0 base address
+    LDI32   TMP_REG, EPWM0_BASE
+    pwm_reset_module TMP_REG
+    .endm
+
+
+; RESET PWM FOR RANGE VALID RESET SIGNALS
+; (stop PWM counter and outputs for range valid reset signals)
+pwm_reset_range_valid_reset .macro
+    ; load EPWM1 base address
+    LDI32   TMP_REG, EPWM1_BASE
+    pwm_reset_module TMP_REG
     .endm
 
 
@@ -719,14 +668,12 @@ INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
-    ; initialize PWM modules
-    pwm_init
+    ; set up PWM for ADC clock signal and for range valid latch reset signals
+    pwm_init_adc_clock
+    pwm_init_range_valid_reset SAMPLE_RATE
 
     ; initialize the ADC
     adc_init SAMPLE_RATE
-
-    ; configure PWM for range reset signals
-    pwm_setup_range_valid_reset SAMPLE_RATE
 
 INIT_COMPLETE:
     ; initialize buffer index to zero
@@ -887,9 +834,9 @@ STOP:
     ; signal interrupt to user space program
     LDI     r31.b0, PRU_R31_VEC_VALID | PRU_EVTOUT_0
 
-    ; stop and deinitialize PWM modules
-    pwm_stop
-    pwm_deinit
+    ; stop and reset PWM modules
+    pwm_reset_range_valid_reset
+    pwm_reset_adc_clock
 
     ; clear status LED
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT

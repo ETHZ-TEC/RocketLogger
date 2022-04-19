@@ -74,7 +74,6 @@ common_src = [
     'log.c',
     'meter.c',
     'pru.c',
-    'pwm.c',
     'rl_file.c',
     'rl_hw.c',
     'rl_lib.c',
