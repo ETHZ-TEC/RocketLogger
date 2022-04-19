@@ -4,7 +4,7 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 
-export { data_proxy, status_proxy, web_data_rate };
+export { DataSubscriber, StatusSubscriber };
 
 
 /// ZeroMQ socket identifier for data publishing status
@@ -16,56 +16,59 @@ const data_socket = 'tcp://127.0.0.1:8277';
 /// RocketLogger maximum web downstream data rate [in 1/s]
 const web_data_rate = 1000;
 
-const data_proxy_debug = debug('data_proxy');
-const status_proxy_debug = debug('status_proxy');
 
+class Subscriber {
+    constructor(socketAddress) {
+        this._onUpdate = null;
+        this._socketAddress = socketAddress;
+        this._debug = debug('rocketlogger');
+    }
 
-/// RocketLogger status update proxy
-async function status_proxy(send) {
-    const sock = new zmq.Subscriber();
+    onUpdate(callback) {
+        if (callback !== null && typeof callback !== 'function') {
+            throw Error('callback is not a function');
+        }
+        this._onUpdate = callback;
+    }
 
-    sock.connect(status_socket);
-    status_proxy_debug(`zmq status subscribe to ${status_socket}`);
-    sock.subscribe();
+    async run() {
+        this._socket = new zmq.Subscriber();
+        this._socket.connect(this._socketAddress);
+        this._socket.subscribe();
 
-    for await (const status of sock) {
-        // debug(`zmq new status: ${status_data}`);
-        try {
-            const status_message = parse_status_to_message(status);
-            send(status_message);
-        } catch (err) {
-            status_proxy_debug(`status proxy parse error: ${err}`);
+        for await (const raw of this._socket) {
+            // this._debug(`subscriber new data: ${raw}`);
+            let data = null;
+            try {
+                data = this._parse(raw);
+            } catch (err) {
+                this._debug(`subscriber parse error: ${err}`);
+            }
+            if (this._onUpdate !== null) {
+                this._onUpdate(data);
+            }
         }
     }
 }
 
-function parse_status_to_message(status_data) {
-    return { status: JSON.parse(status_data) };
-}
+class StatusSubscriber extends Subscriber {
+    constructor(socketAddress = status_socket) {
+        super(socketAddress);
+    }
 
-
-/// RocketLogger data update proxy
-async function data_proxy(send) {
-    const sock = new zmq.Subscriber();
-
-    sock.connect(data_socket);
-    data_proxy_debug(`zmq data subscribe to ${data_socket}`);
-    sock.subscribe();
-
-    for await (const data of sock) {
-        // debug(`zmq new data: ${data[0]}`);
-        const time_received = Date.now();
-        try {
-            const data_message = parse_data_to_message(data);
-            data_message.t = time_received;
-            send(data_message);
-            /// @todo perform local data caching
-        } catch (err) {
-            data_proxy_debug(`data proxy parse error: ${err}`);
-            continue;
-        }
+    _parse(raw) {
+        return { status: JSON.parse(raw) };
     }
 }
+
+class DataSubscriber extends Subscriber {
+    constructor(socketAddress = data_socket) {
+        super(socketAddress);
+    }
+
+    _parse(raw) { return parse_data_to_message(raw); };
+}
+
 
 function parse_data_to_message(data) {
     const message = {
