@@ -143,7 +143,7 @@ function status_get_reset() {
 /// update the status interface with the current RocketLogger status
 function update_status() {
     if (rl._data.status === null) {
-        throw 'undefined RocketLogger status.';
+        throw Error('undefined RocketLogger status.');
     }
     const status = rl._data.status;
 
@@ -153,7 +153,7 @@ function update_status() {
         status_message += 'sampling';
     } else {
         status_message += 'idle';
-        if (rl.plot) {
+        if (rl.plot?.stop) {
             rl.plot.stop();
         }
     }
