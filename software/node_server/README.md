@@ -49,7 +49,6 @@ and configured manually.
 ### Browser client dependencies
 
 * `bootstrap` - responsive, mobile-first front-end component library
-* `jquery` - general purpose JavaScript library
 * `plotly.js` - JavaScript plotting library
 * `timesync` - client-server time synchronization library
 * `socket.io-client` - websockets client side JavaScript library
