@@ -123,9 +123,9 @@ function rocketlogger_init_control() {
             // indicate update except on initial load
             if (!init) {
                 if (res.default) {
-                    $('#alert_config_saved').show('fast');
+                    show(document.querySelector('#alert_config_saved'));
                 } else {
-                    $('#alert_config_loaded').show('fast');
+                    show(document.querySelector('#alert_config_loaded'));
                 }
             }
         }
@@ -167,67 +167,68 @@ function config_get_reset() {
 function config_change() {
     // new configuration structure
     const config = {
-        ambient_enable: $('#ambient_enable').prop('checked'),
+        ambient_enable: document.querySelector('#ambient_enable').checked,
         channel_enable: [],
         channel_force_range: [],
-        digital_enable: $('#digital_enable').prop('checked'),
+        digital_enable: document.querySelector('#digital_enable').checked,
         file: null,
-        sample_rate: $('#sample_rate').val(),
-        web_enable: $('#web_enable').prop('checked'),
+        sample_rate: document.querySelector('#sample_rate').value,
+        web_enable: document.querySelector('#web_enable').checked,
     }
 
     // get channel config
     for (const ch of RL_CHANNEL_NAMES) {
-        if ($(`#channel_${ch.toLowerCase()}_enable`).prop('checked')) {
+        if (document.getElementById(`channel_${ch.toLowerCase()}_enable`).checked) {
             config.channel_enable.push(ch);
         }
     }
 
     // get force channel range config
     for (const ch of RL_CHANNEL_FORCE_NAMES) {
-        if ($(`#channel_${ch.toLowerCase()}_force`).prop('checked')) {
+        if (document.getElementById(`channel_${ch.toLowerCase()}_force`).checked) {
             config.channel_force_range.push(ch);
         }
     }
 
     // get file config
-    if ($('#file_enable').prop('checked')) {
+    if (document.querySelector('#file_enable').checked) {
         config.file = {
-            comment: $('#file_comment').val(),
-            filename: $('#file_filename').val(),
-            format: $('#file_format').val(),
+            comment: document.querySelector('#file_comment').value,
+            filename: document.querySelector('#file_filename').value,
+            format: document.querySelector('#file_format').value,
             size: 0,
         }
-        if ($('#file_split').prop('checked')) {
-            config.file.size = $('#file_size').val() * $('#file_size_scale').val();
+        if (document.querySelector('#file_split').checked) {
+            config.file.size = document.querySelector('#file_size').value * document.querySelector('#file_size_scale').value;
         }
         adjust_filename_extension(config.file);
-        $('#file_filename').val(config.file.filename);
+        document.querySelector('#file_filename').value = config.file.filename;
     }
 
     // update stored config
     rl._data.config = config;
 
     // perform necessary interface updates
-    $('#alert_config_saved').hide();
-    $('#alert_config_loaded').hide();
-    $('#file_group').prop('disabled', (config.file === null));
-    $('#file_split_group').prop('disabled', (config.file && (config.file.size === 0)));
-    $('#web_group').prop('disabled', !config.web_enable);
-    $('#collapsePreview').collapse(config.web_enable ? 'show' : 'hide');
-    config.ambient_enable ? $('#plot_group_ambient').show() : $('#plot_group_ambient').hide();
-    config.digital_enable ? $('#plot_group_digital').show() : $('#plot_group_digital').hide();
-    config.channel_enable.some(v => v[0] === 'V') ? $('#plot_group_voltage').show() : $('#plot_group_voltage').hide();
-    config.channel_enable.some(v => v[0] === 'I') ? $('#plot_group_current').show() : $('#plot_group_current').hide();
+    hide(document.querySelector('#alert_config_saved'));
+    hide(document.querySelector('#alert_config_loaded'));
+    document.querySelector('#file_group').disabled = config.file === null;
+    document.querySelector('#file_split_group').disabled = config.file && (config.file.size === 0);
+    document.querySelector('#web_group').disabled = !config.web_enable;
+    const configCollapse = new bootstrap.Collapse(document.querySelector('#collapseConfiguration'), { toggle: false });
+    config.web_enable ? configCollapse.show() : configCollapse.hide();
+    config.ambient_enable ? show(document.querySelector('#plot_group_ambient')) : hide(document.querySelector('#plot_group_ambient'));
+    config.digital_enable ? show(document.querySelector('#plot_group_digital')) : hide(document.querySelector('#plot_group_digital'));
+    config.channel_enable.some(v => v[0] === 'V') ? show(document.querySelector('#plot_group_voltage')) : hide(document.querySelector('#plot_group_voltage'));
+    config.channel_enable.some(v => v[0] === 'I') ? show(document.querySelector('#plot_group_current')) : hide(document.querySelector('#plot_group_current'));
 
     // estimate remaining time from configuration
     let use_rate_estimated = (config.channel_enable.length +
         (config.digital_enable ? 1 : 0)) * 4 * config.sample_rate;
     if (use_rate_estimated > 0 && config.file !== null) {
-        $('#status_remaining').text(
-            `~ ${unix_to_timespan_string(rl._data.status.disk_free_bytes / use_rate_estimated)}`);
+        document.querySelector('#status_remaining').innerText =
+            `~ ${unix_to_timespan_string(rl._data.status.disk_free_bytes / use_rate_estimated)}`;
     } else {
-        $('#status_remaining').text('indefinite');
+        document.querySelector('#status_remaining').innerText = 'indefinite';
     }
 }
 
@@ -252,34 +253,34 @@ function config_reset_default() {
     const config = rl._data.default_config;
 
     // set direct value inputs
-    $('#ambient_enable').prop('checked', config.ambient_enable);
-    $('#digital_enable').prop('checked', config.digital_enable);
-    $('#sample_rate').val(config.sample_rate);
-    $('#web_enable').prop('checked', config.web_enable);
+    document.querySelector('#ambient_enable').checked = config.ambient_enable;
+    document.querySelector('#digital_enable').checked = config.digital_enable;
+    document.querySelector('#sample_rate').value = config.sample_rate;
+    document.querySelector('#web_enable').checked = config.web_enable;
 
     // set channel switches
     for (const ch of RL_CHANNEL_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_enable`).prop('checked',
-            (config.channel_enable.indexOf(ch) >= 0));
+        document.getElementById(`channel_${ch.toLowerCase()}_enable`).checked =
+            config.channel_enable.indexOf(ch) >= 0;
     }
 
     // set force channel range config
     for (const ch of RL_CHANNEL_FORCE_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_force`).prop('checked',
-            (config.channel_force_range.indexOf(ch) >= 0));
+        document.getElementById(`channel_${ch.toLowerCase()}_force`).checked =
+            config.channel_force_range.indexOf(ch) >= 0;
     }
 
     // set file config inputs
     if (config.file === null) {
-        $('#file_enable').prop('checked', false);
+        document.querySelector('#file_enable').checked = false;
     } else {
-        $('#file_enable').prop('checked', true);
-        $('#file_comment').val(config.file.comment);
-        $('#file_filename').val(config.file.filename);
-        $('#file_format').val(config.file.format);
+        document.querySelector('#file_enable').checked = true;
+        document.querySelector('#file_comment').value = config.file.comment;
+        document.querySelector('#file_filename').value = config.file.filename;
+        document.querySelector('#file_format').value = config.file.format;
 
         // set file split and size config
-        $('#file_split').prop('checked', config.file.size > 0);
+        document.querySelector('#file_split').checked = config.file.size > 0;
         if (config.file.size === 0) {
             config.file.size = RL_CONFIG_RESET.file.size;
         } else if (config.file.size < 1e6) {
@@ -287,11 +288,11 @@ function config_reset_default() {
             config.file.size = RL_CONFIG_RESET.file.size;
         }
         if (config.file.size >= 1e9) {
-            $('#file_size').val(Math.round(config.file.size / 1e9));
-            $('#file_size_scale').val('1000000000');
+            document.querySelector('#file_size').value = Math.round(config.file.size / 1e9);
+            document.querySelector('#file_size_scale').value = '1000000000';
         } else {
-            $('#file_size').val(Math.round(config.file.size / 1e6));
-            $('#file_size_scale').val('1000000');
+            document.querySelector('#file_size').value = Math.round(config.file.size / 1e6);
+            document.querySelector('#file_size_scale').value = '1000000';
         }
     }
 
@@ -303,15 +304,15 @@ function config_reset_default() {
 function config_channels_enable() {
     // enable channel switches
     for (const ch of RL_CHANNEL_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_enable`).prop('checked', true);
+        document.getElementById(`channel_${ch.toLowerCase()}_enable`).checked = true;
     }
 
     // unset force channel range
     for (const ch of RL_CHANNEL_FORCE_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
+        document.getElementById(`channel_${ch.toLowerCase()}_force`).checked = false;
     }
-    $('#digital_enable').prop('checked', true);
-    $('#ambient_enable').prop('checked', true);
+    document.querySelector('#digital_enable').checked = true;
+    document.querySelector('#ambient_enable').checked = true;
 
     // trigger configuration interface update handler
     config_change();
@@ -321,15 +322,15 @@ function config_channels_enable() {
 function config_channels_disable() {
     // disable channels
     for (const ch of RL_CHANNEL_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_enable`).prop('checked', false);
+        document.getElementById(`channel_${ch.toLowerCase()}_enable`).checked = false;
     }
 
     // unset force channel range
     for (const ch of RL_CHANNEL_FORCE_NAMES) {
-        $(`#channel_${ch.toLowerCase()}_force`).prop('checked', false);
+        document.getElementById(`channel_${ch.toLowerCase()}_force`).checked = false;
     }
-    $('#digital_enable').prop('checked', false);
-    $('#ambient_enable').prop('checked', false);
+    document.querySelector('#digital_enable').checked = false;
+    document.querySelector('#ambient_enable').checked = false;
 
     // trigger configuration interface update handler
     config_change();
@@ -340,45 +341,45 @@ function config_file_add_prefix() {
     const date_pattern = /\d{8}_\d{6}_/;
 
     // check filename for existing prefix
-    let filename = $('#file_filename').val();
+    let filename = document.querySelector('#file_filename').value;
     if (date_pattern.test(filename)) {
         filename = filename.slice(16);
     }
-    $('#file_filename').val(`${date_to_prefix_string(new Date())}_${filename}`);
+    document.querySelector('#file_filename').value = `${date_to_prefix_string(new Date())}_${filename}`;
 
     // trigger configuration interface update handler
     config_change();
 }
 
-/// document ready callback handler for initialization
-$(() => {
+/// initialize when document is fully loaded
+window.addEventListener('load', () => {
     // initialize RocketLogger control functionality
     rocketlogger_init_control();
 
     // initialize configuration interface update handler
-    $('#configuration_group').on('change', config_change);
+    document.querySelector('#configuration_group').addEventListener('change', config_change);
 
     // initialize configuration interface helper action buttons
-    $('#button_config_all').on('click', () => {
+    document.querySelector('#button_config_all').addEventListener('click', () => {
         config_channels_enable();
     });
-    $('#button_config_none').on('click', () => {
+    document.querySelector('#button_config_none').addEventListener('click', () => {
         config_channels_disable();
     });
-    $('#button_file_prefix').on('click', () => {
+    document.querySelector('#button_file_prefix').addEventListener('click', () => {
         config_file_add_prefix();
     });
 
     // initialize measurement control buttons
-    $('#button_start').on('click', () => {
+    document.querySelector('#button_start').addEventListener('click', () => {
         rl.start();
     });
-    $('#button_stop').on('click', () => {
+    document.querySelector('#button_stop').addEventListener('click', () => {
         rl.stop();
     });
 
     // initialize system operation control buttons
-    $('#button_reset').on('click', () => {
+    document.querySelector('#button_reset').addEventListener('click', () => {
         const res = prompt(
             'Are you sure to reset the RocketLogger hardware?\n' +
             'Enter "reset" to confirm and proceed:',
@@ -387,7 +388,7 @@ $(() => {
             rl.reset(res.trim().toLowerCase());
         }
     });
-    $('#button_reboot').on('click', () => {
+    document.querySelector('#button_reboot').addEventListener('click', () => {
         const res = prompt(
             'Are you sure to reboot the RocketLogger system?\n' +
             'Enter "reboot" to confirm and proceed:',
@@ -396,7 +397,7 @@ $(() => {
             rl.reboot(res.trim().toLowerCase());
         }
     });
-    $('#button_poweroff').on('click', () => {
+    document.querySelector('#button_poweroff').addEventListener('click', () => {
         const res = prompt(
             'Are you sure to shut down the RocketLogger system?\n' +
             'Enter "shutdown" to confirm and proceed:',
@@ -407,34 +408,42 @@ $(() => {
     });
 
     // initialize default configuration control buttons
-    $('#button_config_save').on('click', () => {
-        $('#alert_config_saved').hide();
-        $('#alert_config_loaded').hide();
+    document.querySelector('#button_config_save').addEventListener('click', () => {
+        hide(document.querySelector('#alert_config_saved'));
+        hide(document.querySelector('#alert_config_loaded'));
         rl.config(true);
     });
-    $('#button_config_load').on('click', () => {
-        $('#alert_config_saved').hide();
-        $('#alert_config_loaded').hide();
+    document.querySelector('#button_config_load').addEventListener('click', () => {
+        hide(document.querySelector('#alert_config_saved'));
+        hide(document.querySelector('#alert_config_loaded'));
         rl.config();
     });
 
     // register control hotkeys
-    $(document).on('keypress', (event) => {
+    document.addEventListener('keydown', (event) => {
+        // skip event of form inputs
         if (event.target.nodeName === 'INPUT' || event.target.nodeName === 'CHECKBOX' ||
             event.target.nodeName === 'TEXTAREA') {
             return;
         }
+        // skip event with pressed modifier keys
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
 
-        switch (event.which) {
-            case ascii('s'):
-                $('#button_stop:enabled').trigger('click');
-                $('#button_start:enabled').trigger('click');
+        switch (event.key) {
+            case 's':
+                if (document.querySelector('#button_start').disabled) {
+                    document.querySelector('#button_stop').click();
+                } else {
+                    document.querySelector('#button_start').click();
+                }
                 break;
-            case ascii('d'):
-                $('#button_config_save').trigger('click');
+            case 'd':
+                document.querySelector('#button_config_save').click();
                 break;
-            case ascii('l'):
-                $('#button_config_load').trigger('click');
+            case 'l':
+                document.querySelector('#button_config_load').click();
                 break;
             default:
                 return;
