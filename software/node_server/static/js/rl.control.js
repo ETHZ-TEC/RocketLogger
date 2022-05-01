@@ -123,9 +123,9 @@ function rocketlogger_init_control() {
             // indicate update except on initial load
             if (!init) {
                 if (res.default) {
-                    show(document.querySelector('#alert_config_saved'));
+                    show('#alert_config_saved');
                 } else {
-                    show(document.querySelector('#alert_config_loaded'));
+                    show('#alert_config_loaded');
                 }
             }
         }
@@ -209,17 +209,17 @@ function config_change() {
     rl._data.config = config;
 
     // perform necessary interface updates
-    hide(document.querySelector('#alert_config_saved'));
-    hide(document.querySelector('#alert_config_loaded'));
+    hide('#alert_config_saved');
+    hide('#alert_config_loaded');
     document.querySelector('#file_group').disabled = config.file === null;
     document.querySelector('#file_split_group').disabled = config.file && (config.file.size === 0);
     document.querySelector('#web_group').disabled = !config.web_enable;
     const configCollapse = new bootstrap.Collapse(document.querySelector('#collapseConfiguration'), { toggle: false });
     config.web_enable ? configCollapse.show() : configCollapse.hide();
-    config.ambient_enable ? show(document.querySelector('#plot_group_ambient')) : hide(document.querySelector('#plot_group_ambient'));
-    config.digital_enable ? show(document.querySelector('#plot_group_digital')) : hide(document.querySelector('#plot_group_digital'));
-    config.channel_enable.some(v => v[0] === 'V') ? show(document.querySelector('#plot_group_voltage')) : hide(document.querySelector('#plot_group_voltage'));
-    config.channel_enable.some(v => v[0] === 'I') ? show(document.querySelector('#plot_group_current')) : hide(document.querySelector('#plot_group_current'));
+    config.ambient_enable ? show('#plot_group_ambient') : hide('#plot_group_ambient');
+    config.digital_enable ? show('#plot_group_digital') : hide('#plot_group_digital');
+    config.channel_enable.some(v => v[0] === 'V') ? show('#plot_group_voltage') : hide('#plot_group_voltage');
+    config.channel_enable.some(v => v[0] === 'I') ? show('#plot_group_current') : hide('#plot_group_current');
 
     // estimate remaining time from configuration
     let use_rate_estimated = (config.channel_enable.length +
@@ -409,13 +409,13 @@ window.addEventListener('load', () => {
 
     // initialize default configuration control buttons
     document.querySelector('#button_config_save').addEventListener('click', () => {
-        hide(document.querySelector('#alert_config_saved'));
-        hide(document.querySelector('#alert_config_loaded'));
+        hide('#alert_config_saved');
+        hide('#alert_config_loaded');
         rl.config(true);
     });
     document.querySelector('#button_config_load').addEventListener('click', () => {
-        hide(document.querySelector('#alert_config_saved'));
-        hide(document.querySelector('#alert_config_loaded'));
+        hide('#alert_config_saved');
+        hide('#alert_config_loaded');
         rl.config();
     });
 
