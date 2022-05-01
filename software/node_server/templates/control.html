@@ -8,10 +8,10 @@
   {{ super() }}
   <!-- socket.io client -->
   <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
-  <script>if (typeof (io) === 'undefined') { document.write('<script src="/assets/socket.io.js"><\/script>') }</script>
+  <script>if (typeof io === 'undefined') { document.write('<script src="/assets/socket.io.js"><\/script>') }</script>
   <!-- plotting and timesync javascript -->
   <script src="https://cdn.plot.ly/plotly-2.11.1.min.js" integrity="sha384-wVbZE1Q7jVilIJHsONFiTPN+mEht52fkyLnuNbshGRGEjouE5Zr1mqxTwArxM/g+" crossorigin="anonymous"></script>
-  <script>if (typeof (Plotly) === 'undefined') { document.write('<script src="/assets/plotly.min.js"><\/script>') }</script>
+  <script>if (typeof Plotly === 'undefined') { document.write('<script src="/assets/plotly.min.js"><\/script>') }</script>
   <script src="/assets/timesync.min.js"></script>
   <!-- local javascript -->
   <script src="/static/js/rl.util.js"></script>

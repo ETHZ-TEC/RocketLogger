@@ -31,8 +31,8 @@
 "use strict";
 
 // check RocketLogger base functionality is loaded
-if (typeof (rl) === 'undefined') {
-    throw 'need to load rl.base.js before loading rl.control.js';
+if (typeof rl === 'undefined') {
+    throw Error('need to load rl.base.js before loading rl.control.js');
 }
 
 /// RocketLogger channel names
@@ -45,8 +45,8 @@ const RL_FILE_FORMATS = ['rld', 'csv'];
 /// initialize RocketLogger control functionality
 function rocketlogger_init_control() {
     // check RocketLogger base functionality is initialized
-    if (rl.status === null) {
-        throw 'need RocketLogger base functionality to be initialized first.';
+    if (typeof rl.status === 'undefined') {
+        throw Error('need RocketLogger base functionality to be initialized first.');
     }
 
     // init config with reset default
@@ -241,13 +241,13 @@ function adjust_filename_extension(file_config) {
 
 function has_rl_extension(filename) {
     return RL_FILE_FORMATS.some(
-        (ext) => filename.toLowerCase().endsWith('.' + ext));
+        ext => filename.toLowerCase().endsWith('.' + ext));
 }
 
 /// update configuration interface to RocketLogger default configuration
 function config_reset_default() {
     if (rl._data.default_config === null) {
-        throw 'undefined RocketLogger default configuration.';
+        throw Error('undefined RocketLogger default configuration.');
     }
     const config = rl._data.default_config;
 

@@ -31,8 +31,8 @@
 "use strict";
 
 // check RocketLogger base functionality is loaded
-if (typeof (rl) === 'undefined') {
-    throw 'need to load rl.base.js before loading rl.data.js';
+if (typeof rl === 'undefined') {
+    throw Error('need to load rl.base.js before loading rl.data.js');
 }
 
 /// data buffer length to buffer locally
@@ -47,8 +47,8 @@ const RL_TIMESYNC_INTERVAL_MS = 60e3;
 /// initialize RocketLogger data and plot functionality
 function rocketlogger_init_data() {
     // check RocketLogger base functionality is initialized
-    if (rl.status === null) {
-        throw 'need RocketLogger base functionality to be initialized first.';
+    if (typeof rl.status === 'undefined') {
+        throw Error('need RocketLogger base functionality to be initialized first.');
     }
 
     // force initial reset of data buffers
