@@ -65,7 +65,7 @@ const rl = {
 function rocketlogger_init_base() {
     // set connection timeout before showing offline banner
     const offline_timeout = setTimeout(() => {
-        $('#error_offline').show();
+        show(document.querySelector('#error_offline'));
     }, RL_OFFLINE_TIMEOUT_MS);
 
     // new socket.io socket for RocketLogger interaction
@@ -75,11 +75,11 @@ function rocketlogger_init_base() {
     rl._data.socket.on('connect', () => {
         console.log(`socket.io connection established (${rl._data.socket.id}).`);
         clearTimeout(offline_timeout);
-        $('#error_offline').hide();
+        hide(document.querySelector('#error_offline'));
     });
     rl._data.socket.on('disconnect', () => {
         console.log(`socket.io connection closed.`);
-        $('#error_offline').show();
+        show(document.querySelector('#error_offline'));
     });
 
     // init status with reset default
@@ -159,77 +159,77 @@ function update_status() {
     }
     if (status.error) {
         status_message += ' with error';
-        $('#warn_error').show();
+        show(document.querySelector('#warn_error'));
     } else {
-        $('#warn_error').hide();
+        hide(document.querySelector('#warn_error'));
     }
-    $('#status_message').text(status_message);
+    document.querySelector('#status_message').innerText = status_message;
 
     // sampling information
-    $('#status_samples').text(status.sample_count + ' samples');
+    document.querySelector('#status_samples').innerText = status.sample_count + ' samples';
     try {
         let sampling_time = status.sample_count / status.config.sample_rate;
-        $('#status_time').text(unix_to_timespan_string(sampling_time));
+        document.querySelector('#status_time').innerText = unix_to_timespan_string(sampling_time);
     } catch (err) {
         // skip
     }
 
     // calibration
     if (status.calibration_time <= 0) {
-        $('#status_calibration').text('');
-        $('#warn_calibration').show();
+        document.querySelector('#status_calibration').innerText = '';
+        show(document.querySelector('#warn_calibration'));
     } else {
-        $('#status_calibration').text(unix_to_datetime_string(status.calibration_time));
-        $('#warn_calibration').hide();
+        document.querySelector('#status_calibration').innerText = unix_to_datetime_string(status.calibration_time);
+        hide(document.querySelector('#warn_calibration'));
     }
 
     // storage
-    $('#status_disk').text(`${bytes_to_string(status.disk_free_bytes)} (` +
-        `${(status.disk_free_permille / 10).toFixed(1)}%) free`);
-    $('#warn_storage_critical').hide();
-    $('#warn_storage_low').hide();
+    document.querySelector('#status_disk').innerText = `${bytes_to_string(status.disk_free_bytes)} (` +
+        `${(status.disk_free_permille / 10).toFixed(1)}%) free`;
+    hide(document.querySelector('#warn_storage_critical'));
+    hide(document.querySelector('#warn_storage_low'));
     if (status.disk_free_permille <= RL_DISK_WARNING_THRESHOLD) {
         if (status.disk_free_permille <= RL_DISK_CRITICAL_THRESHOLD) {
-            $('#warn_storage_critical').show();
+            show(document.querySelector('#warn_storage_critical'));
         } else {
-            $('#warn_storage_low').show();
+            show(document.querySelector('#warn_storage_low'));
         }
     }
     if (status.hasOwnProperty('sdcard_available') && !status.sdcard_available) {
-        $('#warn_sdcard_unavailable').show();
+        show(document.querySelector('#warn_sdcard_unavailable'));
     }
 
     // remaining sampling time
     if (status.sampling && status.disk_use_rate > 0) {
-        $('#status_remaining').text(unix_to_timespan_string(
-            status.disk_free_bytes / status.disk_use_rate));
+        document.querySelector('#status_remaining').innerText = unix_to_timespan_string(
+            status.disk_free_bytes / status.disk_use_rate)
     }
 
     // control buttons and config form
     if (status.sampling) {
-        $('#button_start').removeClass('btn-success').addClass('btn-dark');
-        $('#button_stop').removeClass('btn-dark').addClass('btn-danger');
+        replaceClass(document.querySelector('#button_start'), 'btn-success', 'btn-dark');
+        replaceClass(document.querySelector('#button_stop'), 'btn-dark', 'btn-danger');
     } else {
-        $('#button_start').removeClass('btn-dark').addClass('btn-success');
-        $('#button_stop').removeClass('btn-danger').addClass('btn-dark');
+        replaceClass(document.querySelector('#button_start'), 'btn-dark', 'btn-success');
+        replaceClass(document.querySelector('#button_stop'), 'btn-danger', 'btn-dark');
     }
-    $('#button_start').prop('disabled', status.sampling);
-    $('#button_stop').prop('disabled', !status.sampling);
-    $('#configuration_group').prop('disabled', status.sampling);
+    document.querySelector('#button_start').disabled = status.sampling;
+    document.querySelector('#button_stop').disabled = !status.sampling;
+    document.querySelector('#configuration_group').disabled = status.sampling;
 }
 
-/// document ready callback handler for initialization
-$(() => {
+/// initialize when document is fully loaded
+window.addEventListener('load', () => {
     // initialize RocketLogger interface and display default status
     rocketlogger_init_base();
 
     // status update button
-    $('#button_status').on('click', () => {
+    document.querySelector('#button_status').addEventListener('click', () => {
         rl.status();
     });
 
     // status update on window focus
-    $(window).on('focus', () => {
+    window.addEventListener('focus', () => {
         rl.status();
     });
 

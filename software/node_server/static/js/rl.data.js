@@ -96,9 +96,9 @@ function rocketlogger_init_data() {
         // console.log(`rl data: t=${reply.t}, ${reply.metadata}`);
         // process data trigger plot update if enabled
         process_data(reply);
-        if (rl.plot.timeout === null && $('#plot_update').prop('checked')) {
+        if (rl.plot.timeout === null && document.querySelector('#plot_update').checked) {
             rl.plot.start();
-            $('#collapseConfiguration').collapse('hide');
+            new bootstrap.Collapse(document.querySelector('#collapseConfiguration'), { toggle: false }).hide();
         }
     });
 
@@ -180,25 +180,25 @@ function plots_init() {
     // register plots to update
     rl.plot.plots = [
         {
-            id: 'plot_voltage',
-            range_control: $('#plot_voltage_range'),
+            element: document.querySelector('#plot_voltage'),
+            range_control: document.querySelector('#plot_voltage_range'),
             range: 0,
             unit: 'V',
         },
         {
-            id: 'plot_current',
-            range_control: $('#plot_current_range'),
+            element: document.querySelector('#plot_current'),
+            range_control: document.querySelector('#plot_current_range'),
             range: 0,
             unit: 'A',
         },
         {
-            id: 'plot_digital',
+            element: document.querySelector('#plot_digital'),
             range_control: null,
             range: null,
             unit: 'binary',
         },
         {
-            id: 'plot_ambient',
+            element: document.querySelector('#plot_ambient'),
             range_control: null,
             range: 0,
             unit: 'ambient',
@@ -210,16 +210,18 @@ function plots_init() {
     // register range control handlers for plots
     for (const plot of rl.plot.plots) {
         if (plot.range_control) {
-            plot.range_control.on('change', () => {
-                plot.range = plot.range_control.val();
-            }).trigger('change');
+            plot.range_control.addEventListener('change', () => {
+                plot.range = plot.range_control.value;
+            });
+            triggerEvent(plot.range_control, 'change');
         }
     }
 
     // register time scale control handler
-    $('#plot_time_scale').on('change', () => {
-        rl.plot.time_scale = $('#plot_time_scale').val();
-    }).trigger('change');
+    document.querySelector('#plot_time_scale').addEventListener('change', () => {
+        rl.plot.time_scale = document.querySelector('#plot_time_scale').value;
+    });
+    triggerEvent('#plot_time_scale', 'change');
 }
 
 async function plots_reset() {
@@ -317,7 +319,7 @@ function plot_get_ylayout(plot_config) {
 
 async function plot_reset(plot, xaxis) {
     // purge plot and reset traces
-    Plotly.purge(plot.id);
+    Plotly.purge(plot.element);
     plot.data = [];
 
     // collect data series to plot
@@ -353,11 +355,11 @@ async function plot_reset(plot, xaxis) {
     const layout = plot_get_base_layout();
     layout.xaxis = xaxis;
     layout.yaxis = plot_get_ylayout(plot);
-    Plotly.newPlot(plot.id, plot.data, layout, { responsive: true, displayModeBar: false });
+    Plotly.newPlot(plot.element, plot.data, layout, { responsive: true, displayModeBar: false });
 }
 
 async function plot_update(plot, xaxis) {
-    if (!document.getElementById(plot.id)?.data) {
+    if (!plot.element?.data) {
         console.warn('skip update of un-initialized plot');
         return;
     }
@@ -384,13 +386,11 @@ async function plot_update(plot, xaxis) {
         xaxis: xaxis,
         yaxis: plot_get_ylayout(plot),
     };
-    Plotly.update(plot.id, plot.data, layout_update);
+    Plotly.update(plot.element, plot.data, layout_update);
 }
 
-/**
- * Initialization when document is fully loaded.
- */
-$(() => {
+/// initialize when document is fully loaded
+window.addEventListener('load', () => {
     // initialize RocketLogger data and plot functionality
     rocketlogger_init_data();
 
@@ -398,35 +398,39 @@ $(() => {
     plots_init();
 
     // plot update change handler if enabled
-    $('#plot_update').on('change', () => {
-        if (!$('#plot_update').prop('checked')) {
+    document.querySelector('#plot_update').addEventListener('change', () => {
+        if (!document.querySelector('#plot_update').checked) {
             rl.plot.stop();
         }
     });
-    $('#plot_update_rate').on('change', () => {
-        rl.plot.update_rate = Math.min(RL_PLOT_MAX_FPS, $('#plot_update_rate').val());
-    }).trigger('change');
+
+    document.querySelector('#plot_update_rate').addEventListener('change', () => {
+        rl.plot.update_rate = Math.min(RL_PLOT_MAX_FPS, document.querySelector('#plot_update_rate').value);
+    });
+    triggerEvent('#plot_update_rate', 'change');
 
     // register plotting hotkeys
-    $(document).on('keypress', (event) => {
+    document.addEventListener('keydown', (event) => {
+        // skip event of form inputs
         if (event.target.nodeName === 'INPUT' || event.target.nodeName === 'CHECKBOX' ||
             event.target.nodeName === 'TEXTAREA') {
             return;
         }
+        // skip event with pressed modifier keys
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
 
-        switch (event.which) {
-            case ascii('p'):
-            case ascii(' '):
-                $('#plot_update').trigger('click');
+        switch (event.key) {
+            case ' ':
+            case 'p':
+                document.querySelector('#plot_update').click();
                 break;
-            case ascii('1'):
-                $('#plot_time_scale').val(1000).trigger('change');
-                break;
-            case ascii('2'):
-                $('#plot_time_scale').val(10000).trigger('change');
-                break;
-            case ascii('3'):
-                $('#plot_time_scale').val(100000).trigger('change');
+            case '1':
+            case '2':
+            case '3':
+                document.querySelector('#plot_time_scale').selectedIndex = event.key - '1';
+                triggerEvent('#plot_time_scale', 'change');
                 break;
             default:
                 return;
