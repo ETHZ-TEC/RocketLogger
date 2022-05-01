@@ -100,7 +100,7 @@ I1L_REG                     .set    r5
 I1H_REG                     .set    r6
 I2L_REG                     .set    r7
 I2H_REG                     .set    r8
-DT_REG                      .set    r9      ; PRU cycle counter
+DT_REG                      .set    r9      ; delta capture on ADC ready
 
 ; PRU register definitions: double sampled channel data from ADC
 I1L_2_REG                   .set    r10
@@ -183,6 +183,52 @@ AQ_B_DECSET                 .set    0x0800  ; Action qualifier: set on compare B
 PWM_ADC_CLOCK_PERIOD        .set    49              ; ADC master clock period (in units of 10 ns)
 PWM_RANGE_RESET_PERIOD_BASE .set    (50000 + 5000)  ; Range latch base period, 0.5 kHz + 10% margin (in units of 10 ns)
 PWM_RANGE_RESET_PULSE_WIDTH .set    50              ; Range latch reset pulse width (in units of 10 ns)
+
+
+; ------------------------ PRU-ICSS eCAP Definitions ------------------------- ;
+; PRU-ICSS eCAP module and configuration register offsets
+PRU_ICSS_ECAP_BASE_CONST    .set    C_PRU_ECAP
+ECAP_TSCTR_OFFSET           .set    0x0000  ; ECAP_TSCTR register address offset
+ECAP_CTRPHS_OFFSET          .set    0x0004  ; ECAP_CTRPHS register address offset
+ECAP_CAP1_OFFSET            .set    0x0008  ; ECAP_CAP1 register address offset
+ECAP_CAP2_OFFSET            .set    0x000C  ; ECAP_CAP2 register address offset
+ECAP_CAP3_OFFSET            .set    0x0010  ; ECAP_CAP3 register address offset
+ECAP_CAP4_OFFSET            .set    0x0014  ; ECAP_CAP4 register address offset
+ECAP_ECCTL1_OFFSET          .set    0x0028  ; ECAP_ECCTL1 register address offset
+ECAP_ECCTL2_OFFSET          .set    0x002A  ; ECAP_ECCTL2 register address offset
+ECAP_ECEINT_OFFSET          .set    0x002C  ; ECAP_ECEINT register address offset
+ECAP_ECFLG_OFFSET           .set    0x002E  ; ECAP_ECFLG register address offset
+ECAP_ECCLR_OFFSET           .set    0x0030  ; ECAP_ECCLR register address offset
+ECAP_ECFRC_OFFSET           .set    0x0032  ; ECAP_ECFRC register address offset
+ECAP_REVID_OFFSET           .set    0x005C  ; ECAP_REVID register address offset
+
+; PRU-ICSS eCAP register value definitions and constants (selection)
+ECAP_ECCTL1_RESET           .set    0x0000  ; ECAP_ECCTL1 register reset value
+ECAP_ECCTL1_CONFIG          .set    0x0103  ; ECAP_ECCTL1 register configuration value
+ECAP_ECCTL1_CAP1POL_BIT     .set    0       ; ECAP_ECCTL1 CAP1POL bit offset
+ECAP_ECCTL1_CTRRST1_BIT     .set    1       ; ECAP_ECCTL1 CTRRST1 bit offset
+ECAP_ECCTL1_CAP2POL_BIT     .set    2       ; ECAP_ECCTL1 CAP2POL bit offset
+ECAP_ECCTL1_CTRRST2_BIT     .set    3       ; ECAP_ECCTL1 CTRRST2 bit offset
+ECAP_ECCTL1_CAP3POL_BIT     .set    4       ; ECAP_ECCTL1 CAP3POL bit offset
+ECAP_ECCTL1_CTRRST3_BIT     .set    5       ; ECAP_ECCTL1 CTRRST3 bit offset
+ECAP_ECCTL1_CAP4POL_BIT     .set    6       ; ECAP_ECCTL1 CAP4POL bit offset
+ECAP_ECCTL1_CTRRST4_BIT     .set    7       ; ECAP_ECCTL1 CTRRST4 bit offset
+ECAP_ECCTL1_CAPLDEN_BIT     .set    8       ; ECAP_ECCTL1 CAPLDEN bit offset
+ECAP_ECCTL2_RESET           .set    0x0006  ; ECAP_ECCTL2 register reset value
+ECAP_ECCTL2_CONFIG          .set    0x0018  ; ECAP_ECCTL2 register configuration value
+ECAP_ECCTL2_CONT_ONESHT_BIT .set    0       ; ECAP_ECCTL2 CONT_ONESHT bit offset
+ECAP_ECCTL2_REARM_BIT       .set    3       ; ECAP_ECCTL2 REARM bit offset
+ECAP_ECCTL2_TSCTRSTOP_BIT   .set    4       ; ECAP_ECCTL2 TSCTRSTOP bit offset
+ECAP_ECCTL2_CAP_APWM_BIT    .set    9       ; ECAP_ECCTL2 CAP_APWM bit offset
+ECAP_INT_ALL_MASK           .set    0x00FF  ; ECAP all interrupt mask
+ECAP_INT_INT_BIT            .set    0       ; ECAP interrupt register INT bit offset
+ECAP_INT_CEVT1_BIT          .set    1       ; ECAP interrupt register CEVT1 bit offset
+ECAP_INT_CEVT2_BIT          .set    2       ; ECAP interrupt register CEVT2 bit offset
+ECAP_INT_CEVT3_BIT          .set    3       ; ECAP interrupt register CEVT3 bit offset
+ECAP_INT_CEVT4_BIT          .set    4       ; ECAP interrupt register CEVT4 bit offset
+ECAP_INT_CNTOVF_BIT         .set    5       ; ECAP interrupt register CNTOVF bit offset
+ECAP_INT_PRDEQ_BIT          .set    6       ; ECAP interrupt register PRDEQ bit offset
+ECAP_INT_CMPEQ_BIT          .set    7       ; ECAP interrupt register CMPEQ bit offset
 
 
 ; ----------------------------- SPI Definitions ----------------------------- ;
@@ -270,6 +316,77 @@ timestamp_restart .macro reg
     LDI     MTMP_REG, PRU_CYCLE_RESET                    ; load reset value
     SBBO    &MTMP_REG, CTRL_ADDRESS, PRU_CYCLE_OFFSET, 4 ; reset counter
     start_counter
+    .endm
+
+
+; ---------------------------- eCAP Timer Macros ---------------------------- ;
+; eCAP INITIALIZATION
+; (initialize the IEP timer in free runing mode with capture compare input)
+ecap_init .macro
+    ; set control registers with capture timer disabled
+    LDI     MTMP_REG, ECAP_ECCTL1_CONFIG
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECCTL1_OFFSET, 2
+    LDI     MTMP_REG, ECAP_ECCTL2_CONFIG
+    CLR     MTMP_REG, MTMP_REG, ECAP_ECCTL2_TSCTRSTOP_BIT
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECCTL2_OFFSET, 2
+
+    ; reset counter and phase registers to zero
+    ZERO    &MTMP_REG, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_TSCTR_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CTRPHS_OFFSET, 4
+
+    ; disable interrupts and clear flags
+    ZERO    &MTMP_REG, 2
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECEINT_OFFSET, 2
+    LDI     MTMP_REG, ECAP_INT_ALL_MASK
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECFLG_OFFSET, 2
+
+    ; set control register with capture timer enabled
+    LDI     MTMP_REG, ECAP_ECCTL2_CONFIG
+    SET     MTMP_REG, MTMP_REG, ECAP_ECCTL2_TSCTRSTOP_BIT
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECCTL2_OFFSET, 2
+    .endm
+
+
+; eCAP TIMER DE-INITIALIZATION
+; (stop the IEP timer and reset registers to default values)
+ecap_deinit .macro
+    ; reset control registers to stop capture timer
+    LDI     MTMP_REG, ECAP_ECCTL1_RESET
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECCTL1_OFFSET, 2
+    LDI     MTMP_REG, ECAP_ECCTL2_RESET
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECCTL2_OFFSET, 2
+
+    ; disable interrupts and clear flags
+    ZERO    &MTMP_REG, 2
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECEINT_OFFSET, 2
+    LDI     MTMP_REG, ECAP_INT_ALL_MASK
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECFLG_OFFSET, 2
+
+    ; reset counter, phase and capture registers to zero register by writing all bits set
+    ZERO    &MTMP_REG, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_TSCTR_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CTRPHS_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP1_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP2_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP3_OFFSET, 4
+    SBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP4_OFFSET, 4
+    .endm
+
+
+; eCAP TIMER CAPTURE READ
+; (check for update and read new capture value, sets zero if not captured)
+ecap_capture_read .macro
+    ; clear result value
+    ZERO    &DT_REG, 4
+
+    ; check if new CAP1 (pr1_ecap0_ecap_capin_apwm_o, P8_15) was captured
+    LBCO    &MTMP_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_ECFLG_OFFSET, 2
+    QBBC    RETURN?, MTMP_REG, ECAP_INT_CEVT1_BIT
+    ; read capture value and increment by 1 for the extra zero reset cycle
+    LBCO    &DT_REG, PRU_ICSS_ECAP_BASE_CONST, ECAP_CAP1_OFFSET, 4
+    ADD     DT_REG, DT_REG, 1
+RETURN?:
     .endm
 
 
@@ -668,6 +785,9 @@ INIT:
     ; initialize GPIO states
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_ERROR_BIT   ; reset error LED
 
+    ; initialize eCAP module
+    ecap_init
+
     ; set up PWM for ADC clock signal and for range valid latch reset signals
     pwm_init_adc_clock
     pwm_init_range_valid_reset SAMPLE_RATE
@@ -741,10 +861,7 @@ READ:
     SET     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
 
     ; wait for data ready
-    WBC     ADC_IN_REG, DR1_BIT
-
-    ; immediately timestamp data
-    timestamp_restart DT_REG
+    WBC     ADC_IN_REG, DR2_BIT
 
     ; signal end wait, using status LED as busy wait indicator
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
@@ -820,6 +937,9 @@ DATAPROCESSING:
     ADD     I2H_REG, I2H_REG, I2H_2_REG
     ADD     I2L_REG, I2L_REG, I2L_2_REG
 
+    ; read captured ADC ready timestamp
+    ecap_capture_read
+
     ; single block transfer to DDR of all data channels
     ; data array is ordered: V1, V2, V3, V4, I1L, I1H, I2L, I2H, DT
     SBBO    &DI_REG, MEM_POINTER, 0, BUFFER_BLOCK_SIZE
@@ -837,6 +957,9 @@ STOP:
     ; stop and reset PWM modules
     pwm_reset_range_valid_reset
     pwm_reset_adc_clock
+
+    ; stop and deinitialize eCAP module
+    ecap_deinit
 
     ; clear status LED
     CLR     STATUS_OUT_REG, STATUS_OUT_REG, LED_STATUS_BIT
