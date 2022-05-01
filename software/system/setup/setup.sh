@@ -76,7 +76,10 @@ apt-get install --assume-yes        \
     ninja-build/buster-backports    \
     ntp                             \
     pkg-config                      \
+    python3                         \
+    python3-venv                    \
     ti-pru-cgt-installer            \
+    libatlas-base-dev               \
     libgpiod-dev                    \
     libi2c-dev                      \
     libncurses5-dev                 \
