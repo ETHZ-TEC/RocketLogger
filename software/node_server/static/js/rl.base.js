@@ -65,7 +65,7 @@ const rl = {
 function rocketlogger_init_base() {
     // set connection timeout before showing offline banner
     const offline_timeout = setTimeout(() => {
-        show(document.querySelector('#error_offline'));
+        show('#error_offline');
     }, RL_OFFLINE_TIMEOUT_MS);
 
     // new socket.io socket for RocketLogger interaction
@@ -75,11 +75,11 @@ function rocketlogger_init_base() {
     rl._data.socket.on('connect', () => {
         console.log(`socket.io connection established (${rl._data.socket.id}).`);
         clearTimeout(offline_timeout);
-        hide(document.querySelector('#error_offline'));
+        hide('#error_offline');
     });
     rl._data.socket.on('disconnect', () => {
         console.log(`socket.io connection closed.`);
-        show(document.querySelector('#error_offline'));
+        show('#error_offline');
     });
 
     // init status with reset default
@@ -159,9 +159,9 @@ function update_status() {
     }
     if (status.error) {
         status_message += ' with error';
-        show(document.querySelector('#warn_error'));
+        show('#warn_error');
     } else {
-        hide(document.querySelector('#warn_error'));
+        hide('#warn_error');
     }
     document.querySelector('#status_message').innerText = status_message;
 
@@ -177,26 +177,26 @@ function update_status() {
     // calibration
     if (status.calibration_time <= 0) {
         document.querySelector('#status_calibration').innerText = '';
-        show(document.querySelector('#warn_calibration'));
+        show('#warn_calibration');
     } else {
         document.querySelector('#status_calibration').innerText = unix_to_datetime_string(status.calibration_time);
-        hide(document.querySelector('#warn_calibration'));
+        hide('#warn_calibration');
     }
 
     // storage
     document.querySelector('#status_disk').innerText = `${bytes_to_string(status.disk_free_bytes)} (` +
         `${(status.disk_free_permille / 10).toFixed(1)}%) free`;
-    hide(document.querySelector('#warn_storage_critical'));
-    hide(document.querySelector('#warn_storage_low'));
+    hide('#warn_storage_critical');
+    hide('#warn_storage_low');
     if (status.disk_free_permille <= RL_DISK_WARNING_THRESHOLD) {
         if (status.disk_free_permille <= RL_DISK_CRITICAL_THRESHOLD) {
-            show(document.querySelector('#warn_storage_critical'));
+            show('#warn_storage_critical');
         } else {
-            show(document.querySelector('#warn_storage_low'));
+            show('#warn_storage_low');
         }
     }
     if (status.hasOwnProperty('sdcard_available') && !status.sdcard_available) {
-        show(document.querySelector('#warn_sdcard_unavailable'));
+        show('#warn_sdcard_unavailable');
     }
 
     // remaining sampling time
@@ -207,11 +207,11 @@ function update_status() {
 
     // control buttons and config form
     if (status.sampling) {
-        replaceClass(document.querySelector('#button_start'), 'btn-success', 'btn-dark');
-        replaceClass(document.querySelector('#button_stop'), 'btn-dark', 'btn-danger');
+        replaceClass('#button_start', 'btn-success', 'btn-dark');
+        replaceClass('#button_stop', 'btn-dark', 'btn-danger');
     } else {
-        replaceClass(document.querySelector('#button_start'), 'btn-dark', 'btn-success');
-        replaceClass(document.querySelector('#button_stop'), 'btn-danger', 'btn-dark');
+        replaceClass('#button_start', 'btn-dark', 'btn-success');
+        replaceClass('#button_stop', 'btn-danger', 'btn-dark');
     }
     document.querySelector('#button_start').disabled = status.sampling;
     document.querySelector('#button_stop').disabled = !status.sampling;
