@@ -699,16 +699,19 @@ pwm_init_adc_clock .macro
 ; INITIALIZE PWM FOR RANGE VALID RESET SIGNALS
 ; (configure PWM for range valid reset signals for a sample rate of `sample_rate_reg`)
 pwm_init_range_valid_reset .macro sample_rate_reg
-    ; calculate PWM period from sample rate
-    LDI32   MTMP_REG, (PWM_RANGE_RESET_PERIOD_BASE)
-    LMBD    TMP_REG, sample_rate_reg, 1   ; get exponent of 2 of the sample rate
-    LSR     MTMP_REG, MTMP_REG, TMP_REG
-
     ; load EPWM1 base address
     LDI32   TMP_REG, EPWM1_BASE
 
     ; reset PWM registers prior to re-configuration
     pwm_reset_module TMP_REG
+
+    ; calculate PWM period from sample rate
+    LDI32   MTMP_REG, (PWM_RANGE_RESET_PERIOD_BASE)
+    LMBD    TMP_REG, sample_rate_reg, 1   ; get exponent of 2 of the sample rate
+    LSR     MTMP_REG, MTMP_REG, TMP_REG
+
+    ; re-load EPWM1 base address
+    LDI32   TMP_REG, EPWM1_BASE
 
     ; store calculated period value
     SBBO    &MTMP_REG, TMP_REG, EPWM_TBPRD_OFFSET, 2
