@@ -3,7 +3,7 @@
 import * as path from 'path';
 import { promisify } from 'util';
 import { execFile as execFile_, spawn } from 'child_process';
-import { get_data_path } from './rl.files.js';
+import { filter_data_filename, get_data_path } from './rl.files.js';
 
 export { status, start, stop, reset, config, version };
 
@@ -27,6 +27,9 @@ async function status() {
 
     try {
         const status = JSON.parse(result);
+        if (status.config?.file) {
+            status.config.file.filename = filter_data_filename(status.config.file?.filename);
+        }
         return { status: status };
     } catch (err) {
         throw Error(`RocketLogger status processing error: ${err} (${result})`);
@@ -64,7 +67,7 @@ async function config(config = null) {
     try {
         const config_result = JSON.parse(result);
         if (config_result.file) {
-            config_result.file.filename = path.basename(config_result.file.filename);
+            config_result.file.filename = filter_data_filename(config_result.file?.filename);
         }
         return { config: config_result, default: config !== null };
     } catch (err) {

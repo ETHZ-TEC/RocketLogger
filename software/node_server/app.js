@@ -318,8 +318,15 @@ async function control_action(request) {
 }
 
 
+// set up data update subscriptions
+const data_proxy = new rl_data.DataSubscriber();
+data_proxy.onUpdate(async (data) => io.emit('data', data));
+
+const status_proxy = new rl_data.StatusSubscriber();
+status_proxy.onUpdate(async (status) => io.emit('status', status));
+
+
 // run application
 server_start();
-
-rl_data.status_proxy(async (data) => io.emit('status', data));
-rl_data.data_proxy(async (data) => io.emit('data', data));
+status_proxy.run();
+data_proxy.run();
