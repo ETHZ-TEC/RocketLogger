@@ -4,9 +4,8 @@
 import debug from 'debug';
 import * as zmq from 'zeromq';
 import { filter_data_filename } from './rl.files.js';
-import { DataCache } from './rl.data.cache.js';
 
-export { DataSubscriber, StatusSubscriber, get_data, reset_data };
+export { DataSubscriber, StatusSubscriber };
 
 
 /// ZeroMQ socket identifier for status publishing
@@ -18,31 +17,6 @@ const data_socket = 'tcp://127.0.0.1:8277';
 /// RocketLogger maximum web downstream data rate [in 1/s]
 const web_data_rate = 1000;
 
-/// Measurement data cache size [in number of timestamps]
-const data_cache_size = 10000;
-
-/// Number of buffer levels
-const data_cache_levels = 3;
-
-/// Aggregation factor between data cache levels
-const data_cache_aggregation_factor = 10;
-
-/// RocketLogger data cache
-let data_cache = null;
-
-
-/// Get data from cache prior to `time_reference`, limited to a maximum of `limit` timestamps
-function get_data(time_reference, limit = 5000) {
-    if (data_cache === null) {
-        throw Error('no valid cache data found');
-    }
-    return data_cache.get(time_reference, limit);
-}
-
-/// Reset data cache
-function reset_data() {
-    data_cache?.reset();
-}
 
 class Subscriber {
     constructor(socketAddress) {
@@ -97,14 +71,7 @@ class DataSubscriber extends Subscriber {
         super(socketAddress);
     }
 
-    _parse(raw) {
-        const data_message = parse_data_to_message(raw);
-        if (data_cache === null) {
-            data_cache = new DataCache(data_cache_size, data_cache_levels, data_cache_aggregation_factor, data_message.metadata);
-        }
-        data_cache.add(data_message);
-        return data_message;
-    }
+    _parse(raw) { return parse_data_to_message(raw); }
 }
 
 
