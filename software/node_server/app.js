@@ -258,14 +258,13 @@ const client_connected = (socket) => {
     socket.on('status', async (request) => {
         server_debug(`rl status: ${JSON.stringify(request)}`);
 
-        // validate status update request
-        if (request.cmd !== 'status') {
-            socket.emit('status', { err: [`invalid status command: ${request.cmd}`] });
-            return;
-        }
-
-        // poll status and emit on status channel
         try {
+            // validate status update request
+            if (request.cmd !== 'status') {
+                throw Error(`invalid status command: ${request.cmd}`);
+            }
+
+            // poll status and emit on status channel
             const reply = await rl_control.status()
             reply.status.sdcard_available = await is_sdcard_mounted()
                 .catch(err => {
@@ -284,21 +283,19 @@ const client_connected = (socket) => {
     socket.on('data', async (request) => {
         server_debug(`rl data: ${JSON.stringify(request)}`);
 
-        // validate cached data request
-        if (request.cmd !== 'data') {
-            socket.emit('data', { err: [`invalid data command: ${request.cmd}`] });
-            return;
-        }
-        if (request.time === null) {
-            socket.emit('data', { err: ['missing reference timestamp of last available data'] });
-            return;
-        }
-
-        // read data from cache
         try {
+            // validate cached data request and data availability
+            if (request.cmd !== 'data') {
+                throw Error(`invalid data command: ${request.cmd}`);
+            }
+            if (request.time === null) {
+                throw Error('missing reference timestamp of last available data');
+            }
             if (data_cache === null) {
                 throw Error('no valid cache data found');
             }
+
+            // read data from cache
             const reply = await data_cache.get(request.time, data_cache_reply_limit);
             reply.req = request;
             socket.emit('data', reply);
