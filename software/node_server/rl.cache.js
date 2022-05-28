@@ -6,8 +6,6 @@ import { AggregatingBuffer } from './buffer.js';
 
 export { DataCache };
 
-const cache_debug = debug('cache');
-
 
 class DataCache {
     constructor(size, levels, aggregation_factor, metadata) {
@@ -15,6 +13,7 @@ class DataCache {
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;
         this._metadata = metadata;
+        this._debug = debug('rocketlogger:cache');
         this.reset();
     }
 
@@ -56,7 +55,7 @@ class DataCache {
 
     /// get data for values before `time_reference`, limit to most recent `limit` number of values
     get(time_reference, limit = 0) {
-        cache_debug(`cache read: time_reference=${time_reference}, limit=${limit}`);
+        this._debug(`cache read: time_reference=${time_reference}, limit=${limit}`);
         const reply = {
             metadata: {},
             time: null,
@@ -71,13 +70,13 @@ class DataCache {
 
         // check for and return on cache miss
         if (index_start < 0 || index_end <= index_start) {
-            cache_debug('cache miss: return empty reply');
+            this._debug('cache miss: return empty reply');
             return reply;
         }
 
         // assemble data reply message from cache
         const index_start_reply = limit ? Math.max(index_start, index_end - limit) : index_start;
-        cache_debug(`cache hit: return data range ${index_start_reply}:${index_end}`);
+        this._debug(`cache hit: return data range ${index_start_reply}:${index_end}`);
 
         reply.metadata = this._metadata;
         reply.time = cache_time_view.slice(index_start_reply, index_end);

@@ -22,7 +22,7 @@ class Subscriber {
     constructor(socketAddress) {
         this._onUpdate = null;
         this._socketAddress = socketAddress;
-        this._debug = debug('rocketlogger');
+        this._debug = debug('rocketlogger:data');
     }
 
     onUpdate(callback) {

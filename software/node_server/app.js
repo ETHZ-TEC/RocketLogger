@@ -47,7 +47,7 @@ import { is_same_filesystem, system_poweroff, system_reboot } from './util.js';
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const server_debug = debug('server');
+const server_debug = debug('rocketlogger:server');
 
 // get version of a package
 const get_version = async (package_path = __dirname) => {
