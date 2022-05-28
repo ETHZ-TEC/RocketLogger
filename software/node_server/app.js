@@ -41,13 +41,13 @@ import express from 'express';
 import nunjucks from 'nunjucks';
 import * as socketio from 'socket.io'
 
-import { control as rl_control, data as rl_data, files as rl_files } from './rl.js';
+import { cache as rl_cache, control as rl_control, data as rl_data, files as rl_files } from './rl.js';
 import { is_same_filesystem, system_poweroff, system_reboot } from './util.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const server_debug = debug('server');
+const server_debug = debug('rocketlogger:server');
 
 // get version of a package
 const get_version = async (package_path = __dirname) => {
@@ -68,6 +68,18 @@ const asset_version = {
     socketio: await get_version(path.join(path_modules, 'socket.io-client')),
     timesync: await get_version(path.join(path_modules, 'timesync')),
 };
+
+/// Measurement data cache size [in number of timestamps]
+const data_cache_size = 10000;
+
+/// Number of buffer levels
+const data_cache_levels = 3;
+
+/// Aggregation factor between data cache levels
+const data_cache_aggregation_factor = 10;
+
+/// Maximum number of measurements per cache read [in number of timestamps]
+const data_cache_reply_limit = 5000;
 
 
 // server application and plugin initialization
@@ -92,7 +104,7 @@ const server_start = async () => {
         console.error(err);
         process.exit(1);
     }
-}
+};
 
 
 // routing of static files
@@ -246,14 +258,13 @@ const client_connected = (socket) => {
     socket.on('status', async (request) => {
         server_debug(`rl status: ${JSON.stringify(request)}`);
 
-        // validate status update request
-        if (request.cmd !== 'status') {
-            socket.emit('status', { err: [`invalid status command: ${request.cmd}`] });
-            return;
-        }
-
-        // poll status and emit on status channel
         try {
+            // validate status update request
+            if (request.cmd !== 'status') {
+                throw Error(`invalid status command: ${request.cmd}`);
+            }
+
+            // poll status and emit on status channel
             const reply = await rl_control.status()
             reply.status.sdcard_available = await is_sdcard_mounted()
                 .catch(err => {
@@ -268,10 +279,30 @@ const client_connected = (socket) => {
         }
     });
 
-    // handle cached data request
-    socket.on('data', (request) => {
-        // @todo: implement local data caching
+    // handle data request
+    socket.on('data', async (request) => {
         server_debug(`rl data: ${JSON.stringify(request)}`);
+
+        try {
+            // validate cached data request and data availability
+            if (request.cmd !== 'data') {
+                throw Error(`invalid data command: ${request.cmd}`);
+            }
+            if (request.time === null) {
+                throw Error('missing reference timestamp of last available data');
+            }
+            if (data_cache === null) {
+                throw Error('no valid cache data found');
+            }
+
+            // read data from cache
+            const reply = await data_cache.get(request.time, data_cache_reply_limit);
+            reply.req = request;
+            socket.emit('data', reply);
+        }
+        catch (err) {
+            socket.emit('data', { err: [err.toString()] });
+        }
     });
 };
 
@@ -282,7 +313,9 @@ async function is_sdcard_mounted() {
 async function control_action(request) {
     switch (request.cmd) {
         case 'start':
-            return rl_control.start(request.config);
+            const result = await rl_control.start(request.config);
+            data_cache?.reset();
+            return result;
 
         case 'stop':
             return rl_control.stop();
@@ -318,9 +351,17 @@ async function control_action(request) {
 }
 
 
-// set up data update subscriptions
+// set up data cache and update subscriptions
+let data_cache = null;
+
 const data_proxy = new rl_data.DataSubscriber();
-data_proxy.onUpdate(async (data) => io.emit('data', data));
+data_proxy.onUpdate(async (data) => {
+    io.emit('data', data);
+    if (data_cache === null) {
+        data_cache = new rl_cache.DataCache(data_cache_size, data_cache_levels, data_cache_aggregation_factor, data.metadata);
+    }
+    data_cache.add(data);
+});
 
 const status_proxy = new rl_data.StatusSubscriber();
 status_proxy.onUpdate(async (status) => io.emit('status', status));

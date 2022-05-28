@@ -8,10 +8,10 @@ import { filter_data_filename } from './rl.files.js';
 export { DataSubscriber, StatusSubscriber };
 
 
-/// ZeroMQ socket identifier for data publishing status
+/// ZeroMQ socket identifier for status publishing
 const status_socket = 'tcp://127.0.0.1:8276';
 
-/// ZeroMQ socket identifier for status publishing
+/// ZeroMQ socket identifier for data publishing
 const data_socket = 'tcp://127.0.0.1:8277';
 
 /// RocketLogger maximum web downstream data rate [in 1/s]
@@ -22,7 +22,7 @@ class Subscriber {
     constructor(socketAddress) {
         this._onUpdate = null;
         this._socketAddress = socketAddress;
-        this._debug = debug('rocketlogger');
+        this._debug = debug('rocketlogger:data');
     }
 
     onUpdate(callback) {
@@ -71,7 +71,7 @@ class DataSubscriber extends Subscriber {
         super(socketAddress);
     }
 
-    _parse(raw) { return parse_data_to_message(raw); };
+    _parse(raw) { return parse_data_to_message(raw); }
 }
 
 
