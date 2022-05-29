@@ -41,6 +41,7 @@ and configured manually.
 * `express` - minimalist web framework
 * `nunjucks` - Jinja2 inspired web template engine
 * `socket.io` - websockets server side JavaScript library
+* `socket.io-msgpack-parser` - msgpack parser for socket.io
 * `zeromq` - ZeroMQ message queueing library
 * `gulp` - file system listing
 * `debug` - debugging output utility

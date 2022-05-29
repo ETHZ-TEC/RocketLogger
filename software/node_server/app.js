@@ -39,7 +39,8 @@ import debug from 'debug';
 import http from 'http';
 import express from 'express';
 import nunjucks from 'nunjucks';
-import * as socketio from 'socket.io'
+import * as socketio from 'socket.io';
+import * as msgpackParser from 'socket.io-msgpack-parser';
 
 import { cache as rl_cache, control as rl_control, data as rl_data, files as rl_files } from './rl.js';
 import { is_same_filesystem, system_poweroff, system_reboot } from './util.js';
@@ -84,7 +85,9 @@ const data_cache_reply_limit = 5000;
 // server application and plugin initialization
 const app = express();
 const server = http.Server(app);
-const io = new socketio.Server(server);
+const io = new socketio.Server(server, {
+    parser: msgpackParser,
+});
 
 nunjucks.configure(path_templates, {
     autoescape: true,
