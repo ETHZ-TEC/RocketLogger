@@ -28,13 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-.rl-plot {
+div.rl-plot {
     box-sizing: border-box;
     width: 100%;
     height: 500px;
     background-color: #ffffff;
 }
 
-.rl-help {
+.offcanvas.rl-help {
     height: fit-content;
 }
