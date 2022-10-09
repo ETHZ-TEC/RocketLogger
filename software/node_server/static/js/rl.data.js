@@ -309,7 +309,7 @@ function plot_get_ylayout(plot_config) {
     if (plot_config.unit === 'binary') {
         yaxis.autorange = false;
         yaxis.range = [-0.15, 5.85];
-        yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
+        yaxis.tickvals = [0, 0.66, 1, 1.66, 2, 2.66, 3, 3.66, 4, 4.66, 5, 5.66];
         yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
         yaxis.zeroline = false;
     }
@@ -462,8 +462,10 @@ function data_add(message, cache_data = false) {
     for (const ch in rl._data.metadata) {
         if (rl._data.metadata[ch].unit === 'binary') {
             const bit_offset = rl._data.metadata[ch].bit;
-            const data_digital = Float32Array.from(new Uint8Array(message.digital),
-                value => bit_offset + (value & (0x01 << bit_offset) ? 0.7 : 0));
+            const data_digital = Float32Array.from(new Uint16Array(message.digital),
+                value => bit_offset +
+                    ((value & (0x0001 << bit_offset)) ? 0.33 : 0) +
+                    ((value & (0x0100 << bit_offset)) ? 0.33 : 0));
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);

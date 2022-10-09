@@ -20,7 +20,7 @@ class DataCache {
     // reset data cache by re-initializing buffers for existing
     reset() {
         this._time = new AggregatingBuffer(Float64Array, this._size, this._levels, this._aggregation_factor, NaN);
-        this._digital = new AggregatingBuffer(Uint8Array, this._size, this._levels, this._aggregation_factor);
+        this._digital = new AggregatingBuffer(Uint16Array, this._size, this._levels, this._aggregation_factor);
         this._data = {};
         for (const ch in this._metadata) {
             if (this._metadata[ch].unit !== 'binary') {

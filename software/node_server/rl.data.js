@@ -133,10 +133,15 @@ function parse_digital_data(header, data) {
     const data_in_view = new Uint32Array(data.buffer);
     const data_out_length = data_in_view.length / header.downsample_factor;
 
-    const data_out = new Uint8Array(data_out_length);
+    const data_out = new Uint16Array(data_out_length);
+    const data_out_view = new Uint8Array(data_out.buffer);
     for (let j = 0; j < Math.min(data_out_length, data_in_view.length / header.downsample_factor); j++) {
-        data_out[j] = data_in_view[j * header.downsample_factor];
-        /// @todo any/none down sampling
+        data_out_view[2 * j] = data_in_view[j * header.downsample_factor];
+        data_out_view[2 * j + 1] = data_in_view[j * header.downsample_factor];
+        for (let k = 1; k < header.downsample_factor; k++) {
+            data_out_view[2 * j] &= data_in_view[j * header.downsample_factor + k];
+            data_out_view[2 * j + 1] |= data_in_view[j * header.downsample_factor + k];
+        }
     }
 
     return data_out;
