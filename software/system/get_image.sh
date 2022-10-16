@@ -32,9 +32,9 @@
 #
 
 # Debian buster console image
-URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2021-06-22/buster-console/"
-IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.10-console-armhf-2021-06-22-1gb.img.xz"
-IMAGE_FLASHER_SHA256="ac8a2702ca6a0756103f23b03e9f3f62088faab3b1953d9c9d5792e5d7d0a768"
+URL_DIRECTORY="https://rcn-ee.com/rootfs/bb.org/testing/2022-10-01/buster-console-armhf/"
+IMAGE_FLASHER_FILE="bone-eMMC-flasher-debian-10.13-console-armhf-2022-10-01-1gb.img.xz"
+IMAGE_FLASHER_SHA256="c382544a149a9b7a3438cffca40b10f728a712f015b2ef6b3c8c446dcbfd069a"
 
 # download image
 curl --continue-at - --remote-name "${URL_DIRECTORY}${IMAGE_FLASHER_FILE}"
