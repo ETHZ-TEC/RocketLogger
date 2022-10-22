@@ -56,6 +56,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
@@ -64,7 +65,7 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     python_requires=">=3.6, <4",
     install_requires=[
-        "numpy>=1.13,<1.21",
+        "numpy>=1.13,<1.24",
     ],
     extras_require={
         "dataframe": ["pandas"],
