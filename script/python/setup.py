@@ -70,7 +70,7 @@ setup(
         "dataframe": ["pandas"],
         "plot": ["matplotlib"],
         "dev": ["black", "sphinx"],
-        "test": ["coverage", "nose", "tox"],
+        "test": ["pytest", "pytest-cov", "tox"],
     },
     project_urls={
         "Documentation": "https://github.com/ETHZ-TEC/RocketLogger/wiki/python",

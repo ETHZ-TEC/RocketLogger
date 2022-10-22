@@ -1,8 +1,8 @@
 black
-coverage
 matplotlib
-nose
 numpy
 pandas
+pytest
+pytest-cov
 sphinx
 tox
