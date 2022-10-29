@@ -135,7 +135,7 @@ def _extract_setpoint_measurement(
 
     # locate calibration sweep
     measurement_sweep_bound = np.flatnonzero(
-        np.abs(np.diff(measurement_data)) > 2 * setpoint_step
+        np.abs(np.diff(measurement_data)) > 0.5 * setpoint_step
     )
     measurement_sweep_start = np.min(measurement_sweep_bound)
     measurement_sweep_end = np.max(measurement_sweep_bound)
