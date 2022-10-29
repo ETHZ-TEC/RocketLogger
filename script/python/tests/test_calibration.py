@@ -242,7 +242,39 @@ class TestCalibrationSetup(TestCase):
         data_measure = (
             RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze()
         )
-        with self.assertRaisesRegex(ValueError, "No set-points found"):
+        with self.assertRaisesRegex(ValueError, "no set-points found"):
+            _extract_setpoint_measurement(
+                data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step()
+            )
+
+    def test_setpoint_detection_zero_data(self):
+        data_measure = np.zeros(100000)
+        with self.assertRaisesRegex(ValueError, "no valid set-point steps found"):
+            _extract_setpoint_measurement(
+                data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step(adc_units=True)
+            )
+
+    def test_setpoint_detection_flat_data(self):
+        setpoint_step = CALIBRATION_SETUP_SMU2450.get_voltage_step(adc_units=True)
+        data_measure = np.ones(100000) * setpoint_step
+        with self.assertRaisesRegex(ValueError, "no valid set-point steps found"):
+            _extract_setpoint_measurement(data_measure, setpoint_step)
+
+    def test_setpoint_detection_step_too_low(self):
+        data_measure = (
+            RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze() * 0.9
+        )
+
+        with self.assertRaisesRegex(ValueError, "no set-points found"):
+            _extract_setpoint_measurement(
+                data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step()
+            )
+
+    def test_setpoint_detection_step_too_high(self):
+        data_measure = (
+            RocketLoggerData(_CALIBRATION_VOLTAGE_FILE).get_data("V1").squeeze() * 1.1
+        )
+        with self.assertRaisesRegex(ValueError, "no set-points found"):
             _extract_setpoint_measurement(
                 data_measure, CALIBRATION_SETUP_SMU2450.get_voltage_step()
             )
