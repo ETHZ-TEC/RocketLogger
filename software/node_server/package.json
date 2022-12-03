@@ -37,8 +37,8 @@
     "nunjucks": "~3.2.3",
     "picomatch": "~2.3.1",
     "plotly.js": "2.14.0",
-    "socket.io": "4.5.2",
-    "socket.io-client": "4.5.2",
+    "socket.io": "4.5.4",
+    "socket.io-client": "4.5.4",
     "timesync": "~1.0.11",
     "zeromq": "6.0.0-beta.6"
   },
