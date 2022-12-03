@@ -5,7 +5,7 @@ basic processing and plotting of the data. Further, it provides the necessary
 support to generate calibration data from measurements.
 
 **Dependencies**
-* Python 3: version 3.6-3.10
+* Python 3: version 3.6-3.11
 * NumPy: version 1.13-1.23
 
 **Optional dependencies**
