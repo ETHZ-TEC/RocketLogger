@@ -63,8 +63,7 @@ const path_modules = path.join(__dirname, 'node_modules');
 const path_templates = path.join(__dirname, 'templates');
 const asset_version = {
     bootstrap: await get_version(path.join(path_modules, 'bootstrap')),
-    jquery: await get_version(path.join(path_modules, 'jquery')),
-    plotly: await get_version(path.join(path_modules, 'plotly.js')),
+    plotly: await get_version(path.join(path_modules, 'plotly.js-basic-dist-min')),
     socketio: await get_version(path.join(path_modules, 'socket.io-client')),
     timesync: await get_version(path.join(path_modules, 'timesync')),
 };
@@ -111,8 +110,7 @@ const server_start = async () => {
 app.use('/assets', [
     express.static(__dirname + '/node_modules/bootstrap/dist/css'),
     express.static(__dirname + '/node_modules/bootstrap/dist/js'),
-    express.static(__dirname + '/node_modules/jquery/dist'),
-    express.static(__dirname + '/node_modules/plotly.js/dist'),
+    express.static(__dirname + '/node_modules/plotly.js-basic-dist-min'),
     express.static(__dirname + '/node_modules/socket.io-client/dist'),
     express.static(__dirname + '/node_modules/timesync/dist')
 ]);
