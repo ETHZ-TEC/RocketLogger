@@ -41,6 +41,9 @@ const RL_DATA_INIT_INTERVAL = 3000;
 const RL_PLOT_MAX_FPS = 50;
 /// interval for server timesync [ms]
 const RL_TIMESYNC_INTERVAL_MS = 60e3;
+/// plot color scheme (Plotly.js default)
+const RL_PLOT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+
 
 /// Measurement data buffer size [in number of elements]
 const data_store_size = 10000;
@@ -321,6 +324,7 @@ async function plot_reset(plot, xaxis) {
     // purge plot and reset traces
     Plotly.purge(plot.element);
     plot.data = [];
+    let trace_index = 0;
 
     // collect data series to plot
     for (const ch in rl._data.buffer) {
@@ -342,13 +346,39 @@ async function plot_reset(plot, xaxis) {
         const trace = {
             type: 'scattergl',
             mode: 'lines',
+            line: {
+                color: RL_PLOT_COLORS[trace_index % RL_PLOT_COLORS.length],
+            },
             connectgaps: true,
             name: ch,
             hoverinfo: 'y+name',
             x: buffer_get_view(rl._data.time),
             y: buffer_get_view(rl._data.buffer[ch]),
         };
+        if (plot.unit == 'binary') {
+            const trace_name = ch.replace('min', '').replace('max', '');
+            trace.legendgroup = trace_name;
+            trace.showlegend = false;
+            if (ch.endsWith('min')) {
+                trace_index -= 1;
+                const legend_entry_trace = {
+                    type: 'scattergl',
+                    mode: 'lines',
+                    line: trace.line,
+                    name: trace_name,
+                    legendgroup: trace_name,
+                    hoverinfo: 'skip',
+                    x: [NaN],
+                    y: [NaN],
+                };
+                plot.data.push(legend_entry_trace);
+            }
+            if (ch.endsWith('max')) {
+                trace.fill = 'tonexty';
+            }
+        }
         plot.data.push(trace);
+        trace_index += 1;
     }
 
     // init new plot with default layout
@@ -367,6 +397,9 @@ async function plot_update(plot, xaxis) {
     const time_view = buffer_get_view(rl._data.time);
     const index_start = time_view.findIndex(value => value >= xaxis.range[0]);
     for (const trace of plot.data) {
+        if (!(trace.name in rl._data.buffer)) {
+            continue;
+        }
         // get range of values to plot
         const buffer_view = buffer_get_view(rl._data.buffer[trace.name]);
         trace.x = time_view.subarray(index_start);
@@ -446,8 +479,23 @@ function data_reset(metadata) {
     buffer_init(rl._data.time, Float64Array, NaN);
     rl._data.buffer = {};
     for (const ch in rl._data.metadata) {
-        rl._data.buffer[ch] = {};
-        buffer_init(rl._data.buffer[ch], Float32Array, NaN);
+        if (rl._data.metadata[ch].unit === 'binary') {
+            const chMin = ch + 'min';
+            rl._data.metadata[chMin] = { ...rl._data.metadata[ch] };
+            rl._data.buffer[chMin] = {};
+            buffer_init(rl._data.buffer[chMin], Float32Array, NaN);
+
+            const chMax = ch + 'max';
+            rl._data.metadata[chMax] = { ...rl._data.metadata[ch] };
+            rl._data.metadata[chMax].bit += 8;
+            rl._data.buffer[chMax] = {};
+            buffer_init(rl._data.buffer[chMax], Float32Array, NaN);
+
+            delete rl._data.metadata[ch];
+        } else {
+            rl._data.buffer[ch] = {};
+            buffer_init(rl._data.buffer[ch], Float32Array, NaN);
+        }
     }
     rl._data.reset = false;
 }
@@ -463,9 +511,7 @@ function data_add(message, cache_data = false) {
         if (rl._data.metadata[ch].unit === 'binary') {
             const bit_offset = rl._data.metadata[ch].bit;
             const data_digital = Float32Array.from(new Uint16Array(message.digital),
-                value => bit_offset +
-                    ((value & (0x0001 << bit_offset)) ? 0.33 : 0) +
-                    ((value & (0x0100 << bit_offset)) ? 0.33 : 0));
+                value => (bit_offset % 8) + ((value & (0x0001 << bit_offset)) ? 0.66 : 0));
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
