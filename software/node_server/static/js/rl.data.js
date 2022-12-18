@@ -133,6 +133,8 @@ function rocketlogger_init_data() {
 
 /// process new measurement data
 function process_data(reply) {
+    decode_data_message(reply);
+
     // check received timestamp buffer, drop overflow values
     const time_view = new Float64Array(reply.time);
     if (time_view.length === 0) {
@@ -169,6 +171,25 @@ function process_data(reply) {
 
     // process data
     data_add(reply, cached_data);
+}
+
+// fully decode msgpack data message
+function decode_data_message(reply) {
+    reply.time = decode_msgpack_arraybuffer(reply.time);
+    reply.digital = decode_msgpack_arraybuffer(reply.digital);
+    for (const channel in reply.metadata) {
+        if (reply.metadata[channel].unit !== 'binary') {
+            reply.data[channel] = decode_msgpack_arraybuffer(reply.data[channel]);
+        }
+    }
+}
+
+// decode msgpack extension type ArrayBuffer
+function decode_msgpack_arraybuffer(buffer) {
+    if (Array.isArray(buffer) && buffer[0] === 0x00 && buffer.length === 2) {
+        return buffer[1];
+    }
+    return buffer;
 }
 
 
