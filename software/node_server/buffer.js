@@ -5,6 +5,9 @@ export { AggregatingBuffer };
 
 class AggregatingBuffer {
     constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = 0) {
+        if (!TypedArrayT.hasOwnProperty('BYTES_PER_ELEMENT')) {
+            throw TypeError('supporting TypedArray types only');
+        }
         this._size = size;
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;

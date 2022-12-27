@@ -48,6 +48,20 @@ describe('AggregatingBuffer class', () => {
             const data_view = buffer.getView();
             expect(data_view.every(value => value === 0)).toBeTruthy();
         });
+
+        test('String w/o initial value', () => {
+            const stringAggregatingBuffer = () => {
+                new AggregatingBuffer(String, 1000, 3, 10);
+            };
+            expect(stringAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('ArrayBuffer w/o initial value', () => {
+            const arrayBufferAggregatingBuffer = () => {
+                new AggregatingBuffer(ArrayBuffer, 1000, 3, 10);
+            };
+            expect(arrayBufferAggregatingBuffer).toThrow(TypeError);
+        });
     });
 
     describe('buffer values', () => {
