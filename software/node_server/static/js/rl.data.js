@@ -536,17 +536,14 @@ class AggregatingBuffer {
     }
 
     add(data) {
-        for (let i = 1; i <= this._levels; i++) {
-            if (i == this._levels) {
-                // enqueue new data
-                typedarray_enqueue(data, this._dataLevel[i - 1]);
-                break;
-            }
-
-            // aggregate data about to be dequeued to next lower buffer
+        // aggregate data about to be dequeued to next lower buffer
+        for (let i = 1; i < this._levels; i++) {
             const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
             typedarray_enqueue_aggregate(this._dataLevel[i], this._dataLevel[i - 1], aggregate_count, this._aggregation_factor);
         }
+
+        // enqueue new data
+        typedarray_enqueue(data, this._dataLevel[this._levels - 1]);
     }
 
     getView() {
@@ -561,16 +558,11 @@ class AggregatingDataStore extends AggregatingBuffer {
             throw TypeError('supports only floating point types');
         }
         super(TypedArrayT, size, levels, aggregation_factor, NaN);
+        this._start_index = this._data.length;
     }
 
     prepend(data) {
-        let index_start = this._data.findIndex(value => !isNaN(value));
-        if (index_start < 0) {
-            // no buffered data -> enqueue all data across buffer levels
-            typedarray_enqueue(data, this._data);
-            return;
-        }
-
+        let index_start = this._get_start_index();
         for (let i = 0; i < this._levels; i++) {
             // skip to next non-full buffer level
             if (index_start > this._size) {
@@ -587,11 +579,12 @@ class AggregatingDataStore extends AggregatingBuffer {
     }
 
     getValidView() {
-        const index_start = this._data.findIndex(value => !isNaN(value));
-        if (index_start < 0) {
-            return this._data.subarray(0, 0);
-        }
+        const index_start = this._get_start_index();
         return this._data.subarray(index_start);
+    }
+
+    _get_start_index() {
+        return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
     }
 }
 
@@ -605,12 +598,7 @@ function typedarray_enqueue(buffer_in, buffer_out) {
 // enqueue aggregates of a typed array at end of typed array buffer
 function typedarray_enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
     buffer_out.set(buffer_out.subarray(count));
-    aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
-}
-
-// typed array to typed array sample aggregation
-function aggregate(buffer_out, buffer_in, factor) {
-    for (let i = 0; i < buffer_out.length; i++) {
-        buffer_out[i] = buffer_in[i * factor];
+    for (let i = 0; i < count; i++) {
+        buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
     }
 }

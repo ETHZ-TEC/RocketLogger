@@ -70,8 +70,19 @@ describe('AggregatingBuffer class', () => {
             buffer.add(data_to_add);
 
             const data_view = buffer.getView();
+            // 1st buffer
             expect(data_view[0]).toBe(1);
             expect(data_view[1]).toBe(2);
+            expect(data_view[999]).toBe(1000);
+            // 2nd buffer
+            expect(data_view[1000]).toBe(1010);
+            expect(data_view[1001]).toBe(1011);
+            expect(data_view[1989]).toBe(1999);
+            expect(data_view[1990]).toBe(2000);
+            expect(data_view[1999]).toBe(2090);
+            // 3rd buffer
+            expect(data_view[2000]).toBe(2100);
+            expect(data_view[2001]).toBe(2101);
             expect(data_view[data_view.length - data_to_add.length - 13]).toBe(data_view.length - 13);
             expect(data_view[data_view.length - data_to_add.length - 1]).toBe(data_view.length - 1);
             expect(data_view[data_view.length - data_to_add.length]).toBe(NaN);
