@@ -481,12 +481,12 @@ function data_reset(metadata) {
         if (rl._data.metadata[ch].unit === 'binary') {
             const chMin = ch + 'min';
             rl._data.metadata[chMin] = { ...rl._data.metadata[ch] };
-            rl._data.buffer[chMin] = new AggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
+            rl._data.buffer[chMin] = new MinAggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
 
             const chMax = ch + 'max';
             rl._data.metadata[chMax] = { ...rl._data.metadata[ch] };
             rl._data.metadata[chMax].bit += 8;
-            rl._data.buffer[chMax] = new AggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
+            rl._data.buffer[chMax] = new MaxAggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
 
             delete rl._data.metadata[ch];
         } else {
@@ -602,5 +602,25 @@ class AggregatingDataStore extends AggregatingBuffer {
 
     _get_start_index() {
         return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
+    }
+}
+
+class MaxAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        const nanMaxReduce = (a, v) => isNaN(a) || v > a ? v : a;
+        for (let i = 0; i < count; i++) {
+            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMaxReduce, NaN);
+        }
+    }
+}
+
+class MinAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        const nanMinReduce = (a, v) => isNaN(a) || v < a ? v : a;
+        for (let i = 0; i < count; i++) {
+            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMinReduce, NaN);
+        }
     }
 }

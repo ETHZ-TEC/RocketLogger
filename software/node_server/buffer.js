@@ -1,6 +1,6 @@
 "use strict";
 
-export { AggregatingBuffer, AggregatingDataStore };
+export { AggregatingBuffer, AggregatingDataStore, MaxAggregatingDataStore, MinAggregatingDataStore };
 
 
 class AggregatingBuffer {
@@ -80,5 +80,25 @@ class AggregatingDataStore extends AggregatingBuffer {
 
     _get_start_index() {
         return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
+    }
+}
+
+class MaxAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        const nanMaxReduce = (a, v) => isNaN(a) || v > a ? v : a;
+        for (let i = 0; i < count; i++) {
+            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMaxReduce, NaN);
+        }
+    }
+}
+
+class MinAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        const nanMinReduce = (a, v) => isNaN(a) || v < a ? v : a;
+        for (let i = 0; i < count; i++) {
+            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMinReduce, NaN);
+        }
     }
 }

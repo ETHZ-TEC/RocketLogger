@@ -1,6 +1,6 @@
 "use strict";
 
-import { AggregatingBuffer, AggregatingDataStore } from '../buffer.js';
+import { AggregatingBuffer, AggregatingDataStore, MaxAggregatingDataStore, MinAggregatingDataStore } from '../buffer.js';
 
 
 describe('AggregatingBuffer class', () => {
@@ -250,6 +250,142 @@ describe('AggregatingDataStore class', () => {
             expect(data_view.at(-data_to_prepend.length - aggregates_count - 1)).toBeNaN();
             expect(data_view.at(-data_to_prepend.length - aggregates_count)).toBe(data_to_prepend.at(0));
             expect(data_view.at(-data_to_prepend.length - aggregates_count + 1)).toBe(data_to_prepend.at(aggregates_count));
+            expect(data_view.at(-data_to_prepend.length)).toBe(data_to_prepend.at(10 * aggregates_count));
+            expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_prepend.at(-1));
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+    });
+});
+
+describe('MaxAggregatingDataStore class', () => {
+    describe('construction', () => {
+        test('Float32', () => {
+            const buffer = new MaxAggregatingDataStore(Float32Array, 1000, 3, 10);
+
+            const data_view = buffer.getView();
+            expect(data_view.every(isNaN)).toBeTruthy();
+        });
+    });
+
+    describe('buffer values', () => {
+        let buffer;
+        beforeEach(() => {
+            buffer = new MaxAggregatingDataStore(Float32Array, 1000, 3, 10);
+        });
+
+        test('initial state', () => {
+            expect(buffer._get_start_index()).toBe(buffer._data.length);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(0);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(0)).toBeNaN();
+            expect(data_view.at(73)).toBeNaN();
+            expect(data_view.at(-31)).toBeNaN();
+            expect(data_view.at(-1)).toBeNaN();
+        });
+
+        test('add() once', () => {
+            const data_to_add = Float32Array.from({ length: 100 }, (_, i) => i);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_add.length);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-buffer._size - 13)).toBeNaN();
+            expect(data_view.at(-buffer._size - 1)).toBeNaN();
+            expect(data_view.at(-data_to_add.length - 13)).toBeNaN();
+            expect(data_view.at(-data_to_add.length - 1)).toBeNaN();
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+
+        test('prepend() full, add() with aggregate', () => {
+            const data_to_prepend = Float32Array.from({ length: 1000 }, (_, i) => i);
+            const data_to_add = Float32Array.from({ length: 100 }, (_, i) => data_to_prepend.length + i);
+            const aggregates_count = data_to_add.length / 10;
+            buffer.prepend(data_to_prepend);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_prepend.length + aggregates_count);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count - 13)).toBeNaN();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count - 1)).toBeNaN();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count)).toBe(data_to_prepend.at(9));
+            expect(data_view.at(-data_to_prepend.length - aggregates_count + 1)).toBe(data_to_prepend.at(aggregates_count + 9));
+            expect(data_view.at(-data_to_prepend.length)).toBe(data_to_prepend.at(10 * aggregates_count));
+            expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_prepend.at(-1));
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+    });
+});
+
+describe('MinAggregatingDataStore class', () => {
+    describe('construction', () => {
+        test('Float32', () => {
+            const buffer = new MinAggregatingDataStore(Float32Array, 1000, 3, 10);
+
+            const data_view = buffer.getView();
+            expect(data_view.every(isNaN)).toBeTruthy();
+        });
+    });
+
+    describe('buffer values', () => {
+        let buffer;
+        beforeEach(() => {
+            buffer = new MinAggregatingDataStore(Float32Array, 1000, 3, 10);
+        });
+
+        test('initial state', () => {
+            expect(buffer._get_start_index()).toBe(buffer._data.length);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(0);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(0)).toBeNaN();
+            expect(data_view.at(73)).toBeNaN();
+            expect(data_view.at(-31)).toBeNaN();
+            expect(data_view.at(-1)).toBeNaN();
+        });
+
+        test('add() once', () => {
+            const data_to_add = Float32Array.from({ length: 100 }, (_, i) => i);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_add.length);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-buffer._size - 13)).toBeNaN();
+            expect(data_view.at(-buffer._size - 1)).toBeNaN();
+            expect(data_view.at(-data_to_add.length - 13)).toBeNaN();
+            expect(data_view.at(-data_to_add.length - 1)).toBeNaN();
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+
+        test('prepend() full, add() with aggregate', () => {
+            const data_to_prepend = Float32Array.from({ length: 1000 }, (_, i) => -i);
+            const data_to_add = Float32Array.from({ length: 100 }, (_, i) => data_to_prepend.length + i);
+            const aggregates_count = data_to_add.length / 10;
+            buffer.prepend(data_to_prepend);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_prepend.length + aggregates_count);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count - 13)).toBeNaN();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count - 1)).toBeNaN();
+            expect(data_view.at(-data_to_prepend.length - aggregates_count)).toBe(data_to_prepend.at(9));
+            expect(data_view.at(-data_to_prepend.length - aggregates_count + 1)).toBe(data_to_prepend.at(aggregates_count + 9));
             expect(data_view.at(-data_to_prepend.length)).toBe(data_to_prepend.at(10 * aggregates_count));
             expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_prepend.at(-1));
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
