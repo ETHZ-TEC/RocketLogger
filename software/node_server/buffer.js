@@ -86,9 +86,13 @@ class AggregatingDataStore extends AggregatingBuffer {
 class MaxAggregatingDataStore extends AggregatingDataStore {
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        const nanMaxReduce = (a, v) => isNaN(a) || v > a ? v : a;
         for (let i = 0; i < count; i++) {
-            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMaxReduce, NaN);
+            buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
+            for (let j = 1; j < aggregation_factor; j++) {
+                if (buffer_out[buffer_out.length - count + i] < buffer_in[i * aggregation_factor + j]) {
+                    buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor + j];
+                }
+            }
         }
     }
 }
@@ -96,9 +100,13 @@ class MaxAggregatingDataStore extends AggregatingDataStore {
 class MinAggregatingDataStore extends AggregatingDataStore {
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        const nanMinReduce = (a, v) => isNaN(a) || v < a ? v : a;
         for (let i = 0; i < count; i++) {
-            buffer_out[buffer_out.length - count + i] = buffer_in.subarray(i * aggregation_factor, (i + 1) * aggregation_factor).reduce(nanMinReduce, NaN);
+            buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
+            for (let j = 1; j < aggregation_factor; j++) {
+                if (buffer_out[buffer_out.length - count + i] > buffer_in[i * aggregation_factor + j]) {
+                    buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor + j];
+                }
+            }
         }
     }
 }
