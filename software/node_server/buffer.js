@@ -1,6 +1,6 @@
 "use strict";
 
-export { AggregatingBuffer };
+export { AggregatingBuffer, AggregatingDataStore };
 
 
 class AggregatingBuffer {
@@ -43,5 +43,42 @@ class AggregatingBuffer {
         for (let i = 0; i < count; i++) {
             buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
         }
+    }
+}
+
+
+class AggregatingDataStore extends AggregatingBuffer {
+    constructor(TypedArrayT, size, levels, aggregation_factor) {
+        if (!TypedArrayT.name.startsWith('Float')) {
+            throw TypeError('supports only floating point types');
+        }
+        super(TypedArrayT, size, levels, aggregation_factor, NaN);
+        this._start_index = this._data.length;
+    }
+
+    prepend(data) {
+        let index_start = this._get_start_index();
+        for (let i = 0; i < this._levels; i++) {
+            // skip to next non-full buffer level
+            if (index_start > this._size) {
+                index_start -= this._size;
+                continue;
+            }
+
+            // insert data limited to non-full buffer level
+            const insert_size = Math.min(index_start, data.length);
+            this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
+            return;
+        }
+        console.warn('failed inserting cached data into buffer');
+    }
+
+    getValidView() {
+        const index_start = this._get_start_index();
+        return this._data.subarray(index_start);
+    }
+
+    _get_start_index() {
+        return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
     }
 }
