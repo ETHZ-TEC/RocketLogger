@@ -14,6 +14,7 @@
             "program": "${workspaceFolder}/app.js"
         },
         {
+            "type": "node",
             "address": "rocketlogger",
             "localRoot": "${workspaceFolder}",
             "name": "RocketLogger",
@@ -22,8 +23,7 @@
             "request": "attach",
             "skipFiles": [
                 "<node_internals>/**"
-            ],
-            "type": "pwa-node"
+            ]
         }
     ]
 }
