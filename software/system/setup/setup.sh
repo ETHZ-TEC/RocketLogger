@@ -94,8 +94,8 @@ else
   echo "[ OK ] System dependencies installation was successful."
 fi
 
-# install nodesource repository for nodejs 14.x LTS
-curl --silent --location https://deb.nodesource.com/setup_14.x | bash -
+# install nodesource repository for nodejs 18.x LTS
+curl --silent --location https://deb.nodesource.com/setup_18.x | bash -
 
 # install nodejs
 apt-get install --assume-yes        \
