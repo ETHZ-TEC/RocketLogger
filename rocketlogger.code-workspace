@@ -31,9 +31,6 @@
 		"files.associations": {
 			"*.in": "c"
 		},
-		"C_Cpp.autocomplete": "Disabled",
-		"C_Cpp.intelliSenseEngine": "Disabled",
-		"C_Cpp.errorSquiggles": "Disabled",
 		"clangd.arguments": [
 			"--pretty",
 			"--background-index",
