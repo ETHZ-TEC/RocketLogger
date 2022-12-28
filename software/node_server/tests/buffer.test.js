@@ -1,6 +1,6 @@
 "use strict";
 
-import { AggregatingBuffer, AggregatingDataStore, MaxAggregatingDataStore, MinAggregatingDataStore } from '../buffer.js';
+import { AggregatingBuffer, AggregatingDataStore, AggregatingBinaryStore, MaxAggregatingDataStore, MinAggregatingDataStore } from '../buffer.js';
 
 
 describe('AggregatingBuffer class', () => {
@@ -252,6 +252,118 @@ describe('AggregatingDataStore class', () => {
             expect(data_view.at(-data_to_prepend.length - aggregates_count + 1)).toBe(data_to_prepend.at(aggregates_count));
             expect(data_view.at(-data_to_prepend.length)).toBe(data_to_prepend.at(10 * aggregates_count));
             expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_prepend.at(-1));
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+    });
+});
+
+describe('AggregatingBinaryStore class', () => {
+    describe('construction', () => {
+        test('Uint16Array', () => {
+            const buffer = new AggregatingBinaryStore(Uint16Array, 1000, 3, 10);
+
+            const data_view = buffer.getView();
+            expect(data_view.every(v => v === AggregatingBinaryStore._DATA_INVALID)).toBeTruthy();
+        });
+
+        test('Float32Array', () => {
+            const float32ArrayAggregatingBuffer = () => {
+                new AggregatingBinaryStore(Float32Array, 1000, 3, 10);
+            };
+            expect(float32ArrayAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('Float64Array', () => {
+            const float64ArrayAggregatingBuffer = () => {
+                new AggregatingBinaryStore(Float64Array, 1000, 3, 10);
+            };
+            expect(float64ArrayAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('Int8Array', () => {
+            const int8ArrayAggregatingBuffer = () => {
+                new AggregatingBinaryStore(Int8Array, 1000, 3, 10);
+            };
+            expect(int8ArrayAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('Uint32Array', () => {
+            const uint32ArrayAggregatingBuffer = () => {
+                new AggregatingBinaryStore(Uint32Array, 1000, 3, 10);
+            };
+            expect(uint32ArrayAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('String', () => {
+            const stringAggregatingBuffer = () => {
+                new AggregatingBinaryStore(String, 1000, 3, 10);
+            };
+            expect(stringAggregatingBuffer).toThrow(TypeError);
+        });
+
+        test('ArrayBuffer', () => {
+            const arrayBufferAggregatingBuffer = () => {
+                new AggregatingBinaryStore(ArrayBuffer, 1000, 3, 10);
+            };
+            expect(arrayBufferAggregatingBuffer).toThrow(TypeError);
+        });
+    });
+
+    describe('buffer values', () => {
+        let buffer;
+        beforeEach(() => {
+            buffer = new AggregatingBinaryStore(Uint16Array, 1000, 3, 10);
+        });
+
+        test('initial state', () => {
+            expect(buffer._get_start_index()).toBe(buffer._data.length);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(0);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(0)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(73)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-31)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-1)).toBe(AggregatingBinaryStore._DATA_INVALID);
+        });
+
+        test('add() once', () => {
+            const data_to_add = Uint16Array.from({ length: 100 }, (_, i) => i);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_add.length);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-buffer._size - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-buffer._size - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-data_to_add.length - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-data_to_add.length - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
+            expect(data_view.at(-1)).toBe(data_to_add.at(-1));
+        });
+
+        test('add() full, add() with aggregate', () => {
+            const data_to_fill = Uint16Array.from({ length: 1000 }, (_, i) => (i / 5) << 8 | (i / 5));
+            const data_to_add = Uint16Array.from({ length: 100 }, (_, i) => i << 8);
+            const aggregates_count = data_to_add.length / 10;
+            buffer.add(data_to_fill);
+            buffer.add(data_to_add);
+
+            const data_valid_view = buffer.getValidView();
+            expect(data_valid_view.length).toBe(data_to_fill.length + aggregates_count);
+
+            const data_view = buffer.getView();
+            expect(data_view.at(-data_to_fill.length - aggregates_count - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-data_to_fill.length - aggregates_count - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-data_to_fill.length - aggregates_count)).toBe(0x0100);
+            expect(data_view.at(-data_to_fill.length - aggregates_count + 1)).toBe(0x0302);
+            expect(data_view.at(-data_to_fill.length - aggregates_count + 2)).toBe(0x0504);
+            expect(data_view.at(-data_to_fill.length - aggregates_count + 3)).toBe(0x0706);
+            expect(data_view.at(-data_to_fill.length)).toBe(data_to_fill.at(10 * aggregates_count));
+            expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_fill.at(-1));
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
             expect(data_view.at(-1)).toBe(data_to_add.at(-1));
         });

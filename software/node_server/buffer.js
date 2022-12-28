@@ -1,6 +1,6 @@
 "use strict";
 
-export { AggregatingBuffer, AggregatingDataStore, MaxAggregatingDataStore, MinAggregatingDataStore };
+export { AggregatingBuffer, AggregatingDataStore, AggregatingBinaryStore, MaxAggregatingDataStore, MinAggregatingDataStore };
 
 
 class AggregatingBuffer {
@@ -82,6 +82,40 @@ class AggregatingDataStore extends AggregatingBuffer {
         return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
     }
 }
+
+
+class AggregatingBinaryStore extends AggregatingBuffer {
+    constructor(TypedArrayT, size, levels, aggregation_factor) {
+        if (TypedArrayT.name !== 'Uint16Array') {
+            throw TypeError('supports Uint16Array type only');
+        }
+        super(TypedArrayT, size, levels, aggregation_factor, AggregatingBinaryStore._DATA_INVALID);
+        this._start_index = this._data.length;
+    }
+
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        buffer_out.fill(0x00ff, -count);
+        for (let i = 0; i < count; i++) {
+            for (let j = 1; j < aggregation_factor; j++) {
+                buffer_out[buffer_out.length - count + i] &= 0xff00 | buffer_in[i * aggregation_factor + j];
+                buffer_out[buffer_out.length - count + i] |= 0xff00 & buffer_in[i * aggregation_factor + j];
+            }
+        }
+    }
+
+    getValidView() {
+        const index_start = this._get_start_index();
+        return this._data.subarray(index_start);
+    }
+
+    _get_start_index() {
+        return this._start_index = this._data.findLastIndex(v => v === this.constructor._DATA_INVALID, this._start_index) + 1;
+    }
+
+    static _DATA_INVALID = 0x00ff;
+}
+
 
 class MaxAggregatingDataStore extends AggregatingDataStore {
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
