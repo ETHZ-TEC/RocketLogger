@@ -40,8 +40,8 @@ class AggregatingBuffer {
     // enqueue aggregates of a typed array at end of typed array buffer
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        for (let i = 0; i < count; i++) {
-            buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++, offset_in += aggregation_factor) {
+            buffer_out[i] = buffer_in[offset_in];
         }
     }
 }
@@ -68,9 +68,8 @@ class AggregatingDataStore extends AggregatingBuffer {
             // insert data limited to non-full buffer level
             const insert_size = Math.min(index_start, data.length);
             this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
-            return;
+            break;
         }
-        console.warn('failed inserting cached data into buffer');
     }
 
     getValidView() {
@@ -95,12 +94,15 @@ class AggregatingBinaryStore extends AggregatingBuffer {
 
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        buffer_out.fill(0x00ff, -count);
-        for (let i = 0; i < count; i++) {
-            for (let j = 1; j < aggregation_factor; j++) {
-                buffer_out[buffer_out.length - count + i] &= 0xff00 | buffer_in[i * aggregation_factor + j];
-                buffer_out[buffer_out.length - count + i] |= 0xff00 & buffer_in[i * aggregation_factor + j];
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++) {
+            let min = 0x00ff;
+            let max = 0x00ff;
+            for (let j = 0; j < aggregation_factor; j++, offset_in++) {
+                const value = buffer_in[offset_in];
+                min &= value;
+                max |= value;
             }
+            buffer_out[i] = max & (0xff00 | min);
         }
     }
 
@@ -120,13 +122,15 @@ class AggregatingBinaryStore extends AggregatingBuffer {
 class MaxAggregatingDataStore extends AggregatingDataStore {
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        for (let i = 0; i < count; i++) {
-            buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
-            for (let j = 1; j < aggregation_factor; j++) {
-                if (buffer_out[buffer_out.length - count + i] < buffer_in[i * aggregation_factor + j]) {
-                    buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor + j];
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++) {
+            let max = buffer_in[offset_in++];
+            for (let j = 1; j < aggregation_factor; j++, offset_in++) {
+                const value = buffer_in[offset_in];
+                if (max < value) {
+                    max = value;
                 }
             }
+            buffer_out[i] = max;
         }
     }
 }
@@ -134,13 +138,15 @@ class MaxAggregatingDataStore extends AggregatingDataStore {
 class MinAggregatingDataStore extends AggregatingDataStore {
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
         buffer_out.set(buffer_out.subarray(count));
-        for (let i = 0; i < count; i++) {
-            buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor];
-            for (let j = 1; j < aggregation_factor; j++) {
-                if (buffer_out[buffer_out.length - count + i] > buffer_in[i * aggregation_factor + j]) {
-                    buffer_out[buffer_out.length - count + i] = buffer_in[i * aggregation_factor + j];
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++) {
+            let min = buffer_in[offset_in++];
+            for (let j = 1; j < aggregation_factor; j++, offset_in++) {
+                const value = buffer_in[offset_in];
+                if (min > value) {
+                    min = value;
                 }
             }
+            buffer_out[i] = min;
         }
     }
 }
