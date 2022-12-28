@@ -41,15 +41,16 @@ class DataCache {
         this._digital.add(message.digital);
 
         for (const ch in message.data) {
-            if (message.time.length == message.data[ch].length) {
-                this._data[ch].add(message.data[ch]);
-            } else {
-                // interleave sub-sampled data with NaN
-                const ratio = Math.floor(message.time.length / message.data[ch].length);
-                const data = new Float32Array(message.time.length).map((_, i) =>
-                    i % ratio == 0 ? message.data[ch][i / ratio] : NaN);
-                this._data[ch].add(data);
+            let data = message.data[ch];
+            // replace/interleave sub-sampled data with NaN
+            if (data.length == 0) {
+                data = new Float32Array(message.time.length).fill(NaN);
+            } else if (data.length < message.time.length) {
+                const ratio = Math.floor(message.time.length / data.length);
+                data = Float32Array.from({ length: message.time.length }, (_, i) =>
+                    i % ratio === 0 ? data[i / ratio] : NaN);
             }
+            this._data[ch].add(data);
         }
     }
 
@@ -64,22 +65,23 @@ class DataCache {
         };
 
         // find cache buffer index of first already available data element
-        const cache_time_view = this._time.getView();
-        const index_start = cache_time_view.findIndex(value => !isNaN(value));
-        const index_end = index_start + cache_time_view.subarray(index_start).findIndex(value => value >= time_reference);
+        const cache_time_view = this._time.getValidView();
+        const index = cache_time_view.findIndex(value => value >= time_reference);
+        this._debug(`matching cache range: ${index}:${cache_time_view.length}`);
 
         // check for and return on cache miss
-        if (index_start < 0 || index_end <= index_start) {
+        if (index < 0) {
             this._debug('cache miss: return empty reply');
             return reply;
         }
 
         // assemble data reply message from cache
-        const index_start_reply = limit ? Math.max(index_start, index_end - limit) : index_start;
-        this._debug(`cache hit: return data range ${index_start_reply}:${index_end}`);
+        const end = index - cache_time_view.length;
+        const start = limit ? end - limit : -cache_time_view.length;
+        this._debug(`cache hit: return data range ${start}:${end}`);
 
         reply.metadata = this._metadata;
-        reply.time = cache_time_view.slice(index_start_reply, index_end);
+        reply.time = cache_time_view.slice(start, end);
 
         for (const ch in this._metadata) {
             if (this._metadata[ch].unit === 'binary') {
@@ -87,11 +89,11 @@ class DataCache {
             }
 
             const cache_data_view = this._data[ch].getView();
-            reply.data[ch] = cache_data_view.slice(index_start_reply, index_end);
+            reply.data[ch] = cache_data_view.slice(start, end);
         }
 
         const cache_digital_view = this._digital.getView();
-        reply.digital = cache_digital_view.slice(index_start_reply, index_end);
+        reply.digital = cache_digital_view.slice(start, end);
 
         return reply;
     }
