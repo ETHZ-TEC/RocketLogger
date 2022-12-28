@@ -14,6 +14,7 @@
             "program": "${workspaceFolder}/app.js"
         },
         {
+            "type": "node",
             "address": "rocketlogger",
             "localRoot": "${workspaceFolder}",
             "name": "RocketLogger",
@@ -22,8 +23,29 @@
             "request": "attach",
             "skipFiles": [
                 "<node_internals>/**"
+            ]
+        },
+        {
+            "type": "node",
+            "name": "vscode-jest-tests",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/jest",
+            "args": [
+                "test",
+                "--",
+                "--runInBand",
+                "--watchAll=false",
+                "--testNamePattern",
+                "${jest.testNamePattern}",
+                "--runTestsByPath",
+                "${jest.testFile}"
             ],
-            "type": "pwa-node"
+            "env": {
+                "NODE_OPTIONS": "--experimental-vm-modules"
+            },
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
         }
     ]
 }
