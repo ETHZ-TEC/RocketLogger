@@ -32,7 +32,7 @@ and configured manually.
 
 ## Dependencies and Requirements
 
-* Server: Node.js v10 or later, *NGINX* for reverse proxy
+* Server: Node.js v18 or later, *NGINX* for reverse proxy
 * Client: reasonably recent web browser supporting *ECMAScript* 6
 
 
