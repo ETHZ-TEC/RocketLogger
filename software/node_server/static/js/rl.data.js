@@ -41,6 +41,9 @@ const RL_DATA_INIT_INTERVAL = 3000;
 const RL_PLOT_MAX_FPS = 50;
 /// interval for server timesync [ms]
 const RL_TIMESYNC_INTERVAL_MS = 60e3;
+/// plot color scheme (Plotly.js default)
+const RL_PLOT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+
 
 /// Measurement data buffer size [in number of elements]
 const data_store_size = 10000;
@@ -72,7 +75,7 @@ function rocketlogger_init_data() {
 
     // provide data() method to poll cached data
     rl.data = async () => {
-        const time_view = buffer_get_valid_view(rl._data.time);
+        const time_view = rl._data.time.getValidView();
         const request = {
             cmd: 'data',
             time: time_view.length ? time_view[0] : null,
@@ -144,7 +147,7 @@ function process_data(reply) {
     let reset = rl._data.reset || (reply.reset) ? rl._data.reset : false;
     let cached_data = false;
     if (rl._data.time) {
-        const buffer_time_view = buffer_get_valid_view(rl._data.time);
+        const buffer_time_view = rl._data.time.getValidView();
         if (time_view[0] > buffer_time_view[buffer_time_view.length - 1]) {
             // data update
         } else if (time_view[time_view.length - 1] < buffer_time_view[0]) {
@@ -309,7 +312,7 @@ function plot_get_ylayout(plot_config) {
     if (plot_config.unit === 'binary') {
         yaxis.autorange = false;
         yaxis.range = [-0.15, 5.85];
-        yaxis.tickvals = [0, 0.7, 1, 1.7, 2, 2.7, 3, 3.7, 4, 4.7, 5, 5.7];
+        yaxis.tickvals = [0, 0.66, 1, 1.66, 2, 2.66, 3, 3.66, 4, 4.66, 5, 5.66];
         yaxis.ticktext = ['LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI', 'LO', 'HI'];
         yaxis.zeroline = false;
     }
@@ -321,6 +324,7 @@ async function plot_reset(plot, xaxis) {
     // purge plot and reset traces
     Plotly.purge(plot.element);
     plot.data = [];
+    let trace_index = 0;
 
     // collect data series to plot
     for (const ch in rl._data.buffer) {
@@ -342,13 +346,39 @@ async function plot_reset(plot, xaxis) {
         const trace = {
             type: 'scattergl',
             mode: 'lines',
+            line: {
+                color: RL_PLOT_COLORS[trace_index % RL_PLOT_COLORS.length],
+            },
             connectgaps: true,
             name: ch,
             hoverinfo: 'y+name',
-            x: buffer_get_view(rl._data.time),
-            y: buffer_get_view(rl._data.buffer[ch]),
+            x: rl._data.time.getView(),
+            y: rl._data.buffer[ch].getView(),
         };
+        if (plot.unit == 'binary') {
+            const trace_name = ch.replace('min', '').replace('max', '');
+            trace.legendgroup = trace_name;
+            trace.showlegend = false;
+            if (ch.endsWith('min')) {
+                trace_index -= 1;
+                const legend_entry_trace = {
+                    type: 'scattergl',
+                    mode: 'lines',
+                    line: trace.line,
+                    name: trace_name,
+                    legendgroup: trace_name,
+                    hoverinfo: 'skip',
+                    x: [NaN],
+                    y: [NaN],
+                };
+                plot.data.push(legend_entry_trace);
+            }
+            if (ch.endsWith('max')) {
+                trace.fill = 'tonexty';
+            }
+        }
         plot.data.push(trace);
+        trace_index += 1;
     }
 
     // init new plot with default layout
@@ -364,11 +394,14 @@ async function plot_update(plot, xaxis) {
         return;
     }
 
-    const time_view = buffer_get_view(rl._data.time);
+    const time_view = rl._data.time.getView();
     const index_start = time_view.findIndex(value => value >= xaxis.range[0]);
     for (const trace of plot.data) {
+        if (!(trace.name in rl._data.buffer)) {
+            continue;
+        }
         // get range of values to plot
-        const buffer_view = buffer_get_view(rl._data.buffer[trace.name]);
+        const buffer_view = rl._data.buffer[trace.name].getView();
         trace.x = time_view.subarray(index_start);
         trace.y = buffer_view.subarray(index_start);
 
@@ -442,18 +475,29 @@ window.addEventListener('load', () => {
 
 function data_reset(metadata) {
     rl._data.metadata = metadata;
-    rl._data.time = {};
-    buffer_init(rl._data.time, Float64Array, NaN);
+    rl._data.time = new AggregatingDataStore(Float64Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
     rl._data.buffer = {};
     for (const ch in rl._data.metadata) {
-        rl._data.buffer[ch] = {};
-        buffer_init(rl._data.buffer[ch], Float32Array, NaN);
+        if (rl._data.metadata[ch].unit === 'binary') {
+            const chMin = ch + 'min';
+            rl._data.metadata[chMin] = { ...rl._data.metadata[ch] };
+            rl._data.buffer[chMin] = new MinAggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
+
+            const chMax = ch + 'max';
+            rl._data.metadata[chMax] = { ...rl._data.metadata[ch] };
+            rl._data.metadata[chMax].bit += 8;
+            rl._data.buffer[chMax] = new MaxAggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
+
+            delete rl._data.metadata[ch];
+        } else {
+            rl._data.buffer[ch] = new AggregatingDataStore(Float32Array, data_store_size, data_store_buffer_levels, data_store_aggregation_factor);
+        }
     }
     rl._data.reset = false;
 }
 
 function data_add(message, cache_data = false) {
-    const insert = cache_data ? buffer_prepend : buffer_add;
+    const insert = (buffer, data) => cache_data ? buffer.prepend(data) : buffer.add(data);
 
     const time_view = new Float64Array(message.time);
     insert(rl._data.time, time_view);
@@ -462,8 +506,8 @@ function data_add(message, cache_data = false) {
     for (const ch in rl._data.metadata) {
         if (rl._data.metadata[ch].unit === 'binary') {
             const bit_offset = rl._data.metadata[ch].bit;
-            const data_digital = Float32Array.from(new Uint8Array(message.digital),
-                value => bit_offset + (value & (0x01 << bit_offset) ? 0.7 : 0));
+            const data_digital = Float32Array.from(new Uint16Array(message.digital),
+                value => (bit_offset % 8) + ((value & (0x0001 << bit_offset)) ? 0.66 : 0));
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
@@ -481,81 +525,114 @@ function data_add(message, cache_data = false) {
 }
 
 
-function buffer_init(buffer, TypedArrayT, initial_value = null) {
-    buffer.data = new TypedArrayT(data_store_size * data_store_buffer_levels);
-    if (initial_value !== null) {
-        buffer.data.fill(initial_value);
+class AggregatingBuffer {
+    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = 0) {
+        if (!TypedArrayT.hasOwnProperty('BYTES_PER_ELEMENT')) {
+            throw TypeError('supporting TypedArray types only');
+        }
+        this._size = size;
+        this._levels = levels;
+        this._aggregation_factor = aggregation_factor;
+        this._data = new TypedArrayT(this._levels * this._size).fill(initial_value);
+        this._dataLevel = Array.from({ length: this._levels },
+            (_, i) => this._data.subarray(i * this._size, (i + 1) * this._size));
     }
-    buffer.level = [];
-    for (let i = 0; i < data_store_buffer_levels; i++) {
-        buffer.level[i] = buffer.data.subarray(i * data_store_size, (i + 1) * data_store_size);
+
+    add(data) {
+        // aggregate data about to be dequeued to next lower buffer
+        for (let i = 1; i < this._levels; i++) {
+            const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
+            this.constructor._enqueue_aggregate(this._dataLevel[i], this._dataLevel[i - 1], aggregate_count, this._aggregation_factor);
+        }
+
+        // enqueue new data
+        this.constructor._enqueue(data, this._dataLevel[this._levels - 1]);
+    }
+
+    getView() {
+        return this._data;
+    }
+
+    // enqueue typed array data at end of typed array buffer
+    static _enqueue(buffer_in, buffer_out) {
+        buffer_out.set(buffer_out.subarray(buffer_in.length));
+        buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
+    }
+
+    // enqueue aggregates of a typed array at end of typed array buffer
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++, offset_in += aggregation_factor) {
+            buffer_out[i] = buffer_in[offset_in];
+        }
     }
 }
 
-function buffer_add(buffer, data) {
-    for (let i = 1; i <= data_store_buffer_levels; i++) {
-        if (i == data_store_buffer_levels) {
-            // enqueue new data
-            typedarray_enqueue(buffer.level[i - 1], data);
+
+class AggregatingDataStore extends AggregatingBuffer {
+    constructor(TypedArrayT, size, levels, aggregation_factor) {
+        if (!TypedArrayT.name.startsWith('Float')) {
+            throw TypeError('supports only floating point types');
+        }
+        super(TypedArrayT, size, levels, aggregation_factor, NaN);
+        this._start_index = this._data.length;
+    }
+
+    prepend(data) {
+        let index_start = this._get_start_index();
+        for (let i = 0; i < this._levels; i++) {
+            // skip to next non-full buffer level
+            if (index_start > this._size) {
+                index_start -= this._size;
+                continue;
+            }
+
+            // insert data limited to non-full buffer level
+            const insert_size = Math.min(index_start, data.length);
+            this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
             break;
         }
+    }
 
-        // aggregate data about to be dequeued to next lower buffer
-        const aggregate_count = data.length / (data_store_aggregation_factor ** (data_store_buffer_levels - i));
-        typedarray_enqueue_aggregate(buffer.level[i - 1], buffer.level[i], aggregate_count, data_store_aggregation_factor);
+    getValidView() {
+        const index_start = this._get_start_index();
+        return this._data.subarray(index_start);
+    }
+
+    _get_start_index() {
+        return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
     }
 }
 
-function buffer_prepend(buffer, data) {
-    let buffer_start_index = buffer_get_view(buffer).findIndex(value => !isNaN(value));
-    if (buffer_start_index < 0) {
-        // no buffered data -> enqueue all data across buffer levels
-        typedarray_enqueue(buffer.data, data);
-        return;
-    }
 
-    for (let i = 0; i < data_store_buffer_levels; i++) {
-        // skip to next non-full buffer level
-        if (buffer_start_index > buffer.level[i].length) {
-            buffer_start_index -= buffer.level[i].length;
-            continue;
+class MaxAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++) {
+            let max = buffer_in[offset_in++];
+            for (let j = 1; j < aggregation_factor; j++, offset_in++) {
+                const value = buffer_in[offset_in];
+                if (max < value) {
+                    max = value;
+                }
+            }
+            buffer_out[i] = max;
         }
-
-        // insert data limited to non-full buffer level
-        const insert_size = Math.min(buffer_start_index, data.length);
-        buffer.level[i].set(data.subarray(data.length - insert_size), buffer_start_index - insert_size);
-        return;
     }
-    console.warn('failed inserting cached data into buffer');
 }
 
-function buffer_get_view(buffer) {
-    return buffer.data;
-}
-
-function buffer_get_valid_view(buffer) {
-    const index_start = buffer_get_view(buffer).findIndex(value => !isNaN(value));
-    if (index_start < 0) {
-        return buffer.data.subarray(0, 0);
-    }
-    return buffer.data.subarray(index_start);
-}
-
-// enqueue typed array data at end of typed array buffer
-function typedarray_enqueue(buffer_out, buffer_in) {
-    buffer_out.set(buffer_out.subarray(buffer_in.length));
-    buffer_out.set(buffer_in, buffer_out.length - buffer_in.length);
-}
-
-// enqueue aggregates of a typed array at end of typed array buffer
-function typedarray_enqueue_aggregate(buffer_out, buffer_in, count, aggregation_factor) {
-    buffer_out.set(buffer_out.subarray(count));
-    aggregate(buffer_out.subarray(buffer_out.length - count), buffer_in, aggregation_factor);
-}
-
-// typed array to typed array sample aggregation
-function aggregate(buffer_out, buffer_in, factor) {
-    for (let i = 0; i < buffer_out.length; i++) {
-        buffer_out[i] = buffer_in[i * factor];
+class MinAggregatingDataStore extends AggregatingDataStore {
+    static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
+        buffer_out.set(buffer_out.subarray(count));
+        for (let i = buffer_out.length - count, offset_in = 0; i < buffer_out.length; i++) {
+            let min = buffer_in[offset_in++];
+            for (let j = 1; j < aggregation_factor; j++, offset_in++) {
+                const value = buffer_in[offset_in];
+                if (min > value) {
+                    min = value;
+                }
+            }
+            buffer_out[i] = min;
+        }
     }
 }
