@@ -38,6 +38,15 @@
 			"--clang-tidy",
 			"--compile-commands-dir=${workspaceFolder}/builddir"
 		],
+		"jest.disabledWorkspaceFolders": [
+			"rocketlogger",
+			"system",
+			"python",
+			"calibration",
+			"matlab",
+			"rocketlogger_repo",
+			"wiki"
+		],
 		"python.formatting.provider": "black",
 	},
 	"extensions": {
@@ -52,6 +61,7 @@
 			"mhutchie.git-graph",
 			"ms-azuretools.vscode-docker",
 			"ms-python.python",
+			"orta.vscode-jest",
 			"streetsidesoftware.code-spell-checker",
 			"yzhang.markdown-all-in-one"
 		]
