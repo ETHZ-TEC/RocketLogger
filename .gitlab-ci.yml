@@ -1,0 +1,103 @@
+.python:
+  image: "python:$PYTHON_VERSION-slim"
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    WORKING_DIRECTORY: script/python
+  cache:
+    paths:
+      - .cache/pip
+      - venv
+  before_script:
+    - python --version
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - cd $WORKING_DIRECTORY
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+
+.software:
+  image: "debian:buster"
+  variables:
+    CGT_PRU_VERSION: "2.3.3"
+    CGT_PRU_INSTALLER_MD5: abb76fac986993aafaf467915985ec4f
+    WORKING_DIRECTORY: software/rocketlogger
+  cache:
+    paths:
+      - $CI_PROJECT_DIR/ti-cgt-pru_$CGT_PRU_VERSION
+      - $WORKING_DIRECTORY/builddir
+  before_script:
+    - echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+    - |
+      apt-get update && apt-get install --assume-yes  \
+      clang                           \
+      curl                            \
+      device-tree-compiler            \
+      git                             \
+      meson/buster-backports          \
+      ninja-build/buster-backports    \
+      pkg-config                      \
+      libgpiod-dev                    \
+      libi2c-dev                      \
+      libncurses5-dev                 \
+      libzmq3-dev
+    - |
+      curl --location --remote-name https://software-dl.ti.com/codegen/esd/cgt_public_sw/PRU/${CGT_PRU_VERSION}/ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
+      echo "${CGT_PRU_INSTALLER_MD5} ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin" | md5sum --check --strict &&  \
+      chmod +x ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
+      ./ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
+      rm ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin
+    - export PATH=$PATH:${CI_PROJECT_DIR}/ti-cgt-pru_${CGT_PRU_VERSION}/usr/bin
+    - cd $WORKING_DIRECTORY
+
+.webserver:
+  image: "node:$NODE_VERSION-slim"
+  variables:
+    WORKING_DIRECTORY: software/node_server
+  cache:
+    paths:
+      - $WORKING_DIRECTORY/node_modules
+  before_script:
+    - node --version
+    - cd $WORKING_DIRECTORY
+  parallel:
+    matrix:
+      - NODE_VERSION: ["18", "lts"]
+
+build:software:
+  extends: .software
+  stage: build
+  variables:
+    CC: clang
+    CXX: clang++
+  script:
+    - meson setup builddir
+    - ninja --verbose -C builddir
+
+test:webserver:
+  extends: .webserver
+  stage: test
+  needs: []
+  script:
+    - npm install
+    - npm test
+
+test:python:
+  extends: .python
+  stage: test
+  needs: []
+  variables:
+    MATPLOTLIB_AVAILABLE: "true"
+    PANDAS_AVAILABLE: "true"
+  script:
+    # install dependencies
+    - python -m pip install --upgrade pip
+    - python -m pip install flake8 pytest pytest-cov
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    # stop the build if there are Python syntax errors or undefined names
+    - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    # test with pytest and coverage
+    - pytest --cov=rocketlogger
