@@ -81,7 +81,15 @@ test:webserver:
   needs: []
   script:
     - npm install
-    - npm test
+    - npm install --save-dev jest-junit
+    - npm test -- --ci --collectCoverage --coverageDirectory=coverage --reporters=default --reporters=jest-junit
+  artifacts:
+    when: always
+    reports:
+      junit: $WORKING_DIRECTORY/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $WORKING_DIRECTORY/coverage/cobertura-coverage.xml
 
 test:python:
   extends: .python
@@ -99,5 +107,13 @@ test:python:
     - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    # test with pytest and coverage
-    - pytest --cov=rocketlogger
+    # test with pytest, coverage and JUnit XML report
+    - pytest --cov=rocketlogger --junitxml=report.xml
+    - coverage xml
+  artifacts:
+    when: always
+    reports:
+      junit: $WORKING_DIRECTORY/report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $WORKING_DIRECTORY/coverage.xml
