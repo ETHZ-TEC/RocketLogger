@@ -21,7 +21,9 @@ RUN update-ca-certificates && c_rehash
 
 # TI Code Generation Tools for PRU
 ARG CGT_PRU_VERSION=2.3.3
+ARG CGT_PRU_INSTALLER_MD5=648a6d7d8162fd6a89f381c7b974e6b0
 RUN curl --location --remote-name https://software-dl.ti.com/codegen/esd/cgt_public_sw/PRU/${CGT_PRU_VERSION}/ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
+    echo "${CGT_PRU_INSTALLER_MD5} ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh" | md5sum --check --strict &&  \
     chmod +x ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
     ./ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
     rm ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh

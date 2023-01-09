@@ -17,40 +17,6 @@
     matrix:
       - PYTHON_VERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
 
-.software:
-  image: "debian:buster"
-  variables:
-    CGT_PRU_VERSION: "2.3.3"
-    CGT_PRU_INSTALLER_MD5: abb76fac986993aafaf467915985ec4f
-    WORKING_DIRECTORY: software/rocketlogger
-  cache:
-    paths:
-      - $CI_PROJECT_DIR/ti-cgt-pru_$CGT_PRU_VERSION
-      - $WORKING_DIRECTORY/builddir
-  before_script:
-    - echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
-    - |
-      apt-get update && apt-get install --assume-yes  \
-      clang                           \
-      curl                            \
-      device-tree-compiler            \
-      git                             \
-      meson/buster-backports          \
-      ninja-build/buster-backports    \
-      pkg-config                      \
-      libgpiod-dev                    \
-      libi2c-dev                      \
-      libncurses5-dev                 \
-      libzmq3-dev
-    - |
-      curl --location --remote-name https://software-dl.ti.com/codegen/esd/cgt_public_sw/PRU/${CGT_PRU_VERSION}/ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
-      echo "${CGT_PRU_INSTALLER_MD5} ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin" | md5sum --check --strict &&  \
-      chmod +x ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
-      ./ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin &&  \
-      rm ti_cgt_pru_${CGT_PRU_VERSION}_linux_installer_x86.bin
-    - export PATH=$PATH:${CI_PROJECT_DIR}/ti-cgt-pru_${CGT_PRU_VERSION}/usr/bin
-    - cd $WORKING_DIRECTORY
-
 .webserver:
   image: "node:$NODE_VERSION-slim"
   variables:
@@ -65,12 +31,38 @@
     matrix:
       - NODE_VERSION: ["18", "lts"]
 
+build:image:
+  stage: .pre
+  image: docker:20.10.22
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    WORKING_DIRECTORY: software/rocketlogger
+  services:
+    - docker:20.10.22-dind
+  before_script:
+    - docker info
+    - cd $WORKING_DIRECTORY
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx build --push --platform linux/arm/v7 --tag $IMAGE_TAG .
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/Dockerfile
+
 build:software:
-  extends: .software
+  image: $CI_REGISTRY_IMAGE:latest
   stage: build
   variables:
     CC: clang
     CXX: clang++
+    WORKING_DIRECTORY: software/rocketlogger
+  before_script:
+    - cd $WORKING_DIRECTORY
   script:
     - meson setup builddir
     - ninja --verbose -C builddir
