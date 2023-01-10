@@ -4,6 +4,10 @@
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
     WORKING_DIRECTORY: script/python
   cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/requirements.txt
+      prefix: $CI_JOB_NAME
     paths:
       - .cache/pip
       - venv
@@ -22,6 +26,10 @@
   variables:
     WORKING_DIRECTORY: software/node_server
   cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/package-lock.json
+      prefix: $CI_JOB_NAME
     paths:
       - $WORKING_DIRECTORY/node_modules
   before_script:
