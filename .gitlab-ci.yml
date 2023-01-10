@@ -74,6 +74,11 @@ build:software:
   script:
     - meson setup builddir
     - ninja --verbose -C builddir
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
 
 test:webserver:
   extends: .webserver
@@ -90,6 +95,11 @@ test:webserver:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage/cobertura-coverage.xml
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
 
 test:python:
   extends: .python
@@ -117,3 +127,8 @@ test:python:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage.xml
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
