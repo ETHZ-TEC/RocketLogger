@@ -131,17 +131,19 @@ function parse_time_data(header, data) {
 }
 function parse_digital_data(header, data) {
     const data_in_view = new Uint32Array(data.buffer);
-    const data_out_length = data_in_view.length / header.downsample_factor;
+    const data_out_length = Math.min(data_in_view.length, header.sample_count / header.downsample_factor);
+    const data_resample_factor = Math.floor(data_in_view.length / data_out_length);
 
     const data_out = new Uint16Array(data_out_length);
-    const data_out_view = new Uint8Array(data_out.buffer);
-    for (let j = 0; j < Math.min(data_out_length, data_in_view.length / header.downsample_factor); j++) {
-        data_out_view[2 * j] = data_in_view[j * header.downsample_factor];
-        data_out_view[2 * j + 1] = data_in_view[j * header.downsample_factor];
-        for (let k = 1; k < header.downsample_factor; k++) {
-            data_out_view[2 * j] &= data_in_view[j * header.downsample_factor + k];
-            data_out_view[2 * j + 1] |= data_in_view[j * header.downsample_factor + k];
+    for (let j = 0, offset_in = 0; j < data_out.length; j++) {
+        let min = 0xff;
+        let max = 0x00;
+        for (let k = 0; k < data_resample_factor; k++, offset_in++) {
+            const value = data_in_view[offset_in];
+            min &= value;
+            max |= value;
         }
+        data_out[j] = max << 8 | min;
     }
 
     return data_out;
@@ -153,11 +155,12 @@ function parse_channel_data(header, metadata, data) {
     }
 
     const data_in_view = new Int32Array(data.buffer);
-    const data_out_length = data_in_view.length / header.downsample_factor;
+    const data_out_length = Math.min(data_in_view.length, header.sample_count / header.downsample_factor);
+    const data_resample_factor = Math.floor(data_in_view.length / data_out_length);
 
-    const data_out = new Float32Array(data_out_length).fill(NaN);
-    for (let j = 0; j < Math.min(data_out_length, data_in_view.length / header.downsample_factor); j++) {
-        data_out[j] = data_in_view[j * header.downsample_factor] * metadata.scale;
+    const data_out = new Float32Array(data_out_length);
+    for (let j = 0; j < data_out.length; j++) {
+        data_out[j] = data_in_view[j * data_resample_factor] * metadata.scale;
     }
 
     return data_out;
