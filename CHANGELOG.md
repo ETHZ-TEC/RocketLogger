@@ -1,6 +1,35 @@
 # Changelog
 
 
+## Version 2.1.0 (in progress)
+
+Base operating system:
+* [CHANGED] update to Debian *buster* release 10.13 (#78)
+* [CHANGED] update to Node.js version 18 LTS (#91)
+
+RocketLogger software:
+* [ADDED] System tests for software and data processing pipeline (#73)
+* [ADDED] Server side caching of measurement data (#74)
+* [ADDED] Activity aware binary channel down-sampling (#92)
+* [CHANGED] Improved PWM hardware configuration reliability (#68, #76)
+* [CHANGED] Hardware module based inter sample time capturing (#67)
+* [CHANGED] Update web interface dependencies to latest version (#71, #83)
+* [CHANGED] Optimize and reduce web interface dependencies (#84)
+* [CHANGED] Refactor web interface implementation and addition of unit tests (#70, #72)
+* [CHANGED] Update development tool configurations (#93, #95)
+
+Python support library:
+* [ADDED] Support and test coverage for Python 3.10 and 3.11 (#82, #88)
+* [CHANGED] Migrate from nose to pytest (#81)
+* [FIX] More robust measurement set-point detection (#94)
+
+
+_Notes:_
+
+This release updates the base operating and web interface dependencies. New features include server side measurement data caching and "activity aware" down-sampling of digital signal for the web interface preview.
+Other notable changes include more robust hardware configuration and initial automated test coverage of the measurement software and web interface components.
+
+
 ## Version 2.0.2 (2021-12-09)
 
 RocketLogger software:
