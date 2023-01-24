@@ -578,6 +578,12 @@ class AggregatingDataStore extends AggregatingBuffer {
         this._start_index = this._data.length;
     }
 
+    add(data) {
+        const aggregate_level = Math.floor((this._data.length - this._start_index) / this._size);
+        super.add(data);
+        this._start_index -= data.length / (this._aggregation_factor ** aggregate_level);
+    }
+
     prepend(data) {
         let index_start = this._get_start_index();
         for (let i = 0; i < this._levels; i++) {
@@ -590,6 +596,7 @@ class AggregatingDataStore extends AggregatingBuffer {
             // insert data limited to non-full buffer level
             const insert_size = Math.min(index_start, data.length);
             this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
+            this._start_index -= insert_size;
             break;
         }
     }
@@ -600,7 +607,7 @@ class AggregatingDataStore extends AggregatingBuffer {
     }
 
     _get_start_index() {
-        return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
+        return this._start_index;
     }
 }
 
