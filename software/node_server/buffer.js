@@ -4,19 +4,21 @@ export { AggregatingBuffer, AggregatingDataStore, AggregatingBinaryStore, MaxAgg
 
 
 class AggregatingBuffer {
-    constructor(TypedArrayT, capacity, levels, aggregation_factor, initial_value = 0) {
+    constructor(TypedArrayT, capacity, levels, aggregation_factor) {
         if (!TypedArrayT.hasOwnProperty('BYTES_PER_ELEMENT')) {
             throw TypeError('supporting TypedArray types only');
         }
         this._capacity = capacity;
+        this._size = 0;
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;
-        this._data = new TypedArrayT(this._levels * this._capacity).fill(initial_value);
+        this._data = new TypedArrayT(this._levels * this._capacity);
         this._dataLevel = Array.from({ length: this._levels },
             (_, i) => this._data.subarray(i * this._capacity, (i + 1) * this._capacity));
     }
 
     add(data) {
+        const aggregate_level = Math.floor(this._size / this._capacity);
         // aggregate data about to be dequeued to next lower buffer
         for (let i = 1; i < this._levels; i++) {
             const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
@@ -25,10 +27,18 @@ class AggregatingBuffer {
 
         // enqueue new data
         this.constructor._enqueue(data, this._dataLevel[this._levels - 1]);
+        this._size += Math.floor(data.length / (this._aggregation_factor ** aggregate_level));
+    }
+
+    size() {
+        return this._size;
     }
 
     getView() {
-        return this._data;
+        if (this._size == 0) {
+            return this._data.subarray(0, 0);
+        }
+        return this._data.subarray(-this._size);
     }
 
     // enqueue typed array data at end of typed array buffer
@@ -52,18 +62,11 @@ class AggregatingDataStore extends AggregatingBuffer {
         if (!TypedArrayT.name.startsWith('Float')) {
             throw TypeError('supports only floating point types');
         }
-        super(TypedArrayT, size, levels, aggregation_factor, NaN);
-        this._start_index = this._data.length;
-    }
-
-    add(data) {
-        const aggregate_level = Math.floor((this._data.length - this._start_index) / this._capacity);
-        super.add(data);
-        this._start_index -= data.length / (this._aggregation_factor ** aggregate_level);
+        super(TypedArrayT, size, levels, aggregation_factor);
     }
 
     prepend(data) {
-        let index_start = this._get_start_index();
+        let index_start = this._data.length - this._size;
         for (let i = 0; i < this._levels; i++) {
             // skip to next non-full buffer level
             if (index_start > this._capacity) {
@@ -74,18 +77,9 @@ class AggregatingDataStore extends AggregatingBuffer {
             // insert data limited to non-full buffer level
             const insert_size = Math.min(index_start, data.length);
             this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
-            this._start_index -= insert_size;
+            this._size += insert_size;
             break;
         }
-    }
-
-    getValidView() {
-        const index_start = this._get_start_index();
-        return this._data.subarray(index_start);
-    }
-
-    _get_start_index() {
-        return this._start_index;
     }
 }
 
@@ -95,8 +89,7 @@ class AggregatingBinaryStore extends AggregatingBuffer {
         if (TypedArrayT.name !== 'Uint16Array') {
             throw TypeError('supports Uint16Array type only');
         }
-        super(TypedArrayT, size, levels, aggregation_factor, AggregatingBinaryStore._DATA_INVALID);
-        this._start_index = this._data.length;
+        super(TypedArrayT, size, levels, aggregation_factor);
     }
 
     static _enqueue_aggregate(buffer_in, buffer_out, count, aggregation_factor) {
@@ -112,17 +105,6 @@ class AggregatingBinaryStore extends AggregatingBuffer {
             buffer_out[i] = max & (0xff00 | min);
         }
     }
-
-    getValidView() {
-        const index_start = this._get_start_index();
-        return this._data.subarray(index_start);
-    }
-
-    _get_start_index() {
-        return this._start_index = this._data.findLastIndex(v => v === this.constructor._DATA_INVALID, this._start_index) + 1;
-    }
-
-    static _DATA_INVALID = 0x00ff;
 }
 
 

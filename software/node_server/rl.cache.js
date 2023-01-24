@@ -65,7 +65,7 @@ class DataCache {
         };
 
         // find cache buffer index of first already available data element
-        const cache_time_view = this._time.getValidView();
+        const cache_time_view = this._time.getView();
         const index = cache_time_view.findIndex(value => value >= time_reference);
         this._debug(`matching cache range: ${index}:${cache_time_view.length}`);
 
