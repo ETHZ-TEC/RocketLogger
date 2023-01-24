@@ -63,7 +63,7 @@ const path_modules = path.join(__dirname, 'node_modules');
 const path_templates = path.join(__dirname, 'templates');
 const asset_version = {
     bootstrap: await get_version(path.join(path_modules, 'bootstrap')),
-    plotly: await get_version(path.join(path_modules, 'plotly.js-basic-dist-min')),
+    plotly: await get_version(path.join(path_modules, 'plotly.js-gl2d-dist-min')),
     socketio: await get_version(path.join(path_modules, 'socket.io-client')),
     timesync: await get_version(path.join(path_modules, 'timesync')),
 };

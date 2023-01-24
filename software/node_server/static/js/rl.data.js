@@ -343,12 +343,11 @@ async function plot_reset(plot, xaxis) {
         }
 
         // assemble and add trace config
+        const color = RL_PLOT_COLORS[trace_index % RL_PLOT_COLORS.length];
         const trace = {
             type: 'scattergl',
             mode: 'lines',
-            line: {
-                color: RL_PLOT_COLORS[trace_index % RL_PLOT_COLORS.length],
-            },
+            line: { color: color },
             connectgaps: true,
             name: ch,
             hoverinfo: 'y+name',
@@ -357,6 +356,8 @@ async function plot_reset(plot, xaxis) {
         };
         if (plot.unit == 'binary') {
             const trace_name = ch.replace('min', '').replace('max', '');
+            // workaround unsupported area fill with scattergl: too large performance impact
+            // trace.type = 'scatter';
             trace.legendgroup = trace_name;
             trace.showlegend = false;
             if (ch.endsWith('min')) {
@@ -364,7 +365,7 @@ async function plot_reset(plot, xaxis) {
                 const legend_entry_trace = {
                     type: 'scattergl',
                     mode: 'lines',
-                    line: trace.line,
+                    line: { color: color },
                     name: trace_name,
                     legendgroup: trace_name,
                     hoverinfo: 'skip',
