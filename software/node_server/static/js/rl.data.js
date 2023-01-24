@@ -75,7 +75,7 @@ function rocketlogger_init_data() {
 
     // provide data() method to poll cached data
     rl.data = async () => {
-        const time_view = rl._data.time.getValidView();
+        const time_view = rl._data.time.getView();
         const request = {
             cmd: 'data',
             time: time_view.length ? time_view[0] : null,
@@ -147,7 +147,7 @@ function process_data(reply) {
     let reset = rl._data.reset || (reply.reset) ? rl._data.reset : false;
     let cached_data = false;
     if (rl._data.time) {
-        const buffer_time_view = rl._data.time.getValidView();
+        const buffer_time_view = rl._data.time.getView();
         if (time_view[0] > buffer_time_view[buffer_time_view.length - 1]) {
             // data update
         } else if (time_view[time_view.length - 1] < buffer_time_view[0]) {
@@ -505,19 +505,27 @@ function data_add(message, cache_data = false) {
     // decode channel data
     for (const ch in rl._data.metadata) {
         if (rl._data.metadata[ch].unit === 'binary') {
-            const bit_offset = rl._data.metadata[ch].bit;
-            const data_digital = Float32Array.from(new Uint16Array(message.digital),
-                value => (bit_offset % 8) + ((value & (0x0001 << bit_offset)) ? 0.66 : 0));
+            const bit_mask = 0x0001 << rl._data.metadata[ch].bit;
+            const value_offset = rl._data.metadata[ch].bit % 8;
+            const digital_view = new Uint16Array(message.digital);
+            const data_digital = new Float32Array(digital_view.length);
+            for (let i = 0; i < data_digital.length; i++) {
+                data_digital[i] = value_offset + ((digital_view[i] & bit_mask) ? 0.66 : 0);
+            }
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
             if (time_view.length == data_view.length) {
                 insert(rl._data.buffer[ch], data_view);
             } else {
-                // interleave sub-sampled data with NaN
-                const ratio = Math.floor(time_view.length / data_view.length);
-                const data = new Float32Array(time_view.length).map((_, i) =>
-                    i % ratio == 0 ? data_view[i / ratio] : NaN);
+                // replace/interleave sub-sampled data with NaN
+                const data = new Float32Array(time_view.length).fill(NaN);
+                if (data_view.length > 0) {
+                    const interleave_ratio = Math.floor(data.length / data_view.length);
+                    for (let i = 0, j = 0; i < data.length; i += interleave_ratio, j++) {
+                        data[i] = data_view[j];
+                    }
+                }
                 insert(rl._data.buffer[ch], data);
             }
         }
@@ -526,19 +534,21 @@ function data_add(message, cache_data = false) {
 
 
 class AggregatingBuffer {
-    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = 0) {
+    constructor(TypedArrayT, capacity, levels, aggregation_factor) {
         if (!TypedArrayT.hasOwnProperty('BYTES_PER_ELEMENT')) {
             throw TypeError('supporting TypedArray types only');
         }
-        this._size = size;
+        this._capacity = capacity;
+        this._size = 0;
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;
-        this._data = new TypedArrayT(this._levels * this._size).fill(initial_value);
+        this._data = new TypedArrayT(this._levels * this._capacity);
         this._dataLevel = Array.from({ length: this._levels },
-            (_, i) => this._data.subarray(i * this._size, (i + 1) * this._size));
+            (_, i) => this._data.subarray(i * this._capacity, (i + 1) * this._capacity));
     }
 
     add(data) {
+        const aggregate_level = Math.floor(this._size / this._capacity);
         // aggregate data about to be dequeued to next lower buffer
         for (let i = 1; i < this._levels; i++) {
             const aggregate_count = data.length / (this._aggregation_factor ** (this._levels - i));
@@ -547,10 +557,18 @@ class AggregatingBuffer {
 
         // enqueue new data
         this.constructor._enqueue(data, this._dataLevel[this._levels - 1]);
+        this._size += Math.floor(data.length / (this._aggregation_factor ** aggregate_level));
+    }
+
+    size() {
+        return this._size;
     }
 
     getView() {
-        return this._data;
+        if (this._size == 0) {
+            return this._data.subarray(0, 0);
+        }
+        return this._data.subarray(-this._size);
     }
 
     // enqueue typed array data at end of typed array buffer
@@ -574,33 +592,24 @@ class AggregatingDataStore extends AggregatingBuffer {
         if (!TypedArrayT.name.startsWith('Float')) {
             throw TypeError('supports only floating point types');
         }
-        super(TypedArrayT, size, levels, aggregation_factor, NaN);
-        this._start_index = this._data.length;
+        super(TypedArrayT, size, levels, aggregation_factor);
     }
 
     prepend(data) {
-        let index_start = this._get_start_index();
+        let index_start = this._data.length - this._size;
         for (let i = 0; i < this._levels; i++) {
             // skip to next non-full buffer level
-            if (index_start > this._size) {
-                index_start -= this._size;
+            if (index_start > this._capacity) {
+                index_start -= this._capacity;
                 continue;
             }
 
             // insert data limited to non-full buffer level
             const insert_size = Math.min(index_start, data.length);
             this._dataLevel[i].set(data.subarray(data.length - insert_size), index_start - insert_size);
+            this._size += insert_size;
             break;
         }
-    }
-
-    getValidView() {
-        const index_start = this._get_start_index();
-        return this._data.subarray(index_start);
-    }
-
-    _get_start_index() {
-        return this._start_index = this._data.findLastIndex(isNaN, this._start_index) + 1;
     }
 }
 
