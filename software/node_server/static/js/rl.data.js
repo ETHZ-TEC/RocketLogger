@@ -505,19 +505,27 @@ function data_add(message, cache_data = false) {
     // decode channel data
     for (const ch in rl._data.metadata) {
         if (rl._data.metadata[ch].unit === 'binary') {
-            const bit_offset = rl._data.metadata[ch].bit;
-            const data_digital = Float32Array.from(new Uint16Array(message.digital),
-                value => (bit_offset % 8) + ((value & (0x0001 << bit_offset)) ? 0.66 : 0));
+            const bit_mask = 0x0001 << rl._data.metadata[ch].bit;
+            const value_offset = rl._data.metadata[ch].bit % 8;
+            const digital_view = new Uint16Array(message.digital);
+            const data_digital = new Float32Array(digital_view.length);
+            for (let i = 0; i < data_digital.length; i++) {
+                data_digital[i] = value_offset + ((digital_view[i] & bit_mask) ? 0.66 : 0);
+            }
             insert(rl._data.buffer[ch], data_digital);
         } else {
             const data_view = new Float32Array(message.data[ch]);
             if (time_view.length == data_view.length) {
                 insert(rl._data.buffer[ch], data_view);
             } else {
-                // interleave sub-sampled data with NaN
-                const ratio = Math.floor(time_view.length / data_view.length);
-                const data = new Float32Array(time_view.length).map((_, i) =>
-                    i % ratio == 0 ? data_view[i / ratio] : NaN);
+                // replace/interleave sub-sampled data with NaN
+                const data = new Float32Array(time_view.length).fill(NaN);
+                if (data_view.length > 0) {
+                    const interleave_ratio = Math.floor(data.length / data_view.length);
+                    for (let i = 0, j = 0; i < data.length; i += interleave_ratio, j++) {
+                        data[i] = data_view[j];
+                    }
+                }
                 insert(rl._data.buffer[ch], data);
             }
         }
