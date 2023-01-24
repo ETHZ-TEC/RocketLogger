@@ -74,7 +74,7 @@ cp --force --verbose *.js ${INSTALL_WEB_DIR}
 cp --force --verbose *.json ${INSTALL_WEB_DIR}
 
 echo "> Install RocketLogger Node.js web interface"
-npm install --production --prefix ${INSTALL_WEB_DIR} ${INSTALL_WEB_DIR}
+npm install --omit dev --prefix ${INSTALL_WEB_DIR} ${INSTALL_WEB_DIR}
 
 # verify Node.js package installation was successful
 CONFIG=$?
