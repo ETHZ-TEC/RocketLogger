@@ -243,7 +243,7 @@
   fragment@31 {
     target = <&ehrpwm0>;
     __overlay__ {
-      status = "disabled";
+      status = "disabled";  /* make unavailable for kernel driver */
     };
   };
 
@@ -260,7 +260,7 @@
   fragment@33 {
     target = <&ehrpwm1>;
     __overlay__ {
-      status = "disabled";
+      status = "disabled";  /* make unavailable for kernel driver */
     };
   };
 
