@@ -177,8 +177,8 @@ describe('AggregatingDataStore class', () => {
             expect(data_valid_view.length).toBe(data_to_add.length);
 
             const data_view = buffer.getView();
-            expect(data_view.at(-buffer._size - 13)).toBeNaN();
-            expect(data_view.at(-buffer._size - 1)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 13)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 13)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
@@ -224,12 +224,12 @@ describe('AggregatingDataStore class', () => {
             buffer.prepend(data_to_prepend);
 
             const data_valid_view = buffer.getValidView();
-            expect(data_valid_view.length).toBe(buffer._size);
+            expect(data_valid_view.length).toBe(buffer._capacity);
 
             const data_view = buffer.getView();
-            expect(data_view.at(-buffer._size - 13)).toBeNaN();
-            expect(data_view.at(-buffer._size - 1)).toBeNaN();
-            expect(data_view.at(-buffer._size)).toBe(data_to_prepend.at(data_to_add.length - buffer._size));
+            expect(data_view.at(-buffer._capacity - 13)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 1)).toBeNaN();
+            expect(data_view.at(-buffer._capacity)).toBe(data_to_prepend.at(data_to_add.length - buffer._capacity));
             expect(data_view.at(-data_to_add.length - 1)).toBe(data_to_prepend.at(-1));
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
             expect(data_view.at(-1)).toBe(data_to_add.at(-1));
@@ -337,8 +337,8 @@ describe('AggregatingBinaryStore class', () => {
             expect(data_valid_view.length).toBe(data_to_add.length);
 
             const data_view = buffer.getView();
-            expect(data_view.at(-buffer._size - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
-            expect(data_view.at(-buffer._size - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-buffer._capacity - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
+            expect(data_view.at(-buffer._capacity - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
             expect(data_view.at(-data_to_add.length - 13)).toBe(AggregatingBinaryStore._DATA_INVALID);
             expect(data_view.at(-data_to_add.length - 1)).toBe(AggregatingBinaryStore._DATA_INVALID);
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
@@ -407,8 +407,8 @@ describe('MaxAggregatingDataStore class', () => {
             expect(data_valid_view.length).toBe(data_to_add.length);
 
             const data_view = buffer.getView();
-            expect(data_view.at(-buffer._size - 13)).toBeNaN();
-            expect(data_view.at(-buffer._size - 1)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 13)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 13)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));
@@ -475,8 +475,8 @@ describe('MinAggregatingDataStore class', () => {
             expect(data_valid_view.length).toBe(data_to_add.length);
 
             const data_view = buffer.getView();
-            expect(data_view.at(-buffer._size - 13)).toBeNaN();
-            expect(data_view.at(-buffer._size - 1)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 13)).toBeNaN();
+            expect(data_view.at(-buffer._capacity - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 13)).toBeNaN();
             expect(data_view.at(-data_to_add.length - 1)).toBeNaN();
             expect(data_view.at(-data_to_add.length)).toBe(data_to_add.at(0));

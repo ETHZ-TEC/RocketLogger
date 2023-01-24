@@ -4,16 +4,16 @@ export { AggregatingBuffer, AggregatingDataStore, AggregatingBinaryStore, MaxAgg
 
 
 class AggregatingBuffer {
-    constructor(TypedArrayT, size, levels, aggregation_factor, initial_value = 0) {
+    constructor(TypedArrayT, capacity, levels, aggregation_factor, initial_value = 0) {
         if (!TypedArrayT.hasOwnProperty('BYTES_PER_ELEMENT')) {
             throw TypeError('supporting TypedArray types only');
         }
-        this._size = size;
+        this._capacity = capacity;
         this._levels = levels;
         this._aggregation_factor = aggregation_factor;
-        this._data = new TypedArrayT(this._levels * this._size).fill(initial_value);
+        this._data = new TypedArrayT(this._levels * this._capacity).fill(initial_value);
         this._dataLevel = Array.from({ length: this._levels },
-            (_, i) => this._data.subarray(i * this._size, (i + 1) * this._size));
+            (_, i) => this._data.subarray(i * this._capacity, (i + 1) * this._capacity));
     }
 
     add(data) {
@@ -57,7 +57,7 @@ class AggregatingDataStore extends AggregatingBuffer {
     }
 
     add(data) {
-        const aggregate_level = Math.floor((this._data.length - this._start_index) / this._size);
+        const aggregate_level = Math.floor((this._data.length - this._start_index) / this._capacity);
         super.add(data);
         this._start_index -= data.length / (this._aggregation_factor ** aggregate_level);
     }
@@ -66,8 +66,8 @@ class AggregatingDataStore extends AggregatingBuffer {
         let index_start = this._get_start_index();
         for (let i = 0; i < this._levels; i++) {
             // skip to next non-full buffer level
-            if (index_start > this._size) {
-                index_start -= this._size;
+            if (index_start > this._capacity) {
+                index_start -= this._capacity;
                 continue;
             }
 
