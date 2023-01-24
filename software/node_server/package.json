@@ -4,6 +4,7 @@
   "description": "RocketLogger web interface",
   "homepage": "https://github.com/ETHZ-TEC/RocketLogger#readme",
   "author": "ETH Zurich, Computer Engineering Group",
+  "contributors": ["Lukas Sigrist <lsigrist@mailbox.org>"],
   "license": "BSD-3-Clause",
   "keywords": [
     "measurement",
