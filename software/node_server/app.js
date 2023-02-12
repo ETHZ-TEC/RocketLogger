@@ -311,8 +311,8 @@ async function is_sdcard_mounted() {
 async function control_action(request) {
     switch (request.cmd) {
         case 'start':
-            const result = await rl_control.start(request.config);
             data_cache?.reset();
+            const result = await rl_control.start(request.config);
             return result;
 
         case 'stop':
