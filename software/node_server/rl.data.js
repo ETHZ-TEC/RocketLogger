@@ -127,7 +127,7 @@ function parse_data_header(data) {
 
 function parse_time_data(header, data) {
     const time_in_view = new BigInt64Array(data.buffer);
-    const data_out_length = header.sample_count / header.downsample_factor;
+    const data_out_length = Math.ceil(header.sample_count / header.downsample_factor);
 
     const data_out = new Float64Array(data_out_length);
     for (let j = 0; j < data_out_length; j++) {
@@ -139,7 +139,7 @@ function parse_time_data(header, data) {
 }
 function parse_digital_data(header, data) {
     const data_in_view = new Uint32Array(data.buffer);
-    const data_out_length = Math.min(data_in_view.length, header.sample_count / header.downsample_factor);
+    const data_out_length = Math.min(data_in_view.length, Math.ceil(header.sample_count / header.downsample_factor));
     const data_resample_factor = Math.floor(data_in_view.length / data_out_length);
 
     const data_out = new Uint16Array(data_out_length);
@@ -163,7 +163,7 @@ function parse_channel_data(header, metadata, data) {
     }
 
     const data_in_view = new Int32Array(data.buffer);
-    const data_out_length = Math.min(data_in_view.length, header.sample_count / header.downsample_factor);
+    const data_out_length = Math.min(data_in_view.length, Math.ceil(header.sample_count / header.downsample_factor));
     const data_resample_factor = Math.floor(data_in_view.length / data_out_length);
 
     const data_out = new Float32Array(data_out_length);
