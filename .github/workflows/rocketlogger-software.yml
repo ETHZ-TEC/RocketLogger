@@ -49,4 +49,4 @@ jobs:
       - name: Cross compile using Docker image
         run: |
           docker run --platform linux/arm/v7 --user "$(id -u):$(id -g)" --mount type=bind,source="${{ steps.git_info.outputs.REPO_ROOT_PATH }}",target=/home/rocketlogger \
-            --tty rocketlogger_build /bin/bash -c "cd /home/rocketlogger/${{ steps.git_info.outputs.REPO_REL_PATH }} && meson builddir && cd builddir && ninja"
+            --tty rocketlogger_build /bin/bash -c "cd /home/rocketlogger/${{ steps.git_info.outputs.REPO_REL_PATH }} && meson builddir && ninja -C builddir"

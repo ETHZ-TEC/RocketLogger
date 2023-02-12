@@ -43,9 +43,8 @@ To build and install the RocketLogger software components and its configuration 
 
 ```bash
 meson builddir
-cd builddir
-ninja
-sudo meson install --no-rebuild
+ninja -C builddir
+sudo ninja -C builddir install
 ```
 
 

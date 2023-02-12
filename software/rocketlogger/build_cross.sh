@@ -15,7 +15,7 @@ docker buildx build --platform linux/arm/v7 --tag rocketlogger_build .
 
 # build rocketlogger binary
 docker run --platform linux/arm/v7 --user "$(id -u):$(id -g)" --mount type=bind,source="${REPO_ROOT_PATH}",target=/home/rocketlogger \
-    --tty rocketlogger_build /bin/bash -c "cd /home/rocketlogger/${REPO_REL_PATH} && CC=clang CXX=clang++ meson builddir && cd builddir && ninja"
+    --tty rocketlogger_build /bin/bash -c "cd /home/rocketlogger/${REPO_REL_PATH} && CC=clang CXX=clang++ meson builddir && ninja -C builddir"
 
 
 # for interactive docker shell use:
