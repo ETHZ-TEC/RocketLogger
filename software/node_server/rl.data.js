@@ -112,7 +112,15 @@ function parse_data_header(data) {
     const header = JSON.parse(data[0]);
 
     header.downsample_factor = Math.max(1, header.data_rate / web_data_rate);
-    header.sample_count = (new Uint32Array(data[data.length - 1].buffer)).length;
+
+    // find maximum sample count in channel data message parts
+    header.sample_count = 1;
+    for (let i = 3; i < data.length; i++) {
+        const sample_count = data[i].buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT;
+        if (sample_count > header.sample_count) {
+            header.sample_count = sample_count;
+        }
+    }
 
     return header;
 }
