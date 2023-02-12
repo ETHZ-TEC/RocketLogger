@@ -92,19 +92,11 @@
     </main>
     <footer id="footer">
       {% block footer %}
-      <div class="row justify-content-around">
-        <div class="col-auto">
-          <img class="img-fluid float-left" src="/static/img/eth_logo_small.png" alt="Logo ETH Zurich">
-        </div>
-        <div class="col-auto">
-          <img class="img-fluid float-right" src="/static/img/tik_logo_small.png" alt="Logo TIK">
-        </div>
-      </div>
-
       <p><span {% if version_string %}data-bs-toggle="tooltip" title="{{ version_string }}"{% endif %}>
         RocketLogger version {% if version %}{{ version }}{% else %}<span class="badge bg-danger" id="warn_calibration">unknown</span>{% endif %}
         </span> - <a href="https://github.com/ETHZ-TEC/RocketLogger#readme" target="_blank">https://github.com/ETHZ-TEC/RocketLogger</a><br />
-        &copy; {{ today.year }}, ETH Zurich, Computer Engineering Group.
+        &copy; 2016-2020, ETH Zurich, Computer Engineering Group,<br />
+        &copy; 2020-{{ today.year }}, RocketLogger project.
       </p>
       {% endblock %}
     </footer>
