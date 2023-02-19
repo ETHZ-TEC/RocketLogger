@@ -1,0 +1,134 @@
+.python:
+  image: "python:$PYTHON_VERSION-slim"
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    WORKING_DIRECTORY: script/python
+  cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/requirements.txt
+      prefix: $CI_JOB_NAME
+    paths:
+      - .cache/pip
+      - venv
+  before_script:
+    - python --version
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - cd $WORKING_DIRECTORY
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+
+.webserver:
+  image: "node:$NODE_VERSION-slim"
+  variables:
+    WORKING_DIRECTORY: software/node_server
+  cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/package-lock.json
+      prefix: $CI_JOB_NAME
+    paths:
+      - $WORKING_DIRECTORY/node_modules
+  before_script:
+    - node --version
+    - cd $WORKING_DIRECTORY
+  parallel:
+    matrix:
+      - NODE_VERSION: ["18", "lts"]
+
+build:image:
+  stage: .pre
+  image: docker:20.10.22
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    WORKING_DIRECTORY: software/rocketlogger
+  services:
+    - docker:20.10.22-dind
+  before_script:
+    - docker info
+    - cd $WORKING_DIRECTORY
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx build --push --platform linux/arm/v7 --tag $IMAGE_TAG .
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/Dockerfile
+
+build:software:
+  image: $CI_REGISTRY_IMAGE:latest
+  stage: build
+  variables:
+    CC: clang
+    CXX: clang++
+    WORKING_DIRECTORY: software/rocketlogger
+  before_script:
+    - cd $WORKING_DIRECTORY
+  script:
+    - meson setup builddir
+    - ninja --verbose -C builddir
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
+
+test:webserver:
+  extends: .webserver
+  stage: test
+  needs: []
+  script:
+    - npm install
+    - npm install --save-dev jest-junit
+    - npm test -- --ci --collectCoverage --coverageDirectory=coverage --reporters=default --reporters=jest-junit
+  artifacts:
+    when: always
+    reports:
+      junit: $WORKING_DIRECTORY/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $WORKING_DIRECTORY/coverage/cobertura-coverage.xml
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
+
+test:python:
+  extends: .python
+  stage: test
+  needs: []
+  variables:
+    MATPLOTLIB_AVAILABLE: "true"
+    PANDAS_AVAILABLE: "true"
+  script:
+    # install dependencies
+    - python -m pip install --upgrade pip
+    - python -m pip install flake8 pytest pytest-cov
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    # stop the build if there are Python syntax errors or undefined names
+    - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    # test with pytest, coverage and JUnit XML report
+    - pytest --cov=rocketlogger --junitxml=report.xml
+    - coverage xml
+  artifacts:
+    when: always
+    reports:
+      junit: $WORKING_DIRECTORY/report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $WORKING_DIRECTORY/coverage.xml
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*

@@ -30,58 +30,62 @@
 
 "use strict";
 
-const fs = require('fs');
-const { spawnSync } = require('child_process');
+import { stat } from 'fs/promises';
+import { promisify } from 'util';
+import { exec as exec_ } from 'child_process';
 
-module.exports = {
-    /// helper function to display byte values
-    bytes_to_string(bytes) {
-        if (bytes === 0) {
-            return "0 B";
-        }
-        let log1k = Math.floor(Math.log10(bytes) / 3);
-        let value = (bytes / Math.pow(1000, log1k));
+export { bytes_to_string, date_to_string, is_same_filesystem, system_reboot, system_poweroff };
 
-        switch (log1k) {
-            case 0:
-                return value.toFixed(0) + " B";
-            case 1:
-                return value.toFixed(2) + " kB";
-            case 2:
-                return value.toFixed(2) + " MB";
-            case 3:
-                return value.toFixed(2) + " GB";
-            case 4:
-                return value.toFixed(2) + " TB";
-            default:
-                return bytes.toPrecision(5) + " B";
-        }
-    },
+const exec = promisify(exec_);
 
-    /// check if two files or paths are located on the same filesystem
-    is_same_filesystem(first, second) {
-        const stat_first = fs.statSync(first);
-        const stat_second = fs.statSync(second);
-        return stat_first.dev === stat_second.dev;
-    },
+/// helper function to display byte values
+function bytes_to_string(bytes) {
+    if (bytes === 0) {
+        return "0 B";
+    }
+    const log1k = Math.floor(Math.log10(bytes) / 3);
+    const value = bytes / Math.pow(1000, log1k);
 
-    /// helper function to reboot the system
-    system_reboot() {
-        const args = ['shutdown', '--reboot', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });
-        if (cmd.error) {
-            return cmd.error;
-        }
-        return cmd.status;
-    },
+    switch (log1k) {
+        case 0:
+            return value.toFixed(0) + " B";
+        case 1:
+            return value.toFixed(2) + " kB";
+        case 2:
+            return value.toFixed(2) + " MB";
+        case 3:
+            return value.toFixed(2) + " GB";
+        case 4:
+            return value.toFixed(2) + " TB";
+        default:
+            return bytes.toPrecision(5) + " B";
+    }
+}
 
-    /// helper function to shutdown the system
-    system_poweroff() {
-        const args = ['shutdown', '--poweroff', 'now'];
-        const cmd = spawnSync('sudo', args, { timeout: 500 });
-        if (cmd.error) {
-            return cmd.error;
-        }
-        return cmd.status;
-    },
-};
+/// helper function to display dates
+function date_to_string(date) {
+    return date.toISOString().split('.')[0].replace('T', ' ');
+}
+
+/// check if two files or paths are located on the same filesystem
+async function is_same_filesystem(first, second) {
+    const files_stat = await Promise.all([
+        stat(first),
+        stat(second),
+    ]);
+    return files_stat[0].dev === files_stat[1].dev;
+}
+
+/// helper function to reboot the system
+async function system_reboot() {
+    const cmd = 'sudo shutdown --reboot now';
+    const { stdout } = await exec(cmd, { timeout: 500 });
+    return stdout;
+}
+
+/// helper function to shutdown the system
+async function system_poweroff() {
+    const cmd = 'sudo shutdown --poweroff now';
+    const { stdout } = await exec(cmd, { timeout: 500 });
+    return stdout;
+}

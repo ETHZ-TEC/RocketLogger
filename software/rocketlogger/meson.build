@@ -1,7 +1,7 @@
 project('rocketlogger', 'c',
-    version : '2.0.2',
+    version : '2.1.0',
     default_options : ['buildtype=debugoptimized',
-        'c_std=c11', 'cpp_std=c++11', 'warning_level=3',
+        'c_std=c11', 'cpp_std=c++11', 'warning_level=3', 'werror=true',
         'prefix=/usr', 'install_umask=0022'],
     license : 'BSD-3-Clause')
 
@@ -74,14 +74,12 @@ common_src = [
     'log.c',
     'meter.c',
     'pru.c',
-    'pwm.c',
     'rl_file.c',
     'rl_hw.c',
     'rl_lib.c',
     'rl_socket.c',
     'rl.c',
     'sem.c',
-    'sysfs.c',
     'util.c',
     version_c,
 ]

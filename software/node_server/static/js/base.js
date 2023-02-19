@@ -30,11 +30,9 @@
 
 "use strict";
 
-/// Initialization when document is fully loaded
-$(() => {
-    // convert bootstrap hidden class to jquery show/hide
-    $(".d-none").hide().removeClass("d-none");
-
-    // activate tooltips
-    $('[data-toggle="tooltip"]').tooltip({ boundary: 'window' });
+/// initialize when document is fully loaded
+window.addEventListener('load', () => {
+    // activate Bootstrap tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(
+        element => new bootstrap.Tooltip(element));
 });

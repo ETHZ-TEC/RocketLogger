@@ -1,18 +1,15 @@
 # RocketLogger image build environment
-FROM arm32v7/debian:buster-slim
+FROM arm32v7/debian:bullseye-slim
 WORKDIR /opt
-
-# set up buster-backports for meson and ninja
-RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
 
 # Debian package dependencies
 RUN apt-get update && apt-get install --assume-yes  \
+    clang                           \
     curl                            \
     device-tree-compiler            \
-    gcc                             \
     git                             \
-    meson/buster-backports          \
-    ninja-build/buster-backports    \
+    meson                           \
+    ninja-build                     \
     pkg-config                      \
     libgpiod-dev                    \
     libi2c-dev                      \
@@ -24,7 +21,9 @@ RUN update-ca-certificates && c_rehash
 
 # TI Code Generation Tools for PRU
 ARG CGT_PRU_VERSION=2.3.3
+ARG CGT_PRU_INSTALLER_MD5=648a6d7d8162fd6a89f381c7b974e6b0
 RUN curl --location --remote-name https://software-dl.ti.com/codegen/esd/cgt_public_sw/PRU/${CGT_PRU_VERSION}/ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
+    echo "${CGT_PRU_INSTALLER_MD5} ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh" | md5sum --check --strict &&  \
     chmod +x ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
     ./ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh &&  \
     rm ti_cgt_pru_${CGT_PRU_VERSION}_armlinuxa8hf_busybox_installer.sh

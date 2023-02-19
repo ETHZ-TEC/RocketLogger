@@ -64,6 +64,8 @@
 
 #define OPT_CLI 7
 
+#define OPT_STREAM 8
+
 /**
  * Program version output for GNU standard command line format compliance.
  */
@@ -162,7 +164,10 @@ static struct argp_option options[] = {
                                            "calibration measurements only.",
      0},
     {"web", 'w', "BOOL", OPTION_ARG_OPTIONAL,
-     "Enable web server plotting. Enabled per default.", 0},
+     "Enable data stream interface (required for web interface plotting). "
+     "Enabled per default.",
+     0},
+    {"stream", OPT_STREAM, 0, OPTION_ALIAS, 0, 0},
 
     {0, 0, 0, OPTION_DOC, "Optional arguments for status and config actions:",
      6},
@@ -491,7 +496,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                               RL_CHANNEL_SWITCHED_COUNT);
         break;
     case 'w':
-        /* web interface enable: optional BOOL value */
+    case OPT_STREAM:
+        /* data streaming and web interface enable: optional BOOL value */
         if (arg != NULL) {
             parse_bool(arg, state, &config->web_enable);
         } else {

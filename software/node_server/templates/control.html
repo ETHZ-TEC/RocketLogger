@@ -7,11 +7,11 @@
 {% block js_footer %}
   {{ super() }}
   <!-- socket.io client -->
-  <script src="https://cdn.socket.io/4.1.2/socket.io.min.js" integrity="sha384-toS6mmwu70G0fw54EGlWWeA4z3dyJ+dlXBtSURSKN4vyRFOcxd3Bzjj/AoOwY+Rg" crossorigin="anonymous"></script>
-  <script>if (typeof (io) === 'undefined') { document.write('<script src="/assets/socket.io.js"><\/script>') }</script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script>
+  <script>if (typeof io === 'undefined') { document.write('<script src="/assets/socket.io.js"><\/script>') }</script>
   <!-- plotting and timesync javascript -->
-  <script src="https://cdn.plot.ly/plotly-2.0.0.min.js" integrity="sha384-IEhO+TtPmaeQZEOJyHoAbP9UfC4qIH4XzPKvb34nlBAQrGfHxAOWtVFwq67Abfmj" crossorigin="anonymous"></script>
-  <script>if (typeof (Plotly) === 'undefined') { document.write('<script src="/assets/plotly.min.js"><\/script>') }</script>
+  <script src="https://cdn.plot.ly/plotly-gl2d-2.15.0.min.js" integrity="sha384-BrvaOihYMX8z9bcHSoGCqysoE9Pzkal1dyWluAbLsqpGLaGdLrcACy2SbnJX/+D8" crossorigin="anonymous"></script>
+  <script>if (typeof Plotly === 'undefined') { document.write('<script src="/assets/plotly-gl2d.min.js"><\/script>') }</script>
   <script src="/assets/timesync.min.js"></script>
   <!-- local javascript -->
   <script src="/static/js/rl.util.js"></script>
@@ -92,8 +92,9 @@
             <label class="col-sm-auto col-form-label" for="plot_update_rate">Update interval</label>
             <div class="col-sm-auto">
               <select class="form-select" id="plot_update_rate">
-                <option value="100" selected>auto scroll</option>
-                <option value="10">0.1 s</option>
+                <option value="100">auto scroll</option>
+                <option value="10" selected>0.1 s</option>
+                <option value="5">0.2 s</option>
                 <option value="2">0.5 s</option>
                 <option value="1">1 s</option>
               </select>

@@ -43,9 +43,8 @@ To build and install the RocketLogger software components and its configuration 
 
 ```bash
 meson builddir
-cd builddir
-ninja
-sudo meson install --no-rebuild
+ninja -C builddir
+sudo ninja -C builddir install
 ```
 
 
@@ -90,6 +89,12 @@ the software:
 * *libzeromq* - `libzmq3-dev` package
 * BeagleBone device tree overlay headers - included as a [Meson subproject](https://github.com/beagleboard/bb.org-overlays.git)
 * Linux PRU user space driver *prussdrv* - included as a [Meson subproject](https://github.com/beagleboard/am335x_pru_package.git)
+
+
+## System Tests
+
+Python pytest based RocketLogger system tests are available in the `tests/` subfolder.
+For more details on the test setup and execution refer to the corresponding [README](tests/README).
 
 
 ## License

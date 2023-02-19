@@ -426,8 +426,9 @@ class RocketLoggerData:
 
             # FILE VERSION DEPENDENT FIXES (BACKWARD COMPATIBILITY)
             # fix 1 based indexing of valid channel links for file version <= 2
-            if (header["file_version"] <= 2) & (
-                channel["valid_link"] != _CHANNEL_VALID_UNLINKED
+            if (
+                header["file_version"] <= 2
+                and channel["valid_link"] != _CHANNEL_VALID_UNLINKED
             ):
                 channel["valid_link"] = channel["valid_link"] - 1
 
@@ -673,8 +674,9 @@ class RocketLoggerData:
             raise ValueError("Channel info: link not defined.")
         if not isinstance(channel_info["valid_link"], int):
             raise TypeError("Channel info: invalid link.")
-        if (channel_info["valid_link"] >= len(self._header["channels"])) & (
-            channel_info["valid_link"] != _CHANNEL_VALID_UNLINKED
+        if (
+            channel_info["valid_link"] >= len(self._header["channels"])
+            and channel_info["valid_link"] != _CHANNEL_VALID_UNLINKED
         ):
             raise ValueError("Channel info: invalid link.")
 

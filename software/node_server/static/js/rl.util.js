@@ -30,9 +30,6 @@
 
 "use strict";
 
-/// ASCII value of character
-const ascii = (a) => a.charCodeAt(0);
-
 /// format display byte values
 function bytes_to_string(bytes) {
     if (bytes === 0) {
@@ -127,4 +124,33 @@ function unix_to_timespan_string(seconds) {
     }
 
     return str.trim();
+}
+
+
+/// DOM manipulation helpers
+
+function show(element) {
+    removeClass(element, 'd-none');
+}
+function hide(element) {
+    addClass(element, 'd-none');
+}
+
+function addClass(element, ...classes) {
+    selectElement(element).classList.add(...classes);
+}
+function removeClass(element, ...classes) {
+    selectElement(element).classList.remove(...classes);
+}
+function replaceClass(element, remove_class, add_class) {
+    removeClass(element, remove_class);
+    addClass(element, add_class);
+}
+
+function triggerEvent(element, event) {
+    selectElement(element).dispatchEvent(new Event(event));
+}
+
+function selectElement(element) {
+    return typeof element === 'string' ? document.querySelector(element) : element;
 }

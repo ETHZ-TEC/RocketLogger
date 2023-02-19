@@ -65,7 +65,7 @@ const rl = {
 function rocketlogger_init_base() {
     // set connection timeout before showing offline banner
     const offline_timeout = setTimeout(() => {
-        $('#error_offline').show();
+        show('#error_offline');
     }, RL_OFFLINE_TIMEOUT_MS);
 
     // new socket.io socket for RocketLogger interaction
@@ -75,15 +75,11 @@ function rocketlogger_init_base() {
     rl._data.socket.on('connect', () => {
         console.log(`socket.io connection established (${rl._data.socket.id}).`);
         clearTimeout(offline_timeout);
-        $('#error_offline').hide();
+        hide('#error_offline');
     });
     rl._data.socket.on('disconnect', () => {
         console.log(`socket.io connection closed.`);
-        $('#error_offline').show();
-    });
-    // init default message callback
-    rl._data.socket.on('message', (msg) => {
-        console.log(`socket.io message: ${msg}`);
+        show('#error_offline');
     });
 
     // init status with reset default
@@ -147,7 +143,7 @@ function status_get_reset() {
 /// update the status interface with the current RocketLogger status
 function update_status() {
     if (rl._data.status === null) {
-        throw 'undefined RocketLogger status.';
+        throw Error('undefined RocketLogger status.');
     }
     const status = rl._data.status;
 
@@ -157,83 +153,83 @@ function update_status() {
         status_message += 'sampling';
     } else {
         status_message += 'idle';
-        if (rl.plot) {
+        if (rl.plot?.stop) {
             rl.plot.stop();
         }
     }
     if (status.error) {
         status_message += ' with error';
-        $('#warn_error').show();
+        show('#warn_error');
     } else {
-        $('#warn_error').hide();
+        hide('#warn_error');
     }
-    $('#status_message').text(status_message);
+    document.querySelector('#status_message').innerText = status_message;
 
     // sampling information
-    $('#status_samples').text(status.sample_count + ' samples');
+    document.querySelector('#status_samples').innerText = status.sample_count + ' samples';
     try {
         let sampling_time = status.sample_count / status.config.sample_rate;
-        $('#status_time').text(unix_to_timespan_string(sampling_time));
+        document.querySelector('#status_time').innerText = unix_to_timespan_string(sampling_time);
     } catch (err) {
         // skip
     }
 
     // calibration
     if (status.calibration_time <= 0) {
-        $('#status_calibration').text('');
-        $('#warn_calibration').show();
+        document.querySelector('#status_calibration').innerText = '';
+        show('#warn_calibration');
     } else {
-        $('#status_calibration').text(unix_to_datetime_string(status.calibration_time));
-        $('#warn_calibration').hide();
+        document.querySelector('#status_calibration').innerText = unix_to_datetime_string(status.calibration_time);
+        hide('#warn_calibration');
     }
 
     // storage
-    $('#status_disk').text(`${bytes_to_string(status.disk_free_bytes)} (` +
-        `${(status.disk_free_permille / 10).toFixed(1)}%) free`);
-    $('#warn_storage_critical').hide();
-    $('#warn_storage_low').hide();
+    document.querySelector('#status_disk').innerText = `${bytes_to_string(status.disk_free_bytes)} (` +
+        `${(status.disk_free_permille / 10).toFixed(1)}%) free`;
+    hide('#warn_storage_critical');
+    hide('#warn_storage_low');
     if (status.disk_free_permille <= RL_DISK_WARNING_THRESHOLD) {
         if (status.disk_free_permille <= RL_DISK_CRITICAL_THRESHOLD) {
-            $('#warn_storage_critical').show();
+            show('#warn_storage_critical');
         } else {
-            $('#warn_storage_low').show();
+            show('#warn_storage_low');
         }
     }
     if (status.hasOwnProperty('sdcard_available') && !status.sdcard_available) {
-        $('#warn_sdcard_unavailable').show();
+        show('#warn_sdcard_unavailable');
     }
 
     // remaining sampling time
     if (status.sampling && status.disk_use_rate > 0) {
-        $('#status_remaining').text(unix_to_timespan_string(
-            status.disk_free_bytes / status.disk_use_rate));
+        document.querySelector('#status_remaining').innerText = unix_to_timespan_string(
+            status.disk_free_bytes / status.disk_use_rate)
     }
 
     // control buttons and config form
     if (status.sampling) {
-        $('#button_start').removeClass('btn-success').addClass('btn-dark');
-        $('#button_stop').removeClass('btn-dark').addClass('btn-danger');
+        replaceClass('#button_start', 'btn-success', 'btn-dark');
+        replaceClass('#button_stop', 'btn-dark', 'btn-danger');
     } else {
-        $('#button_start').removeClass('btn-dark').addClass('btn-success');
-        $('#button_stop').removeClass('btn-danger').addClass('btn-dark');
+        replaceClass('#button_start', 'btn-dark', 'btn-success');
+        replaceClass('#button_stop', 'btn-danger', 'btn-dark');
     }
-    $('#button_start').prop('disabled', status.sampling);
-    $('#button_stop').prop('disabled', !status.sampling);
-    $('#configuration_group').prop('disabled', status.sampling);
+    document.querySelector('#button_start').disabled = status.sampling;
+    document.querySelector('#button_stop').disabled = !status.sampling;
+    document.querySelector('#configuration_group').disabled = status.sampling;
 }
 
-/// document ready callback handler for initialization
-$(() => {
+/// initialize when document is fully loaded
+window.addEventListener('load', () => {
     // initialize RocketLogger interface and display default status
     rocketlogger_init_base();
 
     // status update button
-    $('#button_status').on('click', () => {
+    document.querySelector('#button_status').addEventListener('click', () => {
         rl.status();
     });
 
     // status update on window focus
-    $(window).on('focus', () => {
+    window.addEventListener('focus', () => {
         rl.status();
     });
 

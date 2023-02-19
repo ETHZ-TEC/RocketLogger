@@ -32,7 +32,7 @@ and configured manually.
 
 ## Dependencies and Requirements
 
-* Server: Node.js v10 or later, *NGINX* for reverse proxy
+* Server: Node.js v18 or later, *NGINX* for reverse proxy
 * Client: reasonably recent web browser supporting *ECMAScript* 6
 
 
@@ -49,7 +49,6 @@ and configured manually.
 ### Browser client dependencies
 
 * `bootstrap` - responsive, mobile-first front-end component library
-* `jquery` - general purpose JavaScript library
 * `plotly.js` - JavaScript plotting library
 * `timesync` - client-server time synchronization library
 * `socket.io-client` - websockets client side JavaScript library

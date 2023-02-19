@@ -109,15 +109,6 @@ int rl_socket_metadata(rl_config_t const *const config) {
         }
     }
 
-    // digital channel metadata
-    if (config->digital_enable) {
-        for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
-            snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
-                        "{\"name\":\"DI%d\",\"unit\":\"binary\",\"bit\":%d},",
-                        i + 1, i);
-        }
-    }
-
     // ambient channel metadata
     if (config->ambient_enable) {
         for (int ch = 0; ch < SENSOR_REGISTRY_SIZE; ch++) {
@@ -131,12 +122,34 @@ int rl_socket_metadata(rl_config_t const *const config) {
         }
     }
 
+    // digital channel metadata
+    if (config->digital_enable) {
+        for (int i = 0; i < RL_CHANNEL_DIGITAL_COUNT; i++) {
+            snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                        "{\"name\":\"DI%d\",\"unit\":\"binary\",\"bit\":%d},",
+                        i + 1, i);
+        }
+    }
+
     // current range valid metadata and JSON end
-    snprintfcat(
-        metadata_json, RL_SOCKET_METADATA_SIZE,
-        "{\"name\":\"I1L_valid\",\"unit\":\"binary\",\"bit\":6,\"hidden\":true},"
-        "{\"name\":\"I2L_valid\",\"unit\":\"binary\",\"bit\":7,\"hidden\":true}]"
-        "}");
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I1L]) {
+        snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                    "{\"name\":\"I1L_valid\",\"unit\":\"binary\",\"bit\":6,"
+                    "\"hidden\":true},");
+    }
+    if (config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
+        snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE,
+                    "{\"name\":\"I2L_valid\",\"unit\":\"binary\",\"bit\":7,"
+                    "\"hidden\":true},");
+    }
+
+    // trim trailing comma of last array entry
+    if (metadata_json[strlen(metadata_json) - 1] == ',') {
+        metadata_json[strlen(metadata_json) - 1] = 0;
+    }
+
+    // JSON end
+    snprintfcat(metadata_json, RL_SOCKET_METADATA_SIZE, "]}");
 
     return SUCCESS;
 }
@@ -215,9 +228,15 @@ int rl_socket_handle_data(int32_t const *analog_buffer,
         }
     }
 
-    // publish digital data to socket
-    zmq_res = zmq_send(zmq_data_socket, digital_buffer,
-                       buffer_size * sizeof(uint32_t), 0);
+    // publish digital data (or empty if none available) to socket
+    if (config->digital_enable ||
+        config->channel_enable[RL_CONFIG_CHANNEL_I1L] ||
+        config->channel_enable[RL_CONFIG_CHANNEL_I2L]) {
+        zmq_res = zmq_send(zmq_data_socket, digital_buffer,
+                           buffer_size * sizeof(uint32_t), 0);
+    } else {
+        zmq_res = zmq_send(zmq_data_socket, "", 0, 0);
+    }
     if (zmq_res < 0) {
         rl_log(RL_LOG_ERROR, "failed publishing digital data; %d message: %s",
                errno, strerror(errno));

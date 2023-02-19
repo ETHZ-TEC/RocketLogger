@@ -135,8 +135,10 @@ def _extract_setpoint_measurement(
 
     # locate calibration sweep
     measurement_sweep_bound = np.flatnonzero(
-        np.abs(np.diff(measurement_data)) > 2 * setpoint_step
+        np.abs(np.diff(measurement_data)) > 0.5 * setpoint_step
     )
+    if len(measurement_sweep_bound) < 2:
+        raise ValueError("no valid set-point steps found in measurement data")
     measurement_sweep_start = np.min(measurement_sweep_bound)
     measurement_sweep_end = np.max(measurement_sweep_bound)
 
@@ -176,7 +178,7 @@ def _extract_setpoint_measurement(
     # if no set-point was found report error
     if not np.any(setpoint_trim):
         raise ValueError(
-            "No set-points found. You might want to check the set-point step scale?"
+            "no set-points found: you might want to check the set-point step scale?"
         )
 
     # aggregate measurements by set-point interval

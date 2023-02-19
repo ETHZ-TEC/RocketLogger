@@ -93,7 +93,7 @@ fi
 ## install RocketLogger software
 echo "> Build and install rocketlogger on remote host. You will be asked for the new user password, which is 'beaglebone'."
 ssh -F /dev/null -p 2322 -i ./setup/user/rocketlogger.default_rsa -o IdentitiesOnly=yes -t rocketlogger@${HOST} \
-  "cd /home/rocketlogger/rocketlogger/software/rocketlogger && meson builddir && cd builddir && ninja && sudo meson install"
+  "cd /home/rocketlogger/rocketlogger/software/rocketlogger && meson builddir && ninja -C builddir && sudo ninja -C builddir install"
 
 # verify software installation configuration was successful
 INSTALL=$?

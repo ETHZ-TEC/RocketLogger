@@ -97,7 +97,7 @@ following system packages are required:
 ```bash
 g++ make nginx nodejs
 ```
-with the Node.js LTS version 14 from the [NodeSource Node.js](https://github.com/nodesource/distributions#readme)
+with the Node.js LTS version 18 from the [NodeSource Node.js](https://github.com/nodesource/distributions#readme)
 repository.
 
 The cross compilation and operating system patching scripts in addition require a Docker

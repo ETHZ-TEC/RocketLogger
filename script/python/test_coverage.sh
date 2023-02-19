@@ -32,8 +32,7 @@
 export MATPLOTLIB_AVAILABLE="true"
 export PANDAS_AVAILABLE="true"
 
-python3 -m nose                   \
-  --with-coverage                 \
-  --cover-package=rocketlogger    \
-  --cover-html                    \
-  --cover-html-dir=build/coverage
+pytest                              \
+  --cov-report html:build/coverage  \
+  --cov-report term                 \
+  --cov=rocketlogger
