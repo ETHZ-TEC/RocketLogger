@@ -1,0 +1,7 @@
+<map id="bme280_read" name="bme280_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,80,105,105"/>
+<area shape="rect" id="node2" href="$bme280_8c.html#a861788dcd08dd885aa4233624b1757b3" title=" " alt="" coords="155,5,286,31"/>
+<area shape="rect" id="node3" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="194,55,247,80"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="160,104,281,129"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#aed5a727d24f9dadb196ec613dc255c4f" title=" " alt="" coords="153,153,288,179"/>
+</map>

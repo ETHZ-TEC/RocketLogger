@@ -1,0 +1,11 @@
+<map id="sensor/sensor.h" name="sensor/sensor.h">
+<area shape="rect" id="node1" title=" " alt="" coords="253,5,368,31"/>
+<area shape="rect" id="node2" href="$pru_8c.html" title=" " alt="" coords="5,79,56,104"/>
+<area shape="rect" id="node3" href="$rl_8c.html" title=" " alt="" coords="81,79,119,104"/>
+<area shape="rect" id="node4" href="$rl__file_8c.html" title=" " alt="" coords="143,79,206,104"/>
+<area shape="rect" id="node5" href="$rl__hw_8c.html" title=" " alt="" coords="230,79,293,104"/>
+<area shape="rect" id="node6" href="$rl__socket_8c.html" title=" " alt="" coords="317,79,403,104"/>
+<area shape="rect" id="node7" href="$bme280_8c.html" title=" " alt="" coords="427,79,549,104"/>
+<area shape="rect" id="node8" href="$sensor_8c.html" title=" " alt="" coords="573,79,688,104"/>
+<area shape="rect" id="node9" href="$tsl4531_8c.html" title=" " alt="" coords="712,79,829,104"/>
+</map>
