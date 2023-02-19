@@ -1,7 +1,7 @@
 # Changelog
 
 
-## Version 2.1.0 (in progress)
+## Version 2.1.0 (2023-02-19)
 
 Base operating system:
 * [CHANGED] update to Debian *buster* release 10.13 (#78)
@@ -11,6 +11,7 @@ RocketLogger software:
 * [ADDED] System tests for software and data processing pipeline (#73)
 * [ADDED] Server side caching of measurement data (#74)
 * [ADDED] Activity aware binary channel down-sampling (#92)
+* [ADDED] Document measurement status and data stream interface, provide `--stream` CLI alias
 * [CHANGED] Improved PWM hardware configuration reliability (#68, #76)
 * [CHANGED] Hardware module based inter sample time capturing (#67)
 * [CHANGED] Update web interface dependencies to latest version (#71, #83)
@@ -28,6 +29,7 @@ _Notes:_
 
 This release updates the base operating and web interface dependencies. New features include server side measurement data caching and "activity aware" down-sampling of digital signal for the web interface preview.
 Other notable changes include more robust hardware configuration and initial automated test coverage of the measurement software and web interface components.
+Finally, the measurement status and data streaming interfaces are now officially documented for use by third party software.
 
 
 ## Version 2.0.2 (2021-12-09)
