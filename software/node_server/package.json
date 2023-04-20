@@ -34,7 +34,7 @@
     "bootstrap": "5.2.2",
     "debug": "~4.3.4",
     "express": "~4.18.1",
-    "nunjucks": "~3.2.3",
+    "nunjucks": "~3.2.4",
     "picomatch": "~2.3.1",
     "plotly.js-gl2d-dist-min": "2.15.0",
     "socket.io": "4.5.4",
