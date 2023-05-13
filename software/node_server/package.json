@@ -4,7 +4,9 @@
   "description": "RocketLogger web interface",
   "homepage": "https://github.com/ETHZ-TEC/RocketLogger#readme",
   "author": "ETH Zurich, Computer Engineering Group",
-  "contributors": ["Lukas Sigrist <lsigrist@mailbox.org>"],
+  "contributors": [
+    "Lukas Sigrist <lsigrist@mailbox.org>"
+  ],
   "license": "BSD-3-Clause",
   "keywords": [
     "measurement",
@@ -34,11 +36,11 @@
     "bootstrap": "5.2.2",
     "debug": "~4.3.4",
     "express": "~4.18.1",
-    "nunjucks": "~3.2.3",
+    "nunjucks": "3.2.4",
     "picomatch": "~2.3.1",
     "plotly.js-gl2d-dist-min": "2.15.0",
-    "socket.io": "4.5.4",
-    "socket.io-client": "4.5.4",
+    "socket.io": "4.6.1",
+    "socket.io-client": "4.6.1",
     "timesync": "~1.0.11",
     "zeromq": "6.0.0-beta.6"
   },
