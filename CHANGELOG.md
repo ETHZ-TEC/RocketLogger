@@ -1,6 +1,16 @@
 # Changelog
 
 
+## Version 2.1.1 (2023-07-15)
+
+* [CHANGED] Update to latest Debian *buster* release 10.13 image for security fixes
+* [CHANGED] Update web server dependencies for security fixes
+
+_Notes:_
+
+This bugfix release focuses on security updates for web server dependencies and the operating system base image.
+
+
 ## Version 2.1.0 (2023-02-19)
 
 Base operating system:
