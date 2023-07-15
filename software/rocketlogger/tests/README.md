@@ -10,6 +10,7 @@ The following system dependencies are required for generating a Python
 environment and importing required packages.
 ```
 python3
+python3-dev
 python3-venv
 libatlas-base-dev
 ```
@@ -23,7 +24,7 @@ To setup the environment on the RocketLogger for test execution use the
 following commands to create and load a Python virtual environment and install
 required package dependencies:
 ```
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
