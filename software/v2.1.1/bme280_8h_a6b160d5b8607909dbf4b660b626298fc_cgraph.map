@@ -1,0 +1,23 @@
+<map id="bme280_init" name="bme280_init">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,115,108,143"/>
+<area shape="rect" id="Node000002" href="$bme280_8c.html#aaca642ac3d0add3dbf362b885ad24e5e" title=" " alt="" coords="188,37,310,64"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,112,155,75,177,67,179,72,157,79,83,117"/>
+<area shape="rect" id="Node000003" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="434,37,491,64"/>
+<area shape="poly" id="edge11_Node000001_Node000003" title=" " alt="" coords="64,113,98,66,124,41,155,23,189,11,225,5,298,6,366,17,421,32,419,38,365,22,298,11,226,10,190,16,157,27,127,46,102,70,68,116"/>
+<area shape="rect" id="Node000004" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="398,89,527,116"/>
+<area shape="poly" id="edge12_Node000001_Node000004" title=" " alt="" coords="80,141,115,161,156,177,209,190,251,197,292,194,341,177,356,167,365,155,374,141,388,127,399,121,402,125,392,131,378,144,369,158,360,171,343,182,293,199,250,202,207,195,155,182,112,166,77,146"/>
+<area shape="rect" id="Node000005" href="$bme280_8c.html#acf1818f48aea1395eb29a80f9baaffc1" title=" " alt="" coords="156,141,342,168"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="109,133,141,137,140,143,108,138"/>
+<area shape="rect" id="Node000007" href="$bme280_8c.html#ae6636c662ea590cb0d51236eae200216" title=" " alt="" coords="157,89,341,116"/>
+<area shape="poly" id="edge8_Node000001_Node000007" title=" " alt="" coords="108,119,142,115,143,120,109,125"/>
+<area shape="rect" id="Node000008" href="$sensor_8c.html#aed5a727d24f9dadb196ec613dc255c4f" title=" " alt="" coords="175,242,323,270"/>
+<area shape="poly" id="edge13_Node000001_Node000008" title=" " alt="" coords="71,141,107,181,131,203,157,221,181,234,179,239,154,226,128,207,103,185,67,145"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="310,48,419,48,419,53,310,53"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="310,62,389,82,388,87,308,67"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="315,138,341,125,355,114,364,101,373,88,389,75,419,60,421,65,391,79,377,92,368,104,359,117,343,130,317,142"/>
+<area shape="poly" id="edge7_Node000005_Node000004" title=" " alt="" coords="308,137,388,118,389,123,310,142"/>
+<area shape="rect" id="Node000006" href="$bme280_8c.html#a861788dcd08dd885aa4233624b1757b3" title=" " alt="" coords="390,141,535,168"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="342,152,375,152,375,157,342,157"/>
+<area shape="poly" id="edge9_Node000007_Node000003" title=" " alt="" coords="308,85,419,58,420,63,310,90"/>
+<area shape="poly" id="edge10_Node000007_Node000004" title=" " alt="" coords="341,100,383,100,383,105,341,105"/>
+</map>

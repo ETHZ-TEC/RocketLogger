@@ -1,0 +1,7 @@
+<map id="sensor/bme280.h" name="sensor/bme280.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="80,5,213,33"/>
+<area shape="rect" id="Node000002" href="$bme280_8c.html" title=" " alt="" coords="5,81,138,109"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="124,45,87,82,83,79,121,42"/>
+<area shape="rect" id="Node000003" href="$sensor_8c.html" title=" " alt="" coords="162,81,283,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="172,42,211,79,207,82,168,45"/>
+</map>

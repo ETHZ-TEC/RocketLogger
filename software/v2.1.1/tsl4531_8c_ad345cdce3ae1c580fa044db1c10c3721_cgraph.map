@@ -1,0 +1,7 @@
+<map id="tsl4531_get_id" name="tsl4531_get_id">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,32,122,60"/>
+<area shape="rect" id="Node000002" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="206,5,263,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,34,190,23,191,28,123,39"/>
+<area shape="rect" id="Node000003" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="170,57,299,85"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="123,52,156,57,155,62,122,57"/>
+</map>

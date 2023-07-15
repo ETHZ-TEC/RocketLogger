@@ -1,0 +1,11 @@
+<map id="bme280_read" name="bme280_read">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,84,116,112"/>
+<area shape="rect" id="Node000002" href="$bme280_8c.html#a861788dcd08dd885aa4233624b1757b3" title=" " alt="" coords="165,5,310,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,81,163,43,180,36,182,41,165,48,89,86"/>
+<area shape="rect" id="Node000003" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="209,57,266,85"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="116,87,193,75,194,80,116,92"/>
+<area shape="rect" id="Node000004" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="173,109,302,137"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="116,103,158,109,157,114,116,108"/>
+<area shape="rect" id="Node000005" href="$sensor_8c.html#aed5a727d24f9dadb196ec613dc255c4f" title=" " alt="" coords="164,161,311,189"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="90,110,165,146,182,153,180,158,163,151,88,115"/>
+</map>
