@@ -137,7 +137,7 @@ int gpio_get_value(gpio_t *gpio);
 /**
  * Wait for interrupt on GPIO pin.
  *
- * @param gpio_number Linux sysfs GPIO resource number
+ * @param gpio GPIO resource to wait for
  * @param timeout Pointer to timeout timespec, NULL for infinite timeout
  * @return Returns the GPIO pin value (0 or 1) on success, negative on failure
  * with errno set accordingly

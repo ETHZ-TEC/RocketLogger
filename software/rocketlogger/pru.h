@@ -141,7 +141,7 @@ typedef struct pru_buffer pru_buffer_t;
  *
  * Map PRU shared memory and enable PRU interrupts.
  *
- * @return {@link SUCCESS} on success, {@link FAILURE} otherwise
+ * @return {@link SUCCESS} on success, {@link ERROR} otherwise
  */
 int pru_init(void);
 
