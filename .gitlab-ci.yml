@@ -80,6 +80,56 @@ build:software:
     changes:
       - $WORKING_DIRECTORY/**/*
 
+docs:software:
+  image: debian:stable
+  needs: []
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+    WORKING_DIRECTORY: software/rocketlogger
+  before_script:
+    - apt-get update && apt-get install --no-install-recommends --no-install-suggests --assume-yes doxygen graphviz
+    - cd $WORKING_DIRECTORY
+  script:
+    - (cat Doxyfile; echo "WARN_AS_ERROR=FAIL_ON_WARNINGS") | doxygen -
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
+
+docs:python:
+  image: "python:3"
+  needs: []
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    WORKING_DIRECTORY: script/python
+  cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/requirements.txt
+      prefix: $CI_JOB_NAME
+    paths:
+      - .cache/pip
+      - venv
+  before_script:
+    - python --version
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - cd $WORKING_DIRECTORY
+  script:
+    # install dependencies
+    - python -m pip install --upgrade pip
+    - python -m pip install sphinx
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    # build documentation
+    - sphinx-build -a -W -b html docs/ build/sphinx/html/
+  only:
+    refs:
+      - branches
+    changes:
+      - $WORKING_DIRECTORY/**/*
+
 test:webserver:
   extends: .webserver
   stage: test
