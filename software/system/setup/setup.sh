@@ -153,12 +153,6 @@ cp --force system/issue.net /etc/issue.net
 ## filesystem, system and user config directories setup
 echo "> Configure SD card mount and prepare configuration folders"
 
-# external SD card mount
-mkdir --parents /media/sdcard/
-echo -e "# mount external sdcard on boot if available" >> /etc/fstab
-echo -e "/dev/mmcblk0p1\t/media/sdcard/\tauto\tnofail,noatime,errors=remount-ro\t0\t2" >> /etc/fstab
-
-
 # create RocketLogger system config folder
 mkdir --parents /etc/rocketlogger
 
@@ -166,17 +160,9 @@ mkdir --parents /etc/rocketlogger
 mkdir --parents /home/rocketlogger/.config/rocketlogger/
 mkdir --parents /home/rocketlogger/data/
 mkdir --parents /var/log/rocketlogger/
-echo -e "# bind RocketLogger sdcard folders if available" >> /etc/fstab
-
-echo -e "/media/sdcard/rocketlogger/config\t/home/rocketlogger/.config/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
-echo -e "/media/sdcard/rocketlogger/data\t/home/rocketlogger/data\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
-echo -e "/media/sdcard/rocketlogger/log\t/var/log/rocketlogger\tauto\tbind,nofail,noatime,errors=remount-ro\t0\t0" >> /etc/fstab
 
 # make user owner of its own files
 chown --recursive rocketlogger:rocketlogger /home/rocketlogger/
-
-# patch flasher tools to include SD card mounts
-patch --forward --backup --input=tools/functions.sh.patch /opt/scripts/tools/eMMC/functions.sh
 
 
 ## network configuration
