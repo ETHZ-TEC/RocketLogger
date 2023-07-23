@@ -164,6 +164,13 @@ mkdir --parents /var/log/rocketlogger/
 # make user owner of its own files
 chown --recursive rocketlogger:rocketlogger /home/rocketlogger/
 
+# deploy external SD card mount and folder bind configuration
+cp --force mount/media-sdcard.mount /etc/systemd/system/
+cp --force mount/home-rocketlogger-data.mount /etc/systemd/system/
+cp --force mount/home-rocketlogger-.config-rocketlogger.mount /etc/systemd/system/
+cp --force mount/var-log-rocketlogger.mount /etc/systemd/system/
+systemctl enable media-sdcard.mount home-rocketlogger-data.mount home-rocketlogger-.config-rocketlogger.mount var-log-rocketlogger.mount
+
 
 ## network configuration
 echo "> Update hostname and network configuration"
