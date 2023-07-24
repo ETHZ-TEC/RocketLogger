@@ -50,7 +50,7 @@ jobs:
       - name: Build RocketLogger Python support docs
         working-directory: script/python
         run: |
-          python setup.py build_sphinx -a
+          sphinx-build -a -b html docs/ build/sphinx/html/
 
       - name: Build RocketLogger software docs
         uses: mattnotmitt/doxygen-action@v1
