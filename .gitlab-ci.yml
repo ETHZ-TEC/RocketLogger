@@ -1,3 +1,12 @@
+.default_rules:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ /release-*/
+    - if: $CI_COMMIT_BRANCH =~ /hotfix-*/
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - changes: 
+      - .gitlab-ci.yml
+
 .python:
   image: "python:$PYTHON_VERSION-slim"
   variables:
@@ -56,10 +65,9 @@ build:image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     - docker buildx build --push --platform linux/arm/v7 --tag $IMAGE_TAG .
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/Dockerfile
 
 build:software:
@@ -74,10 +82,9 @@ build:software:
   script:
     - meson setup builddir
     - ninja --verbose -C builddir
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*
 
 test:webserver:
@@ -95,10 +102,9 @@ test:webserver:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage/cobertura-coverage.xml
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*
 
 test:python:
@@ -127,8 +133,7 @@ test:python:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage.xml
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*
