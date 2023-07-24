@@ -39,7 +39,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rocketlogger",
-    version="2.1.1",
+    version="2.1.2",
     author="ETH Zurich, Computer Engineering Group",
     description="RocketLogger Python Support",
     long_description=long_description,
