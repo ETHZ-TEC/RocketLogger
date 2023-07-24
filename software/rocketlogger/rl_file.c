@@ -74,7 +74,6 @@ void rl_file_setup_data_channels(rl_file_header_t *const header,
  * Set up channel information of the ambient file header.
  *
  * @param header The ambient file header structure to configure
- * @param config Current measurement configuration
  */
 void rl_file_setup_ambient_channels(rl_file_header_t *const header);
 
