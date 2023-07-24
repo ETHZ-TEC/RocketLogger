@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount external RocketLogger SD card
+Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
+
+[Mount]
+Where=/media/sdcard
+What=/dev/mmcblk0p1
+Type=ext4
+Options=nofail,noatime,errors=remount-ro
+TimeoutSec=5s
+
+[Install]
+WantedBy=multi-user.target
