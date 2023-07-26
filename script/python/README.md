@@ -6,7 +6,7 @@ support to generate calibration data from measurements.
 
 **Dependencies**
 * Python 3: version 3.6-3.11
-* NumPy: version 1.13-1.23
+* NumPy: version 1.13-1.25
 
 **Optional dependencies**
 * Matplotlib: for plotting data overview
