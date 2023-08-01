@@ -93,9 +93,8 @@ void calibration_reset_scales(void);
  * Load the calibration values from calibration file.
  *
  * @note Updates the RocketLogger status. Manually update shared status after
- * loading the calibraion as needed.
+ * loading the calibration as needed.
  *
- * @param config Pointer to {@link rl_config_t} struct.
  * @return Returns 0 on success, negative on failure with errno set accordingly
  */
 int calibration_load(void);

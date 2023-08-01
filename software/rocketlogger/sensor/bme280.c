@@ -48,7 +48,6 @@ const int bme280_sensors[] = BME280_I2C_ADDRESSES;
 /**
  * Get the device ID.
  *
- * @param sensor_identifier The I2C address of the sensor
  * @return Returns device ID on success, negative on failure with errno set
  * accordingly
  */

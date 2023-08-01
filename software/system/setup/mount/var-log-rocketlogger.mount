@@ -1,0 +1,16 @@
+[Unit]
+Description=Bind RocketLogger SD card log directory
+Documentation=https://github.com/ETHZ-TEC/RocketLogger#readme
+
+After=media-sdcard.mount
+Requires=media-sdcard.mount
+
+[Mount]
+Where=/var/log/rocketlogger
+What=/media/sdcard/rocketlogger/log
+Type=none
+Options=bind,nofail,noatime,errors=remount-ro
+TimeoutSec=5s
+
+[Install]
+WantedBy=multi-user.target

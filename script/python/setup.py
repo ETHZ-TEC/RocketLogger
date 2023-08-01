@@ -39,7 +39,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rocketlogger",
-    version="2.1.1",
+    version="2.1.2",
     author="ETH Zurich, Computer Engineering Group",
     description="RocketLogger Python Support",
     long_description=long_description,
@@ -66,7 +66,7 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     python_requires=">=3.6, <4",
     install_requires=[
-        "numpy>=1.13,<1.24",
+        "numpy>=1.13,<1.26",
     ],
     extras_require={
         "dataframe": ["pandas"],

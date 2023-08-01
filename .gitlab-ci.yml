@@ -1,3 +1,12 @@
+.default_rules:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ /release-*/
+    - if: $CI_COMMIT_BRANCH =~ /hotfix-*/
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - changes: 
+      - .gitlab-ci.yml
+
 .python:
   image: "python:$PYTHON_VERSION-slim"
   variables:
@@ -56,10 +65,9 @@ build:image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     - docker buildx build --push --platform linux/arm/v7 --tag $IMAGE_TAG .
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/Dockerfile
 
 build:software:
@@ -74,10 +82,57 @@ build:software:
   script:
     - meson setup builddir
     - ninja --verbose -C builddir
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
+      - $WORKING_DIRECTORY/**/*
+
+docs:software:
+  image: debian:stable
+  needs: []
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+    WORKING_DIRECTORY: software/rocketlogger
+  before_script:
+    - apt-get update && apt-get install --no-install-recommends --no-install-suggests --assume-yes doxygen graphviz
+    - cd $WORKING_DIRECTORY
+  script:
+    - (cat Doxyfile; echo "WARN_AS_ERROR=FAIL_ON_WARNINGS") | doxygen -
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
+      - $WORKING_DIRECTORY/**/*
+
+docs:python:
+  image: "python:3"
+  needs: []
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    WORKING_DIRECTORY: script/python
+  cache:
+    key:
+      files:
+        - $WORKING_DIRECTORY/requirements.txt
+      prefix: $CI_JOB_NAME
+    paths:
+      - .cache/pip
+      - venv
+  before_script:
+    - python --version
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - cd $WORKING_DIRECTORY
+  script:
+    # install dependencies
+    - python -m pip install --upgrade pip
+    - python -m pip install sphinx
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    # build documentation
+    - sphinx-build -a -W -b html docs/ build/sphinx/html/
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*
 
 test:webserver:
@@ -95,10 +150,9 @@ test:webserver:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage/cobertura-coverage.xml
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*
 
 test:python:
@@ -127,8 +181,7 @@ test:python:
       coverage_report:
         coverage_format: cobertura
         path: $WORKING_DIRECTORY/coverage.xml
-  only:
-    refs:
-      - branches
-    changes:
+  rules:
+    - !reference [.default_rules, rules]
+    - changes: 
       - $WORKING_DIRECTORY/**/*

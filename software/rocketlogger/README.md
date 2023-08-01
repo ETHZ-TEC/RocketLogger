@@ -31,10 +31,8 @@ The necessary device tree overlay sources for the RocketLogger Cape hardware are
 
 ### System Configuration
 
-The system configuration files provided in the @ref config subfolder provide the necessary
-`uio_pruss` module configuration, uEnv boot configuration, and RocketLogger service specification,
-as well as as default calibration parameters. These configuration files are deployed together with
-the other software components.
+The required system configuration files are provided in the @ref config subfolder and are deployed
+together with the other software components (see also @ref config/README.md).
 
 
 ## Installation

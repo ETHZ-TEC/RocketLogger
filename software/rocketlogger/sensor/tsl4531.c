@@ -65,7 +65,6 @@ int tsl4531_get_range(int sensor_identifier);
 /**
  * Get the device ID.
  *
- * @param sensor_identifier The I2C address of the sensor
  * @return Returns device ID on success, negative on failure with errno set
  * accordingly
  */
