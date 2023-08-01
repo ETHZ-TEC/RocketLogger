@@ -9,11 +9,6 @@
 IMAGE=/dev/null
 HOSTNAME="rocketlogger"
 
-ROOTFS=`mktemp --directory`
-ROOT_HOME=`mktemp --directory`
-APT_CACHE=`mktemp --directory`
-REPO_PATH=`git rev-parse --show-toplevel`
-REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 # check arguments
 if [ $# -lt 1 ]; then
@@ -27,6 +22,16 @@ if [ $# -ge 2 ]; then
 fi
 
 echo "> Deploy RocketLogger system to image '${IMAGE}'"
+
+
+# mark mounted git repository with differing file ownership as safe
+git config --global --add safe.directory '*'
+
+ROOTFS=`mktemp --directory`
+ROOT_HOME=`mktemp --directory`
+APT_CACHE=`mktemp --directory`
+REPO_PATH=`git rev-parse --show-toplevel`
+REPO_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 
 ## grow image filesystem
@@ -69,6 +74,7 @@ MOUNT=$?
 df --sync ${ROOTFS}
 if [ $MOUNT -ne 0 ]; then
   echo "[ !! ] System image mount failed (code $MOUNT). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  losetup --detach ${DISK}
   exit $MOUNT
 else
   echo "[ OK ] System image mount was successful."
@@ -104,6 +110,7 @@ CONFIG=$?
 df --sync ${ROOTFS}
 if [ $CONFIG -ne 0 ]; then
   echo "[ !! ] System configuration failed (code $CONFIG). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SYSTEM CONFIGURATION."
+  losetup --detach ${DISK}
   exit $CONFIG
 else
   echo "[ OK ] System configuration was successful."
@@ -119,6 +126,7 @@ INSTALL=$?
 df --sync ${ROOTFS}
 if [ $INSTALL -ne 0 ]; then
   echo "[ !! ] Software installation failed (code $INSTALL). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY SOFTWARE INSTALLATION."
+  losetup --detach ${DISK}
   exit $INSTALL
 else
   echo "[ OK ] Software installation was successful."
@@ -134,6 +142,7 @@ WEB=$?
 df --sync ${ROOTFS}
 if [ $WEB -ne 0 ]; then
   echo "[ !! ] Web interface installation failed (code $WEB). MANUALLY CHECK CONSOLE OUTPUT AND VERIFY WEB INTERFACE INSTALLATION."
+  losetup --detach ${DISK}
   exit $WEB
 else
   echo "[ OK ] Web interface installation was successful."
