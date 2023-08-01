@@ -1,10 +1,27 @@
 # Changelog
 
 
+## Version 2.1.2 (2023-08-01)
+
+* [ADD] Document and test compatibility of Python support library with numpy 1.24 and 1.25
+* [ADD] GitLab CI for testing documentation generation (relates to #105)
+* [CHANGED] Update web server dependencies with security patches 
+* [FIX] Improved SD card mount reliability (#107)
+* [FIX] Automated release documentation generation (#105)
+* [FIX] Image patching script failure with latest docker images
+
+
+_Notes:_
+
+This bugfix release address SD card reliability problems, fixes release documentation generation, and updates web server dependencies with security patches.
+Further, the compatibility of Python support library with latest numpy releases is tested and documented.
+
+
 ## Version 2.1.1 (2023-07-15)
 
 * [CHANGED] Update to latest Debian *buster* release 10.13 image for security fixes
 * [CHANGED] Update web server dependencies for security fixes
+
 
 _Notes:_
 
