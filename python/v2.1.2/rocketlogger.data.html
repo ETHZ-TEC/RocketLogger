@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data Module &#8212; RocketLogger Python Support Library 2.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b3523f8e" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=9198e2d1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Calibration Module" href="rocketlogger.calibration.html" />
+    <link rel="prev" title="Package Reference" href="rocketlogger.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="data-module">
+<h1>Data Module<a class="headerlink" href="#data-module" title="Permalink to this heading">¶</a></h1>
+<p>The <a class="reference internal" href="#module-rocketlogger.data" title="rocketlogger.data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rocketlogger.data</span></code></a> module provides support for processing binary RocketLogger data files.</p>
+<span class="target" id="module-rocketlogger.data"></span><p>RocketLogger Data Import Support.</p>
+<p>File reading support for RocketLogger data (rld) files.</p>
+<p>Copyright (c) 2016-2020, ETH Zurich, Computer Engineering Group
+All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:</p>
+<ul class="simple">
+<li><p>Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.</p></li>
+<li><p>Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.</p></li>
+<li><p>Neither the name of the copyright holder nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.</p></li>
+</ul>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketlogger.data.</span></span><span class="sig-name descname"><span class="pre">RocketLoggerData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">join_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recovery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mapped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>RocketLogger data file handling class.</p>
+<p>File reading and basic data processing support for binary RocketLogger data
+files.</p>
+<p>The constructor takes the same parameters as <a class="reference internal" href="#rocketlogger.data.RocketLoggerData.load_file" title="rocketlogger.data.RocketLoggerData.load_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_file()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – The filename of the file to import. If numbered
+files following the “&lt;filename&gt;_p#.rld” convention are found, they
+can be joined during import using the <cite>join_files</cite> parameter.</p></li>
+<li><p><strong>join_files</strong> – Enable joining of multiple files, if numbered files
+following the “&lt;filename&gt;_p#.rld” convention are found</p></li>
+<li><p><strong>exclude_part</strong> – Exclude given part(s) of number files when
+joining following the “&lt;filename&gt;_p#.rld” convention.
+Expects a single index or list or Numpy array of indexes to
+exclude. Silently ignores indexes beyond the number of found parts.
+Only applicable when joining multiple files with <cite>join_files=True</cite>.</p></li>
+<li><p><strong>header_only</strong> – Enable to import only header info without data</p></li>
+<li><p><strong>decimation_factor</strong> – Decimation factor for values read</p></li>
+<li><p><strong>recovery</strong> – Attempt recovery of damaged files that have lost or
+incomplete data blocks at the end of the file. This can be
+caused by power supply failures during measurements.</p></li>
+<li><p><strong>memory_mapped</strong> – Set <cite>False</cite> to fall back to read entire file to
+memory at once, instead of using memory mapped reading. Might
+increase file read performance for many smaller files and/or
+some system configurations.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.add_channel">
+<span class="sig-name descname"><span class="pre">add_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.add_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.add_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new data channel to the RocketLogger data structure.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a valid channel is to the channel being added, the linked
+channel has to be added first.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channel_info</strong> – <p>Channel info structure of the channel to add,
+a dictionary with the following fields designed:</p>
+<ul>
+<li><p>”unit_index” – index of the measurement unit of the channel</p></li>
+<li><p>”scale” – data unit scale, an integer exponent</p></li>
+<li><p>”data_size” – size in bytes of the channel data</p></li>
+<li><p>”valid_link” – index of the valid channel</p></li>
+<li><p>”name” – name of the channel (max 16 bytes)</p></li>
+</ul>
+</p></li>
+<li><p><strong>channel_data</strong> – The actual channel data to add, Numpy array</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_channel_names">
+<span class="sig-name descname"><span class="pre">get_channel_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_channel_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_channel_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the names of all the channels loaded from file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of channel names sorted by name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_comment">
+<span class="sig-name descname"><span class="pre">get_comment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_comment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the comment stored in the file header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Comment stored in the file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data of the specified channels, by default of all channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>channel_names</strong> – The names of the channels for which the data
+shall be returned. List of channel names or “all” to select all
+channels.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Numpy array containing the channel’s data vectors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_dataframe">
+<span class="sig-name descname"><span class="pre">get_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relative'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut to get a pandas dataframe of selected channels indexed with
+timestamps.</p>
+<p>By default all channels are exported and relative timestamps are used
+for indexing. See also <a class="reference internal" href="#rocketlogger.data.RocketLoggerData.get_data" title="rocketlogger.data.RocketLoggerData.get_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_data()</span></code></a> and <a class="reference internal" href="#rocketlogger.data.RocketLoggerData.get_time" title="rocketlogger.data.RocketLoggerData.get_time"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_time()</span></code></a> functions.</p>
+<p>Requires pandas package to be installed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channel_names</strong> – The names of the channels for which the data
+shall be returned. List of channel names or “all” to select all
+channels.</p></li>
+<li><p><strong>time_reference</strong> – <p>The reference to use for timestamp calculation:</p>
+<ul>
+<li><p>”relative” – Calculate timestamp from sample rate, and the sample
+index relative to the measurement start time (default)</p></li>
+<li><p>”local” – Get the timestamp of the local oscillator clock</p></li>
+<li><p>”network” – Get the timestamp of the network synchronized clock</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A pandas dataframe the channel’s data as columns, indexed
+by the timestamps of the selected format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_filename">
+<span class="sig-name descname"><span class="pre">get_filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filename of the loaded data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The absolute filename of the loaded data file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_header">
+<span class="sig-name descname"><span class="pre">get_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary with the header information.</p>
+<p>The relevant fields include: “data_block_count”, “data_block_size”,
+“file_version”, “mac_address”, “sample_count”,”sample_rate”, and
+“start_time”.</p>
+<p>To get the file comment use <a class="reference internal" href="#rocketlogger.data.RocketLoggerData.get_comment" title="rocketlogger.data.RocketLoggerData.get_comment"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_comment()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of relevant header information</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_time">
+<span class="sig-name descname"><span class="pre">get_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relative'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the timestamp of the data.</p>
+<p>Using simple linear interpolation to generating the sample from the
+block timestamps. For local or network timestamps the values for the
+last data block are extrapolated using the average time delta of all
+data blocks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_reference</strong> – <p>The reference to use for timestamp calculation:</p>
+<ul class="simple">
+<li><p>”relative” – Calculate timestamp from sample rate, and the sample
+index relative to the measurement start time (default)</p></li>
+<li><p>”local” – Get the timestamp of the local oscillator clock</p></li>
+<li><p>”network” – Get the timestamp of the network synchronized clock</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Numpy array containing the timestamps</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_unit">
+<span class="sig-name descname"><span class="pre">get_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the unit of the specified channels, by default of all channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>channel_names</strong> – The names of the channels for which the unit
+shall be returned. List of channel names or “all” to select all
+channels.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of channel units sorted by channel_names list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.get_validity">
+<span class="sig-name descname"><span class="pre">get_validity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.get_validity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.get_validity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the validity of the specified channels, by default of all channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>channel_names</strong> – The names of the channels for which the validity
+shall be returned. List of channel names or “all” to select all
+channels.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Numpy array containing the channel’s validity vectors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.load_file">
+<span class="sig-name descname"><span class="pre">load_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">join_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recovery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mapped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.load_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from a RocketLogger data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – The filename of the file to import. If numbered
+files following the “&lt;filename&gt;_p#.rld” convention are found, they
+can be joined during import using the <cite>join_files</cite> flag.</p></li>
+<li><p><strong>join_files</strong> – Enable joining of multiple files if numbered files
+following the “&lt;filename&gt;_p#.rld” convention are found</p></li>
+<li><p><strong>exclude_part</strong> – Exclude given part(s) of number files when
+joining following the “&lt;filename&gt;_p#.rld” convention.
+Expects a single index or list or Numpy array of indexes to
+exclude. Silently ignores indexes beyond the number of found parts.
+Only applicable when joining multiple files with <cite>join_files=True</cite>.</p></li>
+<li><p><strong>header_only</strong> – Enable to import only header info without data</p></li>
+<li><p><strong>decimation_factor</strong> – Decimation factor for values read</p></li>
+<li><p><strong>recovery</strong> – Attempt recovery of damaged files that have lost or
+incomplete data blocks at the end of the file. This could e.g. be
+caused by power supply failures during measurements.</p></li>
+<li><p><strong>memory_mapped</strong> – Set <cite>False</cite> to fall back to read entire file to
+memory at once, instead of using memory mapped reading. Might
+increase file read performance for many smaller files and/or
+some system configurations.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.merge_channels">
+<span class="sig-name descname"><span class="pre">merge_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.merge_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.merge_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge seamlessly switched current channels into a combined channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>keep_channels</strong> – Whether the merged channels are kept</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self reference to data object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the loaded RocketLogger data.</p>
+<p>Requires matplotlib package to be installed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channel_names</strong> – <p>The names of the channels for which the
+data shall be returned. List of channel names (or combination of):</p>
+<ul>
+<li><p>”all” – to select all channels</p></li>
+<li><p>”voltages” – to select voltage channels</p></li>
+<li><p>”currents” – to select current channels</p></li>
+<li><p>”digital” – to select digital channels</p></li>
+</ul>
+</p></li>
+<li><p><strong>show</strong> – Whether to show the plot window or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The matplotlib plot object used for plotting</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerData.remove_channel">
+<span class="sig-name descname"><span class="pre">remove_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerData.remove_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerData.remove_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a data channel from the RocketLogger data structure.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Linked valid channels are not automatically removed. If they shall
+be removed as well, call this function first on the linked channel.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>channel_name</strong> – Name of the channel</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerDataError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketlogger.data.</span></span><span class="sig-name descname"><span class="pre">RocketLoggerDataError</span></span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerDataError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>RocketLogger data handling related errors.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerDataWarning">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketlogger.data.</span></span><span class="sig-name descname"><span class="pre">RocketLoggerDataWarning</span></span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerDataWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerDataWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Warning</span></code></p>
+<p>RocketLogger data handling related warnings.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="rocketlogger.data.RocketLoggerFileError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rocketlogger.data.</span></span><span class="sig-name descname"><span class="pre">RocketLoggerFileError</span></span><a class="reference internal" href="_modules/rocketlogger/data.html#RocketLoggerFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rocketlogger.data.RocketLoggerFileError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code></p>
+<p>RocketLogger file read/write related errors.</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">RocketLogger Python Support Library</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration.html">RocketLogger Calibration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rocketlogger.html">Package Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rocketlogger.calibration.html">Calibration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html">Package Tests</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="rocketlogger.html">Package Reference</a><ul>
+      <li>Previous: <a href="rocketlogger.html" title="previous chapter">Package Reference</a></li>
+      <li>Next: <a href="rocketlogger.calibration.html" title="next chapter">Calibration Module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, ETH Zurich, Computer Engineering Group.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/rocketlogger.data.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
