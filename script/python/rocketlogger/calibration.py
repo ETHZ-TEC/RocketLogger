@@ -615,9 +615,9 @@ class RocketLoggerCalibration:
             (self._calibration_scale, [_CALIBRATION_PRU_CYCLES_SCALE])
         )
         # error statistics do not exist for PRU timestamp (design values)
-        self._error_offset = np.concatenate((self._error_offset, [np.NaN]))
-        self._error_scale = np.concatenate((self._error_scale, [np.NaN]))
-        self._error_rmse = np.concatenate((self._error_rmse, [np.NaN]))
+        self._error_offset = np.concatenate((self._error_offset, [np.nan]))
+        self._error_scale = np.concatenate((self._error_scale, [np.nan]))
+        self._error_rmse = np.concatenate((self._error_rmse, [np.nan]))
 
     def print_statistics(self):
         """
