@@ -27,7 +27,7 @@
     - cd $WORKING_DIRECTORY
   parallel:
     matrix:
-      - PYTHON_VERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+      - PYTHON_VERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
 .webserver:
   image: "node:$NODE_VERSION-slim"
