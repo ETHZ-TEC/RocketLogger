@@ -22,8 +22,7 @@
       - venv
   before_script:
     - python --version
-    - pip install virtualenv
-    - virtualenv venv
+    - python -m venv venv
     - source venv/bin/activate
     - cd $WORKING_DIRECTORY
   parallel:
@@ -119,8 +118,7 @@ docs:python:
       - venv
   before_script:
     - python --version
-    - pip install virtualenv
-    - virtualenv venv
+    - python -m venv venv
     - source venv/bin/activate
     - cd $WORKING_DIRECTORY
   script:
