@@ -35,7 +35,7 @@
   "dependencies": {
     "bootstrap": "5.2.2",
     "debug": "~4.3.4",
-    "express": "4.21.1",
+    "express": "4.21.2",
     "nunjucks": "3.2.4",
     "picomatch": "~2.3.1",
     "plotly.js-gl2d-dist-min": "2.15.0",
