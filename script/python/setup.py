@@ -68,7 +68,7 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     python_requires=">=3.6, <4",
     install_requires=[
-        "numpy>=1.13,<2.2",
+        "numpy>=1.13,<2.4",
     ],
     extras_require={
         "dataframe": ["pandas"],
