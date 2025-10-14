@@ -58,8 +58,13 @@ fi
 ## updates and software dependencies
 echo "> Update system and install software dependencies"
 
-# install buster-backports repository for meson and ninja
-echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
+# update debian and debian-security repositories to the debian archive
+sed 's#http://security.debian.org/debian-security buster/updates#http://archive.debian.org/debian-security buster/updates#g' --in-place /etc/apt/sources.list
+sed 's#http://deb.debian.org/debian buster#http://archive.debian.org/debian buster#g' --in-place /etc/apt/sources.list
+sed 's#http://deb.debian.org/debian buster-updates#http://archive.debian.org/debian buster-updates#g' --in-place /etc/apt/sources.list
+
+# install buster-backports repository archive for meson and ninja
+echo "deb http://archive.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/buster-backports.list
 
 # update package lists
 apt-get update
