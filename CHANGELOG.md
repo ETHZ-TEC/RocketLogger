@@ -1,6 +1,20 @@
 # Changelog
 
 
+## Version 2.1.3 (2025-10-14)
+
+* [ADD] Support and test coverage for Python 3.12-3.14
+* [ADD] Document and test compatibility of Python support library with numpy 1.26-2.3
+* [CHANGED] Update web server dependencies with security patches
+* [CHANGED] Update Debian *buster* repositories to the Debian archives 
+
+
+_Notes:_
+
+This updates web server dependencies with security patches and adapts to archived Debian repositories.
+Further, the Python support library adds compatibility and test coverage for latest Python versions and numpy releases.
+
+
 ## Version 2.1.2 (2023-08-01)
 
 * [ADD] Document and test compatibility of Python support library with numpy 1.24 and 1.25
