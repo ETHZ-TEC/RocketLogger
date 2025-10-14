@@ -1,0 +1,13 @@
+<map id="tsl4531_set_range" name="tsl4531_set_range">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,133,80"/>
+<area shape="rect" id="Node000002" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="402,5,455,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,52,180,40,292,25,387,18,387,23,293,31,181,45,123,57"/>
+<area shape="rect" id="Node000003" href="$tsl4531_8c.html#a997d944027430822a2afebb1abb19f11" title=" " alt="" coords="366,104,491,130"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="123,78,181,90,269,102,351,109,350,115,268,107,180,95,122,83"/>
+<area shape="rect" id="Node000004" href="$tsl4531_8c.html#ab6cd9d9cda8dfcc3adbb8b7223bb59b9" title=" " alt="" coords="181,55,318,80"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="133,65,165,65,165,70,133,70"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="298,51,387,27,388,32,300,57"/>
+<area shape="poly" id="edge6_Node000004_Node000003" title=" " alt="" coords="300,78,365,97,364,102,298,84"/>
+<area shape="rect" id="Node000005" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="368,55,489,80"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="318,65,353,65,353,70,318,70"/>
+</map>

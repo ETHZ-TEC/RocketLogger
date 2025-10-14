@@ -1,0 +1,9 @@
+<map id="bme280_read_calibration" name="bme280_read_calibration">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,171,80"/>
+<area shape="rect" id="Node000002" href="$bme280_8c.html#a861788dcd08dd885aa4233624b1757b3" title=" " alt="" coords="219,5,348,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="141,51,214,33,215,38,143,57"/>
+<area shape="rect" id="Node000003" href="$log_8c.html#a82d4b6100211764e424129940ad317f0" title=" " alt="" coords="257,55,310,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="171,65,241,65,241,70,171,70"/>
+<area shape="rect" id="Node000004" href="$sensor_8c.html#a95dc7ee7d3f0b24a433bb9d091b1927d" title=" " alt="" coords="223,104,344,130"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="143,78,215,97,214,102,141,84"/>
+</map>

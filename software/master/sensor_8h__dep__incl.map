@@ -1,0 +1,19 @@
+<map id="sensor/sensor.h" name="sensor/sensor.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="248,5,361,31"/>
+<area shape="rect" id="Node000002" href="$pru_8c.html" title=" " alt="" coords="5,79,55,105"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="239,38,68,82,56,85,55,80,67,76,238,33"/>
+<area shape="rect" id="Node000003" href="$rl_8c.html" title=" " alt="" coords="79,79,117,105"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="254,39,130,82,118,86,117,81,128,76,253,34"/>
+<area shape="rect" id="Node000004" href="$rl__file_8c.html" title=" " alt="" coords="141,79,202,105"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="270,41,195,81,193,76,267,36"/>
+<area shape="rect" id="Node000005" href="$rl__hw_8c.html" title=" " alt="" coords="226,79,288,105"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="290,45,267,80,263,77,286,42"/>
+<area shape="rect" id="Node000006" href="$rl__socket_8c.html" title=" " alt="" coords="312,79,396,105"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="324,42,348,77,343,80,319,45"/>
+<area shape="rect" id="Node000007" href="$bme280_8c.html" title=" " alt="" coords="420,79,541,105"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="349,35,452,76,450,81,347,40"/>
+<area shape="rect" id="Node000008" href="$sensor_8c.html" title=" " alt="" coords="565,79,679,105"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="374,32,569,76,567,81,373,38"/>
+<area shape="rect" id="Node000009" href="$tsl4531_8c.html" title=" " alt="" coords="702,79,819,105"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="377,28,692,76,702,78,702,83,691,82,376,33"/>
+</map>

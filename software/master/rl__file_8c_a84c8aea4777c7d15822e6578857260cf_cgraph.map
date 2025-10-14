@@ -1,0 +1,9 @@
+<map id="rl_file_setup_data_channels" name="rl_file_setup_data_channels">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,47,128,88"/>
+<area shape="rect" id="Node000002" href="$util_8c.html#a09dda8ba536ea965b2cd013a49819dc8" title=" " alt="" coords="189,5,268,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="127,46,174,32,175,37,129,51"/>
+<area shape="rect" id="Node000003" href="$util_8c.html#a8efbc8c838c5a399661733fdfc674f91" title=" " alt="" coords="176,55,281,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="128,65,160,65,160,70,128,70"/>
+<area shape="rect" id="Node000004" href="$util_8c.html#abfe2d54b038fe391c342e081659e9042" title=" " alt="" coords="188,104,268,130"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="129,84,174,98,173,103,127,89"/>
+</map>
